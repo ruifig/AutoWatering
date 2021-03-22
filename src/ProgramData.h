@@ -1,15 +1,18 @@
 #pragma once
 
-#include <assert.h>
+#include "Config.h"
+
+namespace cz
+{
 
 class ProgramData
 {
 public:
 
-    struct MoistureSensorData
+    struct SoilMoistureSensorData
     {
         // How many seconds to wait between samplings
-        int samplingIntervalSeconds = 5;
+        int samplingIntervalSeconds = DEFAULT_SENSOR_SAMPLING_INTERVAL;
         int airValue = 513;
         int waterValue = 512;
         int currentValue = 0;
@@ -19,14 +22,12 @@ public:
         int calcCurrentPercentage() const;
     };
 
-    const MoistureSensorData& getMoistureSensor(unsigned int index)
-    {
-        assert(index < NumSensors);
-        return m_moistureSensorData[index];
-    }
+    const SoilMoistureSensorData& getSoilMoistureSensor(unsigned int index);
 
 private:
     static constexpr int NumSensors = 4;
     
-    MoistureSensorData m_moistureSensorData[NumSensors];
+    SoilMoistureSensorData m_soilMoistureSensorData[NumSensors];
 };
+
+} // namespace cz

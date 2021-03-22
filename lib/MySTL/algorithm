@@ -1,0 +1,26 @@
+#pragma once
+
+#ifdef min
+    #undef min
+#endif
+
+#ifdef max
+    #undef max
+#endif
+
+namespace std
+{
+
+template<class T> 
+const T& min(const T& a, const T& b)
+{
+    return (b < a) ? b : a;
+}
+
+template<class T> 
+const T& max(const T& a, const T& b)
+{
+    return (a < b) ? b : a;
+}
+
+}

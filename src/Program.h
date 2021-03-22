@@ -3,6 +3,7 @@
 #include "SoilMoistureSensor.h"
 #include <Adafruit_RGBLCDShield.h>
 
+#if 0
 class Program
 {
 public:
@@ -14,4 +15,6 @@ private:
 	SoilMoistureSensor m_sensors[m_maxSensors];
 	RelayModule m_relayModule;
 };
+
+#endif
 

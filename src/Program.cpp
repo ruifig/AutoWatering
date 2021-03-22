@@ -4,6 +4,7 @@
 #include <Wire.h>
 #include <utility/Adafruit_MCP23017.h>
 
+#if 0
 Adafruit_RGBLCDShield lcd;
 
 Program::Program()
@@ -63,6 +64,8 @@ void Program::tick()
 	Serial.println(millis());
 	delay(250);
 }
+
+#endif
 
 
 #if 0

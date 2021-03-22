@@ -1,41 +1,54 @@
 #include "SoilMoistureSensor.h"
-#include "Utils.h"
+
 #include <Arduino.h>
 
-/*
-How to fix or improve sensor response:
-	https://forum.arduino.cc/index.php?topic=597585.0
-	https://www.youtube.com/watch?v=QGCrtXf8YSs
-*/
+#include "ProgramData.h"
+#include "Utils.h"
 
-SoilMoistureSensor::SoilMoistureSensor()
+namespace cz
 {
+SoilMoistureSensor::SoilMoistureSensor(ProgramData& data, uint8_t index, uint8_t vinPin, uint8_t dataPin)
+{
+	setup(data, index, vinPin, dataPin);
 }
 
-void SoilMoistureSensor::setup(uint8_t id, uint8_t vinPin, uint8_t dataPin)
+void SoilMoistureSensor::setup(ProgramData& data, uint8_t index, uint8_t vinPin, uint8_t dataPin)
 {
-	m_id = id;
+	m_data = &data;
+	m_index = index;
 	m_vinPin = vinPin;
 	m_dataPin = dataPin;
 
 	pinMode(m_vinPin, OUTPUT);
 	pinMode(m_dataPin, INPUT);
-
 	// Switch the sensor off
 	digitalWrite(m_vinPin, LOW);
 }
 
-void SoilMoistureSensor::tick()
+float SoilMoistureSensor::tick(float deltaSeconds)
 {
-	/*
-	int pinValue = analogRead(m_pin);
-	Serial.print("Sensor value (pin ");
-	Serial.print(m_pin);
-	Serial.print(") = ");
-	Serial.println(pinValue);
-	*/
+	CZ_ASSERT(m_data);
+
+	switch (m_state)
+	{
+	case State::Off:
+		break;
+
+	case State::PoweringUp:
+		break;
+
+	case State::Reading:
+		// TODO : Fill me
+		break;
+
+	default:
+		CZ_UNEXPECTED();
+	}
+
+	return m_data->getSoilMoistureSensor(m_index).samplingIntervalSeconds;
 }
 
+#if 0
 uint8_t SoilMoistureSensor::readValue()
 {
 	//
@@ -60,61 +73,6 @@ uint8_t SoilMoistureSensor::readValue()
 	return percentage;
 }
 
-void RelayModule::setup(const uint8_t* pinIn, int numChannels)
-{
-	if (numChannels > m_maxChannels)
-	{
-		assert(false);
-		return;
-	}
-
-	m_numChannels = numChannels;
-	memcpy(m_pinIns, pinIn, numChannels);
-
-	for (int idx = 0; idx < m_numChannels; idx++)
-	{
-		pinMode(m_pinIns[idx], OUTPUT);
-		digitalWrite(m_pinIns[idx], LOW);
-	}
-}
-
-void RelayModule::setInput(uint8_t idx, uint8_t state)
-{
-	if (idx < m_numChannels)
-	{
-		CZ_LOG_LN("Signalling relay channel %d (pin %d) to %d", idx, m_pinIns[idx], (int)state);
-		digitalWrite(m_pinIns[idx], state);
-		//analogWrite(m_pinIns[idx], 255);
-	}
-}
-
-#if 0
-void RelayModule::signalHigh(uint8_t idx)
-{
-	if (idx < m_numChannels)
-	{
-		CZ_LOG_LN("Signalling relay channel %d (pin %d)", idx, m_pinIns[idx]);
-		digitalWrite(m_pinIns[idx], HIGH);
-	}
-}
-
-void RelayModule::signalLow(uint8_t idx)
-{
-	if (idx < m_numChannels)
-	{
-		CZ_LOG_LN("Signalling relay channel %d (pin %d)", idx, m_pinIns[idx]);
-		digitalWrite(m_pinIns[idx], LOW);
-	}
-}
-
-void RelayModule::signal(uint8_t idx, unsigned long duration)
-{
-	if (idx < m_numChannels)
-	{
-		CZ_LOG_LN("Signalling relay channel %d (pin %d)", idx, m_pinIns[idx]);
-		digitalWrite(m_pinIns[idx], HIGH);
-		delay(duration);
-		digitalWrite(m_pinIns[idx], LOW);
-	}
-}
 #endif
+
+}  // namespace cz

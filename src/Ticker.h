@@ -2,93 +2,77 @@
 
 namespace cz
 {
-
 namespace TickerPolicy
 {
-
-	/**
-	* Ticking will be based on time elapsed since the last tick.
-    * obj->tick should return how many seconds to wait until the next tick.
-	*/
-	template<class T>
-	struct Time
-	{
-	public:
-		typedef T TimeType; 
-		TimeType getCountdown() const
-		{
-			return m_countdown;
-		}
-	protected:
-		Time()
-		{
-			m_countdown = 0;
-		}
-
-		bool update(TimeType deltatime)
-		{
-			m_countdown -= deltatime;
-			return (m_countdown<=0 ? true : false);
-		}
-
-		void reset(TimeType countdown=0)
-		{
-			m_countdown = countdown;
-		}
-
-	private:
-		// Countdown to next tick
-		TimeType m_countdown;
-	};
-
-}; // namespace TickerPolicy
-
-template<class OBJECTTYPE, class TIMETYPE, class TICKINGMETHOD=TickerPolicy::Time<TIMETYPE> >
-class Ticker : public TICKINGMETHOD
+/**
+ * Ticking will be based on time elapsed since the last tick.
+ * obj->tick should return how many seconds to wait until the next tick.
+ */
+template <class T>
+struct TTime
 {
-public:
-	typedef OBJECTTYPE ObjectType;
-	typedef TIMETYPE TimeType;
+  public:
+	using TimeType = T;
 
-private:
-
-	template<class T>
-	void initializeObj(T* obj)
+	TimeType getCountdown() const
 	{
-		// Does nothing, since we have an object
-	}
-	template<class T>
-	void initializeObj(T** obj)
-	{
-		*obj = nullptr;
-	}
-public:
-
-	Ticker()
-	{
-		initializeObj(&m_obj);
-	}
-	explicit Ticker(ObjectType _tickedObj, bool tickEnabled=true) :
-		m_obj(std::move(_tickedObj)), 
-		m_tickEnabled(tickEnabled)
-	{
-		reset();
+		return m_countdown;
 	}
 
-	~Ticker()
+  protected:
+	TTime()
 	{
+		m_countdown = 0;
 	}
 
-	void tick(TimeType deltatime)
+	bool update(TimeType deltatime)
+	{
+		m_countdown -= deltatime;
+		return (m_countdown <= 0 ? true : false);
+	}
+
+	void reset(TimeType countdown = 0)
+	{
+		m_countdown = countdown;
+	}
+
+	// Countdown to next tick
+	TimeType m_countdown;
+};
+
+};  // namespace TickerPolicy
+
+template <class TObjectType, class TTimeType, class TTickingMethod = TickerPolicy::TTime<TTimeType> >
+class TTicker : public TTickingMethod
+{
+  public:
+	using ObjectType = TObjectType;
+	using TimeType = TTimeType;
+
+	TTicker(bool tickEnabled = true)
+	{
+		m_tickEnabled = tickEnabled;
+		TTickingMethod::reset();
+	}
+
+	template <class... TConstructorArgs>
+	explicit TTicker(bool tickEnabled, TConstructorArgs... Args) : m_obj(Args...), m_tickEnabled(tickEnabled)
+	{
+		TTickingMethod::reset();
+	}
+
+	~TTicker() {}
+
+	TimeType tick(TimeType deltatime)
 	{
 		if (m_tickEnabled)
 		{
-			if (update(deltatime))
+			if (TTickingMethod::update(deltatime))
 			{
-				auto res = m_obj->tick(m_timeSinceLastTick + deltatime);
-				if (res==0)
+				auto res = m_obj.tick(m_timeSinceLastTick + deltatime);
+				if (res == 0)
 					m_tickEnabled = false;
-				reset(res);
+				TTickingMethod::reset(res);
 				m_timeSinceLastTick = 0;
 			}
 			else
@@ -96,135 +80,44 @@ public:
 				m_timeSinceLastTick += deltatime;
 			}
 		}
+
+		return TTickingMethod::m_countdown;
 	}
 
-	/*
-	Same thing as tick, but with an extra parameter
-	*/
-	template<class ExtraParameter1>
-	void tickExt1(TimeType deltatime, ExtraParameter1& extra)
-	{
-		if (m_tickEnabled)
-		{
-			if (update(deltatime))
-			{
-				auto res = m_obj->tick(m_timeSinceLastTick + deltatime, extra);
-				if (res==0)
-					m_tickEnabled = false;
-				reset(res);
-				m_timeSinceLastTick = 0;
-			}
-			else
-			{
-				m_timeSinceLastTick += deltatime;
-			}
-		}
-	}
+	ObjectType& getObj() { return m_obj; }
 
-	template<class ExtraParameter1, class ExtraParameter2>
-	void tickExt2(TimeType deltatime, ExtraParameter1& extra1, ExtraParameter2& extra2)
-	{
-		if (m_tickEnabled)
-		{
-			if (update(deltatime))
-			{
-				TimeType res = m_obj->tick(m_timeSinceLastTick + deltatime, extra1, extra2);
-				if (res==0)
-					m_tickEnabled = false;
-				reset(res);
-				m_timeSinceLastTick = 0;
-			}
-			else
-			{
-				m_timeSinceLastTick += deltatime;
-			}
-		}
-	}
-
-	template<class ExtraParameter1, class ExtraParameter2, class ExtraParameter3>
-	void tickExt2(TimeType deltatime, ExtraParameter1& extra1, ExtraParameter2& extra2, ExtraParameter3& extra3)
-	{
-		if (m_tickEnabled)
-		{
-			if (update(deltatime))
-			{
-				TimeType res = m_obj->tick(m_timeSinceLastTick + deltatime, extra1, extra2, extra3);
-				if (res==0)
-					m_tickEnabled = false;
-				reset(res);
-				m_timeSinceLastTick = 0;
-			}
-			else
-			{
-				m_timeSinceLastTick += deltatime;
-			}
-		}
-	}
-
-	ObjectType& getObj()
-	{
-		return m_obj;
-	}
-
-	const ObjectType& getObj() const
-	{
-		return m_obj;
-	}
-
-	void setObj(const ObjectType& obj, bool needsticking)
-	{
-		m_obj = obj;
-		m_timeSinceLastTick=0;
-		m_tickEnabled = needsticking;
-		reset();
-	}
-
-	void setObj(ObjectType&& obj, bool needsticking)
-	{
-		m_obj = std::move(obj);
-		m_timeSinceLastTick=0;
-		m_tickEnabled = needsticking;
-		reset();
-	}
+	const ObjectType& getObj() const { return m_obj; }
 
 	void start(TimeType countdown)
 	{
-		m_timeSinceLastTick=0;
+		m_timeSinceLastTick = 0;
 		m_tickEnabled = true;
-		reset(countdown);
+		TTickingMethod::reset(countdown);
 	}
 
-	void stop()
-	{
-		m_tickEnabled = false;
-	}
+	void stop() { m_tickEnabled = false; }
 
-	bool isEnabled() const
-	{
-		return m_tickEnabled;
-	}
+	bool isEnabled() const { return m_tickEnabled; }
 
-private:
+  private:
 	ObjectType m_obj;
 	// Accumulates the time since the last tick
-	TimeType m_timeSinceLastTick=0;
-	//int m_countdown;
-	bool m_tickEnabled=false;
+	TimeType m_timeSinceLastTick = 0;
+	// int m_countdown;
+	bool m_tickEnabled = false;
 };
-
 
 struct FunctionTickerObj
 {
-public:
-    using FunctionType = void (*)();
+  public:
+	using FunctionType = void (*)();
 
 	/*!
-	 * \param interval
-	 *	Tick interval, in seconds
+	 * @param func Function to call
+	 * @param interval in seconds to call the function
 	 */
-	FunctionTickerObj(float interval_, FunctionType func_) : interval(interval_), func(func_)
-	{
-	}
+	FunctionTickerObj(FunctionType func_, float interval_) : func(func_), interval(interval_) {}
+
 	FunctionTickerObj() = default;
 	FunctionTickerObj(const FunctionTickerObj&) = default;
 
@@ -237,25 +130,16 @@ public:
 		return interval;
 	}
 
-	float interval=0;
 	FunctionType func;
+	float interval = 0;
 };
 
 struct FunctionTicker
 {
-public:
-	FunctionTicker() : ticker(FunctionTickerObj(), false)
-	{
-	}
-	FunctionTicker(float interval_, FunctionTickerObj::FunctionType func_)
-		: ticker(FunctionTickerObj(interval_, func_), true)
-	{
-	}
+  public:
+	FunctionTicker(FunctionTickerObj::FunctionType func_, float interval_) : ticker(true, func_, interval_) {}
 
-	void tick(float deltaSeconds)
-	{
-		ticker.tick(deltaSeconds);
-	}
+	void tick(float deltaSeconds) { ticker.tick(deltaSeconds); }
 
 	void setInterval(float deltaSeconds)
 	{
@@ -263,12 +147,10 @@ public:
 		ticker.start(deltaSeconds);
 	}
 
-	void stop()
-	{
-		ticker.stop();
-	}
-protected:
-	Ticker<FunctionTickerObj, float> ticker;
+	void stop() { ticker.stop(); }
+
+  protected:
+	TTicker<FunctionTickerObj, float> ticker;
 };
 
-} // namespace cz
+}  // namespace cz
