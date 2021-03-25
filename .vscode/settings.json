@@ -4,7 +4,8 @@
         "functional": "cpp",
         "map": "cpp",
         "utility": "cpp",
-        "basic_definitions": "cpp"
+        "basic_definitions": "cpp",
+        "algorithm": "cpp"
     },
     "gitlens.advanced.blame.customArguments": [],
 

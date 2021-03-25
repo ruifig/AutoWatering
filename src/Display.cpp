@@ -4,10 +4,10 @@
 namespace cz
 {
 
-void Display::setup(Adafruit_RGBLCDShield& lcd, ProgramData& data)
+void Display::setup(Context& ctx, Adafruit_RGBLCDShield& lcd)
 {
+    m_ctx = &ctx;
     m_lcd = &lcd;
-    m_data = &data;
     onEnterState();
 }
 

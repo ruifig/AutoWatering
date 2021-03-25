@@ -1,34 +1,27 @@
 #include "SoilMoistureSensor.h"
-
-#include <Arduino.h>
-
-#include "ProgramData.h"
 #include "Utils.h"
+#include <Arduino.h>
 
 namespace cz
 {
-SoilMoistureSensor::SoilMoistureSensor(ProgramData& data, uint8_t index, uint8_t vinPin, uint8_t dataPin)
+
+SoilMoistureSensor::SoilMoistureSensor(Context& ctx, uint8_t index, IOExpanderPin vinPin, MultiplexerPin dataPin)
+	: m_ctx(ctx)
+	, m_index(index)
+	, m_vinPin(vinPin)
+	, m_dataPin(dataPin)
 {
-	setup(data, index, vinPin, dataPin);
 }
 
-void SoilMoistureSensor::setup(ProgramData& data, uint8_t index, uint8_t vinPin, uint8_t dataPin)
+void SoilMoistureSensor::setup()
 {
-	m_data = &data;
-	m_index = index;
-	m_vinPin = vinPin;
-	m_dataPin = dataPin;
-
-	pinMode(m_vinPin, OUTPUT);
-	pinMode(m_dataPin, INPUT);
+	m_ctx.ioExpander.pinMode(m_vinPin, OUTPUT);
 	// Switch the sensor off
-	digitalWrite(m_vinPin, LOW);
+	m_ctx.ioExpander.digitalWrite(m_vinPin, LOW);
 }
 
 float SoilMoistureSensor::tick(float deltaSeconds)
 {
-	CZ_ASSERT(m_data);
-
 	switch (m_state)
 	{
 	case State::Off:
@@ -45,7 +38,7 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 		CZ_UNEXPECTED();
 	}
 
-	return m_data->getSoilMoistureSensor(m_index).samplingIntervalSeconds;
+	return m_ctx.data.getSoilMoistureSensor(m_index).samplingIntervalSeconds;
 }
 
 #if 0

@@ -1,18 +1,30 @@
 #include <Arduino.h>
 
 #include "Config.h"
-#include "ProgramData.h"
+#include "Context.h"
 #include "SoilMoistureSensor.h"
 #include "Display.h"
 #include "Ticker.h"
 #include "Utils.h"
 #include <algorithm>
+#include <utility>
+#include "MCP23S17Wrapper.h"
+#include <SPI.h>
+#include "Mux16Channels.h"
 
 using namespace cz;
 
-ProgramData gData;
+Context gCtx;
+
 using SoilMoistureSensorTicker = TTicker<SoilMoistureSensor, float>;
-SoilMoistureSensorTicker gSoilMoistureSensors[NUM_SENSORS];
+SoilMoistureSensorTicker gSoilMoistureSensors[4] =
+{
+	{true, gCtx, 0, IO_EXPANDER_VPIN_SENSOR_0, MULTIPLEXER_MOISTURE_SENSOR_0},
+	{true, gCtx, 1, IO_EXPANDER_VPIN_SENSOR_1, MULTIPLEXER_MOISTURE_SENSOR_1},
+	{true, gCtx, 2, IO_EXPANDER_VPIN_SENSOR_2, MULTIPLEXER_MOISTURE_SENSOR_2},
+	{true, gCtx, 3, IO_EXPANDER_VPIN_SENSOR_3, MULTIPLEXER_MOISTURE_SENSOR_3}
+};
+
 TTicker<Display, float> gDisplay;
 Adafruit_RGBLCDShield lcd;
 
@@ -21,11 +33,13 @@ void setup()
 {
 	Serial.begin(9600);
 
-	gDisplay.getObj().setup(lcd, gData);
+	gDisplay.getObj().setup(gCtx, lcd);
 
-	for (int idx = 0; idx < NUM_SENSORS; idx++)
+	pinMode(ARDUINO_MULTIPLEXER_ZPIN.raw, INPUT);
+
+	for(auto&& ticker : gSoilMoistureSensors)
 	{
-		gSoilMoistureSensors[idx].getObj().setup(gData, idx, 30 + idx, PIN_A12 + idx);
+		ticker.getObj().setup();
 	}
 
 	gPreviousTime = millis() / 1000.0f;

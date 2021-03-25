@@ -2,11 +2,10 @@
 
 #include <Arduino.h>
 #include <assert.h>
+#include "Context.h"
 
 namespace cz
 {
-// Forward declarations
-struct ProgramData;
 
 /**
  * Capacitive Soil Moisture Sensor: https://www.amazon.co.uk/gp/product/B08GC5KT4T
@@ -22,23 +21,19 @@ class SoilMoistureSensor
 {
   public:
 
-	SoilMoistureSensor()
-	{
-	}
-
 	/**
-	 * @param data Program data to use
+	 * @param ctx program context
 	 * @param index Sensor's index within the program data
-	 * @param vinPin What Arduino pin we are using to power this sensor
-	 * @param dataPin What Arduino analog pin we are using to read the sensor
+	 * @param vinPin What io expander pin we are using to power this sensor
+	 * @param dataPin What multiplexer pin we are using to read the sensor
 	 */
-	SoilMoistureSensor(ProgramData& data, uint8_t index, uint8_t vinPin, uint8_t dataPin);
+	SoilMoistureSensor(Context& ctx, uint8_t index, IOExpanderPin vinPin, MultiplexerPin dataPin);
 
 	// Disable copying
 	SoilMoistureSensor(const SoilMoistureSensor&) = delete;
 	const SoilMoistureSensor& operator=(const SoilMoistureSensor&) = delete;
 
-	void setup(ProgramData& data, uint8_t index, uint8_t vinPin, uint8_t dataPin);
+	void setup();
 	float tick(float deltaSeconds);
 
   private:
@@ -49,10 +44,10 @@ class SoilMoistureSensor
 		Reading
 	};
 
-	ProgramData* m_data = nullptr;
+	Context& m_ctx;
 	uint8_t m_index;
-	uint8_t m_vinPin;
-	uint8_t m_dataPin;
+	IOExpanderPin m_vinPin;
+	MultiplexerPin m_dataPin;
 	State m_state = State::Off;
 	float m_timeInState = 0;
 };

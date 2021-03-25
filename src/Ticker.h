@@ -55,8 +55,8 @@ class TTicker : public TTickingMethod
 		TTickingMethod::reset();
 	}
 
-	template <class... TConstructorArgs>
-	explicit TTicker(bool tickEnabled, TConstructorArgs... Args) : m_obj(Args...), m_tickEnabled(tickEnabled)
+	template <class... Args>
+	TTicker(bool tickEnabled, Args&&... args) : m_obj(std::forward<Args>(args)...), m_tickEnabled(tickEnabled)
 	{
 		TTickingMethod::reset();
 	}

@@ -1,9 +1,15 @@
 #pragma once
+
 #include <string.h>
 #include <Arduino.h>
 
-#define LOG_ENABLED 0
-#define ASSERT_ENABLED 1
+#ifdef _DEBUG
+	#define LOG_ENABLED 1
+	#define ASSERT_ENABLED 1
+#else
+	#define LOG_ENABLED 0
+	#define ASSERT_ENABLED 0
+#endif
 
 // Removes path from __FILE__
 // Copied from https://stackoverflow.com/questions/8487986/file-macro-shows-full-path
@@ -32,3 +38,4 @@ void strCatPrintf(char* dest, const char* fmt, ...);
 #endif
 
 #define CZ_UNEXPECTED() CZ_ASSERT("Unexpected" && 0)
+
