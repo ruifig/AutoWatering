@@ -34,6 +34,13 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 }
 
 /**
+ * What i2c address to use for the io expander (0x21..0x27)
+ * Note: Don't use address 0x20, because it's used by LCD shield display
+ * Note. Internally, 0x20
+ */
+#define IO_EXPANDER_ADDR 0x21
+
+/**
  * What arduino pin we are using as the IO expander's CS pin
  */
 #define ARDUINO_IO_EXPANDER_CS_PIN cz::ArduinoPin(53)
@@ -57,6 +64,20 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 #define IO_EXPANDER_VPIN_SENSOR_2 cz::IOExpanderPin(6)
 #define IO_EXPANDER_VPIN_SENSOR_3 cz::IOExpanderPin(7)
 
+#define IO_EXPANDER_VPIN_SENSOR_0 cz::IOExpanderPin(4)
+#define IO_EXPANDER_VPIN_SENSOR_1 cz::IOExpanderPin(5)
+#define IO_EXPANDER_VPIN_SENSOR_2 cz::IOExpanderPin(6)
+#define IO_EXPANDER_VPIN_SENSOR_3 cz::IOExpanderPin(7)
+
+#define IO_EXPANDER_MOTOR_0_INPUT1 cz::IOExpanderPin(8)
+#define IO_EXPANDER_MOTOR_0_INPUT2 cz::IOExpanderPin(9)
+#define IO_EXPANDER_MOTOR_1_INPUT1 cz::IOExpanderPin(10)
+#define IO_EXPANDER_MOTOR_1_INPUT2 cz::IOExpanderPin(11)
+#define IO_EXPANDER_MOTOR_2_INPUT1 cz::IOExpanderPin(12)
+#define IO_EXPANDER_MOTOR_2_INPUT2 cz::IOExpanderPin(13)
+#define IO_EXPANDER_MOTOR_3_INPUT1 cz::IOExpanderPin(14)
+#define IO_EXPANDER_MOTOR_3_INPUT2 cz::IOExpanderPin(15)
+
 #define MULTIPLEXER_MOISTURE_SENSOR_0 cz::MultiplexerPin(0)
 #define MULTIPLEXER_MOISTURE_SENSOR_1 cz::MultiplexerPin(1)
 #define MULTIPLEXER_MOISTURE_SENSOR_2 cz::MultiplexerPin(2)
@@ -65,32 +86,41 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 /**
  * How many sensors to support
  */
-#define NUM_SENSORS 4
+#define NUM_MOISTURESENSORS 4
+
+/**
+ * When we want to take a moisture reading, we enable power to the the sensor and need to wait a bit before doing the
+ * actual reading.
+ * This specifies how many seconds to wait before doing the reading
+ */
+//#define MOISTURESENSOR_POWERUP_WAIT 0.2f
+//#define MOISTURESENSOR_POWERUP_WAIT 0.25f
+#define MOISTURESENSOR_POWERUP_WAIT 0.25f
 
 /**
  * Default sensor sampling interval in seconds
  */
-#define DEFAULT_SENSOR_SAMPLING_INTERVAL 5
+//#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 5.0f
+#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 0.1f
 
 /**
  * Time in seconds for the LCD's backlight to be turned if no buttons are pressed
  */
 
-#define DEFAULT_LCD_BACKLIGHT_TIMEOUT 10 
+#define DEFAULT_LCD_BACKLIGHT_TIMEOUT 10.0f
 
 /**
  * Time in seconds for the LCD to turn off if no buttons are pressed
  */
-#define DEFAULT_LCD_IDLE_TIMEOUT 20
+#define DEFAULT_LCD_IDLE_TIMEOUT 20.0f
 
 /**
  * Time in seconds for the progam to revert to normal operating mode if no buttons are press
  * This is so that if for example the user leaves the system in the menu, after a while it will revert to running normally
  */
-#define DEFAULT_REVERT_TO_NORMAL_TIMEOUT 60
-
+#define DEFAULT_REVERT_TO_NORMAL_TIMEOUT 60.0f
 
 /**
  * How long to show the intro for when powering up
  */
-#define INTRO_DURATION 5
+#define INTRO_DURATION 5.0f

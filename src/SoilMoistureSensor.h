@@ -33,23 +33,33 @@ class SoilMoistureSensor
 	SoilMoistureSensor(const SoilMoistureSensor&) = delete;
 	const SoilMoistureSensor& operator=(const SoilMoistureSensor&) = delete;
 
-	void setup();
+	void begin();
 	float tick(float deltaSeconds);
 
   private:
 	enum class State : uint8_t
 	{
-		Off,
-		PoweringUp,
+		Initializing,
+		PoweredDown,
 		Reading
 	};
 
+#if LOG_ENABLED
+	static const char* ms_stateNames[3];
+#endif
+
 	Context& m_ctx;
+	float m_timeInState = 0;
+	float m_nextTickWait = 0;
+	State m_state = State::Initializing;
 	uint8_t m_index;
 	IOExpanderPin m_vinPin;
 	MultiplexerPin m_dataPin;
-	State m_state = State::Off;
-	float m_timeInState = 0;
+
+	void changeToState(State newState);
+	void onLeaveState();
+	void onEnterState();
+	bool tryEnterReadingState();
 };
 
 }  // namespace cz

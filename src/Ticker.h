@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 namespace cz
 {
 namespace TickerPolicy
@@ -85,8 +87,14 @@ class TTicker : public TTickingMethod
 	}
 
 	ObjectType& getObj() { return m_obj; }
-
 	const ObjectType& getObj() const { return m_obj; }
+	
+	// Not allowing these operators, because it would be too easy to mess it up by calling
+	// the object's tick function directly, since both TTicker and ObjectType has a tick function
+#if 0
+	ObjectType* operator->() { return &m_obj; }
+	const ObjectType* operator->() const { return &m_obj; }
+#endif
 
 	void start(TimeType countdown)
 	{

@@ -9,13 +9,13 @@ namespace cz
 class Display
 {
   public:
-	Display() {}
+	Display(Context& ctx);
 
 	// Disable copying
 	Display(const Display&) = delete;
 	Display& operator=(const Display&) = delete;
 
-	void setup(Context& ctx, Adafruit_RGBLCDShield& lcd);
+	void begin();
 	float tick(float deltaSeconds);
 
   private:
@@ -27,8 +27,12 @@ class Display
         Overview
     };
 
-	Context* m_ctx = nullptr;
-	Adafruit_RGBLCDShield* m_lcd = nullptr;
+#if LOG_ENABLED
+	static const char* ms_stateNames[3];
+#endif
+
+	Context& m_ctx;
+	Adafruit_RGBLCDShield m_lcd;
 	float m_timeInState = 0;
 	float m_lastButtonPress = 0;
 	State m_state = State::Initializing;

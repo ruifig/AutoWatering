@@ -1,7 +1,10 @@
 #include "Utils.h"
 #include <Arduino.h>
 
-char tempString[256];
+namespace
+{
+	char tempString[256];
+}
 
 void logPrintf(const char* fmt, ...)
 {

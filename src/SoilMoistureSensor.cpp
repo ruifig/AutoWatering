@@ -5,6 +5,15 @@
 namespace cz
 {
 
+#if LOG_ENABLED
+const char* SoilMoistureSensor::ms_stateNames[3] =
+{
+	"Initializing",
+	"PoweredDown",
+	"Reading"
+};
+#endif
+
 SoilMoistureSensor::SoilMoistureSensor(Context& ctx, uint8_t index, IOExpanderPin vinPin, MultiplexerPin dataPin)
 	: m_ctx(ctx)
 	, m_index(index)
@@ -13,32 +22,136 @@ SoilMoistureSensor::SoilMoistureSensor(Context& ctx, uint8_t index, IOExpanderPi
 {
 }
 
-void SoilMoistureSensor::setup()
+void SoilMoistureSensor::begin()
 {
-	m_ctx.ioExpander.pinMode(m_vinPin, OUTPUT);
-	// Switch the sensor off
-	m_ctx.ioExpander.digitalWrite(m_vinPin, LOW);
+	onEnterState();
+}
+
+bool SoilMoistureSensor::tryEnterReadingState()
+{
+	// From Initializing, we jump straight to a first reading
+	if (m_ctx.data.tryAcquireMoistureSensorMutex())
+	{
+		changeToState(State::Reading);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 float SoilMoistureSensor::tick(float deltaSeconds)
 {
+	m_timeInState += deltaSeconds;
+	m_nextTickWait = 0.2f;
+
 	switch (m_state)
 	{
-	case State::Off:
+	case State::Initializing:
+		// From Initializing, we jump straight to a first reading
+		tryEnterReadingState();
 		break;
 
-	case State::PoweringUp:
+	case State::PoweredDown:
+		if (m_timeInState >= m_ctx.data.getMoistureSensor(m_index).samplingIntervalSeconds)
+		{
+			tryEnterReadingState();
+		}
 		break;
 
 	case State::Reading:
-		// TODO : Fill me
+
+		if (m_timeInState >= MOISTURESENSOR_POWERUP_WAIT)
+		{
+			const ProgramData::MoistureSensorData& currData = m_ctx.data.getMoistureSensor(m_index);
+			int airValue = currData.airValue;
+			int waterValue = currData.waterValue;
+
+			int currentValue = m_ctx.mux.read(m_dataPin);
+
+			if (currentValue > airValue)
+			{
+				airValue = currentValue;
+			}
+			else if (currentValue < waterValue)
+			{
+				waterValue = currentValue;
+			}
+
+			m_ctx.data.setMoistureSensorValues(m_index, currentValue, airValue, waterValue);
+			changeToState(State::PoweredDown);
+		}
 		break;
 
 	default:
 		CZ_UNEXPECTED();
 	}
 
-	return m_ctx.data.getSoilMoistureSensor(m_index).samplingIntervalSeconds;
+	return m_nextTickWait;
+}
+
+void SoilMoistureSensor::changeToState(State newState)
+{
+	#if 0
+	CZ_LOG_LN("SoilMoistureSensor(%d)::%s: %dms %s->%s"
+		, (int)m_index
+		, __FUNCTION__
+		, (int)(m_timeInState * 1000.f)
+		, ms_stateNames[(int)m_state]
+		, ms_stateNames[(int)newState]);
+		#endif
+
+	onLeaveState();
+	m_state = newState;
+	m_timeInState = 0.0f;
+	onEnterState();
+}
+
+void SoilMoistureSensor::onLeaveState()
+{
+	switch (m_state)
+	{
+	case State::Initializing:
+		break;
+
+	case State::PoweredDown:
+		break;
+
+	case State::Reading:
+		//  Turn power off
+		m_ctx.ioExpander.digitalWrite(m_vinPin, LOW);
+		// release the mutex so other sensors can read
+		m_ctx.data.releaseMoistureSensorMutex();
+		break;
+
+	default:
+		CZ_UNEXPECTED();
+	}
+}
+
+void SoilMoistureSensor::onEnterState()
+{
+	switch (m_state)
+	{
+	case State::Initializing:
+		m_ctx.ioExpander.pinMode(m_vinPin, OUTPUT);
+		// Switch the sensor off
+		m_ctx.ioExpander.digitalWrite(m_vinPin, LOW);
+		break;
+
+	case State::PoweredDown:
+		break;
+
+	case State::Reading:
+		//  To take a measurement, we turn the sensor ON, wait a bit, the switch it off
+		m_ctx.ioExpander.digitalWrite(m_vinPin, HIGH);
+		m_nextTickWait = MOISTURESENSOR_POWERUP_WAIT;
+		break;
+
+	default:
+		CZ_UNEXPECTED();
+	}
 }
 
 #if 0

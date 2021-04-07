@@ -27,8 +27,17 @@ const uint8_t muxChannel[16][4]={
 
 }
 
-void Mux16Channels::setup()
+Mux16Channels::Mux16Channels(MCP23017Wrapper& ioExpander, IOExpanderPin s0, IOExpanderPin s1, IOExpanderPin s2, IOExpanderPin s3, ArduinoPin zPin)
+    : m_ioExpander(ioExpander)
+    , m_sPins({s0, s1, s2, s3})
+    , m_zPin(zPin)
 {
+}
+
+void Mux16Channels::begin()
+{
+	pinMode(m_zPin.raw, INPUT);
+
   for(auto&& pin : m_sPins)
   {
     m_ioExpander.pinMode(pin, OUTPUT);
