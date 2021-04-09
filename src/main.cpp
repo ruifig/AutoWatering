@@ -1,5 +1,9 @@
 #include <Arduino.h>
 
+#ifdef AVR8_BREAKPOINT_MODE
+#include "avr8-stub.h"
+#endif
+
 #include "Config.h"
 #include "Context.h"
 #include "SoilMoistureSensor.h"
@@ -68,7 +72,13 @@ void setAllMotorPins(int val1, int val2)
 
 void setup()
 {
+#ifdef AVR8_BREAKPOINT_MODE
+	debug_init();
+	breakpoint();
+#else
+	// If using avr-stub, we can't use Serial
 	Serial.begin(115200);
+#endif
 
 	gCtx.begin();
 	gDisplay.getObj().begin();
@@ -126,12 +136,19 @@ AT24C32 mem(0, Wire);
 
 void setup()
 {
-	Wire.begin();
+#ifdef AVR8_BREAKPOINT_MODE
+	debug_init();
+#else
+	// If using avr-stub, we can't use Serial
 	Serial.begin(115200);
+#endif
+
+	Wire.begin();
+
 	bool b0 = mem.isPresent();
 	CZ_LOG_LN("ATC24_0 : %s", b0 ? "true" : "false");
 
-	//cz::runTests(mem);
+	cz::runTests(mem);
 
 #if 0
 	int t1 = micros();

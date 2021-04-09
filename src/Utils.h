@@ -15,21 +15,26 @@
 // Copied from https://stackoverflow.com/questions/8487986/file-macro-shows-full-path
 #define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
 
-void logPrintf(const char* fmt, ...);
+
+namespace cz
+{
+	void logPrintf(const char* fmt, ...);
+	void logPrintln();
+	void strCatPrintf(char* dest, const char* fmt, ...);
+}
 
 #if LOG_ENABLED
-	#define CZ_LOG(fmt, ...) logPrintf(fmt, ##__VA_ARGS__);
+	#define CZ_LOG(fmt, ...) cz::logPrintf(fmt, ##__VA_ARGS__);
 	#define CZ_LOG_LN(fmt, ...) \
 		{ \
-			logPrintf(fmt, ##__VA_ARGS__); \
-			Serial.println(); \
+			cz::logPrintf(fmt, ##__VA_ARGS__); \
+			cz::logPrintln(); \
 		}
 #else
 	#define CZ_LOG(fmt, ...) ((void)0)
 	#define CZ_LOG_LN(fmt, ...) ((void)0)
 #endif
 
-void strCatPrintf(char* dest, const char* fmt, ...);
 
 #if ASSERT_ENABLED
 	#define CZ_ASSERT(expression) if (!(expression)) { CZ_LOG("ASSERT: %s:%d", __FILENAME__, __LINE__); delay(1000); abort(); }

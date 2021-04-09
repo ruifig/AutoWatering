@@ -11,42 +11,34 @@
 	#define ASSERT_ENABLED 0
 #endif
 
-// Removes path from __FILE__
-// Copied from https://stackoverflow.com/questions/8487986/file-macro-shows-full-path
-#define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
+namespace cz
+{
+
+    /**
+     * These functions must be defined externally.
+     * 
+     **/
+    void logPrintf(const char* fmt, ...);
+    void logPrintln();
+}
 
 #if LOG_ENABLED
 
-    namespace
-    {
-        char tempString[128];
-
-        void logPrintf(const char* fmt, ...)
-        {
-            va_list args;
-            va_start(args, fmt);
-            vsnprintf(tempString, 256, fmt, args);
-            Serial.print(tempString);
-            va_end(args);
-        }
-
-        #define CZ_LOG_LN(fmt, ...) \
-            { \
-                logPrintf(fmt, ##__VA_ARGS__); \
-                Serial.println(); \
-            }
+#define CZ_LOG(fmt, ...) cz::logPrintf(fmt, ##__VA_ARGS__);
+#define CZ_LOG_LN(fmt, ...) \
+    { \
+        cz::logPrintf(fmt, ##__VA_ARGS__); \
+        cz::logPrintln(); \
     }
-
-	#define CZ_LOG(fmt, ...) logPrintf(fmt, ##__VA_ARGS__);
-	#define CZ_LOG_LN(fmt, ...) \
-		{ \
-			logPrintf(fmt, ##__VA_ARGS__); \
-			Serial.println(); \
-		}
+    
 #else
 	#define CZ_LOG(fmt, ...) ((void)0)
 	#define CZ_LOG_LN(fmt, ...) ((void)0)
 #endif
+
+// Removes path from __FILE__
+// Copied from https://stackoverflow.com/questions/8487986/file-macro-shows-full-path
+#define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
 
 #if ASSERT_ENABLED
 	#define CZ_ASSERT(expression) if (!(expression)) { CZ_LOG("ASSERT: %s:%d", __FILENAME__, __LINE__); delay(1000); abort(); }
@@ -387,7 +379,7 @@ AT24C32::AT24C32(uint8_t address, TwoWire& wire)
                     CZ_LOG_LN("    Address %u - Expected %s, got %s", (unsigned int)addr, buf, readBuf);
                     return false;
                 }
-                Serial.println(readBuf);
+                logPrintf(readBuf); logPrintln();
             }
             unsigned long t2 = micros();
             CZ_LOG_LN("    Time to read all: %ld microseconds (%ld milliseconds)", t2 - t1, (t2 - t1) / 1000);
