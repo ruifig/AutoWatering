@@ -32,11 +32,7 @@ public:
     bool tryAcquireMoistureSensorMutex();
     void releaseMoistureSensorMutex();
 
-#if LOG_ENABLED
 	void logMoistureSensors();
-#else
-	void logMoistureSensors() {}
-#endif
 
   private:
     MoistureSensorData m_moistureSensorData[NUM_MOISTURESENSORS];

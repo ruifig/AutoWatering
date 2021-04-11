@@ -4,5 +4,9 @@
 .vscode/launch.json
 .vscode/ipch
 
-lib/ArduinoSTL
+.vs
+/Debug/
+/Release/
+/atmelstudio_lib/ArduinoCore/Debug/
+/atmelstudio_lib/ArduinoCore/Release/
 
