@@ -9,4 +9,5 @@
 /Release/
 /atmelstudio_lib/ArduinoCore/Debug/
 /atmelstudio_lib/ArduinoCore/Release/
+*.componentinfo.xml
 
