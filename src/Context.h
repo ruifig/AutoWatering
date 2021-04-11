@@ -3,6 +3,7 @@
 #include "Config.h"
 #include "MCP23017Wrapper.h"
 #include "Mux16Channels.h"
+#include "Utils.h"
 
 namespace cz
 {

@@ -7,7 +7,7 @@ namespace cz
 
 void Context::begin()
 {
-	static_assert(IO_EXPANDER_ADDR>=0x21 && IO_EXPANDER_ADDR<=0x27);
+	static_assert(IO_EXPANDER_ADDR>=0x21 && IO_EXPANDER_ADDR<=0x27, "Wrong macro value");
 	ioExpander.begin(IO_EXPANDER_ADDR);
 	mux.begin();
 }
