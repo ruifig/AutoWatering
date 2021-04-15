@@ -6,14 +6,14 @@
 namespace cz
 {
 
-class Display
+class DisplayLCD
 {
   public:
-	Display(Context& ctx);
+	DisplayLCD(Context& ctx);
 
 	// Disable copying
-	Display(const Display&) = delete;
-	Display& operator=(const Display&) = delete;
+	DisplayLCD(const DisplayLCD&) = delete;
+	DisplayLCD& operator=(const DisplayLCD&) = delete;
 
 	void begin();
 	float tick(float deltaSeconds);

@@ -1,11 +1,11 @@
-#include "Display.h"
+#include "DisplayLCD.h"
 #include "Utils.h"
 
 namespace cz
 {
 
 #if LOG_ENABLED
-const char* Display::ms_stateNames[3] =
+const char* DisplayLCD::ms_stateNames[3] =
 {
 	"Initializing",
 	"Intro",
@@ -14,17 +14,17 @@ const char* Display::ms_stateNames[3] =
 #endif
 
 
-Display::Display(Context& ctx)
+DisplayLCD::DisplayLCD(Context& ctx)
     : m_ctx(ctx)
 {
 }
 
-void Display::begin()
+void DisplayLCD::begin()
 {
     onEnterState();
 }
 
-float Display::tick(float deltaSeconds)
+float DisplayLCD::tick(float deltaSeconds)
 {
     m_timeInState += deltaSeconds;
     m_lastButtonPress += deltaSeconds;
@@ -36,7 +36,7 @@ float Display::tick(float deltaSeconds)
         setBacklight(true);
     }
 
-	//CZ_LOG_LN("Display::%s: state=%d, timeInState = %d", __FUNCTION__, (int)m_state, (int)m_timeInState);
+	//CZ_LOG_LN("DisplayLCD::%s: state=%d, timeInState = %d", __FUNCTION__, (int)m_state, (int)m_timeInState);
 
 	switch(m_state)
     {
@@ -68,7 +68,7 @@ float Display::tick(float deltaSeconds)
 	return 1.0f / 5.0f;
 }
 
-void Display::setBacklight(bool state)
+void DisplayLCD::setBacklight(bool state)
 {
 	if (state != m_backlightEnabled)
     {
@@ -77,9 +77,9 @@ void Display::setBacklight(bool state)
     }
 }
 
-void Display::changeToState(State newState)
+void DisplayLCD::changeToState(State newState)
 {
-    CZ_LOG_LN("Display::%s %dms %s->%s"
+    CZ_LOG_LN("DisplayLCD::%s %dms %s->%s"
         , __FUNCTION__
 		, (int)(m_timeInState * 1000.f)
         , ms_stateNames[(int)m_state]
@@ -92,7 +92,7 @@ void Display::changeToState(State newState)
     onEnterState();
 }
 
-void Display::onLeaveState()
+void DisplayLCD::onLeaveState()
 {
 	switch (m_state)
 	{
@@ -108,7 +108,7 @@ void Display::onLeaveState()
 	}
 }
 
-void Display::onEnterState()
+void DisplayLCD::onEnterState()
 {
 	switch (m_state)
 	{

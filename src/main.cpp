@@ -7,7 +7,7 @@
 #include "Config.h"
 #include "Context.h"
 #include "SoilMoistureSensor.h"
-#include "Display.h"
+#include "DisplayTFT.h"
 #include "Ticker.h"
 #include "Utils.h"
 #include <algorithm>
@@ -33,7 +33,7 @@ SoilMoistureSensorTicker gSoilMoistureSensors[NUM_MOISTURESENSORS] =
 	#endif
 };
 
-TTicker<Display, float> gDisplay(true, gCtx);
+TTicker<DisplayTFT, float> gDisplay(true, gCtx);
 
 float gPreviousTime = 0;
 

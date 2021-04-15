@@ -123,4 +123,4 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 /**
  * How long to show the intro for when powering up
  */
-#define INTRO_DURATION 5.0f
+#define INTRO_DURATION 500.0f
