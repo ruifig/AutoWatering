@@ -226,6 +226,8 @@ public:
   /************************************************************************/
   int16_t getCursorY(void) const { return cursor_y; };
 
+  GFXfont* getGfxFont(void) { return gfxFont; }
+
 protected:
   void charBounds(unsigned char c, int16_t *x, int16_t *y, int16_t *minx,
                   int16_t *miny, int16_t *maxx, int16_t *maxy);
@@ -291,7 +293,7 @@ public:
   /**********************************************************************/
   bool isPressed(void) { return currstate; };
 
-private:
+protected:
   Adafruit_GFX *_gfx;
   int16_t _x1, _y1; // Coordinates of top-left corner
   uint16_t _w, _h;

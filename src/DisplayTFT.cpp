@@ -3,6 +3,9 @@
 #include <FreeDefaultFonts.h>
 #include <Fonts/FreeSans9pt7b.h>
 #include <Fonts/FreeSans12pt7b.h>
+#include <Fonts/Org_01.h>
+
+
 
 #define YP A3  // must be an analog pin, use "An" notation!
 #define XM A2  // must be an analog pin, use "An" notation!
@@ -15,15 +18,28 @@
 #define TS_MAXY 892
 
 // Assign human-readable names to some common 16-bit color values:
-#define	BLACK   0x0000
-#define	BLUE    0x001F
-#define	RED     0xF800
-#define	GREEN   0x07E0
-#define CYAN    0x07FF
-#define MAGENTA 0xF81F
-#define YELLOW  0xFFE0
-#define WHITE   0xFFFF
+#define BLACK       0x0000
+#define BLUE        0x001F
+#define CYAN        0x07FF
+#define DARKGREEN   0x03E0
+#define DARKCYAN    0x03EF
+#define DARKGREY    0x7BEF
+#define GREEN       0x07E0
+#define GREENYELLOW 0xB7E0
+#define LIGHTGREY   0xC618
+#define MAGENTA     0xF81F
+#define MAROON      0x7800
+#define NAVY        0x000F
+#define OLIVE       0x7BE0
+#define ORANGE      0xFDA0
+#define PINK        0xFC9F
+#define PURPLE      0x780F
+#define RED         0xF800
+#define WHITE       0xFFFF
+#define YELLOW      0xFFE0
 
+
+#define TINY_FONT &Org_01
 #define SMALL_FONT &FreeSmallFont
 #define MEDIUM_FONT &FreeSans9pt7b
 #define LARGE_FONT &FreeSans12pt7b
@@ -123,6 +139,47 @@ void DisplayTFT::onLeaveState()
 	}
 }
 
+
+void DisplayTFT::printAligned(const Box& area, HAlign halign, VAlign valign, const char* txt)
+{
+	Box bounds;
+	m_tft.getTextBounds(txt, 0,0, &bounds.x, &bounds.y, &bounds.width, &bounds.height);
+
+	int x = area.x;
+	int y = area.y;
+	
+	switch(halign)
+	{
+	case HAlign::Left:
+		x = area.x - bounds.x/2;
+		break;
+	case HAlign::Center:
+		x = (area.x + area.width/2) - (bounds.width/2) - (bounds.x/2);
+		break;
+	case HAlign::Right:
+		x = area.x + area.width - bounds.width - bounds.x;
+		break;
+	}
+
+	switch(valign)
+	{
+	case VAlign::Top:
+		y = area.y - bounds.y;
+		break;
+	case VAlign::Center:
+		y = (area.y + area.height/2) - (bounds.height/2) - bounds.y;
+		break;
+	case VAlign::Bottom:
+		y = area.y + area.height - (bounds.height + bounds.y);
+		break;
+	}
+
+	//m_tft.drawRect(area.x, area.y, area.width, area.height, BLUE);
+
+	m_tft.setCursor(x,y);
+	m_tft.print(txt);
+}
+
 void DisplayTFT::onEnterState()
 {
 	switch(m_state)
@@ -161,17 +218,14 @@ void DisplayTFT::onEnterState()
 		break;
 
 	case State::Intro:
-		m_tft.setTextColor(RED);
+		m_tft.setTextColor(GREEN);
 		m_tft.setCursor(0,20);
-
-		m_tft.setFont(SMALL_FONT);
-		m_tft.print("Small font! ");
-
-		m_tft.setFont(MEDIUM_FONT);
-		m_tft.print("Medium font! ");
-
+		
 		m_tft.setFont(LARGE_FONT);
-		m_tft.print("Large font! ");
+
+		printAligned({10, 10, m_tft.width()-20, m_tft.height()-20}, HAlign::Left, VAlign::Top, "AutoWatering");
+		printAligned({10, 10, m_tft.width()-20, m_tft.height()-20}, HAlign::Center, VAlign::Center, "By");
+		printAligned({10, 10, m_tft.width()-20, m_tft.height()-20}, HAlign::Right, VAlign::Bottom, "Rui Figueira");
 
 		break;
 
