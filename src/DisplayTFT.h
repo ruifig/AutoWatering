@@ -79,7 +79,7 @@ class DisplayTFT
 		Overview
 	};
 
-#if LOG_ENABLED
+#if CZ_LOG_ENABLED
 	static const char* ms_stateNames[3];
 #endif
 

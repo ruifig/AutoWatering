@@ -4,11 +4,11 @@
 */
 
 #ifdef _DEBUG
-	#define LOG_ENABLED 1
-	#define ASSERT_ENABLED 1
+	#define CZ_LOG_ENABLED 1
+	#define CZ_ASSERT_ENABLED 1
 #else
-	#define LOG_ENABLED 0
-	#define ASSERT_ENABLED 0
+	#define CZ_LOG_ENABLED 0
+	#define CZ_ASSERT_ENABLED 0
 #endif
 
 namespace cz
@@ -22,7 +22,7 @@ namespace cz
     void logPrintln();
 }
 
-#if LOG_ENABLED
+#if CZ_LOG_ENABLED
 
 #define CZ_LOG(fmt, ...) cz::logPrintf(fmt, ##__VA_ARGS__);
 #define CZ_LOG_LN(fmt, ...) \
@@ -40,7 +40,7 @@ namespace cz
 // Copied from https://stackoverflow.com/questions/8487986/file-macro-shows-full-path
 #define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
 
-#if ASSERT_ENABLED
+#if CZ_ASSERT_ENABLED
 	#define CZ_ASSERT(expression) if (!(expression)) { CZ_LOG("ASSERT: %s:%d", __FILENAME__, __LINE__); delay(1000); abort(); }
 #else
 	#define CZ_ASSERT(expression) ((void)0)

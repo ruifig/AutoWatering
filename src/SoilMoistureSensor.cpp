@@ -5,7 +5,7 @@
 namespace cz
 {
 
-#if LOG_ENABLED
+#if CZ_LOG_ENABLED
 const char* SoilMoistureSensor::ms_stateNames[3] =
 {
 	"Initializing",

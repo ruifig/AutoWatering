@@ -1,4 +1,5 @@
 #include "DisplayTFT.h"
+#include "Utils.h"
 
 #include <FreeDefaultFonts.h>
 #include <Fonts/FreeSans9pt7b.h>
@@ -47,7 +48,7 @@
 namespace cz
 {
 
-#if LOG_ENABLED
+#if CZ_LOG_ENABLED
 const char* DisplayTFT::ms_stateNames[3] =
 {
 	"Initializing",
@@ -76,7 +77,7 @@ float DisplayTFT::tick(float deltaSeconds)
 	m_timeInState += deltaSeconds;
 	m_timeSinceLastTouch += deltaSeconds;
 
-	CZ_LOG_LN("DisplayTFT::%s: state=%s, timeInState = %d", __FUNCTION__, ms_stateNames[(int)m_state], (int)m_timeInState);
+	CZ_LOGLN("DisplayTFT::%s: state=%s, timeInState = %d", __FUNCTION__, ms_stateNames[(int)m_state], (int)m_timeInState);
 
 	switch(m_state)
 	{
@@ -110,7 +111,7 @@ float DisplayTFT::tick(float deltaSeconds)
 
 void DisplayTFT::changeToState(State newState)
 {
-    CZ_LOG_LN("DisplayTFT::%s %dms %s->%s"
+    CZ_LOGLN("DisplayTFT::%s %dms %s->%s"
         , __FUNCTION__
 		, (int)(m_timeInState * 1000.f)
         , ms_stateNames[(int)m_state]
@@ -190,24 +191,24 @@ void DisplayTFT::onEnterState()
 			uint16_t identifier = m_tft.readID();
 			if(identifier == 0x9325)
 			{
-				Serial.println(F("Found ILI9325 LCD driver"));
-				} else if(identifier == 0x9328) {
-				Serial.println(F("Found ILI9328 LCD driver"));
-				} else if(identifier == 0x7575) {
-				Serial.println(F("Found HX8347G LCD driver"));
-				} else if(identifier == 0x9341) {
-				Serial.println(F("Found ILI9341 LCD driver"));
-				} else if(identifier == 0x8357) {
-				Serial.println(F("Found HX8357D LCD driver"));
-				} else {
-				Serial.print(F("Unknown LCD driver chip: "));
-				Serial.println(identifier, HEX);
-				Serial.println(F("If using the Adafruit 2.8\" TFT Arduino shield, the line:"));
-				Serial.println(F("  #define USE_ADAFRUIT_SHIELD_PINOUT"));
-				Serial.println(F("should appear in the library header (Adafruit_TFT.h)."));
-				Serial.println(F("If using the breakout board, it should NOT be #defined!"));
-				Serial.println(F("Also if using the breakout, double-check that all wiring"));
-				Serial.println(F("matches the tutorial."));
+				CZ_LOGLN(F("Found ILI9325 LCD driver"));
+			} else if(identifier == 0x9328) {
+				CZ_LOGLN(F("Found ILI9328 LCD driver"));
+			} else if(identifier == 0x7575) {
+				CZ_LOGLN(F("Found HX8347G LCD driver"));
+			} else if(identifier == 0x9341) {
+				CZ_LOGLN(F("Found ILI9341 LCD driver"));
+			} else if(identifier == 0x8357) {
+				CZ_LOGLN(F("Found HX8357D LCD driver"));
+			} else {
+				CZ_LOG(F("Unknown LCD driver chip: "));
+				CZ_LOGLN(identifier, HEX);
+				CZ_LOGLN(F("If using the Adafruit 2.8\" TFT Arduino shield, the line:"));
+				CZ_LOGLN(F("  #define USE_ADAFRUIT_SHIELD_PINOUT"));
+				CZ_LOGLN(F("should appear in the library header (Adafruit_TFT.h)."));
+				CZ_LOGLN(F("If using the breakout board, it should NOT be #defined!"));
+				CZ_LOGLN(F("Also if using the breakout, double-check that all wiring"));
+				CZ_LOGLN(F("matches the tutorial."));
 				return;
 			}
 

@@ -4,7 +4,7 @@
 namespace cz
 {
 
-#if LOG_ENABLED
+#if CZ_LOG_ENABLED
 const char* DisplayLCD::ms_stateNames[3] =
 {
 	"Initializing",
@@ -79,7 +79,7 @@ void DisplayLCD::setBacklight(bool state)
 
 void DisplayLCD::changeToState(State newState)
 {
-    CZ_LOG_LN("DisplayLCD::%s %dms %s->%s"
+    CZ_LOGLN("DisplayLCD::%s %dms %s->%s"
         , __FUNCTION__
 		, (int)(m_timeInState * 1000.f)
         , ms_stateNames[(int)m_state]

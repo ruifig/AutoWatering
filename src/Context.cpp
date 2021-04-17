@@ -53,7 +53,7 @@ void ProgramData::logMoistureSensors()
 		strCatPrintf(buf, "(%d:%3d->%3d, %3d=%3d%%)", (int)idx, (int)s.airValue, (int)s.waterValue, (int)s.currentValue, s.calcCurrentPercentage());
 	}
 
-	CZ_LOG_LN("%s", buf);
+	CZ_LOGLN("%s", buf);
 }
 
 bool ProgramData::tryAcquireMoistureSensorMutex()
