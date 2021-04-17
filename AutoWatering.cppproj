@@ -259,6 +259,9 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="lib\czMicroMuc" />
+    <Folder Include="lib\czMicroMuc\source" />
+    <Folder Include="lib\czMicroMuc\source\crazygaze\" />
+    <Folder Include="lib\czMicroMuc\source\crazygaze\micromuc" />
     <Folder Include="src\" />
     <Folder Include="lib\" />
     <Folder Include="lib\Adafruit BusIO" />
