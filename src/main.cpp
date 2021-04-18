@@ -10,6 +10,7 @@
 #include "DisplayTFT.h"
 #include "Ticker.h"
 #include "Utils.h"
+#include "crazygaze/micromuc/Logging.h"
 #include <algorithm>
 #include <utility>
 #include <SPI.h>
@@ -105,6 +106,8 @@ void setup()
 	//delay(3000);
 	//gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_2_INPUT1, LOW);
 	//gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_2_INPUT2, LOW);
+
+	//CZ_LOG(logDefault, Log, "alsdflkj asldkj laksdjfl kasjdfl akjsd flaksjd flkajsd fjljjjjasdlkj alksdj laksdjf laksdjf lkasdj flkjlsjdflkaj sdflkj lkj lkasjdf lkasdfj lkajsflkadsfj alskdjf lkajsdf lkajsd flkajs dflkj laksdj flaksjd flkajsd flkasdjf alksdjf lkasjd flksdjf");
 
 
 }
