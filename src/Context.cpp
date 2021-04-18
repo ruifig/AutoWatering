@@ -53,6 +53,14 @@ void ProgramData::logMoistureSensors()
 			strCatPrintf(buf, " ");
 		}
 		strCatPrintf(buf, "(%d:%3d->%3d, %3d=%3d%%)", (int)idx, (int)s.airValue, (int)s.waterValue, (int)s.currentValue, s.calcCurrentPercentage());
+		Serial.print(F(""));
+		Serial.print(F("asdlfjasl dfkja ldsfja lsdkjf alksdjf alksdjf laksdjf lakjsd fklajsd flkajsdf lkajsd flaksjdf akljsdfs "));
+		Serial.print(F("1sdlfjasl dfkja ldsfja lsdkjf alksdjf alksdjf laksdjf lakjsd fklajsd flkajsdf lkajsd flaksjdf akljsdfs "));
+		Serial.print(F("2sdlfjasl dfkja ldsfja lsdkjf alksdjf alksdjf laksdjf lakjsd fklajsd flkajsdf lkajsd flaksjdf akljsdfs "));
+		Serial.print(F("3sdlfjasl dfkja ldsfja lsdkjf alksdjf alksdjf laksdjf lakjsd fklajsd flkajsdf lkajsd flaksjdf akljsdfs "));
+		Serial.print(F("4sdlfjasl dfkja ldsfja lsdkjf alksdjf alksdjf laksdjf lakjsd fklajsd flkajsdf lkajsd flaksjdf akljsdfs "));
+		Serial.print(F("5sdlfjasl dfkja ldsfja lsdkjf alksdjf alksdjf laksdjf lakjsd fklajsd flkajsdf lkajsd flaksjdf akljsdfs "));
+		Serial.print(F("6sdlfjasl dfkja ldsfja lsdkjf alksdjf alksdjf laksdjf lakjsd fklajsd flkajsdf lkajsd flaksjdf akljsdfs "));
 	}
 
 	CZ_LOG(logDefault, Log, "%s", buf);

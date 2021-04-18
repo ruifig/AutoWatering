@@ -4,7 +4,7 @@
 	#define CZ_DEBUG 1
 #else
 	
-	#if !defined(NDEDUG)
+	#if !defined(NDEBUG)
 		#error No _DEBUG/DEBUG or NDEBUG defined
 	#endif
 

@@ -18,7 +18,7 @@
 #include <utility>
 #include <string.h>
 #include <stdlib.h>
-#include <new>
+#include <new.h>
 
 namespace cz
 {
