@@ -1,5 +1,7 @@
 #include "Context.h"
 #include "Utils.h"
+#include "crazygaze/micromuc/Logging.h"
+#include "crazygaze/micromuc/StringUtils.h"
 #include <Arduino.h>
 
 namespace cz
@@ -34,7 +36,7 @@ void ProgramData::setMoistureSensorValues(uint8_t index, int currentValue, int a
 #if 0
 	if (index==3)
 	{
-		CZ_LOG_LN("Sensor %d: (%3d->%3d) (%3d=%3d%%)", (int)index, (int)s.airValue, (int)s.waterValue, (int)s.currentValue, s.calcCurrentPercentage());
+		CZ_LOG(logDefault, Log, "Sensor %d: (%3d->%3d) (%3d=%3d%%)", (int)index, (int)s.airValue, (int)s.waterValue, (int)s.currentValue, s.calcCurrentPercentage());
 	}
 #endif
 }
@@ -53,7 +55,7 @@ void ProgramData::logMoistureSensors()
 		strCatPrintf(buf, "(%d:%3d->%3d, %3d=%3d%%)", (int)idx, (int)s.airValue, (int)s.waterValue, (int)s.currentValue, s.calcCurrentPercentage());
 	}
 
-	CZ_LOGLN("%s", buf);
+	CZ_LOG(logDefault, Log, "%s", buf);
 }
 
 bool ProgramData::tryAcquireMoistureSensorMutex()

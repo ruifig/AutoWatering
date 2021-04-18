@@ -1,6 +1,7 @@
 #pragma once
 
-#include "czMicroMuc.h"
+#include "crazygaze/micromuc/czmicromuc.h"
+#include <stdarg.h>
 
 namespace cz
 {

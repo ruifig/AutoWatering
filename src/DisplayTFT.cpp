@@ -1,5 +1,6 @@
 #include "DisplayTFT.h"
 #include "Utils.h"
+#include "crazygaze/micromuc/Logging.h"
 
 #include <FreeDefaultFonts.h>
 #include <Fonts/FreeSans9pt7b.h>
@@ -77,7 +78,7 @@ float DisplayTFT::tick(float deltaSeconds)
 	m_timeInState += deltaSeconds;
 	m_timeSinceLastTouch += deltaSeconds;
 
-	CZ_LOGLN("DisplayTFT::%s: state=%s, timeInState = %d", __FUNCTION__, ms_stateNames[(int)m_state], (int)m_timeInState);
+	CZ_LOG(logDefault, Log, "DisplayTFT::%s: state=%s, timeInState = %d", __FUNCTION__, ms_stateNames[(int)m_state], (int)m_timeInState);
 
 	switch(m_state)
 	{
@@ -111,7 +112,7 @@ float DisplayTFT::tick(float deltaSeconds)
 
 void DisplayTFT::changeToState(State newState)
 {
-    CZ_LOGLN("DisplayTFT::%s %dms %s->%s"
+    CZ_LOG(logDefault, Log, "DisplayTFT::%s %dms %s->%s"
         , __FUNCTION__
 		, (int)(m_timeInState * 1000.f)
         , ms_stateNames[(int)m_state]
@@ -191,24 +192,23 @@ void DisplayTFT::onEnterState()
 			uint16_t identifier = m_tft.readID();
 			if(identifier == 0x9325)
 			{
-				CZ_LOGLN(F("Found ILI9325 LCD driver"));
+				CZ_LOG(logDefault, Log, "Found ILI9325 LCD driver");
 			} else if(identifier == 0x9328) {
-				CZ_LOGLN(F("Found ILI9328 LCD driver"));
+				CZ_LOG(logDefault, Log, "Found ILI9328 LCD driver");
 			} else if(identifier == 0x7575) {
-				CZ_LOGLN(F("Found HX8347G LCD driver"));
+				CZ_LOG(logDefault, Log, "Found HX8347G LCD driver");
 			} else if(identifier == 0x9341) {
-				CZ_LOGLN(F("Found ILI9341 LCD driver"));
+				CZ_LOG(logDefault, Log, "Found ILI9341 LCD driver");
 			} else if(identifier == 0x8357) {
-				CZ_LOGLN(F("Found HX8357D LCD driver"));
+				CZ_LOG(logDefault, Log, "Found HX8357D LCD driver");
 			} else {
-				CZ_LOG(F("Unknown LCD driver chip: "));
-				CZ_LOGLN(identifier, HEX);
-				CZ_LOGLN(F("If using the Adafruit 2.8\" TFT Arduino shield, the line:"));
-				CZ_LOGLN(F("  #define USE_ADAFRUIT_SHIELD_PINOUT"));
-				CZ_LOGLN(F("should appear in the library header (Adafruit_TFT.h)."));
-				CZ_LOGLN(F("If using the breakout board, it should NOT be #defined!"));
-				CZ_LOGLN(F("Also if using the breakout, double-check that all wiring"));
-				CZ_LOGLN(F("matches the tutorial."));
+				CZ_LOG(logDefault, Log, "Unknown LCD driver chip: 0x%x", identifier);
+				CZ_LOG(logDefault, Log, "If using the Adafruit 2.8\" TFT Arduino shield, the line:");
+				CZ_LOG(logDefault, Log, "  #define USE_ADAFRUIT_SHIELD_PINOUT");
+				CZ_LOG(logDefault, Log, "should appear in the library header (Adafruit_TFT.h).");
+				CZ_LOG(logDefault, Log, "If using the breakout board, it should NOT be #defined!");
+				CZ_LOG(logDefault, Log, "Also if using the breakout, double-check that all wiring");
+				CZ_LOG(logDefault, Log, "matches the tutorial.");
 				return;
 			}
 

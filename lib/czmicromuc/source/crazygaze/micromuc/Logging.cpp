@@ -7,9 +7,12 @@
 	
 *********************************************************************/
 
-#include "czMicroMuc.h"
 #include "Logging.h"
+#include <Arduino.h>
 #include <string.h>
+#include <stdarg.h>
+#include <algorithm>
+#include "StringUtils.h"
 
 #define LOG_TIME 1
 #define LOG_CATEGORY 1
@@ -24,9 +27,12 @@ namespace cz
 LogCategoryLogNone logNone;
 #endif
 
-LogCategoryBase::LogCategoryBase(const char* name, LogVerbosity verbosity, LogVerbosity compileTimeVerbosity) : m_name(name)
-, m_verbosity(verbosity)
-, m_compileTimeVerbosity(compileTimeVerbosity)
+LogCategoryBase* LogCategoryBase::ms_first = nullptr;
+
+LogCategoryBase::LogCategoryBase(const char* name, cz::LogVerbosity verbosity, cz::LogVerbosity compileTimeVerbosity)
+	: m_name(name)
+	, m_verbosity(verbosity)
+	, m_compileTimeVerbosity(compileTimeVerbosity)
 {
 	if (ms_first==nullptr)
 	{
@@ -44,9 +50,9 @@ LogCategoryBase::LogCategoryBase(const char* name, LogVerbosity verbosity, LogVe
 	}
 }
 
-const char* logVerbosityToString(LogVerbosity v);
+const char* logVerbosityToString(LogVerbosity v)
 {
-	static strs[6] =
+	static char* strs[6] =
 	{
 		"NNN",
 		"FTL",
@@ -56,7 +62,7 @@ const char* logVerbosityToString(LogVerbosity v);
 		"VER"
 	};
 
-	return strs[v];
+	return strs[(int)v];
 }
 
 void LogCategoryBase::setVerbosity(LogVerbosity verbosity)
@@ -106,7 +112,7 @@ LogOutput::~LogOutput()
 {
 	auto data = getSharedData();
 	auto lk = std::unique_lock<std::mutex>(data->mtx);
-	data->outputs.erase(std::find(data->outputs.begin(), data->outputs.end(), this));
+	data->outputs.removeIfExists(this);
 }
 
 void LogOutput::logToAll(const LogCategoryBase* category, LogVerbosity verbosity, const char* fmt, ...)
@@ -159,7 +165,7 @@ void LogOutput::logToAll(const LogCategoryBase* category, LogVerbosity verbosity
 
 	// Log prefix
 	{
-		const char* str = formatStringVA("%s%s%s%s", timeStr, categoryNameStr, verbosityStr);
+		const char* str = formatString("%s%s%s%s", timeStr, categoryNameStr, verbosityStr);
 		logToAllSimple(verbosity, str);
 	}
 
@@ -174,7 +180,7 @@ void LogOutput::logToAll(const LogCategoryBase* category, LogVerbosity verbosity
 
 }
 
-void LogOutput::logToAllSimple(LogVerbosity verbosity, const char* str);
+void LogOutput::logToAllSimple(LogVerbosity verbosity, const char* str)
 {
 	auto data = getSharedData();
 	auto lk = std::unique_lock<std::mutex>(data->mtx);

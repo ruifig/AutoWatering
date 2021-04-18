@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "crazygaze/micromuc/czmicromuc.h"
 
 namespace cz
 {

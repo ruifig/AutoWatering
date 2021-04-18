@@ -130,6 +130,7 @@
             <Value>%24(ProjectDir)\lib\MCUFRIEND_kbv</Value>
             <Value>%24(ProjectDir)\lib\czMicroSTL</Value>
             <Value>%24(ProjectDir)\lib\czAT24C</Value>
+            <Value>%24(ProjectDir)\lib\czmicromuc\source</Value>
           </ListValues>
         </avrgcccpp.compiler.directories.IncludePaths>
         <avrgcccpp.compiler.optimization.OtherFlags>-fno-threadsafe-statics</avrgcccpp.compiler.optimization.OtherFlags>
@@ -227,6 +228,7 @@
             <Value>%24(ProjectDir)\lib\MCUFRIEND_kbv</Value>
             <Value>%24(ProjectDir)\lib\czMicroSTL</Value>
             <Value>%24(ProjectDir)\lib\czAT24C</Value>
+            <Value>%24(ProjectDir)\lib\czmicromuc\source</Value>
           </ListValues>
         </avrgcccpp.compiler.directories.IncludePaths>
         <avrgcccpp.compiler.optimization.OtherFlags>-fno-threadsafe-statics</avrgcccpp.compiler.optimization.OtherFlags>
@@ -258,10 +260,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="lib\czMicroMuc" />
-    <Folder Include="lib\czMicroMuc\source" />
-    <Folder Include="lib\czMicroMuc\source\crazygaze\" />
-    <Folder Include="lib\czMicroMuc\source\crazygaze\micromuc" />
+    <Folder Include="lib\czmicromuc" />
+    <Folder Include="lib\czmicromuc\source" />
+    <Folder Include="lib\czmicromuc\source\crazygaze" />
+    <Folder Include="lib\czmicromuc\source\crazygaze\micromuc" />
     <Folder Include="src\" />
     <Folder Include="lib\" />
     <Folder Include="lib\Adafruit BusIO" />
@@ -351,22 +353,28 @@
     <Compile Include="lib\czAT24C\AT24C.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="lib\czMicroMuc\czMicroMuc.cpp">
+    <Compile Include="lib\czmicromuc\source\crazygaze\micromuc\Array.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="lib\czMicroMuc\czMicroMuc.h">
+    <Compile Include="lib\czmicromuc\source\crazygaze\micromuc\czmicromuc.cpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="lib\czMicroMuc\Logging.cpp">
+    <Compile Include="lib\czmicromuc\source\crazygaze\micromuc\czmicromuc.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="lib\czMicroMuc\Logging.h">
+    <Compile Include="lib\czmicromuc\source\crazygaze\micromuc\FixedSizeArray.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="lib\czMicroMuc\StringUtils.cpp">
+    <Compile Include="lib\czmicromuc\source\crazygaze\micromuc\Logging.cpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="lib\czMicroMuc\StringUtils.h">
+    <Compile Include="lib\czmicromuc\source\crazygaze\micromuc\Logging.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="lib\czmicromuc\source\crazygaze\micromuc\StringUtils.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="lib\czmicromuc\source\crazygaze\micromuc\StringUtils.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="lib\MCUFRIEND_kbv\FreeDefaultFonts.h">
@@ -520,6 +528,9 @@
       <SubType>compile</SubType>
     </None>
     <None Include="lib\czMicroSTL\mutex">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="lib\czMicroSTL\new">
       <SubType>compile</SubType>
     </None>
     <None Include="lib\czMicroSTL\type_traits">

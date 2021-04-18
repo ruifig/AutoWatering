@@ -11,7 +11,7 @@
 	#define CZ_DEBUG 0
 #endif
 
-#if !define(CZ_LOG_ENABLED)
+#if !defined(CZ_LOG_ENABLED)
 	#define CZ_LOG_ENABLED 1
 #endif
 
@@ -34,7 +34,7 @@
 	#define CZ_UNEXPECTED() ((void)0)
 #endif
 
-#namespace cz
+namespace cz
 {
 	void _doAssert(const char* file, int line, const char* fmt, ...);
 }

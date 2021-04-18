@@ -1,6 +1,8 @@
-#include "czMicroMuc.h"
-#include "czmucLogging.h"
+#include "czmicromuc.h"
+#include "Logging.h"
+#include "StringUtils.h"
 #include <stdarg.h>
+
 
 namespace cz
 {
@@ -26,3 +28,5 @@ void _doAssert(const char* file, int line, const char* fmt, ...)
 }
 	
 } // namespace cz
+
+
