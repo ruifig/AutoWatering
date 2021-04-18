@@ -45,7 +45,7 @@ class SoilMoistureSensor
 	};
 
 #if CZ_LOG_ENABLED
-	static const char* ms_stateNames[3];
+	static const char* const ms_stateNames[3] PROGMEM;
 #endif
 
 	Context& m_ctx;

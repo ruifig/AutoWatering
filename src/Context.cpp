@@ -36,7 +36,7 @@ void ProgramData::setMoistureSensorValues(uint8_t index, int currentValue, int a
 #if 0
 	if (index==3)
 	{
-		CZ_LOG(logDefault, Log, "Sensor %d: (%3d->%3d) (%3d=%3d%%)", (int)index, (int)s.airValue, (int)s.waterValue, (int)s.currentValue, s.calcCurrentPercentage());
+		CZ_LOG(logDefault, Log, F("Sensor %d: (%3d->%3d) (%3d=%3d%%)"), (int)index, (int)s.airValue, (int)s.waterValue, (int)s.currentValue, s.calcCurrentPercentage());
 	}
 #endif
 }
@@ -52,18 +52,11 @@ void ProgramData::logMoistureSensors()
 		{
 			strCatPrintf(buf, " ");
 		}
-		strCatPrintf(buf, "(%d:%3d->%3d, %3d=%3d%%)", (int)idx, (int)s.airValue, (int)s.waterValue, (int)s.currentValue, s.calcCurrentPercentage());
-		Serial.print(F(""));
-		Serial.print(F("asdlfjasl dfkja ldsfja lsdkjf alksdjf alksdjf laksdjf lakjsd fklajsd flkajsdf lkajsd flaksjdf akljsdfs "));
-		Serial.print(F("1sdlfjasl dfkja ldsfja lsdkjf alksdjf alksdjf laksdjf lakjsd fklajsd flkajsdf lkajsd flaksjdf akljsdfs "));
-		Serial.print(F("2sdlfjasl dfkja ldsfja lsdkjf alksdjf alksdjf laksdjf lakjsd fklajsd flkajsdf lkajsd flaksjdf akljsdfs "));
-		Serial.print(F("3sdlfjasl dfkja ldsfja lsdkjf alksdjf alksdjf laksdjf lakjsd fklajsd flkajsdf lkajsd flaksjdf akljsdfs "));
-		Serial.print(F("4sdlfjasl dfkja ldsfja lsdkjf alksdjf alksdjf laksdjf lakjsd fklajsd flkajsdf lkajsd flaksjdf akljsdfs "));
-		Serial.print(F("5sdlfjasl dfkja ldsfja lsdkjf alksdjf alksdjf laksdjf lakjsd fklajsd flkajsdf lkajsd flaksjdf akljsdfs "));
-		Serial.print(F("6sdlfjasl dfkja ldsfja lsdkjf alksdjf alksdjf laksdjf lakjsd fklajsd flkajsdf lkajsd flaksjdf akljsdfs "));
+		strCatPrintf(buf, F("(%d:%3d->%3d, %3d=%3d%%)"), (int)idx, (int)s.airValue, (int)s.waterValue, (int)s.currentValue, s.calcCurrentPercentage());
+
 	}
 
-	CZ_LOG(logDefault, Log, "%s", buf);
+	CZ_LOG(logDefault, Log, F("%s"), buf);
 }
 
 bool ProgramData::tryAcquireMoistureSensorMutex()

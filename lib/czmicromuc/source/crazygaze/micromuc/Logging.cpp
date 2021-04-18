@@ -115,11 +115,8 @@ LogOutput::~LogOutput()
 	data->outputs.removeIfExists(this);
 }
 
-void LogOutput::logToAll(const LogCategoryBase* category, LogVerbosity verbosity, const char* fmt, ...)
+void LogOutput::logPrefix(const LogCategoryBase* category, LogVerbosity verbosity)
 {
-	va_list args;
-	va_start(args, fmt);
-
 	#if LOG_TIME
 		// Example of max length: 50:24:60:60:999 \n
 		#define TIME_BUF_SIZE 17
@@ -139,7 +136,7 @@ void LogOutput::logToAll(const LogCategoryBase* category, LogVerbosity verbosity
 		int seconds = ms / 1000;
 		ms = ms - (seconds * 1000);
 
-		snprintf(timeStr, TIME_BUF_SIZE, "%02d:%02d:%02d:%02d:%03d ", days, hours, minutes, seconds, ms);
+		snprintf_P(timeStr, TIME_BUF_SIZE, (const char*)(F("%02d:%02d:%02d:%02d:%03d ")), days, hours, minutes, seconds, ms);
 	#else
 		const char* timeStr = "";
 	#endif
@@ -149,7 +146,7 @@ void LogOutput::logToAll(const LogCategoryBase* category, LogVerbosity verbosity
 		// Example of long category name: logReallyBigLongCategory: \n
 		#define CATEGORY_BUF_SIZE 27
 		char categoryNameStr[CATEGORY_BUF_SIZE];
-		snprintf(categoryNameStr, CATEGORY_BUF_SIZE, "%s: ", category->getName());
+		snprintf_P(categoryNameStr, CATEGORY_BUF_SIZE, (const char*)(F("%s: ")), category->getName());
 	#else
 		const char* categoryNameStr = "";
 	#endif
@@ -158,26 +155,45 @@ void LogOutput::logToAll(const LogCategoryBase* category, LogVerbosity verbosity
 		// Example of max size: WRN: \n
 		#define VERBOSITY_BUF_SIZE 6
 		char verbosityStr[VERBOSITY_BUF_SIZE];
-		snprintf(verbosityStr, VERBOSITY_BUF_SIZE, "%s: ", logVerbosityToString(verbosity));
+		snprintf_P(verbosityStr, VERBOSITY_BUF_SIZE, (const char*)(F("%s: ")), logVerbosityToString(verbosity));
 	#else
 		const char* verbosityStr = "";
 	#endif
 
 	// Log prefix
 	{
-		const char* str = formatString("%s%s%s%s", timeStr, categoryNameStr, verbosityStr);
+		const char* str = formatString(F("%s%s%s%s"), timeStr, categoryNameStr, verbosityStr);
 		logToAllSimple(verbosity, str);
 	}
+	
+}
 
-	// Log message
-	{
-		const char* str = formatStringVA(fmt, args);
-		logToAllSimple(verbosity, str);
-		logToAllSimple(verbosity, "\r\n");
-	}
+void LogOutput::logToAll(const LogCategoryBase* category, LogVerbosity verbosity, const char* fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+
+	logPrefix(category, verbosity);
+
+	const char* str = formatStringVA(fmt, args);
+	logToAllSimple(verbosity, str);
+	logToAllSimple(verbosity, F("\r\n"));
 
 	va_end(args);
+}
 
+void LogOutput::logToAll(const LogCategoryBase* category, LogVerbosity verbosity, const __FlashStringHelper* fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+
+	logPrefix(category, verbosity);
+
+	const char* str = formatStringVA(fmt, args);
+	logToAllSimple(verbosity, str);
+	logToAllSimple(verbosity, F("\r\n"));
+
+	va_end(args);
 }
 
 void LogOutput::logToAllSimple(LogVerbosity verbosity, const char* str)
@@ -190,6 +206,15 @@ void LogOutput::logToAllSimple(LogVerbosity verbosity, const char* str)
 	}
 }
 
+void LogOutput::logToAllSimple(LogVerbosity verbosity, const __FlashStringHelper* str)
+{
+	auto data = getSharedData();
+	auto lk = std::unique_lock<std::mutex>(data->mtx);
+	for (auto&& out : data->outputs)
+	{
+		out->logSimple(verbosity, str);
+	}
+}
 
 } // namespace cz
 

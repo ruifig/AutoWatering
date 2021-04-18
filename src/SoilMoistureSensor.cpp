@@ -6,11 +6,14 @@ namespace cz
 {
 
 #if CZ_LOG_ENABLED
-const char* SoilMoistureSensor::ms_stateNames[3] =
+const char state_0[] PROGMEM = "Initializing";
+const char state_1[] PROGMEM = "PoweredDown";
+const char state_2[] PROGMEM = "Reading";
+const char* const SoilMoistureSensor::ms_stateNames[3] PROGMEM =
 {
-	"Initializing",
-	"PoweredDown",
-	"Reading"
+	state_0,
+	state_1,
+	state_2
 };
 #endif
 
@@ -94,7 +97,7 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 void SoilMoistureSensor::changeToState(State newState)
 {
 	#if 0
-	CZ_LOG_LN("SoilMoistureSensor(%d)::%s: %dms %s->%s"
+	CZ_LOG(logDefault, Log, F("SoilMoistureSensor(%d)::%s: %dms %s->%s")
 		, (int)m_index
 		, __FUNCTION__
 		, (int)(m_timeInState * 1000.f)

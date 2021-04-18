@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Arduino.h>
+
 #if defined(DEBUG) || defined(_DEBUG)
 	#define CZ_DEBUG 1
 #else
@@ -37,5 +39,6 @@
 namespace cz
 {
 	void _doAssert(const char* file, int line, const char* fmt, ...);
+	void _doAssert(const char* file, int line, const __FlashStringHelper* fmt, ...);
 }
 

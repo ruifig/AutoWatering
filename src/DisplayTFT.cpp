@@ -50,11 +50,14 @@ namespace cz
 {
 
 #if CZ_LOG_ENABLED
-const char* DisplayTFT::ms_stateNames[3] =
+const char state_0[] PROGMEM = "Initializing";
+const char state_1[] PROGMEM = "Intro";
+const char state_2[] PROGMEM = "Overview";
+const char* const DisplayTFT::ms_stateNames[3] PROGMEM =
 {
-	"Initializing",
-	"Intro",
-	"Overview"
+	state_0,
+	state_1,
+	state_2
 };
 #endif
 
@@ -78,7 +81,7 @@ float DisplayTFT::tick(float deltaSeconds)
 	m_timeInState += deltaSeconds;
 	m_timeSinceLastTouch += deltaSeconds;
 
-	CZ_LOG(logDefault, Log, "DisplayTFT::%s: state=%s, timeInState = %d", __FUNCTION__, ms_stateNames[(int)m_state], (int)m_timeInState);
+	CZ_LOG(logDefault, Log, F("DisplayTFT::%s: state=%s, timeInState = %d"), __FUNCTION__, ms_stateNames[(int)m_state], (int)m_timeInState);
 
 	switch(m_state)
 	{
@@ -112,7 +115,7 @@ float DisplayTFT::tick(float deltaSeconds)
 
 void DisplayTFT::changeToState(State newState)
 {
-    CZ_LOG(logDefault, Log, "DisplayTFT::%s %dms %s->%s"
+    CZ_LOG(logDefault, Log, F("DisplayTFT::%s %dms %s->%s")
         , __FUNCTION__
 		, (int)(m_timeInState * 1000.f)
         , ms_stateNames[(int)m_state]
@@ -142,7 +145,8 @@ void DisplayTFT::onLeaveState()
 }
 
 
-void DisplayTFT::printAligned(const Box& area, HAlign halign, VAlign valign, const char* txt)
+template<typename T>
+void DisplayTFT::printAlignedImpl(const Box& area, HAlign halign, VAlign valign, const T* txt)
 {
 	Box bounds;
 	m_tft.getTextBounds(txt, 0,0, &bounds.x, &bounds.y, &bounds.width, &bounds.height);
@@ -192,23 +196,23 @@ void DisplayTFT::onEnterState()
 			uint16_t identifier = m_tft.readID();
 			if(identifier == 0x9325)
 			{
-				CZ_LOG(logDefault, Log, "Found ILI9325 LCD driver");
+				CZ_LOG(logDefault, Log, F("Found ILI9325 LCD driver"));
 			} else if(identifier == 0x9328) {
-				CZ_LOG(logDefault, Log, "Found ILI9328 LCD driver");
+				CZ_LOG(logDefault, Log, F("Found ILI9328 LCD driver"));
 			} else if(identifier == 0x7575) {
-				CZ_LOG(logDefault, Log, "Found HX8347G LCD driver");
+				CZ_LOG(logDefault, Log, F("Found HX8347G LCD driver"));
 			} else if(identifier == 0x9341) {
-				CZ_LOG(logDefault, Log, "Found ILI9341 LCD driver");
+				CZ_LOG(logDefault, Log, F("Found ILI9341 LCD driver"));
 			} else if(identifier == 0x8357) {
-				CZ_LOG(logDefault, Log, "Found HX8357D LCD driver");
+				CZ_LOG(logDefault, Log, F("Found HX8357D LCD driver"));
 			} else {
-				CZ_LOG(logDefault, Log, "Unknown LCD driver chip: 0x%x", identifier);
-				CZ_LOG(logDefault, Log, "If using the Adafruit 2.8\" TFT Arduino shield, the line:");
-				CZ_LOG(logDefault, Log, "  #define USE_ADAFRUIT_SHIELD_PINOUT");
-				CZ_LOG(logDefault, Log, "should appear in the library header (Adafruit_TFT.h).");
-				CZ_LOG(logDefault, Log, "If using the breakout board, it should NOT be #defined!");
-				CZ_LOG(logDefault, Log, "Also if using the breakout, double-check that all wiring");
-				CZ_LOG(logDefault, Log, "matches the tutorial.");
+				CZ_LOG(logDefault, Log, F("Unknown LCD driver chip: 0x%x"), identifier);
+				CZ_LOG(logDefault, Log, F("If using the Adafruit 2.8\" TFT Arduino shield, the line:"));
+				CZ_LOG(logDefault, Log, F("  #define USE_ADAFRUIT_SHIELD_PINOUT"));
+				CZ_LOG(logDefault, Log, F("should appear in the library header (Adafruit_TFT.h)."));
+				CZ_LOG(logDefault, Log, F("If using the breakout board, it should NOT be #defined!"));
+				CZ_LOG(logDefault, Log, F("Also if using the breakout, double-check that all wiring"));
+				CZ_LOG(logDefault, Log, F("matches the tutorial."));
 				return;
 			}
 
@@ -224,9 +228,9 @@ void DisplayTFT::onEnterState()
 		
 		m_tft.setFont(LARGE_FONT);
 
-		printAligned({10, 10, m_tft.width()-20, m_tft.height()-20}, HAlign::Left, VAlign::Top, "AutoWatering");
-		printAligned({10, 10, m_tft.width()-20, m_tft.height()-20}, HAlign::Center, VAlign::Center, "By");
-		printAligned({10, 10, m_tft.width()-20, m_tft.height()-20}, HAlign::Right, VAlign::Bottom, "Rui Figueira");
+		printAligned({10, 10, m_tft.width()-20, m_tft.height()-20}, HAlign::Left, VAlign::Top, F("AutoWatering"));
+		printAligned({10, 10, m_tft.width()-20, m_tft.height()-20}, HAlign::Center, VAlign::Center, F("By"));
+		printAligned({10, 10, m_tft.width()-20, m_tft.height()-20}, HAlign::Right, VAlign::Bottom, F("Rui Figueira"));
 
 		break;
 

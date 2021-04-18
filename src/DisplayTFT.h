@@ -80,7 +80,7 @@ class DisplayTFT
 	};
 
 #if CZ_LOG_ENABLED
-	static const char* ms_stateNames[3];
+	static const char* const ms_stateNames[3] PROGMEM;
 #endif
 
 	Context& m_ctx;
@@ -109,7 +109,17 @@ class DisplayTFT
 		Bottom
 	};
 
-	void printAligned(const Box& area, HAlign halign, VAlign valign, const char* txt);
+	template<typename T>
+	void printAlignedImpl(const Box& area, HAlign halign, VAlign valign, const T* txt);
+
+	void printAligned(const Box& area, HAlign halign, VAlign valign, const char* txt)
+	{
+		printAlignedImpl(area, halign, valign, txt);
+	}
+	void printAligned(const Box& area, HAlign halign, VAlign valign, const __FlashStringHelper* txt)
+	{
+		printAlignedImpl(area, halign, valign, txt);
+	}
 
 };
 	

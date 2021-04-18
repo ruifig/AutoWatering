@@ -18,10 +18,24 @@ void _doAssert(const char* file, int line, const char* fmt, ...)
 	va_list args;
 	va_start(args, fmt);
 
-	CZ_LOG(logDefault, Error, "ASSERT: %s:%d", file, line);
-	LogOutput::logToAllSimple(LogVerbosity::Fatal, formatString("ASSERT: %d:%d: ", file, line));
+	CZ_LOG(logDefault, Error, F("ASSERT: %s:%d"), file, line);
+	LogOutput::logToAllSimple(LogVerbosity::Fatal, formatString(F("ASSERT: %d:%d: "), file, line));
 	LogOutput::logToAllSimple(LogVerbosity::Fatal, formatStringVA(fmt, args));
-	LogOutput::logToAllSimple(LogVerbosity::Fatal, "\r\n");
+	LogOutput::logToAllSimple(LogVerbosity::Fatal, F("\r\n"));
+	va_end(args);
+
+	_BREAK();
+}
+
+void _doAssert(const char* file, int line, const __FlashStringHelper* fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+
+	CZ_LOG(logDefault, Error, F("ASSERT: %s:%d"), file, line);
+	LogOutput::logToAllSimple(LogVerbosity::Fatal, formatString(F("ASSERT: %d:%d: "), file, line));
+	LogOutput::logToAllSimple(LogVerbosity::Fatal, formatStringVA(fmt, args));
+	LogOutput::logToAllSimple(LogVerbosity::Fatal, F("\r\n"));
 	va_end(args);
 
 	_BREAK();

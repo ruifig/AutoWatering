@@ -1,51 +1,5 @@
 #include "AT24C.h"
-
-/*
-*/
-
-#ifdef _DEBUG
-	#define CZ_LOG_ENABLED 1
-	#define CZ_ASSERT_ENABLED 1
-#else
-	#define CZ_LOG_ENABLED 0
-	#define CZ_ASSERT_ENABLED 0
-#endif
-
-namespace cz
-{
-
-    /**
-     * These functions must be defined externally.
-     * 
-     **/
-    void logPrintf(const char* fmt, ...);
-    void logPrintln();
-}
-
-#if CZ_LOG_ENABLED
-
-#define CZ_LOG(fmt, ...) cz::logPrintf(fmt, ##__VA_ARGS__);
-#define CZ_LOG_LN(fmt, ...) \
-    { \
-        cz::logPrintf(fmt, ##__VA_ARGS__); \
-        cz::logPrintln(); \
-    }
-    
-#else
-	#define CZ_LOG(fmt, ...) ((void)0)
-	#define CZ_LOG_LN(fmt, ...) ((void)0)
-#endif
-
-// Removes path from __FILE__
-// Copied from https://stackoverflow.com/questions/8487986/file-macro-shows-full-path
-#define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
-
-#if CZ_ASSERT_ENABLED
-	#define CZ_ASSERT(expression) if (!(expression)) { CZ_LOG("ASSERT: %s:%d", __FILENAME__, __LINE__); delay(1000); abort(); }
-#else
-	#define CZ_ASSERT(expression) ((void)0)
-#endif
-
+#include "crazygaze/micromuc/Logging.h"
 
 namespace cz
 {
@@ -152,7 +106,7 @@ uint32_t AT24C::read32(uint16_t address)
 
 uint16_t AT24C::write(uint16_t address, const uint8_t* src, uint16_t len)
 {
-    CZ_LOG_LN("AT24::write(%u, %p, %u)", (unsigned)address, src, (unsigned)len);
+    CZ_LOG(logDefault, Log, F("AT24::write(%u, %p, %u)"), (unsigned)address, src, (unsigned)len);
 
     uint16_t todo = len;
     while(todo)
@@ -160,7 +114,7 @@ uint16_t AT24C::write(uint16_t address, const uint8_t* src, uint16_t len)
         uint16_t bytes = calcBulkSize(address, todo);
         waitForReady();
 
-        CZ_LOG_LN("    address=%u, bytes=%u", (unsigned)address, (unsigned)bytes);
+        CZ_LOG(logDefault, Log, F("    address=%u, bytes=%u"), (unsigned)address, (unsigned)bytes);
         m_wire.beginTransmission(m_id);
         writeAddress(address);
         m_wire.write(src, bytes);
@@ -170,13 +124,13 @@ uint16_t AT24C::write(uint16_t address, const uint8_t* src, uint16_t len)
         src += bytes;
     }
 
-    CZ_LOG_LN("   todo = %u", todo);
+    CZ_LOG(logDefault, Log, F("   todo = %u"), todo);
     return len - todo;
 }
 
 uint16_t AT24C::read(uint16_t address, uint8_t* dest, uint16_t len)
 {
-    CZ_LOG_LN("AT24::read(%u, %p, %u)", (unsigned)address, dest, (unsigned)len);
+    CZ_LOG(logDefault, Log, F("AT24::read(%u, %p, %u)"), (unsigned)address, dest, (unsigned)len);
 
     uint16_t todo = len;
     while(todo)
@@ -184,7 +138,7 @@ uint16_t AT24C::read(uint16_t address, uint8_t* dest, uint16_t len)
         uint8_t bytes = calcBulkSize(address, todo);
         waitForReady();
 
-        CZ_LOG_LN("    address=%u, bytes=%u", (unsigned)address, (unsigned)bytes);
+        CZ_LOG(logDefault, Log, F("    address=%u, bytes=%u"), (unsigned)address, (unsigned)bytes);
         m_wire.beginTransmission(m_id);
         writeAddress(address);
         m_wire.endTransmission();
@@ -199,7 +153,7 @@ uint16_t AT24C::read(uint16_t address, uint8_t* dest, uint16_t len)
         }
     }
 
-    CZ_LOG_LN("   todo = %u", todo);
+    CZ_LOG(logDefault, Log, F("   todo = %u"), todo);
     return len - todo;
 }
 
@@ -213,7 +167,7 @@ void AT24C::writeByte(uint16_t address, uint8_t data)
     m_wire.endTransmission();
 }
 
-// NOTE: This doesn it do a waitForReady first, because it's not necessary to wait between
+// NOTE: This doesn't it do a waitForReady first, because it's not necessary to wait between
 // multiple reads, and we want to use this to compose larger reads
 uint8_t AT24C::readByte(uint16_t address)
 {
@@ -254,7 +208,7 @@ AT24C32::AT24C32(uint8_t address, TwoWire& wire)
 
     bool test8(AT24C &mem)
     {
-        CZ_LOG_LN("Testing writting all in 8 bits");
+        CZ_LOG(logDefault, Log, F("Testing writting all in 8 bits"));
         {
             unsigned long t1 = micros();
             for (uint16_t addr = 0; addr < mem.getSizeBytes(); addr++)
@@ -262,7 +216,7 @@ AT24C32::AT24C32(uint8_t address, TwoWire& wire)
                 mem.write8(addr, addr & 0xFF);
             }
             unsigned long t2 = micros();
-            CZ_LOG_LN("    Time to write all: %ld microseconds (%ld milliseconds)", t2 - t1, (t2 - t1) / 1000);
+            CZ_LOG(logDefault, Log, F("    Time to write all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
         }
 
         {
@@ -272,12 +226,12 @@ AT24C32::AT24C32(uint8_t address, TwoWire& wire)
                 uint8_t ret = mem.read8(addr);
                 if (ret != (addr & 0xFF))
                 {
-                    CZ_LOG_LN("    Address %u - Expected %d, got %d", (unsigned int)addr, (int)addr & 0xFF, ret);
+                    CZ_LOG(logDefault, Log, F("    Address %u - Expected %d, got %d"), (unsigned int)addr, (int)addr & 0xFF, ret);
                     return false;
                 }
             }
             unsigned long t2 = micros();
-            CZ_LOG_LN("    Time to real all: %ld microseconds (%ld milliseconds)", t2 - t1, (t2 - t1) / 1000);
+            CZ_LOG(logDefault, Log, F("    Time to real all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
         }
 
         return true;
@@ -285,7 +239,7 @@ AT24C32::AT24C32(uint8_t address, TwoWire& wire)
 
     bool test16(AT24C &mem)
     {
-        CZ_LOG_LN("Testing writting all in 16 bits");
+        CZ_LOG(logDefault, Log, F("Testing writting all in 16 bits"));
         {
             unsigned long t1 = micros();
             for (uint16_t addr = 0; addr < mem.getSizeBytes(); addr += 2)
@@ -293,7 +247,7 @@ AT24C32::AT24C32(uint8_t address, TwoWire& wire)
                 mem.write16(addr, addr);
             }
             unsigned long t2 = micros();
-            CZ_LOG_LN("    Time to write all: %ld microseconds (%ld milliseconds)", t2 - t1, (t2 - t1) / 1000);
+            CZ_LOG(logDefault, Log, F("    Time to write all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
         }
 
         {
@@ -303,12 +257,12 @@ AT24C32::AT24C32(uint8_t address, TwoWire& wire)
                 uint16_t ret = mem.read16(addr);
                 if (ret != addr)
                 {
-                    CZ_LOG_LN("    Address %u - Expected %d, got %d", (unsigned int)addr, (int)addr, ret);
+                    CZ_LOG(logDefault, Log, F("    Address %u - Expected %d, got %d"), (unsigned int)addr, (int)addr, ret);
                     return false;
                 }
             }
             unsigned long t2 = micros();
-            CZ_LOG_LN("    Time to real all: %ld microseconds (%ld milliseconds)", t2 - t1, (t2 - t1) / 1000);
+            CZ_LOG(logDefault, Log, F("    Time to real all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
         }
 
         return true;
@@ -316,7 +270,7 @@ AT24C32::AT24C32(uint8_t address, TwoWire& wire)
 
     bool test32(AT24C &mem)
     {
-        CZ_LOG_LN("Testing writting all in 32 bits");
+        CZ_LOG(logDefault, Log, F("Testing writting all in 32 bits"));
         {
             unsigned long t1 = micros();
             for (uint16_t addr = 0; addr < mem.getSizeBytes(); addr += 4)
@@ -324,7 +278,7 @@ AT24C32::AT24C32(uint8_t address, TwoWire& wire)
                 mem.write32(addr, (uint32_t(1) << 24) | (uint32_t(2) << 16) | addr);
             }
             unsigned long t2 = micros();
-            CZ_LOG_LN("    Time to write all: %ld microseconds (%ld milliseconds)", t2 - t1, (t2 - t1) / 1000);
+            CZ_LOG(logDefault, Log, F("    Time to write all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
         }
 
         {
@@ -335,12 +289,12 @@ AT24C32::AT24C32(uint8_t address, TwoWire& wire)
                 uint32_t expected = (uint32_t(1) << 24) | (uint32_t(2) << 16) | addr;
                 if (ret != expected)
                 {
-                    CZ_LOG_LN("    Address %u - Expected %lu, got %d", (unsigned int)addr, (unsigned long)expected, ret);
+                    CZ_LOG(logDefault, Log, F("    Address %u - Expected %lu, got %d"), (unsigned int)addr, (unsigned long)expected, ret);
                     return false;
                 }
             }
             unsigned long t2 = micros();
-            CZ_LOG_LN("    Time to real all: %ld microseconds (%ld milliseconds)", t2 - t1, (t2 - t1) / 1000);
+            CZ_LOG(logDefault, Log, F("    Time to real all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
         }
 
         return true;
@@ -351,7 +305,7 @@ AT24C32::AT24C32(uint8_t address, TwoWire& wire)
         static char readBuf[128];
         uint16_t bufSize = strlen(buf);
 
-        CZ_LOG_LN("Testing writting buffers of size %u", bufSize);
+        CZ_LOG(logDefault, Log, F("Testing writting buffers of size %u"), bufSize);
 
         {
             unsigned long t1 = micros();
@@ -362,7 +316,7 @@ AT24C32::AT24C32(uint8_t address, TwoWire& wire)
                 CZ_ASSERT(ret == todo);
             }
             unsigned long t2 = micros();
-            CZ_LOG_LN("    Time to write all: %ld microseconds (%ld milliseconds)", t2 - t1, (t2 - t1) / 1000);
+            CZ_LOG(logDefault, Log, F("    Time to write all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
         }
 
         {
@@ -376,13 +330,13 @@ AT24C32::AT24C32(uint8_t address, TwoWire& wire)
                 CZ_ASSERT(ret == todo);
                 if (strncmp(buf, readBuf, todo) != 0)
                 {
-                    CZ_LOG_LN("    Address %u - Expected %s, got %s", (unsigned int)addr, buf, readBuf);
+                    CZ_LOG(logDefault, Log, F("    Address %u - Expected %s, got %s"), (unsigned int)addr, buf, readBuf);
                     return false;
                 }
-                logPrintf(readBuf); logPrintln();
+                CZ_LOG(logDefault, Log, F("%s"), readBuf);
             }
             unsigned long t2 = micros();
-            CZ_LOG_LN("    Time to read all: %ld microseconds (%ld milliseconds)", t2 - t1, (t2 - t1) / 1000);
+            CZ_LOG(logDefault, Log, F("    Time to read all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
         }
 
         return true;
@@ -394,7 +348,7 @@ void printFirst64Bits(AT24C& mem)
 	for(int i=0; i<8; i++)
 		data[i] = mem.read8(i);
 
-	CZ_LOG_LN("First 8 bytes = {%d,%d,%d,%d,%d,%d,%d,%d}",
+	CZ_LOG(logDefault, Log, F("First 8 bytes = {%d,%d,%d,%d,%d,%d,%d,%d}"),
 		(int)data[0], (int)data[1], (int)data[2], (int)data[3],
 		(int)data[4], (int)data[5], (int)data[6], (int)data[7]);
 }
@@ -402,7 +356,7 @@ void printFirst64Bits(AT24C& mem)
 
 bool runTests(AT24C& mem)
 {
-    CZ_LOG_LN("Starting tests...");
+    CZ_LOG(logDefault, Log, F("Starting tests..."));
     printFirst64Bits(mem);
     if (!test8(mem)) return false;
     printFirst64Bits(mem);
@@ -417,7 +371,7 @@ bool runTests(AT24C& mem)
     printFirst64Bits(mem);
     if (!testBuffers(mem, buf2)) return false;
     printFirst64Bits(mem);
-    CZ_LOG_LN("Tests finished");
+    CZ_LOG(logDefault, Log, F("Tests finished"));
 
     return true;
 }

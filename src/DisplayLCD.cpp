@@ -6,11 +6,14 @@ namespace cz
 {
 
 #if CZ_LOG_ENABLED
-const char* DisplayLCD::ms_stateNames[3] =
+const char state_0[] PROGMEM = "Initializing";
+const char state_1[] PROGMEM = "Intro";
+const char state_2[] PROGMEM = "Overview";
+const char* const DisplayLCD::ms_stateNames[3] PROGMEM =
 {
-	"Initializing",
-	"Intro",
-	"Overview"
+	state_0,
+	state_1,
+	state_2
 };
 #endif
 
@@ -80,7 +83,7 @@ void DisplayLCD::setBacklight(bool state)
 
 void DisplayLCD::changeToState(State newState)
 {
-    CZ_LOG(logDefault, Log, "DisplayLCD::%s %dms %s->%s"
+    CZ_LOG(logDefault, Log, F("DisplayLCD::%s %dms %s->%s")
         , __FUNCTION__
 		, (int)(m_timeInState * 1000.f)
         , ms_stateNames[(int)m_state]
@@ -119,9 +122,9 @@ void DisplayLCD::onEnterState()
         setBacklight(true);
 		break;
 	case State::Intro:
-        m_lcd.print("AutoWatering by");
+        m_lcd.print(F("AutoWatering by"));
         m_lcd.setCursor(0, 1);
-        m_lcd.print("Rui Figueira");
+        m_lcd.print(F("Rui Figueira"));
 		break;
 	case State::Overview:
 		break;

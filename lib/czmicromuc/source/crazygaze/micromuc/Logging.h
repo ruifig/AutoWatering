@@ -12,6 +12,7 @@
 
 #include "crazygaze/micromuc/czmicromuc.h"
 #include "crazygaze/micromuc/Array.h"
+#include <Arduino.h>
 
 #include <mutex>
 
@@ -82,12 +83,19 @@ class LogOutput
 public:
 	LogOutput();
 	virtual ~LogOutput();
+
 	static void logToAll(const LogCategoryBase* category, LogVerbosity verbosity, const char* fmt, ...);
+	static void logToAll(const LogCategoryBase* category, LogVerbosity verbosity, const __FlashStringHelper* fmt, ...);
 	static void logToAllSimple(LogVerbosity verbosity, const char* str);
+	static void logToAllSimple(LogVerbosity verbosity, const __FlashStringHelper* str);
 
 private:
+	
 	virtual void log(const LogCategoryBase* category, LogVerbosity verbosity, const char* msg) = 0;
 	virtual void logSimple(LogVerbosity verbosity, const char* str) = 0;
+	virtual void logSimple(LogVerbosity verbosity, const __FlashStringHelper* str) = 0;
+
+	static void logPrefix(const LogCategoryBase* category, LogVerbosity verbosity);
 
 	struct SharedData
 	{
