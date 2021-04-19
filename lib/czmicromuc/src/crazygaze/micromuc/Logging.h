@@ -84,7 +84,7 @@ public:
 	LogOutput();
 	virtual ~LogOutput();
 
-	static void logToAll(const LogCategoryBase* category, LogVerbosity verbosity, const char* fmt, ...);
+	static void logToAll(const LogCategoryBase* category, LogVerbosity verbosity, const char* fmt, ...) __attribute__ ((format (printf, 3,4)));
 	static void logToAll(const LogCategoryBase* category, LogVerbosity verbosity, const __FlashStringHelper* fmt, ...);
 	static void logToAllSimple(LogVerbosity verbosity, const char* str);
 	static void logToAllSimple(LogVerbosity verbosity, const __FlashStringHelper* str);
@@ -105,6 +105,16 @@ private:
 	};
 	static SharedData* getSharedData();
 };
+
+#if CZ_SERIAL_LOG_ENABLED
+class SerialLogOutput : public LogOutput
+{
+private:
+	virtual void log(const LogCategoryBase* category, LogVerbosity verbosity, const char* msg) override;
+	virtual void logSimple(LogVerbosity verbosity, const char* str) override;
+	virtual void logSimple(LogVerbosity verbosity, const __FlashStringHelper* str) override;
+};
+#endif
 
 
 #if CZ_LOG_ENABLED

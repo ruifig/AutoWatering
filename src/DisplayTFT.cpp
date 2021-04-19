@@ -50,14 +50,11 @@ namespace cz
 {
 
 #if CZ_LOG_ENABLED
-const char state_0[] PROGMEM = "Initializing";
-const char state_1[] PROGMEM = "Intro";
-const char state_2[] PROGMEM = "Overview";
-const char* const DisplayTFT::ms_stateNames[3] PROGMEM =
+const char* const DisplayTFT::ms_stateNames[3]=
 {
-	state_0,
-	state_1,
-	state_2
+	"Initializing",
+	"Intro",
+	"Overview"
 };
 #endif
 

@@ -162,7 +162,7 @@ void LogOutput::logPrefix(const LogCategoryBase* category, LogVerbosity verbosit
 
 	// Log prefix
 	{
-		const char* str = formatString(F("%s%s%s%s"), timeStr, categoryNameStr, verbosityStr);
+		const char* str = formatString(F("%s%s%s"), timeStr, categoryNameStr, verbosityStr);
 		logToAllSimple(verbosity, str);
 	}
 	
@@ -215,6 +215,28 @@ void LogOutput::logToAllSimple(LogVerbosity verbosity, const __FlashStringHelper
 		out->logSimple(verbosity, str);
 	}
 }
+
+#if CZ_SERIAL_LOG_ENABLED
+void SerialLogOutput::log(const LogCategoryBase* category, LogVerbosity verbosity, const char* msg)
+{
+	Serial.println(msg);
+}
+
+void SerialLogOutput::logSimple(LogVerbosity verbosity, const char* str)
+{
+	Serial.print(str);
+}
+void SerialLogOutput::logSimple(LogVerbosity verbosity, const __FlashStringHelper* str)
+{
+	Serial.print(str);
+}
+
+namespace
+{
+	SerialLogOutput gSerialLogOutput;
+}
+
+#endif
 
 } // namespace cz
 

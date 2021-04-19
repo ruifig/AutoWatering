@@ -1,3 +1,4 @@
+
 #include <Arduino.h>
 
 #ifdef AVR8_BREAKPOINT_MODE
@@ -8,19 +9,24 @@
 #include "Context.h"
 #include "SoilMoistureSensor.h"
 #include "DisplayTFT.h"
-#include "Ticker.h"
 #include "Utils.h"
+#include "crazygaze/micromuc/Ticker.h"
 #include "crazygaze/micromuc/Logging.h"
 #include <algorithm>
 #include <utility>
-#include <SPI.h>
 
 #include "AT24C.h"
+#include "crazygaze/micromuc/SDLogOutput.h"
 
 using namespace cz;
 
+void operator delete(void* ptr, unsigned int size)
+{
+	free(ptr);
+}
 
-#if 1
+
+SDCardHelper gSDCard;
 Context gCtx;
 
 using SoilMoistureSensorTicker = TTicker<SoilMoistureSensor, float>;
@@ -71,15 +77,47 @@ void setAllMotorPins(int val1, int val2)
 	gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_3_INPUT2, val2);
 }
 
+
+
+class Foo
+{
+public:
+	Foo(int a, int b) : a(a), b(b)
+	{
+		Serial.println("Hello");
+	}
+	
+	int a;
+	int b;
+};
+
+void* gFooBuf;
+Foo* gFoo;
+
 void setup()
 {
+
+	gFooBuf = ::operator new(sizeof(Foo));
+	gFoo = new(gFooBuf) Foo(1,2);
+
+	gFoo->~Foo();
+	::operator delete(gFooBuf);
+	
+
 #ifdef AVR8_BREAKPOINT_MODE
 	debug_init();
 	breakpoint();
 #else
 	// If using avr-stub, we can't use Serial
 	Serial.begin(115200);
+	while (!Serial) {
+		; // wait for serial port to connect. Needed for native USB port only
+	}
 #endif
+
+	CZ_LOG(logDefault, Log, "Hello world!");
+
+	gSDCard.begin(SD_CARD_SS_PIN);
 
 	gCtx.begin();
 	gDisplay.getObj().begin();
@@ -133,52 +171,3 @@ void loop()
 
 }
 
-#else
-
-AT24C32 mem(0, Wire);
-
-void setup()
-{
-#ifdef AVR8_BREAKPOINT_MODE
-	debug_init();
-#else
-	// If using avr-stub, we can't use Serial
-	Serial.begin(115200);
-#endif
-
-	Wire.begin();
-
-	bool b0 = mem.isPresent();
-	CZ_LOG_LN("ATC24_0 : %s", b0 ? "true" : "false");
-
-	cz::runTests(mem);
-
-#if 0
-	int t1 = micros();
-	CZ_ASSERT(mem.isPresent());
-	mem.write8(31, 239);
-	int t2 = micros();
-	CZ_ASSERT(mem.isPresent());
-	int t3 = micros();
-	Serial.println(0);
-
-	CZ_LOG_LN("%d, %d(%d), %d(%d)", t1, t2, t2 - t1, t3, t3 - t2);
-
-	mem.write8(1, 253);
-	Serial.println(1);
-
-	CZ_ASSERT(mem.hasErrorOccurred() == false);
-	mem.write8(4096-1, 254);
-	Serial.println(2);
-
-	CZ_ASSERT(mem.hasErrorOccurred() == false);
-
-#endif
-
-}
-
-void loop()
-{
-}
-
-#endif

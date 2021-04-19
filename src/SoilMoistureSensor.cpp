@@ -6,14 +6,11 @@ namespace cz
 {
 
 #if CZ_LOG_ENABLED
-const char state_0[] PROGMEM = "Initializing";
-const char state_1[] PROGMEM = "PoweredDown";
-const char state_2[] PROGMEM = "Reading";
-const char* const SoilMoistureSensor::ms_stateNames[3] PROGMEM =
+const char* const SoilMoistureSensor::ms_stateNames[3] =
 {
-	state_0,
-	state_1,
-	state_2
+	"Initializing",
+	"PoweredDown",
+	"Reading"
 };
 #endif
 

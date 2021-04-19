@@ -43,7 +43,8 @@ void ProgramData::setMoistureSensorValues(uint8_t index, int currentValue, int a
 
 void ProgramData::logMoistureSensors()
 {
-	char buf[128] = {};
+	char buf[128];
+	buf[0] = 0;
 
 	for(int idx = 0; idx < NUM_MOISTURESENSORS; idx++)
 	{

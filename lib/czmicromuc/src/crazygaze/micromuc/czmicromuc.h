@@ -17,6 +17,14 @@
 	#define CZ_LOG_ENABLED 1
 #endif
 
+#if !defined(CZ_SERIAL_LOG_ENABLED)
+	#if CZ_DEBUG
+		#define CZ_SERIAL_LOG_ENABLED 1
+	#else
+		#define CZ_SERIAL_LOG_ENABLED 0
+	#endif
+#endif
+
 // Removes path from __FILE__
 // Copied from https://stackoverflow.com/questions/8487986/file-macro-shows-full-path
 #define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
@@ -38,7 +46,7 @@
 
 namespace cz
 {
-	void _doAssert(const char* file, int line, const char* fmt, ...);
+	void _doAssert(const char* file, int line, const char* fmt, ...) __attribute__ ((format (printf, 3,4)));
 	void _doAssert(const char* file, int line, const __FlashStringHelper* fmt, ...);
 }
 
