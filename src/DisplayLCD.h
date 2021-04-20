@@ -27,9 +27,7 @@ class DisplayLCD
         Overview
     };
 
-#if CZ_LOG_ENABLED
 	static const char* const ms_stateNames[3];
-#endif
 
 	Context& m_ctx;
 	Adafruit_RGBLCDShield m_lcd;

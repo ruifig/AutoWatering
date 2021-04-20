@@ -110,9 +110,11 @@ void setup()
 #endif
 
 #if SD_CARD_LOGGING
-	gSDCard.begin(SD_CARD_SS_PIN);
-	gSdLogOutput.begin(gSDCard.root, "log.txt", true);
-	CZ_LOG(logDefault, Log, "SD card log file initialized");
+	if (gSDCard.begin(SD_CARD_SS_PIN))
+	{
+		gSdLogOutput.begin(gSDCard.root, "log.txt", true);
+		CZ_LOG(logDefault, Log, "SD card log file initialized");
+	}
 #endif
 
 	gCtx.begin();
@@ -126,10 +128,6 @@ void setup()
 	gPreviousTime = millis() / 1000.0f;
 
 	setMotorPins();
-
-	CZ_LOG(logDefault, Log, "My name is MojoJojo!");
-	CZ_LOG(logDefault, Log, "My name is Rui Figueira! %s:d", __FILENAME__, __LINE__);
-	CZ_ASSERT(false);
 
 	setAllMotorPins(HIGH, LOW);
 	delay(1000);

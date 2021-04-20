@@ -49,14 +49,12 @@
 namespace cz
 {
 
-#if CZ_LOG_ENABLED
 const char* const DisplayTFT::ms_stateNames[3]=
 {
 	"Initializing",
 	"Intro",
 	"Overview"
 };
-#endif
 
 DisplayTFT::DisplayTFT(Context& ctx)
 	: m_ctx(ctx)
