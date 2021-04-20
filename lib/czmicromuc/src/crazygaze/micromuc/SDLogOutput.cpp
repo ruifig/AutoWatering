@@ -80,19 +80,31 @@ SDLogOutput::~SDLogOutput()
 {
 }
 
-void SDLogOutput::begin(const char* name, bool append)
+void SDLogOutput::begin(SdFile& dirFile, const char* name, bool truncate)
 {
+	int a = O_CREAT | O_WRITE;
+	int flags = (O_CREAT | O_WRITE | O_APPEND) | (truncate ? O_TRUNC : 0);
+	int b = flags & (O_CREAT | O_WRITE);
+
+	if (!m_file.open(dirFile, name, (O_CREAT | O_WRITE | O_APPEND) | (truncate ? O_TRUNC : 0)))
+	{
+		CZ_LOG(logDefault, Error, "Error opening log file %s", name);
+		return;
+	}
 	
 	m_initialized = true;
 }
 
-void SDLogOutput::log(const LogCategoryBase* category, LogVerbosity verbosity, const char* msg)
+void SDLogOutput::log(const LogCategoryBase* category, LogVerbosity verbosity, const char* str)
 {
 	if (!m_initialized)
 	{
 		return;
 	}
 	
+	m_file.write(str);
+	m_file.write("\r\n");
+	m_file.sync(false);
 }
 
 void SDLogOutput::logSimple(LogVerbosity verbosity, const char* str)
@@ -101,6 +113,9 @@ void SDLogOutput::logSimple(LogVerbosity verbosity, const char* str)
 	{
 		return;
 	}
+
+	m_file.write(str);
+	m_file.sync(false);
 }
 
 void SDLogOutput::logSimple(LogVerbosity verbosity, const __FlashStringHelper* str)
@@ -109,6 +124,9 @@ void SDLogOutput::logSimple(LogVerbosity verbosity, const __FlashStringHelper* s
 	{
 		return;
 	}
+
+	m_file.write_P((const char*)str);
+	m_file.sync(false);
 }
 
 	

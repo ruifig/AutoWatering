@@ -30,16 +30,18 @@ class SDLogOutput : public LogOutput
 
 	/**
 	 * @param SSPin What pin to use for device select
+	 * @param dirFile directory where to create the file
 	 * @param name 8.3 DOS name
 	 * @param append If true, file will be opened for append. If false, it will be truncated if it exists.
 	 */
-	void begin(const char* name, bool append);
+	void begin(SdFile& dirFile, const char* name, bool truncate);
 
   private:
-	virtual void log(const LogCategoryBase* category, LogVerbosity verbosity, const char* msg) override;
+	virtual void log(const LogCategoryBase* category, LogVerbosity verbosity, const char* str) override;
 	virtual void logSimple(LogVerbosity verbosity, const char* str) override;
 	virtual void logSimple(LogVerbosity verbosity, const __FlashStringHelper* str) override;
 
+	SdFile m_file;
 	bool m_initialized = false;
 };
 	

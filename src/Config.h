@@ -40,6 +40,11 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 #define SD_CARD_SS_PIN 53
 
 /**
+ * If 1, it will log to a file in the sd card
+ */
+#define SD_CARD_LOGGING 1
+
+/**
  * What i2c address to use for the io expander (0x21..0x27)
  * Note: Don't use address 0x20, because it's used by LCD shield display
  * Note. Internally, 0x20

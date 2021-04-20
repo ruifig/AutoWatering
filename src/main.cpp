@@ -26,7 +26,11 @@ void operator delete(void* ptr, unsigned int size)
 }
 
 
-SDCardHelper gSDCard;
+#if SD_CARD_LOGGING
+	SDCardHelper gSDCard;
+	SDLogOutput gSdLogOutput;
+#endif
+
 Context gCtx;
 
 using SoilMoistureSensorTicker = TTicker<SoilMoistureSensor, float>;
@@ -91,18 +95,8 @@ public:
 	int b;
 };
 
-void* gFooBuf;
-Foo* gFoo;
-
 void setup()
 {
-
-	gFooBuf = ::operator new(sizeof(Foo));
-	gFoo = new(gFooBuf) Foo(1,2);
-
-	gFoo->~Foo();
-	::operator delete(gFooBuf);
-	
 
 #ifdef AVR8_BREAKPOINT_MODE
 	debug_init();
@@ -115,9 +109,11 @@ void setup()
 	}
 #endif
 
-	CZ_LOG(logDefault, Log, "Hello world!");
-
+#if SD_CARD_LOGGING
 	gSDCard.begin(SD_CARD_SS_PIN);
+	gSdLogOutput.begin(gSDCard.root, "log.txt", true);
+	CZ_LOG(logDefault, Log, "SD card log file initialized");
+#endif
 
 	gCtx.begin();
 	gDisplay.getObj().begin();
@@ -130,6 +126,10 @@ void setup()
 	gPreviousTime = millis() / 1000.0f;
 
 	setMotorPins();
+
+	CZ_LOG(logDefault, Log, "My name is MojoJojo!");
+	CZ_LOG(logDefault, Log, "My name is Rui Figueira! %s:d", __FILENAME__, __LINE__);
+	CZ_ASSERT(false);
 
 	setAllMotorPins(HIGH, LOW);
 	delay(1000);

@@ -25,9 +25,8 @@
 	#endif
 #endif
 
-// Removes path from __FILE__
-// Copied from https://stackoverflow.com/questions/8487986/file-macro-shows-full-path
-#define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
+
+#define __FILENAME__ getFilename(__FILE__)
 
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__)
 	#define _BREAK() __asm__ __volatile__("break")
@@ -46,6 +45,8 @@
 
 namespace cz
 {
+	// Returns just the filename of a given path
+	const char* getFilename(const char* file);
 	void _doAssert(const char* file, int line, const char* fmt, ...) __attribute__ ((format (printf, 3,4)));
 	void _doAssert(const char* file, int line, const __FlashStringHelper* fmt, ...);
 }
