@@ -129,10 +129,10 @@ void setup()
 
 	setMotorPins();
 
-	setAllMotorPins(HIGH, LOW);
-	delay(1000);
-	setAllMotorPins(LOW, LOW);
-	delay(3000);
+	//setAllMotorPins(HIGH, LOW);
+	//delay(1000);
+	//setAllMotorPins(LOW, LOW);
+	//delay(3000);
 
 	//gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_2_INPUT1, HIGH);
 	//gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_2_INPUT2, LOW);

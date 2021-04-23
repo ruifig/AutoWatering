@@ -84,17 +84,22 @@ public:
 	LogOutput();
 	virtual ~LogOutput();
 
+	/**
+	 * Logs a message, with all the information that is enabled (time, category, verbosity), and moves to the next line
+	 **/
 	static void logToAll(const LogCategoryBase* category, LogVerbosity verbosity, const char* fmt, ...) __attribute__ ((format (printf, 3,4)));
 	static void logToAll(const LogCategoryBase* category, LogVerbosity verbosity, const __FlashStringHelper* fmt, ...);
+
+	/**
+	 * Logs a message without any extra information. Also, it doesn't add a new line at the end
+	 **/
 	static void logToAllSimple(LogVerbosity verbosity, const char* str);
 	static void logToAllSimple(LogVerbosity verbosity, const __FlashStringHelper* str);
 
 private:
 	
-	virtual void log(const LogCategoryBase* category, LogVerbosity verbosity, const char* msg) = 0;
 	virtual void logSimple(LogVerbosity verbosity, const char* str) = 0;
 	virtual void logSimple(LogVerbosity verbosity, const __FlashStringHelper* str) = 0;
-
 	static void logPrefix(const LogCategoryBase* category, LogVerbosity verbosity);
 
 	struct SharedData
@@ -110,7 +115,6 @@ private:
 class SerialLogOutput : public LogOutput
 {
 private:
-	virtual void log(const LogCategoryBase* category, LogVerbosity verbosity, const char* msg) override;
 	virtual void logSimple(LogVerbosity verbosity, const char* str) override;
 	virtual void logSimple(LogVerbosity verbosity, const __FlashStringHelper* str) override;
 };

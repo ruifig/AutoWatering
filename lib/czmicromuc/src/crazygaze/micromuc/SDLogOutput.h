@@ -37,7 +37,6 @@ class SDLogOutput : public LogOutput
 	void begin(SdFile& dirFile, const char* name, bool truncate);
 
   private:
-	virtual void log(const LogCategoryBase* category, LogVerbosity verbosity, const char* str) override;
 	virtual void logSimple(LogVerbosity verbosity, const char* str) override;
 	virtual void logSimple(LogVerbosity verbosity, const __FlashStringHelper* str) override;
 

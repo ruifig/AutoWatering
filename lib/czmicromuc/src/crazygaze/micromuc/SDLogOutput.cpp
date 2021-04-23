@@ -95,18 +95,6 @@ void SDLogOutput::begin(SdFile& dirFile, const char* name, bool truncate)
 	m_initialized = true;
 }
 
-void SDLogOutput::log(const LogCategoryBase* category, LogVerbosity verbosity, const char* str)
-{
-	if (!m_initialized)
-	{
-		return;
-	}
-	
-	m_file.write(str);
-	m_file.write("\r\n");
-	m_file.sync(false);
-}
-
 void SDLogOutput::logSimple(LogVerbosity verbosity, const char* str)
 {
 	if (!m_initialized)

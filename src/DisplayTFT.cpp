@@ -76,7 +76,7 @@ float DisplayTFT::tick(float deltaSeconds)
 	m_timeInState += deltaSeconds;
 	m_timeSinceLastTouch += deltaSeconds;
 
-	CZ_LOG(logDefault, Log, F("DisplayTFT::%s: state=%s, timeInState = %d"), __FUNCTION__, ms_stateNames[(int)m_state], (int)m_timeInState);
+	//CZ_LOG(logDefault, Log, F("DisplayTFT::%s: state=%s, timeInState = %d"), __FUNCTION__, ms_stateNames[(int)m_state], (int)m_timeInState);
 
 	switch(m_state)
 	{

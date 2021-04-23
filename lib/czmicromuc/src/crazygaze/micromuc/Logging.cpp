@@ -217,10 +217,6 @@ void LogOutput::logToAllSimple(LogVerbosity verbosity, const __FlashStringHelper
 }
 
 #if CZ_SERIAL_LOG_ENABLED
-void SerialLogOutput::log(const LogCategoryBase* category, LogVerbosity verbosity, const char* msg)
-{
-	Serial.println(msg);
-}
 
 void SerialLogOutput::logSimple(LogVerbosity verbosity, const char* str)
 {

@@ -9,8 +9,13 @@
 
 //#define USE_SERIAL
 
-#define CUSTOM_RESET_PORT PORTK
-#define CUSTOM_RESET_PIN PK0 // PK0 is Arduino Mega's A8 pin
+#if 0
+	#define CUSTOM_RESET_PORT PORTK
+	#define CUSTOM_RESET_PIN PK0 // PK0 is Arduino Mega's A8 pin
+#else
+	#define CUSTOM_RESET_PORT PORTL
+	#define CUSTOM_RESET_PIN PL7 // PK0 is Arduino Mega's D42 pin
+#endif
 
 #if ARDUINO < 101
 #define USE_GFX_KBV
