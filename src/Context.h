@@ -4,29 +4,70 @@
 #include "MCP23017Wrapper.h"
 #include "Mux16Channels.h"
 #include "Utils.h"
+#include <crazygaze/micromuc/Queue.h>
 
 namespace cz
 {
+	struct GraphPoint
+	{
+		// 0..100 moisture level
+		unsigned int val : 7;
+		// Tells if the motor was on at this point
+		bool on : 1;
+	};
+
+	static_assert(sizeof(GraphPoint)==1, "GraphPoint size must be 1");
+
+    class GroupData
+    {
+	  public:
+		void setMoistureSensorValues(int currentValue, int airValue, int waterValue);
+
+		unsigned int getAirValue() const
+		{
+			return m_airValue;
+		}
+
+		unsigned int getWaterValue() const
+		{
+			return m_waterValue;
+		}
+
+		unsigned int getCurrentValue() const
+		{
+			return m_currentValue;
+		}
+
+		unsigned int getPercentageValue() const
+		{
+			return m_currentPercentageValue;
+		}
+
+		float getSamplingInterval() const
+		{
+			return m_samplingInterval;
+		}
+
+		void resetHistory();
+
+	  private:
+        // How many seconds to wait between samplings
+        float m_samplingInterval = MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL;
+        unsigned int m_airValue = 513;
+        unsigned int m_waterValue = 512;
+        unsigned int m_currentValue = 0;
+		uint8_t m_currentPercentageValue = 0;
+        //! Value below which irrigation should be turned on
+        int m_threshold = 0;
+        //! Returns the current value in 0..100 format (aka: Percentage)
+        int calcCurrentPercentage() const;
+		TStaticFixedCapacityQueue<GraphPoint, GRAPH_NUMPOINTS> m_history;
+    };
 
 class ProgramData
 {
 public:
-
-    struct MoistureSensorData
-    {
-        // How many seconds to wait between samplings
-        float samplingIntervalSeconds = MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL;
-        int airValue = 513;
-        int waterValue = 512;
-        int currentValue = 0;
-        //! Value below which irrigation should be turned on
-        int threshold = 0;
-        //! Returns the current value in 0..100 format (aka: Percentage)
-        int calcCurrentPercentage() const;
-    };
-
-    const MoistureSensorData& getMoistureSensor(uint8_t index);
-    void setMoistureSensorValues(uint8_t index, int currentValue, int airValue, int waterValue);
+    GroupData& getGroupData(uint8_t index);
 
     // We only allow 1 sensor to be active at one give time, so we use this as a kind of mutex
     bool tryAcquireMoistureSensorMutex();
@@ -35,7 +76,7 @@ public:
 	void logMoistureSensors();
 
   private:
-    MoistureSensorData m_moistureSensorData[NUM_MOISTURESENSORS];
+    GroupData m_group[NUM_MOISTURESENSORS];
     bool m_moistureSensorMutex = false;
 };
 

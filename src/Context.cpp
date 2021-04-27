@@ -14,32 +14,29 @@ void Context::begin()
 	mux.begin();
 }
 
-int ProgramData::MoistureSensorData::calcCurrentPercentage() const
+void GroupData::setMoistureSensorValues(int currentValue, int airValue, int waterValue)
 {
-	return map(currentValue, airValue, waterValue, 0, 100);
-}
+	m_currentValue = currentValue;
+	m_airValue = airValue;
+	m_waterValue = waterValue;
+	m_currentPercentageValue = map(m_currentValue, m_airValue, m_waterValue, 0, 100);
 
-const ProgramData::MoistureSensorData& ProgramData::getMoistureSensor(uint8_t index)
-{
-	CZ_ASSERT(index < NUM_MOISTURESENSORS);
-	return m_moistureSensorData[index];
-}
-
-void ProgramData::setMoistureSensorValues(uint8_t index, int currentValue, int airValue, int waterValue)
-{
-	CZ_ASSERT(index < NUM_MOISTURESENSORS);
-	auto& s = m_moistureSensorData[index];
-	s.currentValue = currentValue;
-	s.airValue = airValue;
-	s.waterValue = waterValue;
-
-#if 0
-	if (index==3)
+	// Add to history
+	GraphPoint point;
+	point.val = m_currentPercentageValue;
+	if (m_history.isFull())
 	{
-		CZ_LOG(logDefault, Log, F("Sensor %d: (%3d->%3d) (%3d=%3d%%)"), (int)index, (int)s.airValue, (int)s.waterValue, (int)s.currentValue, s.calcCurrentPercentage());
+		m_history.pop();
 	}
-#endif
+	m_history.push(point);
 }
+
+GroupData& ProgramData::getGroupData(uint8_t index)
+{
+	CZ_ASSERT(index < NUM_MOISTURESENSORS);
+	return m_group[index];
+}
+
 
 void ProgramData::logMoistureSensors()
 {
@@ -48,12 +45,12 @@ void ProgramData::logMoistureSensors()
 
 	for(int idx = 0; idx < NUM_MOISTURESENSORS; idx++)
 	{
-		auto& s = m_moistureSensorData[idx];
+		GroupData& g = m_group[idx];
 		if (idx != 0)
 		{
 			strCatPrintf(buf, " ");
 		}
-		strCatPrintf(buf, F("(%d:%3d->%3d, %3d=%3d%%)"), (int)idx, (int)s.airValue, (int)s.waterValue, (int)s.currentValue, s.calcCurrentPercentage());
+		strCatPrintf(buf, F("(%d:%3d->%3d, %3d=%3d%%)"), (int)idx, (int)g.getAirValue(), (int)g.getWaterValue(), (int)g.getCurrentValue(), g.getPercentageValue());
 
 	}
 

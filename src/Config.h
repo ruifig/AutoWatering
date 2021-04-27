@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include "crazygaze/micromuc/czmicromuc.h"
+#include <MCUFRIEND_kbv.h>
 
 namespace cz
 {
@@ -33,6 +34,11 @@ using IOExpanderPin = TPinType<uint8_t, PinLocation::IOExpander>;
 using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 
 }
+
+// FASTER_ITERATION
+#ifndef FASTER_ITERATION
+	#define FASTER_ITERATION 0
+#endif
 
 /**
  * What pin to as CS/SS for the SD card reader
@@ -104,15 +110,17 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
  * actual reading.
  * This specifies how many seconds to wait before doing the reading
  */
-//#define MOISTURESENSOR_POWERUP_WAIT 0.2f
-//#define MOISTURESENSOR_POWERUP_WAIT 0.25f
 #define MOISTURESENSOR_POWERUP_WAIT 0.25f
 
 /**
  * Default sensor sampling interval in seconds
  */
 //#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 5.0f
-#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 0.1f
+#if FASTER_ITERATION
+	#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 1.0f
+#else
+	#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 60.0f
+#endif
 
 /**
  * Time in seconds for the LCD's backlight to be turned if no buttons are pressed
@@ -134,4 +142,17 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 /**
  * How long to show the intro for when powering up
  */
-#define INTRO_DURATION 5.0f
+
+ #if FASTER_ITERATION
+	#define INTRO_DURATION 5.0f
+#else
+	#define INTRO_DURATION 1.0f
+#endif
+
+#define GRAPH_NUMPOINTS 200
+#define GRAPH_MOTOR_ON_COLOUR TFT_YELLOW
+#define GRAPH_MOTOR_OFF_COLOUR TFT_BLACK
+#define GRAPH_MOISTURE_OK_COLOUR TFT_GREEN
+#define GRAPH_MOISTURE_LOW_COLOUR TFT_RED
+
+

@@ -54,7 +54,7 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 		break;
 
 	case State::PoweredDown:
-		if (m_timeInState >= m_ctx.data.getMoistureSensor(m_index).samplingIntervalSeconds)
+		if (m_timeInState >= m_ctx.data.getGroupData(m_index).getSamplingInterval())
 		{
 			tryEnterReadingState();
 		}
@@ -64,12 +64,12 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 
 		if (m_timeInState >= MOISTURESENSOR_POWERUP_WAIT)
 		{
-			const ProgramData::MoistureSensorData& currData = m_ctx.data.getMoistureSensor(m_index);
-			int airValue = currData.airValue;
-			int waterValue = currData.waterValue;
+			GroupData& data = m_ctx.data.getGroupData(m_index);
+			int airValue = data.getAirValue();
+			int waterValue = data.getWaterValue();
 
+			// Read the sensor
 			int currentValue = m_ctx.mux.read(m_dataPin);
-
 			if (currentValue > airValue)
 			{
 				airValue = currentValue;
@@ -79,7 +79,7 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 				waterValue = currentValue;
 			}
 
-			m_ctx.data.setMoistureSensorValues(m_index, currentValue, airValue, waterValue);
+			data.setMoistureSensorValues(currentValue, airValue, waterValue);
 			changeToState(State::PoweredDown);
 		}
 		break;

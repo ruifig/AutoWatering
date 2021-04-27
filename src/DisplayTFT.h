@@ -58,6 +58,13 @@ public:
 	
 };
 
+
+class Group
+{
+  public:
+  private:
+};
+
 class DisplayTFT
 {
   public:
