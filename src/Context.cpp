@@ -16,6 +16,7 @@ void Context::begin()
 
 void GroupData::setMoistureSensorValues(int currentValue, int airValue, int waterValue)
 {
+	m_numReadings++;
 	m_currentValue = currentValue;
 	m_airValue = airValue;
 	m_waterValue = waterValue;
@@ -47,7 +48,7 @@ GroupData& ProgramData::getGroupData(uint8_t index)
 
 void ProgramData::logMoistureSensors()
 {
-	char buf[128];
+	char buf[256];
 	buf[0] = 0;
 
 	bool changed = false;
@@ -72,7 +73,7 @@ void ProgramData::logMoistureSensors()
 		{
 			strCatPrintf(buf, " ");
 		}
-		strCatPrintf(buf, F("(%d:%3d->%3d, %3d=%3d%%)"), (int)idx, (int)g.getAirValue(), (int)g.getWaterValue(), (int)g.getCurrentValue(), g.getPercentageValue());
+		strCatPrintf(buf, F("(%d:%3u:%3d->%3d, %3d=%3d%%)"), (int)idx, g.getNumReadings(), (int)g.getAirValue(), (int)g.getWaterValue(), (int)g.getCurrentValue(), g.getPercentageValue());
 
 	}
 

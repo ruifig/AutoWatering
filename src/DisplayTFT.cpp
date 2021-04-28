@@ -70,6 +70,7 @@ const uint8_t chart_curve_bitmask[] PROGMEM = {
 #define WHITE       0xFFFF
 #define YELLOW      0xFFE0
 
+#define VERYDARKGREY    0x2945
 
 #define TINY_FONT &Org_01
 #define SMALL_FONT &FreeSmallFont
@@ -120,7 +121,7 @@ float DisplayTFT::tick(float deltaSeconds)
 		}
 		break;
 	case State::Overview:
-		// TODO : Fill me
+		drawOverview();
 		break;
 	default:
 		CZ_UNEXPECTED();
@@ -217,6 +218,25 @@ void DisplayTFT::drawRGBBitmap(int16_t x, int16_t y, const uint16_t *bitmap, con
 	m_tft.drawRGBBitmap(x, y, bitmap, mask, w, h);
 }
 
+void DisplayTFT::plotHistory(int16_t x, int16_t y, int16_t h, const TFixedCapacityQueue<GraphPoint>& data, uint8_t valThreshold, const GraphPoint* oldData, int oldCount)
+{
+	int bottomY = y + h - 1;
+
+	const int count = data.size();
+	for(int i=0; i<count; i++)
+	{
+		GraphPoint p = data.getAtIndex(i);
+		int xx = x + i;
+		m_tft.drawFastVLine(xx, y, h, BLACK);
+		// The height for the plotting is h-1 because we reserve the top pixel for the motor on/off
+		int yy = map(p.val, 0, 100, 0,  h - 1);
+		m_tft.drawPixel(xx, bottomY - yy, p.val < valThreshold ? GRAPH_MOISTURE_LOW_COLOUR : GRAPH_MOISTURE_OK_COLOUR);
+		m_tft.drawPixel(xx, y, p.on ? GRAPH_MOTOR_ON_COLOUR : GRAPH_MOTOR_OFF_COLOUR);
+	}
+
+}
+
+
 void DisplayTFT::onEnterState()
 {
 	switch(m_state)
@@ -272,11 +292,93 @@ void DisplayTFT::onEnterState()
 		break;
 
 	case State::Overview:
+		drawHistoryBoxes();
 		break;
 
 	default:
 		CZ_UNEXPECTED();
 	}
+}
+
+
+void DisplayTFT::drawHistoryBoxes()
+{
+	for(int i=0; i<NUM_MOISTURESENSORS; i++)
+	{
+		int x = m_historyX;
+		int y = m_groupsStartY + (i*(GRAPH_HEIGHT + m_spaceBetweenGroups));
+		m_tft.drawRect(x-1, y-1, GRAPH_NUMPOINTS+2, GRAPH_HEIGHT+2, VERYDARKGREY);
+
+		constexpr int16_t h = GRAPH_HEIGHT;
+		int bottomY = y + h - 1;
+		m_tft.drawFastHLine(x-3, bottomY - map(0, 0, 100, 0, h - 1), 4, DARKGREY);
+		m_tft.drawFastHLine(x-3, bottomY - map(20, 0, 100, 0, h - 1), 4, DARKGREY);
+		m_tft.drawFastHLine(x-3, bottomY - map(40, 0, 100, 0, h - 1), 4, DARKGREY);
+		m_tft.drawFastHLine(x-3, bottomY - map(60, 0, 100, 0, h - 1), 4, DARKGREY);
+		m_tft.drawFastHLine(x-3, bottomY - map(80, 0, 100, 0, h - 1), 4, DARKGREY);
+		m_tft.drawFastHLine(x-3, bottomY - map(100, 0, 100, 0, h - 1), 4, DARKGREY);
+	}
+}
+
+void DisplayTFT::drawOverview()
+{
+#define TEST_HISTORY 0
+#if TEST_HISTORY
+	static HistoryQueue q;
+	bool first;
+	if (first)
+	{
+		for(int i=0; i<20; i++)
+		{
+			q.push({0, false});
+		}
+
+		for(int i=0; i<20; i++)
+		{
+			q.push({25, true});
+		}
+
+		for(int i=0; i<20; i++)
+		{
+			q.push({49, false});
+		}
+
+		for(int i=0; i<20; i++)
+		{
+			q.push({50, true});
+		}
+
+		for(int i=0; i<20; i++)
+		{
+			q.push({75, false});
+		}
+
+		for(int i=0; i<20; i++)
+		{
+			q.push({100, true});
+		}
+
+		while(!q.isFull())
+		{
+			q.push({10, false});
+		}
+	}
+#endif
+
+
+	for(int i=0; i<NUM_MOISTURESENSORS; i++)
+	{
+		GroupData& data = m_ctx.data.getGroupData(i);
+#if TEST_HISTORY
+		auto&& history = q;
+#else
+		const HistoryQueue& history = data.getHistory();
+#endif
+		int x = m_historyX;
+		int y = m_groupsStartY + (i*(GRAPH_HEIGHT + m_spaceBetweenGroups));
+		plotHistory(x, y, GRAPH_HEIGHT, history, data.getPercentageThreshold(), nullptr, 0);
+	}
+
 }
 
 } // namespace cz

@@ -7,10 +7,11 @@ namespace cz
 {
 
 #if CZ_LOG_ENABLED
-const char* const SoilMoistureSensor::ms_stateNames[3] =
+const char* const SoilMoistureSensor::ms_stateNames[4] =
 {
 	"Initializing",
 	"PoweredDown",
+	"PoweringUp",
 	"Reading"
 };
 #endif
@@ -51,19 +52,24 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 	{
 	case State::Initializing:
 		// From Initializing, we jump straight to a first reading
-		tryEnterReadingState();
+		changeToState(State::PoweringUp);
 		break;
 
 	case State::PoweredDown:
 		if (m_timeInState >= m_ctx.data.getGroupData(m_index).getSamplingInterval())
+		{
+			changeToState(State::PoweringUp);
+		}
+		break;
+
+	case State::PoweringUp:
+		if (m_timeInState >= MOISTURESENSOR_POWERUP_WAIT)
 		{
 			tryEnterReadingState();
 		}
 		break;
 
 	case State::Reading:
-
-		if (m_timeInState >= MOISTURESENSOR_POWERUP_WAIT)
 		{
 			GroupData& data = m_ctx.data.getGroupData(m_index);
 			int airValue = data.getAirValue();
@@ -82,6 +88,13 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 
 			//CZ_LOG(logDefault, Log, F("SoilMoistureSensor(%d) : %d"), m_index, currentValue);
 			data.setMoistureSensorValues(currentValue, airValue, waterValue);
+			#if FASTER_ITERATION
+				data.setMoistureSensorValues(currentValue, airValue, waterValue);
+				data.setMoistureSensorValues(currentValue, airValue, waterValue);
+				data.setMoistureSensorValues(currentValue, airValue, waterValue);
+				data.setMoistureSensorValues(currentValue, airValue, waterValue);
+				data.setMoistureSensorValues(currentValue, airValue, waterValue);
+			#endif
 			changeToState(State::PoweredDown);
 		}
 		break;
@@ -120,6 +133,9 @@ void SoilMoistureSensor::onLeaveState()
 	case State::PoweredDown:
 		break;
 
+	case State::PoweringUp:
+		break;
+
 	case State::Reading:
 		//  Turn power off
 		m_ctx.ioExpander.digitalWrite(m_vinPin, LOW);
@@ -145,10 +161,13 @@ void SoilMoistureSensor::onEnterState()
 	case State::PoweredDown:
 		break;
 
-	case State::Reading:
-		//  To take a measurement, we turn the sensor ON, wait a bit, the switch it off
+	case State::PoweringUp:
+		//  To take a measurement, we turn the sensor ON, wait a bit, then switch it off
 		m_ctx.ioExpander.digitalWrite(m_vinPin, HIGH);
 		m_nextTickWait = MOISTURESENSOR_POWERUP_WAIT;
+		break;
+
+	case State::Reading:
 		break;
 
 	default:

@@ -37,6 +37,8 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 
 #if CZ_DEBUG
 	#define FASTER_ITERATION 1
+#else
+	#define FASTER_ITERATION 1
 #endif
 
 // FASTER_ITERATION
@@ -114,7 +116,11 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
  * actual reading.
  * This specifies how many seconds to wait before doing the reading
  */
-#define MOISTURESENSOR_POWERUP_WAIT 0.25f
+#if FASTER_ITERATION
+	#define MOISTURESENSOR_POWERUP_WAIT 0.20f
+#else
+	#define MOISTURESENSOR_POWERUP_WAIT 0.20f
+#endif
 
 /**
  * Default sensor sampling interval in seconds
@@ -147,7 +153,7 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
  */
 
  #if FASTER_ITERATION
-	#define INTRO_DURATION 5.0f
+	#define INTRO_DURATION 1.0f
 #else
 	#define INTRO_DURATION 1.0f
 #endif
@@ -157,5 +163,6 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 #define GRAPH_MOTOR_OFF_COLOUR TFT_BLACK
 #define GRAPH_MOISTURE_OK_COLOUR TFT_GREEN
 #define GRAPH_MOISTURE_LOW_COLOUR TFT_RED
+#define GRAPH_HEIGHT 32
 
 
