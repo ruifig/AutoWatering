@@ -48,6 +48,17 @@ namespace cz
 			return m_samplingInterval;
 		}
 
+		bool hasChanged() const
+		{
+			return m_updated;
+		}
+
+		void resetChanged()
+		{
+			m_updated = false;
+		}
+
+
 		void resetHistory();
 
 	  private:
@@ -62,6 +73,7 @@ namespace cz
         //! Returns the current value in 0..100 format (aka: Percentage)
         int calcCurrentPercentage() const;
 		TStaticFixedCapacityQueue<GraphPoint, GRAPH_NUMPOINTS> m_history;
+		bool m_updated = false;
     };
 
 class ProgramData

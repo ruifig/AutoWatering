@@ -126,6 +126,13 @@ class DisplayTFT
 		printAlignedImpl(area, halign, valign, txt);
 	}
 
+	/**
+	 * Draws a filled rectangle with the specified colour, followed by a 565 RGB bitmap from PROGMEM using a bitmask
+	 * (set bits = opaque, unset bits = clear).
+	 **/
+	void drawRGBBitmap(int16_t x, int16_t y, const uint16_t *bitmap, const uint8_t* mask, int16_t w, int16_t h, uint16_t bkgColor);
+
+
 };
 	
 	

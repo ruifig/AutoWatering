@@ -1,5 +1,6 @@
 #include "SoilMoistureSensor.h"
 #include "Utils.h"
+#include <crazygaze/micromuc/Logging.h>
 #include <Arduino.h>
 
 namespace cz
@@ -79,6 +80,7 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 				waterValue = currentValue;
 			}
 
+			//CZ_LOG(logDefault, Log, F("SoilMoistureSensor(%d) : %d"), m_index, currentValue);
 			data.setMoistureSensorValues(currentValue, airValue, waterValue);
 			changeToState(State::PoweredDown);
 		}
@@ -100,7 +102,7 @@ void SoilMoistureSensor::changeToState(State newState)
 		, (int)(m_timeInState * 1000.f)
 		, ms_stateNames[(int)m_state]
 		, ms_stateNames[(int)newState]);
-		#endif
+	#endif
 
 	onLeaveState();
 	m_state = newState;

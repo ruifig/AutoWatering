@@ -161,11 +161,10 @@ void loop()
 		countdown = std::min(ticker.tick(deltaSeconds), countdown);
 	}
 
-	gPreviousTime = now;
-	//CZ_LOG_LN("Waiting %d seconds", (int) countdown);
-	delay(countdown*1000);
-
 	gCtx.data.logMoistureSensors();
+
+	gPreviousTime = now;
+	delay(countdown*1000);
 
 }
 

@@ -35,6 +35,10 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 
 }
 
+#if CZ_DEBUG
+	#define FASTER_ITERATION 1
+#endif
+
 // FASTER_ITERATION
 #ifndef FASTER_ITERATION
 	#define FASTER_ITERATION 0
@@ -115,7 +119,6 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 /**
  * Default sensor sampling interval in seconds
  */
-//#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 5.0f
 #if FASTER_ITERATION
 	#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 1.0f
 #else

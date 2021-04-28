@@ -239,6 +239,13 @@ void runTests()
 	assert(q.remove(2) == 2);
 	assert(equals(q, { 3,4,5 }));
 
+	assert(q.front() == 3);
+	assert(q.back() == 5);
+
+	q.clear();
+	assert(q.size() == 0);
+
+
 }
 
 }

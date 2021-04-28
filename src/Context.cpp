@@ -29,6 +29,13 @@ void GroupData::setMoistureSensorValues(int currentValue, int airValue, int wate
 		m_history.pop();
 	}
 	m_history.push(point);
+	m_updated = true;
+}
+
+void GroupData::resetHistory()
+{
+	m_history.clear();
+	m_updated = true;
 }
 
 GroupData& ProgramData::getGroupData(uint8_t index)
@@ -42,6 +49,21 @@ void ProgramData::logMoistureSensors()
 {
 	char buf[128];
 	buf[0] = 0;
+
+	bool changed = false;
+	for(auto&& g : m_group)
+	{
+		if (g.hasChanged())
+		{
+			g.resetChanged();
+			changed = true;
+		}
+	}
+
+	if (!changed)
+	{
+		return;
+	}
 
 	for(int idx = 0; idx < NUM_MOISTURESENSORS; idx++)
 	{
