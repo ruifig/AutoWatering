@@ -1,6 +1,7 @@
 #include "DisplayTFT.h"
 #include "Utils.h"
 #include "crazygaze/micromuc/Logging.h"
+#include "crazygaze/micromuc/StringUtils.h"
 
 #include <FreeDefaultFonts.h>
 #include <Fonts/FreeSans9pt7b.h>
@@ -100,7 +101,6 @@ void DisplayTFT::begin()
 {
 	onEnterState();
 }
-
 
 float DisplayTFT::tick(float deltaSeconds)
 {
@@ -218,7 +218,13 @@ void DisplayTFT::drawRGBBitmap(int16_t x, int16_t y, const uint16_t *bitmap, con
 	m_tft.drawRGBBitmap(x, y, bitmap, mask, w, h);
 }
 
-void DisplayTFT::plotHistory(int16_t x, int16_t y, int16_t h, const TFixedCapacityQueue<GraphPoint>& data, uint8_t valThreshold, const GraphPoint* oldData, int oldCount)
+
+void DisplayTFT::fillRect(const Box& box, uint16_t color)
+{
+	m_tft.fillRect(box.x, box.y, box.width, box.height, color);
+}
+
+void DisplayTFT::plotHistory(int16_t x, int16_t y, int16_t h, const TFixedCapacityQueue<GraphPoint>& data, uint8_t valThreshold /*, const GraphPoint* oldData, int oldCount*/)
 {
 	int bottomY = y + h - 1;
 
@@ -227,7 +233,7 @@ void DisplayTFT::plotHistory(int16_t x, int16_t y, int16_t h, const TFixedCapaci
 	{
 		GraphPoint p = data.getAtIndex(i);
 		int xx = x + i;
-		m_tft.drawFastVLine(xx, y, h, BLACK);
+		//m_tft.drawFastVLine(xx, y, h, BLACK);
 		// The height for the plotting is h-1 because we reserve the top pixel for the motor on/off
 		int yy = map(p.val, 0, 100, 0,  h - 1);
 		m_tft.drawPixel(xx, bottomY - yy, p.val < valThreshold ? GRAPH_MOISTURE_LOW_COLOUR : GRAPH_MOISTURE_OK_COLOUR);
@@ -243,6 +249,7 @@ void DisplayTFT::onEnterState()
 	{
 	case State::Initializing:
 		{
+			memset(m_previousValues, 0, sizeof(m_previousValues));
 			m_tft.reset();
 			uint16_t identifier = m_tft.readID();
 			if(identifier == 0x9325)
@@ -374,10 +381,56 @@ void DisplayTFT::drawOverview()
 #else
 		const HistoryQueue& history = data.getHistory();
 #endif
+
+		//
+		// Draw history
+		//
 		int x = m_historyX;
 		int y = m_groupsStartY + (i*(GRAPH_HEIGHT + m_spaceBetweenGroups));
-		plotHistory(x, y, GRAPH_HEIGHT, history, data.getPercentageThreshold(), nullptr, 0);
+		plotHistory(x, y, GRAPH_HEIGHT, history, data.getPercentageThreshold());
+
+		//
+		// Draw values
+		//
+		{
+			PreviousValues& previousValues = m_previousValues[i];
+			Box box = {m_historyX + GRAPH_NUMPOINTS + 2, y, 30, GRAPH_HEIGHT/3};
+			m_tft.setFont(TINY_FONT);
+			m_tft.setTextColor(DARKGREY);
+			char str[5];
+
+			if (previousValues.waterValue != data.getWaterValue())
+			{
+				previousValues.waterValue = data.getWaterValue();
+				itoa(previousValues.waterValue, str, 10);
+				fillRect(box, BLACK);
+				printAligned(box, HAlign::Center, VAlign::Center, str);
+			}
+
+			box.y += box.height;
+			if (previousValues.percentage != data.getPercentageValue())
+			{
+				previousValues.percentage = data.getPercentageValue();
+				itoa(previousValues.percentage, str, 10);
+				fillRect(box, BLACK);
+				printAligned(box, HAlign::Center, VAlign::Center, formatString(F("%3u%%"), previousValues.percentage));
+			}
+
+
+			box.y += box.height;
+			if (previousValues.airValue != data.getAirValue())
+			{
+				previousValues.airValue = data.getAirValue();
+				itoa(data.getAirValue(), str, 10);
+				fillRect(box, BLACK);
+				printAligned(box, HAlign::Center, VAlign::Center, str);
+			}
+
+		}
+
 	}
+
+	
 
 }
 

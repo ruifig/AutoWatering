@@ -148,18 +148,39 @@ void setup()
 
 }
 
+float gTickingTimes[5];
+float gTickingLastTime;
+int gTickingTimingIndex = 0;
+void startTickingTiming()
+{
+	gTickingLastTime = millis() / 1000.0f;
+	gTickingTimingIndex = 0;
+}
+
+void tickingTime()
+{
+	float now = millis() / 1000.0f;
+	gTickingTimes[gTickingTimingIndex++] = now - gTickingLastTime;
+	gTickingLastTime = now;
+}
+
+
 void loop()
 {
 	float now = millis() / 1000.0f;
 	float deltaSeconds = now - gPreviousTime;
 	float countdown = 60*60;
 
+	startTickingTiming();
 	countdown = std::min(gDisplay.tick(deltaSeconds), countdown);
+	tickingTime();
 
 	for (auto&& ticker : gSoilMoistureSensors)
 	{
 		countdown = std::min(ticker.tick(deltaSeconds), countdown);
+		tickingTime();
 	}
+
 
 	gCtx.data.logMoistureSensors();
 

@@ -59,12 +59,6 @@ public:
 };
 
 
-class Group
-{
-  public:
-  private:
-};
-
 class DisplayTFT
 {
   public:
@@ -96,9 +90,16 @@ class DisplayTFT
 	float m_timeSinceLastTouch = 0;
 	bool m_screenOff = false;
 
-	constexpr static int16_t m_historyX = 10;
+	constexpr static int16_t m_historyX = 5;
 	constexpr static int16_t m_groupsStartY = 10;
 	constexpr static int16_t m_spaceBetweenGroups = 20;
+
+	struct PreviousValues
+	{
+		uint16_t waterValue;
+		uint16_t airValue;
+		uint8_t percentage;
+	} m_previousValues[NUM_MOISTURESENSORS];
 
 	void changeToState(State newState);
 	void onLeaveState();
@@ -153,6 +154,8 @@ class DisplayTFT
 	 *    If this is not specified, then the function erases a full Y range per point before drawing the point.
 	 **/
 	void plotHistory(int16_t x, int16_t y, int16_t h, const TFixedCapacityQueue<GraphPoint>& data, uint8_t valThreshold /*, const GraphPoint* oldData = nullptr, int oldCount=0*/);
+
+	void fillRect(const Box& box, uint16_t color);
 
 };
 	
