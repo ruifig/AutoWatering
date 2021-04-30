@@ -6,6 +6,7 @@
 
 .vs
 /Debug/
+/Development/
 /Release/
 /atmelstudio_lib/ArduinoCore/Debug/
 /atmelstudio_lib/ArduinoCore/Release/

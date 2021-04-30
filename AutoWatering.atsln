@@ -10,15 +10,20 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AVR = Debug|AVR
+		Development|AVR = Development|AVR
 		Release|AVR = Release|AVR
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.Debug|AVR.ActiveCfg = Debug|AVR
 		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.Debug|AVR.Build.0 = Debug|AVR
+		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.Development|AVR.ActiveCfg = Development|AVR
+		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.Development|AVR.Build.0 = Development|AVR
 		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.Release|AVR.ActiveCfg = Release|AVR
 		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.Release|AVR.Build.0 = Release|AVR
 		{DBD43DB8-0C6B-4D0C-901C-CCD781F6B924}.Debug|AVR.ActiveCfg = Debug|AVR
 		{DBD43DB8-0C6B-4D0C-901C-CCD781F6B924}.Debug|AVR.Build.0 = Debug|AVR
+		{DBD43DB8-0C6B-4D0C-901C-CCD781F6B924}.Development|AVR.ActiveCfg = Release|AVR
+		{DBD43DB8-0C6B-4D0C-901C-CCD781F6B924}.Development|AVR.Build.0 = Release|AVR
 		{DBD43DB8-0C6B-4D0C-901C-CCD781F6B924}.Release|AVR.ActiveCfg = Release|AVR
 		{DBD43DB8-0C6B-4D0C-901C-CCD781F6B924}.Release|AVR.Build.0 = Release|AVR
 	EndGlobalSection

@@ -54,7 +54,11 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 /**
  * If 1, it will log to a file in the sd card
  */
-#define SD_CARD_LOGGING 1
+#if CZ_LOG_ENABLED
+	#define SD_CARD_LOGGING 1
+#else
+	#define SD_CARD_LOGGING 0
+#endif
 
 /**
  * What i2c address to use for the io expander (0x21..0x27)
