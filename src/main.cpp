@@ -18,6 +18,7 @@
 #include "AT24C.h"
 #include "crazygaze/micromuc/SDLogOutput.h"
 #include "crazygaze/micromuc/Profiler.h"
+#include "crazygaze/micromuc/SerialStringReader.h"
 
 using namespace cz;
 
@@ -84,18 +85,6 @@ void setAllMotorPins(int val1, int val2)
 
 
 
-class Foo
-{
-public:
-	Foo(int a, int b) : a(a), b(b)
-	{
-		Serial.println("Hello");
-	}
-	
-	int a;
-	int b;
-};
-
 void setup()
 {
 
@@ -144,92 +133,12 @@ void setup()
 	//gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_2_INPUT1, LOW);
 	//gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_2_INPUT2, LOW);
 
-	//CZ_LOG(logDefault, Log, "alsdflkj asldkj laksdjfl kasjdfl akjsd flaksjd flkajsd fjljjjjasdlkj alksdj laksdjf laksdjf lkasdj flkjlsjdflkaj sdflkj lkj lkasjdf lkasdfj lkajsflkadsfj alskdjf lkajsdf lkajsd flkajs dflkj laksdj flaksjd flkajsd flkasdjf alksdjf lkasjd flksdjf");
 
-
-}
-
-float gTickingTimes[5];
-
-float gTickingLastTime;
-int gTickingTimingIndex = 0;
-
-const char stringA[] PROGMEM = "StringA";
-const char stringB[] = "StringB";
-const char* stringC = "StringB";
-
-void startTickingTiming()
-{
-	gTickingLastTime = millis() / 1000.0f;
-	gTickingTimingIndex = 0;
-}
-
-void tickingTime()
-{
-	float now = millis() / 1000.0f;
-	gTickingTimes[gTickingTimingIndex++] = now - gTickingLastTime;
-	gTickingLastTime = now;
 }
 
 PROFILER_CREATE(10);
 
-
-/**
- * Reads a string from Serial, without using the String or memory allocation
- * The sender needs to write \r\n at the end of each string.
- */
-template<int MaxSize=64>
-class SerialStringReader
-{
-public:
-	/**
-	 * Tries to read a string without blocking
-	 * A string is considered full when a \r\n is detected
-	 * @return Pointer to the string, or nullptr if no string detected
-	 */
-	bool tryRead()
-	{
-		int ch = Serial.read();
-		while(ch != -1)
-		{
-			if (ch == '\n')
-			{
-				m_buf[m_index] = 0;
-				return true;
-			}
-			else if (ch == '\r')
-			{
-				// drop this one
-			}
-			else
-			{
-				m_buf[m_index++] = ch;
-				if (m_index == MaxSize-1)
-				{
-					m_buf[m_index] = 0;
-					return true;
-				}
-			}
-
-			ch = Serial.read();
-		}
-
-		return false;
-	}
-
-	const char* retrieve()
-	{
-		m_index = 0;
-		return m_buf;
-	}
-
-private:
-	char m_buf[MaxSize];
-	int m_index = 0;
-};
-
-
-SerialStringReader<64> gSerialStringReader;
+cz::SerialStringReader<64> gSerialStringReader;
 
 void loop()
 {
@@ -241,14 +150,11 @@ void loop()
 
 	{
 		PROFILE_SCOPE(F("TickAll"));
-		startTickingTiming();
 		countdown = std::min(gDisplay.tick(deltaSeconds), countdown);
-		tickingTime();
 
 		for (auto&& ticker : gSoilMoistureSensors)
 		{
 			countdown = std::min(ticker.tick(deltaSeconds), countdown);
-			tickingTime();
 		}
 
 	}

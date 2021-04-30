@@ -8,7 +8,6 @@
 *********************************************************************/
 
 #include "Logging.h"
-#include <Arduino.h>
 #include <string.h>
 #include <stdarg.h>
 #include <algorithm>

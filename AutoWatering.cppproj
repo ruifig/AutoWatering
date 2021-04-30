@@ -501,6 +501,9 @@
     <Compile Include="lib\czmicromuc\src\crazygaze\micromuc\SDLogOutput.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="lib\czmicromuc\src\crazygaze\micromuc\SerialStringReader.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="lib\czmicromuc\src\crazygaze\micromuc\StringUtils.cpp">
       <SubType>compile</SubType>
     </Compile>
