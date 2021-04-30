@@ -23,6 +23,8 @@ namespace cz
     class GroupData
     {
 	  public:
+		void begin();
+
 		void setMoistureSensorValues(int currentValue, int airValue, int waterValue);
 
 		unsigned int getAirValue() const
@@ -107,6 +109,7 @@ public:
 
 	void logMoistureSensors();
 
+	void begin();
   private:
     GroupData m_group[NUM_MOISTURESENSORS];
     bool m_moistureSensorMutex = false;

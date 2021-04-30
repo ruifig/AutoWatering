@@ -35,12 +35,6 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 
 }
 
-#if CZ_DEBUG
-	#define FASTER_ITERATION 1
-#else
-	#define FASTER_ITERATION 1
-#endif
-
 // FASTER_ITERATION
 #ifndef FASTER_ITERATION
 	#define FASTER_ITERATION 0

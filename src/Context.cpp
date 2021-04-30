@@ -12,6 +12,59 @@ void Context::begin()
 	static_assert(IO_EXPANDER_ADDR>=0x21 && IO_EXPANDER_ADDR<=0x27, "Wrong macro value");
 	ioExpander.begin(IO_EXPANDER_ADDR);
 	mux.begin();
+
+	data.begin();
+
+}
+
+
+void GroupData::begin()
+{
+
+// Fill the history with some values, for testing purposes
+#if FASTER_ITERATION
+	for(int i=0; i<20; i++)
+	{
+		m_history.push({GRAPH_HEIGHT-2, false});
+	}
+
+	for(int i=0; i<20; i++)
+	{
+		m_history.push({0, false});
+	}
+
+	for(int i=0; i<20; i++)
+	{
+		m_history.push({GRAPH_HEIGHT/4, true});
+	}
+
+	for(int i=0; i<20; i++)
+	{
+		m_history.push({GRAPH_HEIGHT/2 -1, false});
+	}
+
+	for(int i=0; i<20; i++)
+	{
+		m_history.push({GRAPH_HEIGHT/2, true});
+	}
+
+	for(int i=0; i<20; i++)
+	{
+		m_history.push({(GRAPH_HEIGHT*3)/4, false});
+	}
+
+	for(int i=0; i<20; i++)
+	{
+		m_history.push({GRAPH_HEIGHT-2, true});
+	}
+
+	while(!m_history.isFull())
+	{
+		m_history.push({GRAPH_HEIGHT/3, false});
+	}
+
+
+#endif
 }
 
 void GroupData::setMoistureSensorValues(int currentValue, int airValue, int waterValue)
@@ -24,7 +77,7 @@ void GroupData::setMoistureSensorValues(int currentValue, int airValue, int wate
 
 	// Add to history
 	GraphPoint point;
-	point.val = m_currentPercentageValue;
+	point.val = map(m_currentValue, m_airValue, m_waterValue, 0, GRAPH_HEIGHT-2);
 	if (m_history.isFull())
 	{
 		m_history.pop();
@@ -37,6 +90,15 @@ void GroupData::resetHistory()
 {
 	m_history.clear();
 	m_updated = true;
+}
+
+
+void ProgramData::begin()
+{
+	for(auto&& g : m_group)
+	{
+		g.begin();
+	}
 }
 
 GroupData& ProgramData::getGroupData(uint8_t index)
