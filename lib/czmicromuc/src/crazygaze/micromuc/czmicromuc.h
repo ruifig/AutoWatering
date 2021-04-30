@@ -21,7 +21,7 @@
 	#if CZ_DEBUG
 		#define CZ_SERIAL_LOG_ENABLED 1
 	#else
-		#define CZ_SERIAL_LOG_ENABLED 0
+		#define CZ_SERIAL_LOG_ENABLED 1
 	#endif
 #endif
 

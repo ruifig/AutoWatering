@@ -17,6 +17,7 @@
 
 #include "AT24C.h"
 #include "crazygaze/micromuc/SDLogOutput.h"
+#include "crazygaze/micromuc/Profiler.h"
 
 using namespace cz;
 
@@ -149,8 +150,14 @@ void setup()
 }
 
 float gTickingTimes[5];
+
 float gTickingLastTime;
 int gTickingTimingIndex = 0;
+
+const char stringA[] PROGMEM = "StringA";
+const char stringB[] = "StringB";
+const char* stringC = "StringB";
+
 void startTickingTiming()
 {
 	gTickingLastTime = millis() / 1000.0f;
@@ -164,23 +171,34 @@ void tickingTime()
 	gTickingLastTime = now;
 }
 
+CREATE_PROFILER(10);
 
 void loop()
 {
+	gProfiler.startRun();
+
 	float now = millis() / 1000.0f;
 	float deltaSeconds = now - gPreviousTime;
 	float countdown = 60*60;
 
-	startTickingTiming();
-	countdown = std::min(gDisplay.tick(deltaSeconds), countdown);
-	tickingTime();
-
-	for (auto&& ticker : gSoilMoistureSensors)
 	{
-		countdown = std::min(ticker.tick(deltaSeconds), countdown);
+		PROFILE_SCOPE(F("TickAll"));
+		startTickingTiming();
+		countdown = std::min(gDisplay.tick(deltaSeconds), countdown);
 		tickingTime();
+
+		for (auto&& ticker : gSoilMoistureSensors)
+		{
+			countdown = std::min(ticker.tick(deltaSeconds), countdown);
+			tickingTime();
+		}
+
 	}
 
+
+	float testDuration = (millis() / 1000.0f) - now;
+
+	gProfiler.log();
 
 	gCtx.data.logMoistureSensors();
 

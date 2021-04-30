@@ -2,6 +2,7 @@
 #include "Utils.h"
 #include "crazygaze/micromuc/Logging.h"
 #include "crazygaze/micromuc/StringUtils.h"
+#include <crazygaze/micromuc/Profiler.h>
 
 #include <FreeDefaultFonts.h>
 #include <Fonts/FreeSans9pt7b.h>
@@ -104,6 +105,8 @@ void DisplayTFT::begin()
 
 float DisplayTFT::tick(float deltaSeconds)
 {
+	PROFILE_SCOPE(F("DisplayTFT"));
+
 	m_timeInState += deltaSeconds;
 	m_timeSinceLastTouch += deltaSeconds;
 
@@ -233,9 +236,9 @@ void DisplayTFT::plotHistory(int16_t x, int16_t y, int16_t h, const TFixedCapaci
 	{
 		GraphPoint p = data.getAtIndex(i);
 		int xx = x + i;
-		//m_tft.drawFastVLine(xx, y, h, BLACK);
+		m_tft.drawFastVLine(xx, y, h, BLACK);
 		// The height for the plotting is h-1 because we reserve the top pixel for the motor on/off
-		int yy = map(p.val, 0, 100, 0,  h - 1);
+		int yy = map(p.val, 0, 100, 0,  h - 2);
 		m_tft.drawPixel(xx, bottomY - yy, p.val < valThreshold ? GRAPH_MOISTURE_LOW_COLOUR : GRAPH_MOISTURE_OK_COLOUR);
 		m_tft.drawPixel(xx, y, p.on ? GRAPH_MOTOR_ON_COLOUR : GRAPH_MOTOR_OFF_COLOUR);
 	}
@@ -329,12 +332,21 @@ void DisplayTFT::drawHistoryBoxes()
 
 void DisplayTFT::drawOverview()
 {
-#define TEST_HISTORY 0
+	PROFILE_SCOPE(F("DisplayTFT:drawOverview"));
+
+#define TEST_HISTORY 1
 #if TEST_HISTORY
 	static HistoryQueue q;
-	bool first;
-	if (first)
+	static bool qInit;
+	if (!qInit)
 	{
+		qInit = true;
+
+		for(int i=0; i<20; i++)
+		{
+			q.push({100, false});
+		}
+
 		for(int i=0; i<20; i++)
 		{
 			q.push({0, false});
@@ -375,6 +387,8 @@ void DisplayTFT::drawOverview()
 
 	for(int i=0; i<NUM_MOISTURESENSORS; i++)
 	{
+		PROFILE_SCOPE(F("sensor"));
+
 		GroupData& data = m_ctx.data.getGroupData(i);
 #if TEST_HISTORY
 		auto&& history = q;
@@ -382,17 +396,23 @@ void DisplayTFT::drawOverview()
 		const HistoryQueue& history = data.getHistory();
 #endif
 
+		int y = m_groupsStartY + (i*(GRAPH_HEIGHT + m_spaceBetweenGroups));
 		//
 		// Draw history
 		//
-		int x = m_historyX;
-		int y = m_groupsStartY + (i*(GRAPH_HEIGHT + m_spaceBetweenGroups));
-		plotHistory(x, y, GRAPH_HEIGHT, history, data.getPercentageThreshold());
+		{
+			PROFILE_SCOPE(F("plotHistory"));
+
+			int x = m_historyX;
+			plotHistory(x, y, GRAPH_HEIGHT, history, data.getPercentageThreshold());
+		}
 
 		//
 		// Draw values
 		//
 		{
+			PROFILE_SCOPE(F("drawValue"));
+
 			PreviousValues& previousValues = m_previousValues[i];
 			Box box = {m_historyX + GRAPH_NUMPOINTS + 2, y, 30, GRAPH_HEIGHT/3};
 			m_tft.setFont(TINY_FONT);

@@ -76,5 +76,12 @@ void strCatPrintf(char* dest, const __FlashStringHelper* fmt, ...)
 	strcat(dest, formatStringVA(fmt, args));
 	va_end(args);
 }
+
+char* duplicateChar(char* dest, int n, char ch)
+{
+	memset(dest, ch, n);
+	dest[n] = 0;
+	return dest;
+}
 	
 } // namespace cz

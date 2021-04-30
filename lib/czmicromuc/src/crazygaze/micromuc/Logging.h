@@ -34,8 +34,6 @@ const char* logVerbosityToString(LogVerbosity v);
 // Globally sets maximum compile time verbosity
 #define CZ_LOG_MAXIMUM_VERBOSITY Verbose
 
-#define CZ_NUM
-
 class LogCategoryBase
 {
   public:
@@ -93,13 +91,13 @@ public:
 	/**
 	 * Logs a message without any extra information. Also, it doesn't add a new line at the end
 	 **/
-	static void logToAllSimple(LogVerbosity verbosity, const char* str);
-	static void logToAllSimple(LogVerbosity verbosity, const __FlashStringHelper* str);
+	static void logToAllSimple(const char* str);
+	static void logToAllSimple(const __FlashStringHelper* str);
 
 private:
 	
-	virtual void logSimple(LogVerbosity verbosity, const char* str) = 0;
-	virtual void logSimple(LogVerbosity verbosity, const __FlashStringHelper* str) = 0;
+	virtual void logSimple(const char* str) = 0;
+	virtual void logSimple(const __FlashStringHelper* str) = 0;
 	static void logPrefix(const LogCategoryBase* category, LogVerbosity verbosity);
 
 	struct SharedData
@@ -115,8 +113,8 @@ private:
 class SerialLogOutput : public LogOutput
 {
 private:
-	virtual void logSimple(LogVerbosity verbosity, const char* str) override;
-	virtual void logSimple(LogVerbosity verbosity, const __FlashStringHelper* str) override;
+	virtual void logSimple(const char* str) override;
+	virtual void logSimple(const __FlashStringHelper* str) override;
 };
 #endif
 

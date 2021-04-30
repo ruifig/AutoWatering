@@ -376,6 +376,12 @@
     <Compile Include="lib\czmicromuc\src\crazygaze\micromuc\Logging.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="lib\czmicromuc\src\crazygaze\micromuc\Profiler.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="lib\czmicromuc\src\crazygaze\micromuc\Profiler.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="lib\czmicromuc\src\crazygaze\micromuc\Queue.h">
       <SubType>compile</SubType>
     </Compile>

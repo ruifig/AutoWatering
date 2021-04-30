@@ -58,8 +58,6 @@ bool SDCardHelper::begin(int SSPin)
 	CZ_LOG(logDefault, Log, F("Volume size (Kb): %u"), volumesize);
 	volumesize /= 1024;
 	CZ_LOG(logDefault, Log, F("Volume size (Mb): %u"), volumesize);
-	float volumeSizeGb = ((float)volumesize / 1024.0);
-	CZ_LOG(logDefault, Log, F("Volume size (Gb): %f"), volumeSizeGb);
 
 	if (root.openRoot(volume) == false)
 	{
@@ -95,7 +93,7 @@ void SDLogOutput::begin(SdFile& dirFile, const char* name, bool truncate)
 	m_initialized = true;
 }
 
-void SDLogOutput::logSimple(LogVerbosity verbosity, const char* str)
+void SDLogOutput::logSimple(const char* str)
 {
 	if (!m_initialized)
 	{
@@ -106,7 +104,7 @@ void SDLogOutput::logSimple(LogVerbosity verbosity, const char* str)
 	m_file.sync(false);
 }
 
-void SDLogOutput::logSimple(LogVerbosity verbosity, const __FlashStringHelper* str)
+void SDLogOutput::logSimple(const __FlashStringHelper* str)
 {
 	if (!m_initialized)
 	{

@@ -1,6 +1,7 @@
 #include "SoilMoistureSensor.h"
 #include "Utils.h"
 #include <crazygaze/micromuc/Logging.h>
+#include <crazygaze/micromuc/Profiler.h>
 #include <Arduino.h>
 
 namespace cz
@@ -45,6 +46,8 @@ bool SoilMoistureSensor::tryEnterReadingState()
 
 float SoilMoistureSensor::tick(float deltaSeconds)
 {
+	PROFILE_SCOPE(F("MoistureSensor"));
+
 	m_timeInState += deltaSeconds;
 	m_nextTickWait = 0.2f;
 

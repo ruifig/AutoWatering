@@ -163,7 +163,7 @@ void LogOutput::logPrefix(const LogCategoryBase* category, LogVerbosity verbosit
 	// Log prefix
 	{
 		const char* str = formatString(F("%s%s%s"), timeStr, categoryNameStr, verbosityStr);
-		logToAllSimple(verbosity, str);
+		logToAllSimple(str);
 	}
 	
 }
@@ -176,8 +176,8 @@ void LogOutput::logToAll(const LogCategoryBase* category, LogVerbosity verbosity
 	logPrefix(category, verbosity);
 
 	const char* str = formatStringVA(fmt, args);
-	logToAllSimple(verbosity, str);
-	logToAllSimple(verbosity, F("\r\n"));
+	logToAllSimple(str);
+	logToAllSimple(F("\r\n"));
 
 	va_end(args);
 }
@@ -190,39 +190,39 @@ void LogOutput::logToAll(const LogCategoryBase* category, LogVerbosity verbosity
 	logPrefix(category, verbosity);
 
 	const char* str = formatStringVA(fmt, args);
-	logToAllSimple(verbosity, str);
-	logToAllSimple(verbosity, F("\r\n"));
+	logToAllSimple(str);
+	logToAllSimple(F("\r\n"));
 
 	va_end(args);
 }
 
-void LogOutput::logToAllSimple(LogVerbosity verbosity, const char* str)
+void LogOutput::logToAllSimple(const char* str)
 {
 	auto data = getSharedData();
 	auto lk = std::unique_lock<std::mutex>(data->mtx);
 	for (auto&& out : data->outputs)
 	{
-		out->logSimple(verbosity, str);
+		out->logSimple(str);
 	}
 }
 
-void LogOutput::logToAllSimple(LogVerbosity verbosity, const __FlashStringHelper* str)
+void LogOutput::logToAllSimple(const __FlashStringHelper* str)
 {
 	auto data = getSharedData();
 	auto lk = std::unique_lock<std::mutex>(data->mtx);
 	for (auto&& out : data->outputs)
 	{
-		out->logSimple(verbosity, str);
+		out->logSimple(str);
 	}
 }
 
 #if CZ_SERIAL_LOG_ENABLED
 
-void SerialLogOutput::logSimple(LogVerbosity verbosity, const char* str)
+void SerialLogOutput::logSimple(const char* str)
 {
 	Serial.print(str);
 }
-void SerialLogOutput::logSimple(LogVerbosity verbosity, const __FlashStringHelper* str)
+void SerialLogOutput::logSimple(const __FlashStringHelper* str)
 {
 	Serial.print(str);
 }

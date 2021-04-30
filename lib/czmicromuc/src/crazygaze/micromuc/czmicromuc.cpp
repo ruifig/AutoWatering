@@ -28,9 +28,9 @@ void _doAssert(const char* file, int line, const char* fmt, ...)
 	va_list args;
 	va_start(args, fmt);
 
-	LogOutput::logToAllSimple(LogVerbosity::Fatal, formatString(F("ASSERT: %s:%d: "), file, line));
-	LogOutput::logToAllSimple(LogVerbosity::Fatal, formatStringVA(fmt, args));
-	LogOutput::logToAllSimple(LogVerbosity::Fatal, F("\r\n"));
+	LogOutput::logToAllSimple(formatString(F("ASSERT: %s:%d: "), file, line));
+	LogOutput::logToAllSimple(formatStringVA(fmt, args));
+	LogOutput::logToAllSimple(F("\r\n"));
 	va_end(args);
 
 	delay(1000);
@@ -43,9 +43,9 @@ void _doAssert(const char* file, int line, const __FlashStringHelper* fmt, ...)
 	va_start(args, fmt);
 
 	CZ_LOG(logDefault, Error, F("ASSERT: %s:%d"), file, line);
-	LogOutput::logToAllSimple(LogVerbosity::Fatal, formatString(F("ASSERT: %d:%d: "), file, line));
-	LogOutput::logToAllSimple(LogVerbosity::Fatal, formatStringVA(fmt, args));
-	LogOutput::logToAllSimple(LogVerbosity::Fatal, F("\r\n"));
+	LogOutput::logToAllSimple(formatString(F("ASSERT: %d:%d: "), file, line));
+	LogOutput::logToAllSimple(formatStringVA(fmt, args));
+	LogOutput::logToAllSimple(F("\r\n"));
 	va_end(args);
 
 	_BREAK();
