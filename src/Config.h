@@ -163,6 +163,11 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 #define GRAPH_MOTOR_OFF_COLOUR TFT_BLACK
 #define GRAPH_MOISTURE_OK_COLOUR TFT_GREEN
 #define GRAPH_MOISTURE_LOW_COLOUR TFT_RED
-#define GRAPH_HEIGHT 32
+
+
+//
+// * Top line is used for the motor on/off info
+// * Rest of the lines are for the moisture level
+#define GRAPH_HEIGHT (1+32)
 
 

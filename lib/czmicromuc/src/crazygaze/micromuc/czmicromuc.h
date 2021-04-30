@@ -21,10 +21,13 @@
 	#if CZ_DEBUG
 		#define CZ_SERIAL_LOG_ENABLED 1
 	#else
-		#define CZ_SERIAL_LOG_ENABLED 1
+		#define CZ_SERIAL_LOG_ENABLED 0
 	#endif
 #endif
 
+#if !defined(CZ_PROFILER)
+	#define CZ_PROFILER 0
+#endif
 
 #define __FILENAME__ getFilename(__FILE__)
 

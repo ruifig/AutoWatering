@@ -171,11 +171,11 @@ void tickingTime()
 	gTickingLastTime = now;
 }
 
-CREATE_PROFILER(10);
+PROFILER_CREATE(10);
 
 void loop()
 {
-	gProfiler.startRun();
+	PROFILER_STARTRUN();
 
 	float now = millis() / 1000.0f;
 	float deltaSeconds = now - gPreviousTime;
@@ -198,7 +198,7 @@ void loop()
 
 	float testDuration = (millis() / 1000.0f) - now;
 
-	gProfiler.log();
+	PROFILER_LOG();
 
 	gCtx.data.logMoistureSensors();
 

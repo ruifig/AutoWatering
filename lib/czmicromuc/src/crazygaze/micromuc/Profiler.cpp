@@ -2,11 +2,11 @@
 #include "Logging.h"
 #include "StringUtils.h"
 
+#if CZ_PROFILER
 extern cz::Profiler gProfiler;
 
 namespace cz
 {
-
 
 Profiler::Section::Section(const __FlashStringHelper* name)
 {
@@ -111,5 +111,8 @@ void Profiler::log()
 	Serial.flush();
 }
 
+
 } // namespace cz
 
+
+#endif
