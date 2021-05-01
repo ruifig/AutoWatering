@@ -19,6 +19,7 @@
 #include "crazygaze/micromuc/SDLogOutput.h"
 #include "crazygaze/micromuc/Profiler.h"
 #include "crazygaze/micromuc/SerialStringReader.h"
+#include "MemoryFree.h"
 
 using namespace cz;
 
@@ -83,8 +84,6 @@ void setAllMotorPins(int val1, int val2)
 	gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_3_INPUT2, val2);
 }
 
-
-
 void setup()
 {
 
@@ -132,8 +131,6 @@ void setup()
 	//delay(3000);
 	//gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_2_INPUT1, LOW);
 	//gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_2_INPUT2, LOW);
-
-
 }
 
 PROFILER_CREATE(10);
@@ -147,7 +144,7 @@ void loop()
 	float now = millis() / 1000.0f;
 	float deltaSeconds = now - gPreviousTime;
 	float countdown = 60*60;
-
+	
 	{
 		PROFILE_SCOPE(F("TickAll"));
 		countdown = std::min(gDisplay.tick(deltaSeconds), countdown);
@@ -158,6 +155,7 @@ void loop()
 		}
 
 	}
+
 
 	// We use this so that we can just put a breakpoint in here and force the code to run when we want to check the profiler data
 	if (CZ_PROFILER || true)

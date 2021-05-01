@@ -5,16 +5,6 @@
 #include "crazygaze/micromuc/StringUtils.h"
 #include <crazygaze/micromuc/Profiler.h>
 
-#include <FreeDefaultFonts.h>
-#include <Fonts/FreeSans9pt7b.h>
-#include <Fonts/FreeSans12pt7b.h>
-#include <Fonts/Org_01.h>
-
-#define TINY_FONT &Org_01
-#define SMALL_FONT &FreeSmallFont
-#define MEDIUM_FONT &FreeSans9pt7b
-#define LARGE_FONT &FreeSans12pt7b
-
 
 //
 // chart_curve, 16*16
@@ -189,6 +179,9 @@ void DisplayTFT::onEnterState()
 		gScreen.setCursor(0,20);
 		
 		gScreen.setFont(LARGE_FONT);
+
+		static char test[] = "asdflaksjdf ljsd flkjads flkjasd lfkjasdl kfjal dsfjlak sdjflkaj sdflkaj sdfkljas dlfkja sldkfj alskdjf alksdjf laksdjf lkasdjf lkasjdf lkasdjfs";
+		printAligned({10, 10, gScreen.width()-20, gScreen.height()-20}, HAlign::Right, VAlign::Bottom, test);
 
 		printAligned({10, 10, gScreen.width()-20, gScreen.height()-20}, HAlign::Left, VAlign::Top, F("AutoWatering"));
 		printAligned({10, 10, gScreen.width()-20, gScreen.height()-20}, HAlign::Center, VAlign::Center, F("By"));
