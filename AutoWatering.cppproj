@@ -630,6 +630,12 @@
     <Compile Include="src\DisplayTFT.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\GFXUtils.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\GFXUtils.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\main.cpp">
       <SubType>compile</SubType>
       <Link>src\main.cpp</Link>
