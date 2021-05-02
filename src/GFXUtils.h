@@ -1,6 +1,8 @@
 #pragma once
 
 #include "crazygaze/micromuc/czmicromuc.h"
+#include "crazygaze/micromuc/StringUtils.h"
+
 #include <Adafruit_GFX.h>
 #include <MCUFRIEND_kbv.h>
 
@@ -100,8 +102,10 @@ public:
 namespace gfx
 {
 
-#define GFX_FLAG_ERASEBKG 0x1
-#define GFX_FLAG_DRAWBORDER 0x2
+#define GFX_FLAG_ERASEBKG   (1 << 0)
+#define GFX_FLAG_DRAWBORDER (1 << 1)
+
+#define GFX_FLAG_MUMASPERCENTAGE (15 << 1)
 
 
 class Widget
@@ -111,6 +115,10 @@ class Widget
   private:
 };
 
+
+/**
+ * Data for a label that doesn't change at all, and this all data can be in PROGMEM
+ */
 struct StaticLabelData
 {
 	Rect pos;
@@ -123,18 +131,27 @@ struct StaticLabelData
 	unsigned int flags;
 };
 
-class StaticLabel : Widget
+/**
+ * Data for a label that the text can change, but not the other parameters
+ */
+struct FixedLabelData
 {
-public:
-	StaticLabel(StaticLabelData* data_P)
-		: m_data_P(data_P)
-	{
-	}
+	Rect pos;
+	HAlign halign;
+	VAlign valign;
+	const GFXfont* font;
+	uint16_t textColor;
+	uint16_t bkgColor;
+	unsigned int flags;
+};
 
-	virtual void draw() override
+class BaseLabel : public Widget
+{
+
+protected:
+
+	void drawImpl(const StaticLabelData& data)
 	{
-		StaticLabelData data;
-		memcpy_P(&data, &m_data_P, sizeof(data));
 		if (data.flags & GFX_FLAG_ERASEBKG)
 		{
 			fillRect(data.pos, data.bkgColor);
@@ -145,9 +162,133 @@ public:
 		printAligned(data.pos, data.halign, data.valign, data.value);
 	}
 
-private:
+	void drawImpl(const FixedLabelData& data, const char* value)
+	{
+		if (data.flags & GFX_FLAG_ERASEBKG)
+		{
+			fillRect(data.pos, data.bkgColor);
+		}
+
+		gScreen.setFont(data.font);
+		gScreen.setTextColor(data.textColor);
+		printAligned(data.pos, data.halign, data.valign, value);
+	}
+
+};
+
+/**
+ * Label where nothing can change.
+ * The entire setup can be put in PROGMEM
+ */
+class StaticLabel : public BaseLabel
+{
+  public:
+	StaticLabel(const StaticLabelData* data_P)
+		: m_data_P(data_P)
+	{
+	}
+
+	virtual void draw() override
+	{
+		StaticLabelData data;
+		memcpy_P(&data, m_data_P, sizeof(data));
+		drawImpl(data);
+	}
+
+  private:
 	const StaticLabelData* m_data_P;
 };
+
+
+/**
+ * Label that the text can change, but not the rest of the setup.
+ */
+template<int BUFSIZE=10>
+class FixedLabel : public BaseLabel
+{
+  public:
+	static int constexpr m_bufSize = BUFSIZE;
+
+	FixedLabel(const FixedLabelData* data_P, const __FlashStringHelper* value = nullptr)
+		: m_data_P(data_P)
+	{
+		if (value)
+		{
+			strncpy_P(m_value, (const char*)value, m_bufSize);
+			m_value[m_bufSize-1] = 0;
+		}
+		else
+		{
+			strncpy_P(m_value, (const char*)F("99%"), m_bufSize);
+			m_value[m_bufSize-1] = 0;
+		}
+	}
+
+	virtual void draw() override
+	{
+		FixedLabelData data;
+		memcpy_P(&data, m_data_P, sizeof(data));
+		drawImpl(data, m_value);
+	}
+
+  private:
+	const FixedLabelData* m_data_P;
+	char m_value[m_bufSize];
+};
+
+class FixedNumLabel : public BaseLabel
+{
+  public:
+
+	FixedNumLabel(const FixedLabelData* data_P, int value = 0)
+		: m_data_P(data_P)
+		, m_value(value)
+		, m_needsRedraw(true)
+	{
+	}
+
+	virtual void draw() override
+	{
+		if (!m_needsRedraw)
+			return;
+
+		FixedLabelData data;
+		memcpy_P(&data, m_data_P, sizeof(data));
+		const char *str;
+		if (data.flags & GFX_FLAG_MUMASPERCENTAGE)
+		{
+			str = formatString(F("%3u%%"), m_value);
+		}
+		else
+		{
+			str = itoa(m_value, getTemporaryString(), 10);
+		}
+
+		drawImpl(data, str);
+		m_needsRedraw = false;
+	}
+
+	void setValue(int value)
+	{
+		if (value != m_value)
+		{
+			m_value = value;
+			m_needsRedraw = true;
+		}
+	}
+
+	void setValueAndDraw(int value)
+	{
+		setValue(value);
+		draw();
+	}
+
+  private:
+	const FixedLabelData* m_data_P;
+	int m_value;
+	bool m_needsRedraw;
+};
+
 
 
 } // namespace gfx

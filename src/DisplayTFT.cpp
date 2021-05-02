@@ -48,8 +48,106 @@ const uint8_t chart_curve_bitmask[] PROGMEM = {
 #define TS_MAXX 915
 #define TS_MAXY 892
 
+#define SCREEN_WIDTH 320
+#define SCREEN_HEIGHT 240
+
 namespace cz
 {
+
+using namespace gfx;
+
+namespace
+{
+
+constexpr static int16_t ms_historyX = 5;
+constexpr static int16_t ms_groupsStartY = 10;
+constexpr static int16_t ms_spaceBetweenGroups = 20;
+
+
+const char introLabel1_value_P[] PROGMEM = "AutoWatering";
+const StaticLabelData introLabel1_P PROGMEM =
+{
+	{10, 10, SCREEN_WIDTH - 20, SCREEN_HEIGHT - 20 }, // box
+	HAlign::Left, VAlign::Top,  (const __FlashStringHelper*)introLabel1_value_P,
+	LARGE_FONT,
+	GREEN,
+	BLACK,
+	GFX_FLAG_ERASEBKG
+};
+
+const char introLabel2_value_P[] PROGMEM = "By";
+const StaticLabelData introLabel2_P PROGMEM =
+{
+	{10, 10, SCREEN_WIDTH - 20, SCREEN_HEIGHT - 20 }, // box
+	HAlign::Center, VAlign::Center,  (const __FlashStringHelper*)introLabel2_value_P,
+	LARGE_FONT,
+	GREEN,
+	BLACK,
+	0
+};
+
+const char introLabel3_value_P[] PROGMEM = "Rui Figueira";
+const StaticLabelData introLabel3_P PROGMEM =
+{
+	{10, 10, SCREEN_WIDTH - 20, SCREEN_HEIGHT - 20 }, // box
+	HAlign::Right, VAlign::Bottom,  (const __FlashStringHelper*)introLabel3_value_P,
+	LARGE_FONT,
+	GREEN,
+	BLACK,
+	0
+};
+
+
+#define DEFINE_SENSOR_LABEL_LINE(SENSOR_INDEX, LINE_INDEX, FLAGS) \
+const FixedLabelData sensor##SENSOR_INDEX##line##LINE_INDEX PROGMEM = \
+{ \
+	{ms_historyX + GRAPH_NUMPOINTS + 2, ms_groupsStartY + (SENSOR_INDEX * (GRAPH_HEIGHT + ms_spaceBetweenGroups)) + (LINE_INDEX * (GRAPH_HEIGHT/3)), 30, GRAPH_HEIGHT/3}, \
+	HAlign::Center, VAlign::Center, \
+	TINY_FONT, \
+	DARKGREY, BLACK, \
+	GFX_FLAG_ERASEBKG | FLAGS \
+};
+
+#define DEFINE_SENSOR_LABELS(SENSOR_INDEX) \
+	DEFINE_SENSOR_LABEL_LINE(SENSOR_INDEX, 0, 0) \
+	DEFINE_SENSOR_LABEL_LINE(SENSOR_INDEX, 1, GFX_FLAG_MUMASPERCENTAGE) \
+	DEFINE_SENSOR_LABEL_LINE(SENSOR_INDEX, 2, 0) \
+
+DEFINE_SENSOR_LABELS(0)
+DEFINE_SENSOR_LABELS(1)
+DEFINE_SENSOR_LABELS(2)
+DEFINE_SENSOR_LABELS(3)
+
+
+FixedNumLabel sensorLabels[NUM_MOISTURESENSORS][3] =
+{
+	{
+		{ &sensor0line0 },
+		{ &sensor0line1 },
+		{ &sensor0line2 }
+	},
+
+	{
+		{ &sensor1line0 },
+		{ &sensor1line1 },
+		{ &sensor1line2 }
+	},
+
+	{
+		{ &sensor2line0 },
+		{ &sensor2line1 },
+		{ &sensor2line2 }
+	},
+
+	{
+		{ &sensor3line0 },
+		{ &sensor3line1 },
+		{ &sensor3line2 }
+	}
+};
+
+}
+
 
 const char* const DisplayTFT::ms_stateNames[3]=
 {
@@ -169,30 +267,21 @@ void DisplayTFT::onEnterState()
 	{
 	case State::Initializing:
 		{
-			memset(m_previousValues, 0, sizeof(m_previousValues));
 			initializeScreen();
 		}
 		break;
 
 	case State::Intro:
-		gScreen.setTextColor(GREEN);
-		gScreen.setCursor(0,20);
-		
-		gScreen.setFont(LARGE_FONT);
+		{
+			StaticLabel(&introLabel1_P).draw();
+			StaticLabel(&introLabel2_P).draw();
+			StaticLabel(&introLabel3_P).draw();
 
-		static char test[] = "asdflaksjdf ljsd flkjads flkjasd lfkjasdl kfjal dsfjlak sdjflkaj sdflkaj sdfkljas dlfkja sldkfj alskdjf alksdjf laksdjf lkasdjf lkasjdf lkasdjfs";
-		printAligned({10, 10, gScreen.width()-20, gScreen.height()-20}, HAlign::Right, VAlign::Bottom, test);
+			gScreen.drawRGBBitmap(50,50, chart_curve, chart_curve_width, chart_curve_width);
 
-		printAligned({10, 10, gScreen.width()-20, gScreen.height()-20}, HAlign::Left, VAlign::Top, F("AutoWatering"));
-		printAligned({10, 10, gScreen.width()-20, gScreen.height()-20}, HAlign::Center, VAlign::Center, F("By"));
-		printAligned({10, 10, gScreen.width()-20, gScreen.height()-20}, HAlign::Right, VAlign::Bottom, F("Rui Figueira"));
-
-
-		gScreen.drawRGBBitmap(50,50, chart_curve, chart_curve_width, chart_curve_width);
-
-		drawRGBBitmap(50,70, chart_curve, chart_curve_bitmask, chart_curve_width, chart_curve_height, WHITE);
-		drawRGBBitmap(50,90, chart_curve, chart_curve_bitmask, chart_curve_width, chart_curve_height, YELLOW);
-
+			drawRGBBitmap(50,70, chart_curve, chart_curve_bitmask, chart_curve_width, chart_curve_height, WHITE);
+			drawRGBBitmap(50,90, chart_curve, chart_curve_bitmask, chart_curve_width, chart_curve_height, YELLOW);
+		}
 		break;
 
 	case State::Overview:
@@ -211,8 +300,8 @@ void DisplayTFT::drawHistoryBoxes()
 
 	for(int i=0; i<NUM_MOISTURESENSORS; i++)
 	{
-		int x = m_historyX;
-		int y = m_groupsStartY + (i*(GRAPH_HEIGHT + m_spaceBetweenGroups));
+		int x = ms_historyX;
+		int y = ms_groupsStartY + (i*(GRAPH_HEIGHT + ms_spaceBetweenGroups));
 		gScreen.drawRect(x-1, y-1, GRAPH_NUMPOINTS+2, GRAPH_HEIGHT+2, VERYDARKGREY);
 
 		constexpr int16_t h = GRAPH_HEIGHT;
@@ -237,60 +326,25 @@ void DisplayTFT::drawOverview()
 		GroupData& data = m_ctx.data.getGroupData(i);
 		const HistoryQueue& history = data.getHistory();
 
-		int y = m_groupsStartY + (i*(GRAPH_HEIGHT + m_spaceBetweenGroups));
+		int y = ms_groupsStartY + (i*(GRAPH_HEIGHT + ms_spaceBetweenGroups));
 		//
 		// Draw history
 		//
 		{
 			PROFILE_SCOPE(F("plotHistory"));
 
-			int x = m_historyX;
+			int x = ms_historyX;
 			plotHistory(x, y, GRAPH_HEIGHT, history, data.getPercentageThreshold());
 		}
 
 		//
 		// Draw values
 		//
-		{
-			PROFILE_SCOPE(F("drawValue"));
-
-			PreviousValues& previousValues = m_previousValues[i];
-			Rect box = {m_historyX + GRAPH_NUMPOINTS + 2, y, 30, GRAPH_HEIGHT/3};
-			gScreen.setFont(TINY_FONT);
-			gScreen.setTextColor(DARKGREY);
-			char str[5];
-
-			if (previousValues.waterValue != data.getWaterValue())
-			{
-				previousValues.waterValue = data.getWaterValue();
-				itoa(previousValues.waterValue, str, 10);
-				fillRect(box, BLACK);
-				printAligned(box, HAlign::Center, VAlign::Center, str);
-			}
-
-			box.y += box.height;
-			if (previousValues.percentage != data.getPercentageValue())
-			{
-				previousValues.percentage = data.getPercentageValue();
-				itoa(previousValues.percentage, str, 10);
-				fillRect(box, BLACK);
-				printAligned(box, HAlign::Center, VAlign::Center, formatString(F("%3u%%"), previousValues.percentage));
-			}
-
-
-			box.y += box.height;
-			if (previousValues.airValue != data.getAirValue())
-			{
-				previousValues.airValue = data.getAirValue();
-				itoa(data.getAirValue(), str, 10);
-				fillRect(box, BLACK);
-				printAligned(box, HAlign::Center, VAlign::Center, str);
-			}
-
-		}
+		sensorLabels[i][0].setValueAndDraw(data.getWaterValue());
+		sensorLabels[i][1].setValueAndDraw(data.getPercentageValue());
+		sensorLabels[i][2].setValueAndDraw(data.getAirValue());
 
 	}
-
 	
 
 }

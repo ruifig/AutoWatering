@@ -37,16 +37,6 @@ class DisplayTFT
 	float m_timeSinceLastTouch = 0;
 	bool m_screenOff = false;
 
-	constexpr static int16_t m_historyX = 5;
-	constexpr static int16_t m_groupsStartY = 10;
-	constexpr static int16_t m_spaceBetweenGroups = 20;
-
-	struct PreviousValues
-	{
-		uint16_t waterValue;
-		uint16_t airValue;
-		uint8_t percentage;
-	} m_previousValues[NUM_MOISTURESENSORS];
 
 	void changeToState(State newState);
 	void onLeaveState();
