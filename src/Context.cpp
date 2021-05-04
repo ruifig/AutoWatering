@@ -25,7 +25,7 @@ void GroupData::begin()
 #if FASTER_ITERATION
 	for(int i=0; i<20; i++)
 	{
-		m_history.push({GRAPH_HEIGHT-2, false});
+		m_history.push({GRAPH_POINT_MAXVAL, false});
 	}
 
 	for(int i=0; i<20; i++)
@@ -35,32 +35,32 @@ void GroupData::begin()
 
 	for(int i=0; i<20; i++)
 	{
-		m_history.push({GRAPH_HEIGHT/4, true});
+		m_history.push({GRAPH_POINT_MAXVAL/4, true});
 	}
 
 	for(int i=0; i<20; i++)
 	{
-		m_history.push({GRAPH_HEIGHT/2 -1, false});
+		m_history.push({GRAPH_POINT_MAXVAL/2 -1, false});
 	}
 
 	for(int i=0; i<20; i++)
 	{
-		m_history.push({GRAPH_HEIGHT/2, true});
+		m_history.push({GRAPH_POINT_MAXVAL/2, true});
 	}
 
 	for(int i=0; i<20; i++)
 	{
-		m_history.push({(GRAPH_HEIGHT*3)/4, false});
+		m_history.push({(GRAPH_POINT_MAXVAL*3)/4, false});
 	}
 
 	for(int i=0; i<20; i++)
 	{
-		m_history.push({GRAPH_HEIGHT-2, true});
+		m_history.push({GRAPH_POINT_MAXVAL, true});
 	}
 
 	while(!m_history.isFull())
 	{
-		m_history.push({GRAPH_HEIGHT/3, false});
+		m_history.push({GRAPH_POINT_MAXVAL/3, false});
 	}
 
 
@@ -76,8 +76,8 @@ void GroupData::setMoistureSensorValues(int currentValue, int airValue, int wate
 	m_currentPercentageValue = map(m_currentValue, m_airValue, m_waterValue, 0, 100);
 
 	// Add to history
-	GraphPoint point;
-	point.val = map(m_currentValue, m_airValue, m_waterValue, 0, GRAPH_HEIGHT-2);
+	GraphPoint point = {0, 0};
+	point.val = map(m_currentValue, m_airValue, m_waterValue, 0, GRAPH_POINT_MAXVAL);
 	if (m_history.isFull())
 	{
 		m_history.pop();

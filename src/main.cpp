@@ -20,6 +20,7 @@
 #include "crazygaze/micromuc/Profiler.h"
 #include "crazygaze/micromuc/SerialStringReader.h"
 #include "MemoryFree.h"
+#include "crazygaze/micromuc/BitQueue.h"
 
 using namespace cz;
 
@@ -42,9 +43,7 @@ SoilMoistureSensorTicker gSoilMoistureSensors[NUM_MOISTURESENSORS] =
 	{true, gCtx, 0, IO_EXPANDER_VPIN_SENSOR_0, MULTIPLEXER_MOISTURE_SENSOR_0},
 	{true, gCtx, 1, IO_EXPANDER_VPIN_SENSOR_1, MULTIPLEXER_MOISTURE_SENSOR_1},
 	{true, gCtx, 2, IO_EXPANDER_VPIN_SENSOR_2, MULTIPLEXER_MOISTURE_SENSOR_2},
-	#if 1
 	{true, gCtx, 3, IO_EXPANDER_VPIN_SENSOR_3, MULTIPLEXER_MOISTURE_SENSOR_3}
-	#endif
 };
 
 TTicker<DisplayTFT, float> gDisplay(true, gCtx);
@@ -131,6 +130,9 @@ void setup()
 	//delay(3000);
 	//gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_2_INPUT1, LOW);
 	//gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_2_INPUT2, LOW);
+
+	cz::runBitQueueTests();
+
 }
 
 PROFILER_CREATE(10);

@@ -167,5 +167,8 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 // * Top line is used for the motor on/off info
 // * Rest of the lines are for the moisture level
 #define GRAPH_HEIGHT (1+32)
+#define GRAPH_POINT_NUM_BITS 5
+static_assert(1<<5 < GRAPH_HEIGHT, "Reduce number of bits, or increase graph height");
+#define GRAPH_POINT_MAXVAL ((1<<GRAPH_POINT_NUM_BITS) - 1)
 
 

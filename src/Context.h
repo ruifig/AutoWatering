@@ -11,7 +11,7 @@ namespace cz
 	struct GraphPoint
 	{
 		// 0..100 moisture level
-		unsigned int val : 7;
+		unsigned int val : GRAPH_POINT_NUM_BITS;
 		// Tells if the motor was on at this point
 		bool on : 1;
 	};
