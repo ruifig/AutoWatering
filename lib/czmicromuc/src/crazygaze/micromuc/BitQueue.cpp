@@ -1,16 +1,13 @@
 #include "BitQueue.h"
 #include "Logging.h"
+#include "StringUtils.h"
 #include <algorithm>
 #include <assert.h>
 
-static inline size_t stack_size()
-{
-    return RAMEND - SP;
-}
-
 #define CZ_TEST(expression) if (!(expression)) { ::cz::_doAssert(__FILENAME__, __LINE__, #expression); }
 
-#define BIT_MASK(H,L) (((unsigned) -1 >> (31 - (H))) & ~((1U << (L)) - 1))
+#define INT_MSB (sizeof(unsigned)*8-1)
+#define BIT_MASK(H,L) (((unsigned) -1 >> (INT_MSB - (H))) & ~((1U << (L)) - 1))
 
 /*
 	Gets the bits between H-L (inclusive)
@@ -18,13 +15,13 @@ static inline size_t stack_size()
 		GET_BITS(somevar, 7, 4)
 */
 #define GET_BITS(val, H, L) \
-	((val & (unsigned int)((((unsigned int)(1) << ((H)-(L)+1)) -1) << (L))) >> (L))
+	((val & (unsigned int)((((unsigned)(1) << ((H)-(L)+1)) -1) << (L))) >> (L))
 
 #define IS_BIT_SET(val, B) \
-	((val) & ((unsigned int)1 << (unsigned int)(B)))
+	((val) & ((unsigned int)1 << (unsigned)(B)))
 
 #define SET_BIT(var, pos, value) \
-	((var & ~((uint32_t)(1) << pos)) | ((uint32_t)(value)<<pos))
+	((var & ~((unsigned)(1) << pos)) | ((unsigned)(value)<<pos))
 
 // Makes a bit mask for a range of bits H-L (inclusive)
 #define MAKE_MASK(H,L) \
@@ -71,11 +68,10 @@ namespace
 
 FixedCapacityBitQueue::FixedCapacityBitQueue(uint8_t* buffer, int capacityBits)
 {
-	assert(capacityBits >= 2);
+	CZ_ASSERT(capacityBits >= 2);
 	m_data = buffer;
 	m_capacity = capacityBits;
-	m_tail = 0;
-	m_head = 0;
+	clear();
 }
 
 bool FixedCapacityBitQueue::isEmpty() const
@@ -167,7 +163,7 @@ void FixedCapacityBitQueue::dropBits(unsigned int numBits)
 		unsigned int idx = m_head / 8;
 		unsigned int L = m_head % 8;
 		unsigned int todo = std::min(numBits, std::min(8 - L, m_capacity - m_head));
-#if BITQUEUE_ZERO_ONPOP
+#if CZ_BITQUEUE_ZERO_ONPOP
 		unsigned int H = L + todo - 1;
 		m_data[idx] = ZERO_BITS(m_data[idx], H, L);
 #endif
@@ -195,7 +191,7 @@ unsigned int FixedCapacityBitQueue::pop(uint8_t* dst, unsigned int numBits)
 		unsigned int todo = std::min(numBits, std::min(8 - L, m_capacity - m_head));
 		unsigned int H = L + todo - 1;
 		uint8_t val = GET_BITS(m_data[idx], H, L);
-#if BITQUEUE_ZERO_ONPOP
+#if CZ_BITQUEUE_ZERO_ONPOP
 		m_data[idx] = ZERO_BITS(m_data[idx], H, L);
 #endif
 		writer.write(val, todo);
@@ -209,7 +205,7 @@ unsigned int FixedCapacityBitQueue::pop(uint8_t* dst, unsigned int numBits)
 void FixedCapacityBitQueue::clear()
 {
 	m_head = m_tail = 0;
-#if BITQUEUE_ZERO_ONPOP
+#if CZ_BITQUEUE_ZERO_ONPOP
 	auto numBytes = (m_capacity / 8) + ((m_capacity % 8) ? 1 : 0);
 	memset(m_data, 0, numBytes);
 #endif
@@ -250,9 +246,9 @@ void FixedCapacityBitQueue::pushImpl(uint8_t val, unsigned int numBits)
 		unsigned int todo = std::min(numBits, std::min(8 - L, m_capacity - m_tail));
 		unsigned int H = L + todo - 1;
 
-#if BITQUEUE_ZERO_ONPOP
+#if CZ_BITQUEUE_ZERO_ONPOP
 		// Unused bits should have been cleared when popping
-		assert(GET_BITS(m_data[idx], H, L) == 0);
+		CZ_ASSERT(GET_BITS(m_data[idx], H, L) == 0);
 #endif
 		m_data[idx] = SET_BITS(m_data[idx], H, L, val & MAKE_MASK(todo - 1, 0));
 		m_tail = (m_tail + todo) % m_capacity;
@@ -319,7 +315,6 @@ namespace
 	template<unsigned QSIZE_BYTES>
 	void runTests1()
 	{
-		Serial.print("1. Stack size = "); Serial.println(stack_size());
 		// Fill the test data with: 1,2,3,...,255
 		uint8_t testData[QSIZE_BYTES];
 		for (int idx = 0; idx < QSIZE_BYTES; idx++)
@@ -329,11 +324,8 @@ namespace
 
 		auto test1 = [&testData](unsigned int pushSize, unsigned int popSize, unsigned int offset, bool forcePush)
 		{
-			Serial.print("2. Stack size = "); Serial.println(stack_size());
 			cz::TStaticFixedBitCapacityQueue<QSIZE_BYTES * 8> q;
 			BitArray testArray{ testData, 0 };
-
-			Serial.print("3. Stack size = "); Serial.println(stack_size());
 
 			CZ_TEST(q.capacity() == QSIZE_BYTES * 8);
 			CZ_TEST(q.availableCapacity() == QSIZE_BYTES * 8);
@@ -351,38 +343,21 @@ namespace
 				CZ_TEST(q.size() == 0);
 			}
 
-			Serial.print("4. Stack size = "); Serial.println(stack_size());
 			todo = QSIZE_BYTES * 8;
 			while(todo)
 			{
-				Serial.print("5. Stack size = "); Serial.println(stack_size());
-				Serial.flush();
-				Serial.println(todo);
-				Serial.flush();
-
 				unsigned int size = std::min(todo, pushSize);
-				Serial.println("  a");
-				Serial.flush();
-
 				uint8_t val;
 				testArray.getBits(&val, size);
-				Serial.println("  b");
-				Serial.flush();
 
 				if (forcePush)
 				{
 					q.forcePushBits(val, size);
-					Serial.println("  c");
-					Serial.flush();
 				}
 				else
 				{
 					bool ret = q.pushBits(val, size);
-					Serial.println("  c");
-					Serial.flush();
 					CZ_TEST(ret);
-					Serial.println("  cc");
-					Serial.flush();
 				}
 
 				todo -= size;
@@ -424,10 +399,14 @@ namespace
 		{
 			for (int b = 1; b < 8; b++)
 			{
-				for (int c = 0; c < 16; c++)
+				for (int c = 0; c < 11; c++)
 				{
+					LogOutput::logToAllSimple(formatString(F("test1<%d>(%d,%d,%d,FALSE)..."), QSIZE_BYTES, a, b, c));
 					test1(a, b, c, false);
+					LogOutput::logToAllSimple(formatString(F(" done\n")));
+					LogOutput::logToAllSimple(formatString(F("test1<%d>(%d,%d,%d,TRUE)..."), QSIZE_BYTES, a, b, c));
 					test1(a, b, c, true);
+					LogOutput::logToAllSimple(formatString(F(" done\n")));
 				}
 			}
 		}
@@ -447,7 +426,7 @@ namespace
 			unsigned int v : ELE_BITS;
 		};
 
-		auto test = [](unsigned int offset, bool forcePush)
+		auto test2 = [](unsigned int offset, bool forcePush)
 		{
 			cz::TStaticFixedBitCapacityQueue<NUM_ELEMS * ELE_BITS> q;
 
@@ -497,14 +476,14 @@ namespace
 			}
 		};
 
-		test(1, false);
-		test(1, true);
-
-
 		for (int c = 0; c < 16; c++)
 		{
-			test(c, false);
-			test(c, true);
+			LogOutput::logToAllSimple(formatString(F("test2<%d>(%d,FALSE)..."), NUM_ELEMS,c));
+			test2(c, false);
+			LogOutput::logToAllSimple(formatString(F(" done\n")));
+			LogOutput::logToAllSimple(formatString(F("test2<%d>(%d,TRUE)..."), NUM_ELEMS,c));
+			test2(c, true);
+			LogOutput::logToAllSimple(formatString(F(" done\n")));
 		}
 	}
 
@@ -512,15 +491,15 @@ namespace
 
 void runBitQueueTests()
 {
-	Serial.print("Stack size = "); Serial.println(stack_size());
 	CZ_LOG(logDefault, Log, F("Running BitQueueTests..."));
-	Serial.print("Stack size = "); Serial.println(stack_size());
+
+	// misc tests
 	runTests1<4>();
-	Serial.print("Stack size = "); Serial.println(stack_size());
-	runTests1<256>();
-	runTests1<400>();
+	runTests1<130>();
+
+	// Test getAtIndex
 	runTests2<4>();
-	runTests2<128>();
+	runTests2<130>();
 	CZ_LOG(logDefault, Log, F("Finished BitQueueTests"));
 
 }

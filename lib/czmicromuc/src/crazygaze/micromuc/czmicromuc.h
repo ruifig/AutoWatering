@@ -2,6 +2,10 @@
 
 #include <Arduino.h>
 
+#define GCC_VERSION (__GNUC__ * (uint32_t)10000 \
+                     + __GNUC_MINOR__ * 100 \
+                     + __GNUC_PATCHLEVEL__)
+
 #if defined(DEBUG) || defined(_DEBUG)
 	#define CZ_DEBUG 1
 #else
@@ -32,7 +36,10 @@
 #define __FILENAME__ getFilename(__FILE__)
 
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__)
+	#define CZ_AVR 1
 	#define _BREAK() __asm__ __volatile__("break")
+#else
+	#define CZ_AVR 0
 #endif
 
 //

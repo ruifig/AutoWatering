@@ -2,7 +2,10 @@
 
 #include "crazygaze/micromuc/czmicromuc.h"
 
-#define BITQUEUE_ZERO_ONPOP 1
+#ifndef CZ_BITQUEUE_ZERO_ONPOP
+	#define CZ_BITQUEUE_ZERO_ONPOP 0
+#endif
+
 namespace cz
 {
 

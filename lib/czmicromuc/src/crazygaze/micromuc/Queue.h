@@ -1,7 +1,7 @@
 #pragma once
 
+#include "crazygaze/micromuc/czmicromuc.h"
 #include <type_traits>
-#include <assert.h>
 
 namespace cz
 {
@@ -33,7 +33,7 @@ public:
 	 */
 	TFixedCapacityQueue(Type* buffer, int capacity)
 	{
-		assert(capacity > 1);
+		CZ_ASSERT(capacity > 1);
 		m_data = buffer;
 		m_capacity = capacity;
 		m_tail = 0;
@@ -83,7 +83,7 @@ public:
 	{
 		Type val;
 		bool ret = pop(val);
-		assert(ret);
+		CZ_ASSERT(ret);
 		return val;
 	}
 
@@ -132,13 +132,13 @@ public:
 
 	const Type& getAtIndex(int index) const
 	{
-		assert(index < size());
+		CZ_ASSERT(index < size());
 		return m_data[(m_head + index) % m_capacity];
 	}
 
 	Type& getAtIndex(int index)
 	{
-		assert(index < size());
+		CZ_ASSERT(index < size());
 		return m_data[(m_head + index) % m_capacity];
 	}
 
@@ -177,80 +177,8 @@ public:
 	}
 };
 
+void runQueueTests();
 
-#if 0
-namespace
-{
-
-template<class Q>
-void printQueue(Q& q)
-{
-	printf("Elems=%d\n", q.size());
-	for (int i = 0; i < q.size(); i++)
-	{
-		printf("%d, ", q.getAtIndex(i));
-	}
-	printf("\n");
-}
-
-template<class Q>
-bool equals(Q& q, const std::vector<typename Q::Type>& v)
-{
-	if (q.size() != v.size())
-		return false;
-
-	for (int i = 0; i < q.size(); i++)
-	{
-		if (q.getAtIndex(i) != v[i])
-			return false;
-	}
-
-	return true;
-}
-
-void runTests()
-{
-	TStaticFixedCapacityQueue<int, 5> q;
-
-	printQueue(q);
-	assert(q.push(0));
-	assert(q.push(1));
-	assert(q.push(2));
-	assert(q.push(3));
-	assert(q.push(4));
-
-	assert(equals(q, { 0,1,2,3,4 }));
-	printQueue(q);
-	assert(q.push(5) == false);
-	printQueue(q);
-
-
-	assert(q.pop() == 0);
-	assert(q.pop() == 1);
-	printQueue(q);
-	assert(equals(q, { 2,3,4 }));
-
-	assert(q.push(5));
-	printQueue(q);
-	assert(equals(q, { 2,3,4,5 }));
-
-	assert(q.push(2));
-	assert(equals(q, { 2,3,4,5,2 }));
-	assert(q.remove(2) == 2);
-	assert(equals(q, { 3,4,5 }));
-
-	assert(q.front() == 3);
-	assert(q.back() == 5);
-
-	q.clear();
-	assert(q.size() == 0);
-
-
-}
-
-}
-
-#endif
 
 } // namespace cz
 

@@ -20,7 +20,6 @@
 #include "crazygaze/micromuc/Profiler.h"
 #include "crazygaze/micromuc/SerialStringReader.h"
 #include "MemoryFree.h"
-#include "crazygaze/micromuc/BitQueue.h"
 
 using namespace cz;
 
@@ -85,7 +84,6 @@ void setAllMotorPins(int val1, int val2)
 
 void setup()
 {
-
 #ifdef AVR8_BREAKPOINT_MODE
 	debug_init();
 	breakpoint();
@@ -130,8 +128,6 @@ void setup()
 	//delay(3000);
 	//gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_2_INPUT1, LOW);
 	//gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_2_INPUT2, LOW);
-
-	cz::runBitQueueTests();
 
 }
 
