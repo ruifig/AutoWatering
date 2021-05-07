@@ -115,7 +115,7 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
  * This specifies how many seconds to wait before doing the reading
  */
 #if FASTER_ITERATION
-	#define MOISTURESENSOR_POWERUP_WAIT 0.20f
+	#define MOISTURESENSOR_POWERUP_WAIT 0.10f
 #else
 	#define MOISTURESENSOR_POWERUP_WAIT 0.20f
 #endif
@@ -124,7 +124,7 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
  * Default sensor sampling interval in seconds
  */
 #if FASTER_ITERATION
-	#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 1.0f
+	#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 0.001f
 #else
 	#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 60.0f
 #endif

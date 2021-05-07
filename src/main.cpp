@@ -39,10 +39,16 @@ Context gCtx;
 using SoilMoistureSensorTicker = TTicker<SoilMoistureSensor, float>;
 SoilMoistureSensorTicker gSoilMoistureSensors[NUM_MOISTURESENSORS] =
 {
-	{true, gCtx, 0, IO_EXPANDER_VPIN_SENSOR_0, MULTIPLEXER_MOISTURE_SENSOR_0},
-	{true, gCtx, 1, IO_EXPANDER_VPIN_SENSOR_1, MULTIPLEXER_MOISTURE_SENSOR_1},
-	{true, gCtx, 2, IO_EXPANDER_VPIN_SENSOR_2, MULTIPLEXER_MOISTURE_SENSOR_2},
-	{true, gCtx, 3, IO_EXPANDER_VPIN_SENSOR_3, MULTIPLEXER_MOISTURE_SENSOR_3}
+	{true, gCtx, 0, IO_EXPANDER_VPIN_SENSOR_0, MULTIPLEXER_MOISTURE_SENSOR_0}
+#if NUM_MOISTURESENSORS>1
+	,{true, gCtx, 1, IO_EXPANDER_VPIN_SENSOR_1, MULTIPLEXER_MOISTURE_SENSOR_1}
+#endif
+#if NUM_MOISTURESENSORS>2
+	,{true, gCtx, 2, IO_EXPANDER_VPIN_SENSOR_2, MULTIPLEXER_MOISTURE_SENSOR_2}
+#endif
+#if NUM_MOISTURESENSORS>3
+	,{true, gCtx, 3, IO_EXPANDER_VPIN_SENSOR_3, MULTIPLEXER_MOISTURE_SENSOR_3}
+#endif
 };
 
 TTicker<DisplayTFT, float> gDisplay(true, gCtx);
@@ -131,7 +137,7 @@ void setup()
 
 }
 
-PROFILER_CREATE(10);
+PROFILER_CREATE(30);
 
 cz::SerialStringReader<64> gSerialStringReader;
 
@@ -163,6 +169,10 @@ void loop()
 			if (strcmp_P(gSerialStringReader.retrieve(), (const char*)F("profiler_log"))==0)
 			{
 				PROFILER_LOG();
+			}
+			else if (strcmp_P(gSerialStringReader.retrieve(), (const char*)F("profiler_reset"))==0)
+			{
+				PROFILER_RESET();
 			}
 			else
 			{

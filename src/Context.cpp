@@ -63,6 +63,7 @@ void GroupData::begin()
 		m_history.push({GRAPH_POINT_MAXVAL/3, false});
 	}
 
+	m_updateCount = GRAPH_NUMPOINTS; 
 
 #endif
 }
@@ -83,13 +84,13 @@ void GroupData::setMoistureSensorValues(int currentValue, int airValue, int wate
 		m_history.pop();
 	}
 	m_history.push(point);
-	m_updated = true;
+	m_updateCount++;
 }
 
 void GroupData::resetHistory()
 {
 	m_history.clear();
-	m_updated = true;
+	m_updateCount = 0;
 }
 
 
@@ -108,6 +109,7 @@ GroupData& ProgramData::getGroupData(uint8_t index)
 }
 
 
+#if 0
 void ProgramData::logMoistureSensors()
 {
 	char buf[256];
@@ -141,6 +143,8 @@ void ProgramData::logMoistureSensors()
 
 	CZ_LOG(logDefault, Log, F("%s"), buf);
 }
+
+#endif
 
 bool ProgramData::tryAcquireMoistureSensorMutex()
 {

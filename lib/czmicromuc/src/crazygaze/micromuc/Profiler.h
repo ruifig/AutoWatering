@@ -57,6 +57,7 @@ struct Profiler
 
 	void startRun();
 	void log();
+	void reset();
 
 }; // Profiler
 
@@ -72,6 +73,7 @@ struct Profiler
 
 	#define PROFILER_STARTRUN() gProfiler.startRun()
 	#define PROFILER_LOG() gProfiler.log()
+	#define PROFILER_RESET() gProfiler.reset()
 
 #else // CZ_PROFILER
 
@@ -79,6 +81,7 @@ struct Profiler
 	#define PROFILER_CREATE(capacity)
 	#define PROFILER_STARTRUN()
 	#define PROFILER_LOG()
+	#define PROFILER_RESET()
 #endif
 
 

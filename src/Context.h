@@ -59,12 +59,17 @@ namespace cz
 
 		bool hasChanged() const
 		{
-			return m_updated;
+			return m_updateCount>0;
+		}
+
+		int getChangedCount() const
+		{
+			return m_updateCount;
 		}
 
 		void resetChanged()
 		{
-			m_updated = false;
+			m_updateCount = 0;
 		}
 
 		const HistoryQueue& getHistory()
@@ -95,7 +100,7 @@ namespace cz
         //! Returns the current value in 0..100 format (aka: Percentage)
         int calcCurrentPercentage() const;
 		HistoryQueue m_history;
-		bool m_updated = false;
+		int m_updateCount = 0;
     };
 
 class ProgramData
@@ -107,7 +112,7 @@ public:
     bool tryAcquireMoistureSensorMutex();
     void releaseMoistureSensorMutex();
 
-	void logMoistureSensors();
+	//void logMoistureSensors();
 
 	void begin();
   private:

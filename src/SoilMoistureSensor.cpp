@@ -49,7 +49,12 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 	PROFILE_SCOPE(F("MoistureSensor"));
 
 	m_timeInState += deltaSeconds;
+
+#if FASTER_ITERATION
+	m_nextTickWait = 0.001f;
+#else
 	m_nextTickWait = 0.2f;
+#endif
 
 	switch (m_state)
 	{
@@ -91,12 +96,11 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 
 			//CZ_LOG(logDefault, Log, F("SoilMoistureSensor(%d) : %d"), m_index, currentValue);
 			data.setMoistureSensorValues(currentValue, airValue, waterValue);
-			#if FASTER_ITERATION
-				data.setMoistureSensorValues(currentValue, airValue, waterValue);
-				data.setMoistureSensorValues(currentValue, airValue, waterValue);
-				data.setMoistureSensorValues(currentValue, airValue, waterValue);
-				data.setMoistureSensorValues(currentValue, airValue, waterValue);
-				data.setMoistureSensorValues(currentValue, airValue, waterValue);
+			#if FASTER_ITERATION && 0
+				for(int i=0; i<5; i++)
+				{
+					data.setMoistureSensorValues(currentValue, airValue, waterValue);
+				}
 			#endif
 			changeToState(State::PoweredDown);
 		}

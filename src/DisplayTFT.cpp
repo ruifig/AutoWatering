@@ -1,6 +1,6 @@
 #include "DisplayTFT.h"
 #include "Utils.h"
-#include "GFXUtils.h"
+#include "gfx/GFXUtils.h"
 #include "crazygaze/micromuc/Logging.h"
 #include "crazygaze/micromuc/StringUtils.h"
 #include <crazygaze/micromuc/Profiler.h>
@@ -125,25 +125,31 @@ FixedNumLabel sensorLabels[NUM_MOISTURESENSORS][3] =
 		{ &sensor0line0 },
 		{ &sensor0line1 },
 		{ &sensor0line2 }
-	},
-
+	}
+#if NUM_MOISTURESENSORS>1
+	,
 	{
 		{ &sensor1line0 },
 		{ &sensor1line1 },
 		{ &sensor1line2 }
-	},
-
+	}
+#endif
+#if NUM_MOISTURESENSORS>2
+	,
 	{
 		{ &sensor2line0 },
 		{ &sensor2line1 },
 		{ &sensor2line2 }
-	},
-
+	}
+#endif
+#if NUM_MOISTURESENSORS>3
+	,
 	{
 		{ &sensor3line0 },
 		{ &sensor3line1 },
 		{ &sensor3line2 }
 	}
+#endif
 };
 
 }
@@ -205,7 +211,7 @@ float DisplayTFT::tick(float deltaSeconds)
 	}
 #endif
 
-	return 1.0f / 5.0f;
+	return 1.0f / 30.0f;
 }
 	
 
@@ -241,21 +247,64 @@ void DisplayTFT::onLeaveState()
 }
 
 
-void DisplayTFT::plotHistory(int16_t x, int16_t y, int16_t h, const TFixedCapacityQueue<GraphPoint>& data, uint8_t valThreshold /*, const GraphPoint* oldData, int oldCount*/)
+void DisplayTFT::plotHistory(int16_t x, int16_t y, int16_t h, const TFixedCapacityQueue<GraphPoint>& data, int previousDrawOffset, uint8_t valThreshold /*, const GraphPoint* oldData, int oldCount*/)
 {
+	CZ_ASSERT(previousDrawOffset<=0);
+
+	// If the previous draw offset is 0, it means the graph data hasn't changed, so no need to redraw
+	if (previousDrawOffset==0)
+	{
+		return;
+	}
 	int bottomY = y + h - 1;
 
 	const int count = data.size();
+	int oldDrawIdx = previousDrawOffset;
 	for(int i=0; i<count; i++)
 	{
+
 		GraphPoint p = data.getAtIndex(i);
 		int xx = x + i;
-		gScreen.drawFastVLine(xx, y, h, BLACK);
+
+		bool doDrawLevel = false;
+		bool doDrawMotor = false;
+
+		if (oldDrawIdx >= 0)
+		{
+			GraphPoint oldPoint = data.getAtIndex(oldDrawIdx);
+			if (oldPoint.val != p.val)
+			{
+				int yy = oldPoint.val;
+				// erase previous dot
+				gScreen.drawPixel(xx, bottomY - yy, BLACK);
+				doDrawLevel = true;
+			}
+
+			if (oldPoint.on != p.on)
+			{
+				doDrawMotor = true;
+			}
+		}
+		else
+		{
+			gScreen.drawFastVLine(xx, y, h, BLACK);
+			doDrawLevel = true;
+			doDrawMotor = true;
+		}
+		oldDrawIdx++;
+
 		// The height for the plotting is h-1 because we reserve the top pixel for the motor on/off
 		//int yy = map(p.val, 0, 100, 0,  h - 2);
-		int yy = p.val;
-		gScreen.drawPixel(xx, bottomY - yy, p.val < valThreshold ? GRAPH_MOISTURE_LOW_COLOUR : GRAPH_MOISTURE_OK_COLOUR);
-		gScreen.drawPixel(xx, y, p.on ? GRAPH_MOTOR_ON_COLOUR : GRAPH_MOTOR_OFF_COLOUR);
+		if (doDrawLevel)
+		{
+			int yy = p.val;
+			gScreen.drawPixel(xx, bottomY - yy, p.val < valThreshold ? GRAPH_MOISTURE_LOW_COLOUR : GRAPH_MOISTURE_OK_COLOUR);
+		}
+
+		if (doDrawMotor)
+		{
+			gScreen.drawPixel(xx, y, p.on ? GRAPH_MOTOR_ON_COLOUR : GRAPH_MOTOR_OFF_COLOUR);
+		}
 	}
 
 }
@@ -334,15 +383,20 @@ void DisplayTFT::drawOverview()
 			PROFILE_SCOPE(F("plotHistory"));
 
 			int x = ms_historyX;
-			plotHistory(x, y, GRAPH_HEIGHT, history, data.getPercentageThreshold());
+			plotHistory(x, y, GRAPH_HEIGHT, history, -data.getChangedCount(), data.getPercentageThreshold());
 		}
+
+		data.resetChanged();
 
 		//
 		// Draw values
 		//
-		sensorLabels[i][0].setValueAndDraw(data.getWaterValue());
-		sensorLabels[i][1].setValueAndDraw(data.getPercentageValue());
-		sensorLabels[i][2].setValueAndDraw(data.getAirValue());
+		{
+			PROFILE_SCOPE(F("drawTextValues"));
+			sensorLabels[i][0].setValueAndDraw(data.getWaterValue());
+			sensorLabels[i][1].setValueAndDraw(data.getPercentageValue());
+			sensorLabels[i][2].setValueAndDraw(data.getAirValue());
+		}
 
 	}
 	

@@ -58,7 +58,7 @@ class DisplayTFT
 	 * @param oldData/oldCount if specified, the data being plotted is compared against this, so it draws as few pixels as possible
 	 *    If this is not specified, then the function erases a full Y range per point before drawing the point.
 	 **/
-	void plotHistory(int16_t x, int16_t y, int16_t h, const TFixedCapacityQueue<GraphPoint>& data, uint8_t valThreshold /*, const GraphPoint* oldData = nullptr, int oldCount=0*/);
+	void plotHistory(int16_t x, int16_t y, int16_t h, const TFixedCapacityQueue<GraphPoint>& data, int previousDrawOffset, uint8_t valThreshold /*, const GraphPoint* oldData = nullptr, int oldCount=0*/);
 
 
 };

@@ -111,6 +111,17 @@ void Profiler::log()
 	Serial.flush();
 }
 
+void Profiler::reset()
+{
+	Section* section = rootSection;
+	while(section)
+	{
+		section->totalMicros = 0;
+		section->totalSeconds = 0;
+		section->count = 0;
+		section = section->next;
+	}
+}
 
 } // namespace cz
 
