@@ -113,6 +113,11 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 	return m_nextTickWait;
 }
 
+
+void SoilMoistureSensor::onEvent(const Event& evt)
+{
+}
+
 void SoilMoistureSensor::changeToState(State newState)
 {
 	#if 0

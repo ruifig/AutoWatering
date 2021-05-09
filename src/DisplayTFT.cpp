@@ -214,6 +214,9 @@ float DisplayTFT::tick(float deltaSeconds)
 	return 1.0f / 30.0f;
 }
 	
+void DisplayTFT::onEvent(const Event& evt)
+{
+}
 
 void DisplayTFT::changeToState(State newState)
 {

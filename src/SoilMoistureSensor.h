@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <assert.h>
 #include "Context.h"
+#include "Component.h"
 
 namespace cz
 {
@@ -17,7 +18,7 @@ namespace cz
  * - The sensor Vin should be connected to an Arduino digital pin. This is required so that the sensor is only powered
  * up when we need to make a reading. This saves power.
  */
-class SoilMoistureSensor
+class SoilMoistureSensor : public Component
 {
   public:
 
@@ -34,7 +35,8 @@ class SoilMoistureSensor
 	const SoilMoistureSensor& operator=(const SoilMoistureSensor&) = delete;
 
 	void begin();
-	float tick(float deltaSeconds);
+	virtual float tick(float deltaSeconds) override;
+	virtual void onEvent(const Event& evt) override;
 
   private:
 	enum class State : uint8_t

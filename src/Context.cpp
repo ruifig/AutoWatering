@@ -2,6 +2,7 @@
 #include "Utils.h"
 #include "crazygaze/micromuc/Logging.h"
 #include "crazygaze/micromuc/StringUtils.h"
+#include "Component.h"
 #include <Arduino.h>
 
 namespace cz
@@ -18,8 +19,9 @@ void Context::begin()
 }
 
 
-void GroupData::begin()
+void GroupData::begin(uint8_t index)
 {
+	m_index = index;
 
 // Fill the history with some values, for testing purposes
 #if FASTER_ITERATION
@@ -85,6 +87,8 @@ void GroupData::setMoistureSensorValues(int currentValue, int airValue, int wate
 	}
 	m_history.push(point);
 	m_updateCount++;
+
+	Component::raiseEvent(SoilMoistureSensorReadingEvent(m_index));
 }
 
 void GroupData::resetHistory()
@@ -96,9 +100,11 @@ void GroupData::resetHistory()
 
 void ProgramData::begin()
 {
+	uint8_t idx = 0;
 	for(auto&& g : m_group)
 	{
-		g.begin();
+		g.begin(idx);
+		idx++;
 	}
 }
 

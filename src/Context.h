@@ -23,7 +23,7 @@ namespace cz
     class GroupData
     {
 	  public:
-		void begin();
+		void begin(uint8_t index);
 
 		void setMoistureSensorValues(int currentValue, int airValue, int waterValue);
 
@@ -82,11 +82,11 @@ namespace cz
 			return m_numReadings;
 		}
 
-
 		void resetHistory();
 
 	  private:
         // How many seconds to wait between samplings
+		uint8_t m_index;
         float m_samplingInterval = MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL;
 		int m_numReadings = 0;
         unsigned int m_airValue = 513;

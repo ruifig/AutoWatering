@@ -1,5 +1,6 @@
 #pragma once
 #include "Context.h"
+#include "Component.h"
 #include <Adafruit_GFX.h>
 #include <MCUFRIEND_kbv.h>
 #include <TouchScreen.h>
@@ -7,7 +8,7 @@
 namespace cz
 {
 
-class DisplayTFT
+class DisplayTFT : public Component
 {
   public:
 	DisplayTFT(Context& ctx);
@@ -17,7 +18,8 @@ class DisplayTFT
 	DisplayTFT& operator=(const DisplayTFT&) = delete;
 
 	void begin();
-	float tick(float deltaSeconds);
+	virtual float tick(float deltaSeconds) override;
+	virtual void onEvent(const Event& evt) override;
 
   private:
 
