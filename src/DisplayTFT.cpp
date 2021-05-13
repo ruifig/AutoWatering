@@ -216,6 +216,21 @@ float DisplayTFT::tick(float deltaSeconds)
 	
 void DisplayTFT::onEvent(const Event& evt)
 {
+	switch(evt.type)
+	{
+		case Event::SoilMoistureSensorReading:
+		{
+			auto idx = static_cast<const SoilMoistureSensorReadingEvent&>(evt).index;
+
+			// We only increment if < GRAPH_NUMPOINTS, so we don't wrap around to 0 if it happens the display is not updated
+			// for a very long time (shouldn't happen), or if the sensors update too quickly before the screen updates (shouldn't happen).
+			// This is needed because the number of sensor updates is used to optimize the sensor history drawing.
+			if (m_soilMoistureSensorUpdates[idx]<GRAPH_NUMPOINTS)
+			{
+				++m_soilMoistureSensorUpdates[idx];
+			}
+		}
+	}
 }
 
 void DisplayTFT::changeToState(State newState)
@@ -319,6 +334,7 @@ void DisplayTFT::onEnterState()
 	{
 	case State::Initializing:
 		{
+			memset(m_soilMoistureSensorUpdates, 255, sizeof(m_soilMoistureSensorUpdates));
 			initializeScreen();
 		}
 		break;
@@ -373,6 +389,11 @@ void DisplayTFT::drawOverview()
 
 	for(int i=0; i<NUM_MOISTURESENSORS; i++)
 	{
+		if (m_soilMoistureSensorUpdates[i]==0)
+		{
+			continue;
+		}
+
 		PROFILE_SCOPE(F("sensorDrawing"));
 
 		GroupData& data = m_ctx.data.getGroupData(i);
@@ -384,12 +405,9 @@ void DisplayTFT::drawOverview()
 		//
 		{
 			PROFILE_SCOPE(F("plotHistory"));
-
 			int x = ms_historyX;
-			plotHistory(x, y, GRAPH_HEIGHT, history, -data.getChangedCount(), data.getPercentageThreshold());
+			plotHistory(x, y, GRAPH_HEIGHT, history, -static_cast<int>(m_soilMoistureSensorUpdates[i]), data.getPercentageThreshold());
 		}
-
-		data.resetChanged();
 
 		//
 		// Draw values
@@ -402,7 +420,8 @@ void DisplayTFT::drawOverview()
 		}
 
 	}
-	
+
+	memset(m_soilMoistureSensorUpdates, 0, sizeof(m_soilMoistureSensorUpdates));
 
 }
 

@@ -36,7 +36,17 @@ void operator delete(void* ptr, unsigned int size)
 
 Context gCtx;
 
-using SoilMoistureSensorTicker = TTicker<SoilMoistureSensor, float>;
+
+#if 1
+	// Use normal ticking, where the object is only ticked as often as it wants
+	using TickingMethod = TickerPolicy::TTime<float>;
+#else
+	// Use forced ticking, where the object is always ticked every loop independently of how often it wants to be ticked
+	using TickingMethod = TickerPolicy::TTimeAlwaysTick<float>;
+#endif
+
+using SoilMoistureSensorTicker = TTicker<SoilMoistureSensor, float, TickingMethod>;
+
 SoilMoistureSensorTicker gSoilMoistureSensors[NUM_MOISTURESENSORS] =
 {
 	{true, gCtx, 0, IO_EXPANDER_VPIN_SENSOR_0, MULTIPLEXER_MOISTURE_SENSOR_0}
@@ -51,7 +61,7 @@ SoilMoistureSensorTicker gSoilMoistureSensors[NUM_MOISTURESENSORS] =
 #endif
 };
 
-TTicker<DisplayTFT, float> gDisplay(true, gCtx);
+TTicker<DisplayTFT, float, TickingMethod> gDisplay(true, gCtx);
 
 float gPreviousTime = 0;
 
@@ -117,7 +127,7 @@ void setup()
 		ticker.getObj().begin();
 	}
 
-	gPreviousTime = millis() / 1000.0f;
+	gPreviousTime = micros() / 1000000.0f;
 
 	setMotorPins();
 
@@ -145,7 +155,7 @@ void loop()
 {
 	PROFILER_STARTRUN();
 
-	float now = millis() / 1000.0f;
+	float now = micros() / 1000000.0f;
 	float deltaSeconds = now - gPreviousTime;
 	float countdown = 60*60;
 	
@@ -181,9 +191,6 @@ void loop()
 		}
 	}
 
-	//gCtx.data.logMoistureSensors();
-
 	gPreviousTime = now;
-	//delay(countdown*1000);
 }
 

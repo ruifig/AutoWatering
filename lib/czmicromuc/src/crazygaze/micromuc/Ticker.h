@@ -6,6 +6,7 @@ namespace cz
 {
 namespace TickerPolicy
 {
+
 /**
  * Ticking will be based on time elapsed since the last tick.
  * obj->tick should return how many seconds to wait until the next tick.
@@ -40,6 +41,37 @@ struct TTime
 
 	// Countdown to next tick
 	TimeType m_countdown;
+};
+
+/**
+ * Similar to TTime, but ignores the countdown, so it causes a tick to happen every call.
+ * Useful for debugging.
+ */
+template <class T>
+struct TTimeAlwaysTick
+{
+  public:
+	using TimeType = T;
+
+	TimeType getCountdown() const
+	{
+		return 0;
+	}
+
+  protected:
+	TTimeAlwaysTick()
+	{
+	}
+
+	bool update(TimeType deltatime)
+	{
+		return true;
+	}
+
+	void reset(TimeType countdown = 0)
+	{
+	}
+
 };
 
 };  // namespace TickerPolicy
@@ -83,7 +115,7 @@ class TTicker : public TTickingMethod
 			}
 		}
 
-		return TTickingMethod::m_countdown;
+		return TTickingMethod::getCountdown();
 	}
 
 	ObjectType& getObj() { return m_obj; }

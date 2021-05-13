@@ -124,7 +124,7 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
  * Default sensor sampling interval in seconds
  */
 #if FASTER_ITERATION
-	#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 0.001f
+	#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 0.000001f
 #else
 	#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 60.0f
 #endif

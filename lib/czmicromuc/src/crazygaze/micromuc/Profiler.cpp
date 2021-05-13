@@ -25,7 +25,7 @@ Profiler::Section::Section(const __FlashStringHelper* name)
 
 Profiler::Scope::Scope(Section& section)
 {
-	if (gProfiler.pointsCount >= gProfiler.pointsCapacity - 1)
+	if (gProfiler.pointsCount == gProfiler.pointsCapacity - 1)
 	{
 		point = nullptr;
 		return;
@@ -60,7 +60,6 @@ Profiler::Profiler(Point* buffer, int capacity)
 
 void Profiler::startRun()
 {
-	points[0] = {0,0};
 	pointsCount = 0;
 	level = 0;
 }
@@ -90,8 +89,9 @@ void Profiler::log()
 
 	{
 		Point* p = points;
+		int todo = pointsCount;
 		LogOutput::logToAllSimple(F("  Points\n"));
-		while(p->section)
+		while(todo--)
 		{
 			char indent[50];
 			LogOutput::logToAllSimple(formatString(F("    %s"), duplicateChar(indent, p->level, ' ')));

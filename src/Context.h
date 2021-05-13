@@ -57,16 +57,6 @@ namespace cz
 			return m_samplingInterval;
 		}
 
-		bool hasChanged() const
-		{
-			return m_updateCount>0;
-		}
-
-		int getChangedCount() const
-		{
-			return m_updateCount;
-		}
-
 		void resetChanged()
 		{
 			m_updateCount = 0;
