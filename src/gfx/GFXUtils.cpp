@@ -46,6 +46,11 @@ void fillRect(const Rect& box, uint16_t color)
 	gScreen.fillRect(box.x, box.y, box.width, box.height, color);
 }
 
+void drawRect(const Rect& box, uint16_t color)
+{
+	gScreen.drawRect(box.x, box.y, box.width, box.height, color);
+}
+
 void drawRGBBitmap(int16_t x, int16_t y, const uint16_t *bitmap, const uint8_t* mask, int16_t w, int16_t h, uint16_t bkgColor)
 {
 	gScreen.fillRect(x, y, w, h, bkgColor);

@@ -73,6 +73,8 @@ void initializeScreen();
 
 void fillRect(const Rect& box, uint16_t color);
 
+void drawRect(const Rect& box, uint16_t color);
+
 /**
  * Draws a filled rectangle with the specified colour, followed by a 565 RGB bitmap from PROGMEM using a bitmask
  * (set bits = opaque, unset bits = clear).
@@ -102,10 +104,13 @@ public:
 namespace gfx
 {
 
+// If set, it fills the drawing area with the background colour
 #define GFX_FLAG_ERASEBKG   (1 << 0)
+// If set, it draw a rectangle with the foreground/text colour
 #define GFX_FLAG_DRAWBORDER (1 << 1)
 
-#define GFX_FLAG_MUMASPERCENTAGE (15 << 1)
+// For labels, it display the text as a percentage number. E.g: "90%"
+#define GFX_FLAG_MUMASPERCENTAGE (1 << 15)
 
 
 class Widget
@@ -157,6 +162,11 @@ protected:
 			fillRect(data.pos, data.bkgColor);
 		}
 
+		if (data.flags & GFX_FLAG_DRAWBORDER)
+		{
+			drawRect(data.pos, data.textColor);
+		}
+
 		gScreen.setFont(data.font);
 		gScreen.setTextColor(data.textColor);
 		printAligned(data.pos, data.halign, data.valign, data.value);
@@ -167,6 +177,11 @@ protected:
 		if (data.flags & GFX_FLAG_ERASEBKG)
 		{
 			fillRect(data.pos, data.bkgColor);
+		}
+
+		if (data.flags & GFX_FLAG_DRAWBORDER)
+		{
+			drawRect(data.pos, data.textColor);
 		}
 
 		gScreen.setFont(data.font);
