@@ -4,6 +4,7 @@
 #include "crazygaze/micromuc/Logging.h"
 #include "crazygaze/micromuc/StringUtils.h"
 #include <crazygaze/micromuc/Profiler.h>
+#include "Icons.h"
 
 
 //
@@ -403,6 +404,34 @@ void DisplayTFT::drawHistoryBoxes()
 		gScreen.drawFastHLine(0, bottomY - map(80, 0, 100, 0, h - 1),  2, DARKGREY);
 		gScreen.drawFastHLine(0, bottomY - map(100, 0, 100, 0, h - 1), 2, DARKGREY);
 	}
+
+	#define TEST_ICON(idx, name) \
+		drawRGBBitmap(32*idx,SCREEN_HEIGHT-32*2 - 3, img_##name, img_##name##_bitmask, img_##name##_width, img_##name##_height, BLACK); \
+		drawRGBBitmapDisabled(32*idx,SCREEN_HEIGHT-32*1, img_##name, img_##name##_bitmask, img_##name##_width, img_##name##_height, BLACK);
+
+	#if 0
+	for (int i=0; i<2; i++)
+	{
+		drawRGBBitmap(32*i,SCREEN_HEIGHT-32*2, img_Play, img_Play_bitmask, img_Play_width, img_Play_height, BLACK);
+		drawRGBBitmap(32*i,SCREEN_HEIGHT-32*1, img_Play, img_Play_bitmask, img_Play_width, img_Play_height, BLACK);
+	}
+	#else
+		TEST_ICON(0, Play);
+		TEST_ICON(1, Stop);
+		TEST_ICON(2, Shot);
+		TEST_ICON(3, Calibrate);
+		TEST_ICON(4, Settings);
+		TEST_ICON(5, Save);
+		TEST_ICON(6, SetSensorInterval);
+		TEST_ICON(7, SetWateringDuration);
+		TEST_ICON(8, Close);
+		TEST_ICON(9, SetThreshold);
+
+		TEST_ICON(0, Add);
+		TEST_ICON(1, Remove);
+
+	#endif
+
 }
 
 void DisplayTFT::drawOverview()

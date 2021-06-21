@@ -57,6 +57,48 @@ void drawRGBBitmap(int16_t x, int16_t y, const uint16_t *bitmap, const uint8_t* 
 	gScreen.drawRGBBitmap(x, y, bitmap, mask, w, h);
 }
 
+// Based on https://stackoverflow.com/questions/58449462/rgb565-to-grayscale
+int16_t convert565ToGray(int16_t color)
+{
+	int16_t red = ((color & 0xF800)>>11);
+	int16_t green = ((color & 0x07E0)>>5);
+	int16_t blue = (color & 0x001F);
+	int16_t grayscale = (0.2126 * red) + (0.7152 * green / 2.0) + (0.0722 * blue);
+	return (grayscale<<11) + (grayscale<<6) + grayscale;
+}
+
+
+void drawRGBBitmapDisabled(int16_t x, int16_t y, const uint16_t *bitmap, const uint8_t* mask, int16_t w, int16_t h, uint16_t bkgColor)
+{
+	gScreen.fillRect(x, y, w, h, bkgColor);
+
+	int count = 0;
+	int16_t bw = (w + 7) / 8; // Bitmask scanline pad = whole byte
+	uint8_t byte = 0;
+	gScreen.startWrite();
+	for (int16_t j = 0; j < h; j++, y++)
+	{
+		for (int16_t i = 0; i < w; i++)
+		{
+			count++;
+
+			if (i & 7)
+				byte <<= 1;
+			else
+				byte = pgm_read_byte(&mask[j * bw + i / 8]);
+
+			if (byte & 0x80)
+			{
+				if ((count % 2) == 0)
+					gScreen.writePixel(x + i, y, BLACK);
+				else
+					gScreen.writePixel(x + i, y, convert565ToGray(pgm_read_word(&bitmap[j * w + i])));
+			}
+		}
+	}
+	gScreen.endWrite();
+}
+
 template<typename T>
 void printAlignedImpl(const Rect& area, HAlign halign, VAlign valign, const T* txt)
 {

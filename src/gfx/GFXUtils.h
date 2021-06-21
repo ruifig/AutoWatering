@@ -80,6 +80,7 @@ void drawRect(const Rect& box, uint16_t color);
  * (set bits = opaque, unset bits = clear).
  **/
 void drawRGBBitmap(int16_t x, int16_t y, const uint16_t *bitmap, const uint8_t* mask, int16_t w, int16_t h, uint16_t bkgColor);
+void drawRGBBitmapDisabled(int16_t x, int16_t y, const uint16_t *bitmap, const uint8_t* mask, int16_t w, int16_t h, uint16_t bkgColor);
 
 /**
  * Prints a string aligned in a box area
