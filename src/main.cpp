@@ -63,7 +63,7 @@ SoilMoistureSensorTicker gSoilMoistureSensors[NUM_MOISTURESENSORS] =
 
 TTicker<DisplayTFT, float, TickingMethod> gDisplay(true, gCtx);
 
-float gPreviousTime = 0;
+unsigned long gPreviousMicros = 0;
 
 void setMotorPins()
 {
@@ -127,7 +127,7 @@ void setup()
 		ticker.getObj().begin();
 	}
 
-	gPreviousTime = micros() / 1000000.0f;
+	gPreviousMicros = micros();
 
 	setMotorPins();
 
@@ -155,8 +155,12 @@ void loop()
 {
 	PROFILER_STARTRUN();
 
-	float now = micros() / 1000000.0f;
-	float deltaSeconds = now - gPreviousTime;
+	CZ_LOG(logDefault, Log, F("stack_size=%u"), stack_size());
+
+	unsigned long nowMicros = micros();
+	// NOTE: If using subtraction, there is no need to handle wrap around
+	// See: https://arduino.stackexchange.com/questions/33572/arduino-countdown-without-using-delay/33577#33577
+	float deltaSeconds = (nowMicros - gPreviousMicros) / 1000000.0f;
 	float countdown = 60*60;
 	
 	{
@@ -191,6 +195,6 @@ void loop()
 		}
 	}
 
-	gPreviousTime = now;
+	gPreviousMicros = nowMicros;
 }
 
