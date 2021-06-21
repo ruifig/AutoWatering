@@ -59,11 +59,27 @@ using namespace gfx;
 namespace
 {
 
-constexpr static int16_t ms_historyX = 5;
-constexpr static int16_t ms_groupsStartY = 10;
-constexpr static int16_t ms_spaceBetweenGroups = 20;
+
+constexpr Rect getHistoryPlotRect(int index)
+{
+	Rect rect{0};
+	// Don't start a 0, so we leave space to add the small markers
+	rect.x = 3;
+	// 1+ to leave a line for the box
+	// + X at the end to add a space between different history plots
+	rect.y = 1 + (index*(GRAPH_HEIGHT + 10));
+	rect.height = GRAPH_HEIGHT;
+	rect.width = GRAPH_NUMPOINTS;
+	return rect;
+}
+
+// Make sure we have enough space at the bottom for the menu
+static_assert((SCREEN_HEIGHT - (getHistoryPlotRect(3).y + getHistoryPlotRect(3).height)) > 64, "Need enough space left at the bototm for the menu (64 pixels high)");
 
 
+//
+// Intro screen
+//
 const char introLabel1_value_P[] PROGMEM = "AutoWatering";
 const StaticLabelData introLabel1_P PROGMEM =
 {
@@ -98,10 +114,18 @@ const StaticLabelData introLabel3_P PROGMEM =
 };
 
 
+//
+// Sensor data (left to the history plot)
+//
 #define DEFINE_SENSOR_LABEL_LINE(SENSOR_INDEX, LINE_INDEX, FLAGS) \
 const FixedLabelData sensor##SENSOR_INDEX##line##LINE_INDEX PROGMEM = \
 { \
-	{ms_historyX + GRAPH_NUMPOINTS + 2, ms_groupsStartY + (SENSOR_INDEX * (GRAPH_HEIGHT + ms_spaceBetweenGroups)) + (LINE_INDEX * (GRAPH_HEIGHT/3)), 30, GRAPH_HEIGHT/3}, \
+	{ \
+		getHistoryPlotRect(SENSOR_INDEX).x + getHistoryPlotRect(SENSOR_INDEX).width + 2, \
+		getHistoryPlotRect(SENSOR_INDEX).y + (LINE_INDEX * (GRAPH_HEIGHT/3)),  \
+		32, \
+		GRAPH_HEIGHT/3, \
+	}, \
 	HAlign::Center, VAlign::Center, \
 	TINY_FONT, \
 	DARKGREY, BLACK, \
@@ -117,7 +141,6 @@ DEFINE_SENSOR_LABELS(0)
 DEFINE_SENSOR_LABELS(1)
 DEFINE_SENSOR_LABELS(2)
 DEFINE_SENSOR_LABELS(3)
-
 
 FixedNumLabel sensorLabels[NUM_MOISTURESENSORS][3] =
 {
@@ -368,18 +391,17 @@ void DisplayTFT::drawHistoryBoxes()
 
 	for(int i=0; i<NUM_MOISTURESENSORS; i++)
 	{
-		int x = ms_historyX;
-		int y = ms_groupsStartY + (i*(GRAPH_HEIGHT + ms_spaceBetweenGroups));
-		gScreen.drawRect(x-1, y-1, GRAPH_NUMPOINTS+2, GRAPH_HEIGHT+2, VERYDARKGREY);
+		Rect rect = getHistoryPlotRect(i);
+		gScreen.drawRect(rect.x-1 , rect.y-1, rect.width+2, rect.height+2, VERYDARKGREY);
 
 		constexpr int16_t h = GRAPH_HEIGHT;
-		int bottomY = y + h - 1;
-		gScreen.drawFastHLine(x-3, bottomY - map(0, 0, 100, 0, h - 1), 4, DARKGREY);
-		gScreen.drawFastHLine(x-3, bottomY - map(20, 0, 100, 0, h - 1), 4, DARKGREY);
-		gScreen.drawFastHLine(x-3, bottomY - map(40, 0, 100, 0, h - 1), 4, DARKGREY);
-		gScreen.drawFastHLine(x-3, bottomY - map(60, 0, 100, 0, h - 1), 4, DARKGREY);
-		gScreen.drawFastHLine(x-3, bottomY - map(80, 0, 100, 0, h - 1), 4, DARKGREY);
-		gScreen.drawFastHLine(x-3, bottomY - map(100, 0, 100, 0, h - 1), 4, DARKGREY);
+		int bottomY = rect.y + rect.height - 1;
+		gScreen.drawFastHLine(0, bottomY - map(0, 0, 100, 0, h - 1),   2, DARKGREY);
+		gScreen.drawFastHLine(0, bottomY - map(20, 0, 100, 0, h - 1),  2, DARKGREY);
+		gScreen.drawFastHLine(0, bottomY - map(40, 0, 100, 0, h - 1),  2, DARKGREY);
+		gScreen.drawFastHLine(0, bottomY - map(60, 0, 100, 0, h - 1),  2, DARKGREY);
+		gScreen.drawFastHLine(0, bottomY - map(80, 0, 100, 0, h - 1),  2, DARKGREY);
+		gScreen.drawFastHLine(0, bottomY - map(100, 0, 100, 0, h - 1), 2, DARKGREY);
 	}
 }
 
@@ -399,14 +421,13 @@ void DisplayTFT::drawOverview()
 		GroupData& data = m_ctx.data.getGroupData(i);
 		const HistoryQueue& history = data.getHistory();
 
-		int y = ms_groupsStartY + (i*(GRAPH_HEIGHT + ms_spaceBetweenGroups));
 		//
 		// Draw history
 		//
 		{
 			PROFILE_SCOPE(F("plotHistory"));
-			int x = ms_historyX;
-			plotHistory(x, y, GRAPH_HEIGHT, history, -static_cast<int>(m_soilMoistureSensorUpdates[i]), data.getPercentageThreshold());
+			Rect rect = getHistoryPlotRect(i);
+			plotHistory(rect.x, rect.y, GRAPH_HEIGHT, history, -static_cast<int>(m_soilMoistureSensorUpdates[i]), data.getPercentageThreshold());
 		}
 
 		//

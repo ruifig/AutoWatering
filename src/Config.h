@@ -49,7 +49,7 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
  * If 1, it will log to a file in the sd card
  */
 #if CZ_LOG_ENABLED
-	#define SD_CARD_LOGGING 1
+	#define SD_CARD_LOGGING 0
 #else
 	#define SD_CARD_LOGGING 0
 #endif
@@ -67,7 +67,7 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 #define ARDUINO_IO_EXPANDER_CS_PIN cz::ArduinoPin(53)
 
 /**
- * What arduino pin we are using to communicate with the mutiplexer.
+ * What arduino pin we are using to communicate with the multiplexer.
  * Also known as the multiplexer Z pin
  */
 #define ARDUINO_MULTIPLEXER_ZPIN cz::ArduinoPin(A15)
@@ -156,7 +156,7 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 	#define INTRO_DURATION 1.0f
 #endif
 
-#define GRAPH_NUMPOINTS 200
+#define GRAPH_NUMPOINTS (320-32-2)
 #define GRAPH_MOTOR_ON_COLOUR TFT_YELLOW
 #define GRAPH_MOTOR_OFF_COLOUR TFT_BLACK
 #define GRAPH_MOISTURE_OK_COLOUR TFT_GREEN
