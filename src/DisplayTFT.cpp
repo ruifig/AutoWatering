@@ -68,7 +68,7 @@ constexpr Rect getHistoryPlotRect(int index)
 	rect.x = 3;
 	// 1+ to leave a line for the box
 	// + X at the end to add a space between different history plots
-	rect.y = 1 + (index*(GRAPH_HEIGHT + 10));
+	rect.y = 1 + (index*(GRAPH_HEIGHT + 5));
 	rect.height = GRAPH_HEIGHT;
 	rect.width = GRAPH_NUMPOINTS;
 	return rect;
