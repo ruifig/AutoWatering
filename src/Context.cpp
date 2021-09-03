@@ -91,6 +91,28 @@ void GroupData::setMoistureSensorValues(int currentValue, int airValue, int wate
 	Component::raiseEvent(SoilMoistureSensorReadingEvent(m_index));
 }
 
+void GroupData::start()
+{
+	if (m_running)
+	{
+		return;
+	}
+
+	m_running = true;
+	Component::raiseEvent(StartGroupEvent(m_index));
+}
+
+void GroupData::stop()
+{
+	if (!m_running)
+	{
+		return;
+	}
+
+	m_running = false;
+	Component::raiseEvent(StopGroupEvent(m_index));
+}
+
 void GroupData::resetHistory()
 {
 	m_history.clear();

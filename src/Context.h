@@ -27,6 +27,11 @@ namespace cz
 
 		void setMoistureSensorValues(int currentValue, int airValue, int waterValue);
 
+		// Starts running this group (aka: It will monitor and water)
+		void start();
+		// Stops running this group (aka: Stops monitoring and watering)
+		void stop();
+
 		unsigned int getAirValue() const
 		{
 			return m_airValue;
@@ -77,6 +82,7 @@ namespace cz
 	  private:
         // How many seconds to wait between samplings
 		uint8_t m_index;
+		bool m_running = false;
         float m_samplingInterval = MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL;
 		int m_numReadings = 0;
         unsigned int m_airValue = 513;

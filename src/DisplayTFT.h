@@ -4,9 +4,46 @@
 #include <Adafruit_GFX.h>
 #include <MCUFRIEND_kbv.h>
 #include <TouchScreen.h>
+#include "gfx/GFXUtils.h"
 
 namespace cz
 {
+
+class Menu
+{
+  public:
+	Menu() {}
+	virtual ~Menu() {}
+
+	virtual void init() = 0;
+	virtual void tick(float deltaSeconds) = 0;
+	virtual void draw(bool forceDraw) = 0;
+		
+  protected:
+};
+
+
+class SensorMainMenu : public Menu
+{
+  public:
+	SensorMainMenu() {}
+	virtual ~SensorMainMenu() {}
+
+	virtual void init() override;
+	virtual void tick(float deltaSeconds) override;
+	virtual void draw(bool forceDraw = false) override;
+
+  protected:
+	enum
+	{
+		Start,
+		Stop,
+		Shot,
+		Settings,
+		Max
+	};
+	ImageButton m_buttons[Max];
+};
 
 class DisplayTFT : public Component
 {
@@ -40,6 +77,7 @@ class DisplayTFT : public Component
 	bool m_screenOff = false;
 	uint8_t m_soilMoistureSensorUpdates[NUM_MOISTURESENSORS];
 
+	SensorMainMenu m_sensorMainMenu;
 
 	void changeToState(State newState);
 	void onLeaveState();

@@ -2,6 +2,7 @@
 
 #include "crazygaze/micromuc/czmicromuc.h"
 #include "crazygaze/micromuc/StringUtils.h"
+#include "Colour.h"
 
 #include <Adafruit_GFX.h>
 #include <MCUFRIEND_kbv.h>
@@ -18,34 +19,24 @@
 
 #define DEFAULT_FONT SMALL_FONT
 
-
-// Assign human-readable names to some common 16-bit color values:
-#define BLACK       0x0000
-#define BLUE        0x001F
-#define CYAN        0x07FF
-#define DARKGREEN   0x03E0
-#define DARKCYAN    0x03EF
-#define DARKGREY    0x7BEF
-#define GREEN       0x07E0
-#define GREENYELLOW 0xB7E0
-#define LIGHTGREY   0xC618
-#define MAGENTA     0xF81F
-#define MAROON      0x7800
-#define NAVY        0x000F
-#define OLIVE       0x7BE0
-#define ORANGE      0xFDA0
-#define PINK        0xFC9F
-#define PURPLE      0x780F
-#define RED         0xF800
-#define WHITE       0xFFFF
-#define YELLOW      0xFFE0
-
-#define VERYDARKGREY    0x2945
-
 namespace cz
 {
 
 extern MCUFRIEND_kbv gScreen;
+
+struct Image
+{
+	const uint16_t* bmp;
+	const uint8_t* mask;
+	uint16_t width;
+	uint16_t height;
+};
+
+struct Pos
+{
+	int16_t x;
+	int16_t y;
+};
 
 struct Rect
 {
@@ -53,6 +44,12 @@ struct Rect
 	int16_t y;
 	uint16_t width;
 	uint16_t height;
+
+	bool contains(int16_t x, int16_t y) const
+	{
+	  return ((x >= this->x) && (x < (int16_t)(this->x + this->width)) &&
+	          (y >= this->y) && (y < (int16_t)(this->y + this->height)));
+	}
 };
 
 enum class HAlign : uint8_t
@@ -79,8 +76,10 @@ void drawRect(const Rect& box, uint16_t color);
  * Draws a filled rectangle with the specified colour, followed by a 565 RGB bitmap from PROGMEM using a bitmask
  * (set bits = opaque, unset bits = clear).
  **/
-void drawRGBBitmap(int16_t x, int16_t y, const uint16_t *bitmap, const uint8_t* mask, int16_t w, int16_t h, uint16_t bkgColor);
-void drawRGBBitmapDisabled(int16_t x, int16_t y, const uint16_t *bitmap, const uint8_t* mask, int16_t w, int16_t h, uint16_t bkgColor);
+void drawRGBBitmap_P(int16_t x, int16_t y, const uint16_t *bitmap, const uint8_t* mask, int16_t w, int16_t h, uint16_t bkgColour);
+void drawRGBBitmapDisabled_P(int16_t x, int16_t y, const uint16_t *bitmap, const uint8_t* mask, int16_t w, int16_t h, uint16_t bkgColour);
+void drawRGBBitmap_P(const Rect& area, const uint16_t *bitmap, const uint8_t* mask, uint16_t bkgColour);
+void drawRGBBitmapDisabled_P(const Rect& area, const uint16_t *bitmap, const uint8_t* mask, uint16_t bkgColour);
 
 /**
  * Prints a string aligned in a box area
@@ -92,12 +91,48 @@ void printAligned(const Rect& area, HAlign halign, VAlign valign, const __FlashS
 /**
  * 
  */
-class MyButton : public Adafruit_GFX_Button
+class TextButton : public Adafruit_GFX_Button
 {
 public:
 
 	void drawButton(boolean inverted = false );
-	
+};
+
+enum class ButtonState : uint8_t
+{
+	Hidden,
+	Disabled,
+	Pressed,
+	Released
+};
+
+/**
+ * Image button, with the used bitmap being in PROGMEM
+ */
+class ImageButton
+{
+  public:
+	ImageButton();
+	void init(Adafruit_GFX &gfx, const Image& img, const Pos& pos, uint16_t bkgColour);
+	void draw(bool forceDraw = false);
+	bool contains(int16_t x, int16_t y) const;
+	bool setEnabled(bool enabled);
+	bool isDisabled() const
+	{
+		return m_currState == ButtonState::Disabled;
+	}
+
+	void setState(ButtonState state);
+	bool justReleased() const;
+
+  protected:
+	Adafruit_GFX* m_gfx;
+	Pos m_pos;
+	Image m_img;
+	uint16_t m_bkgColour;
+	ButtonState m_lastState;
+	ButtonState m_currState;
+	bool m_needsRedraw;
 };
 
 
@@ -132,8 +167,8 @@ struct StaticLabelData
 	VAlign valign;
 	const __FlashStringHelper* value;
 	const GFXfont* font;
-	uint16_t textColor;
-	uint16_t bkgColor;
+	Colour textColour;
+	Colour bkgColour;
 	unsigned int flags;
 };
 
@@ -146,8 +181,8 @@ struct FixedLabelData
 	HAlign halign;
 	VAlign valign;
 	const GFXfont* font;
-	uint16_t textColor;
-	uint16_t bkgColor;
+	Colour textColour;
+	Colour bkgColour;
 	unsigned int flags;
 };
 
@@ -160,16 +195,16 @@ protected:
 	{
 		if (data.flags & GFX_FLAG_ERASEBKG)
 		{
-			fillRect(data.pos, data.bkgColor);
+			fillRect(data.pos, (uint16_t)data.bkgColour);
 		}
 
 		if (data.flags & GFX_FLAG_DRAWBORDER)
 		{
-			drawRect(data.pos, data.textColor);
+			drawRect(data.pos, (uint16_t)data.textColour);
 		}
 
 		gScreen.setFont(data.font);
-		gScreen.setTextColor(data.textColor);
+		gScreen.setTextColor((uint16_t)data.textColour);
 		printAligned(data.pos, data.halign, data.valign, data.value);
 	}
 
@@ -177,16 +212,16 @@ protected:
 	{
 		if (data.flags & GFX_FLAG_ERASEBKG)
 		{
-			fillRect(data.pos, data.bkgColor);
+			fillRect(data.pos, (uint16_t)data.bkgColour);
 		}
 
 		if (data.flags & GFX_FLAG_DRAWBORDER)
 		{
-			drawRect(data.pos, data.textColor);
+			drawRect(data.pos, (uint16_t)data.textColour);
 		}
 
 		gScreen.setFont(data.font);
-		gScreen.setTextColor(data.textColor);
+		gScreen.setTextColor((uint16_t)data.textColour);
 		printAligned(data.pos, data.halign, data.valign, value);
 	}
 
