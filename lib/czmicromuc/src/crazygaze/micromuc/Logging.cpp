@@ -51,7 +51,7 @@ LogCategoryBase::LogCategoryBase(const char* name, cz::LogVerbosity verbosity, c
 
 const char* logVerbosityToString(LogVerbosity v)
 {
-	static char* strs[6] =
+	static const char* strs[6] =
 	{
 		"NNN",
 		"FTL",

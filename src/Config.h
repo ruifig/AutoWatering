@@ -40,6 +40,10 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 	#define FASTER_ITERATION 0
 #endif
 
+#ifndef MOCK_COMPONENTS
+	#define MOCK_COMPONENTS 0
+#endif
+
 /**
  * What pin to as CS/SS for the SD card reader
  */

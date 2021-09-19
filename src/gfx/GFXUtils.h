@@ -146,7 +146,7 @@ namespace gfx
 #define GFX_FLAG_DRAWBORDER (1 << 1)
 
 // For labels, it display the text as a percentage number. E.g: "90%"
-#define GFX_FLAG_MUMASPERCENTAGE (1 << 15)
+#define GFX_FLAG_MUMASPERCENTAGE ((unsigned)1 << 15)
 
 
 class Widget

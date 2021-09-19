@@ -45,6 +45,7 @@ Component::~Component()
 
 void Component::raiseEvent(const Event& evt)
 {
+	evt.log();
 	Component* obj = ms_first;
 	while(obj)
 	{

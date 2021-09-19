@@ -8,6 +8,7 @@
 #include "Config.h"
 #include "Context.h"
 #include "SoilMoistureSensor.h"
+#include "GroupMonitor.h"
 #include "DisplayTFT.h"
 #include "Utils.h"
 #include "crazygaze/micromuc/Ticker.h"
@@ -22,6 +23,15 @@
 #include "MemoryFree.h"
 
 using namespace cz;
+
+class AlignmentCheck
+{
+	char* a;
+	uint8_t b;
+	char* c;
+	uint8_t d;
+};
+static_assert(sizeof(AlignmentCheck) == 2*2 + 1*2, "Default struct alignment is not 1");
 
 void operator delete(void* ptr, unsigned int size)
 {
@@ -61,42 +71,21 @@ SoilMoistureSensorTicker gSoilMoistureSensors[NUM_MOISTURESENSORS] =
 #endif
 };
 
+using GroupMonitorTicker = TTicker<GroupMonitor, float, TickingMethod>;
+
+GroupMonitorTicker gGroupMonitors[NUM_MOISTURESENSORS] =
+{
+	{ true, gCtx, 0, IO_EXPANDER_MOTOR_0_INPUT1, IO_EXPANDER_MOTOR_0_INPUT2},
+	{ true, gCtx, 1, IO_EXPANDER_MOTOR_1_INPUT1, IO_EXPANDER_MOTOR_1_INPUT2},
+	{ true, gCtx, 2, IO_EXPANDER_MOTOR_2_INPUT1, IO_EXPANDER_MOTOR_2_INPUT2},
+	{ true, gCtx, 3, IO_EXPANDER_MOTOR_3_INPUT1, IO_EXPANDER_MOTOR_3_INPUT2}
+};
+
+
 TTicker<DisplayTFT, float, TickingMethod> gDisplay(true, gCtx);
 
 unsigned long gPreviousMicros = 0;
 
-void setMotorPins()
-{
-	gCtx.ioExpander.pinMode(IO_EXPANDER_MOTOR_0_INPUT1, OUTPUT);
-	gCtx.ioExpander.pinMode(IO_EXPANDER_MOTOR_0_INPUT2, OUTPUT);
-	gCtx.ioExpander.pinMode(IO_EXPANDER_MOTOR_1_INPUT1, OUTPUT);
-	gCtx.ioExpander.pinMode(IO_EXPANDER_MOTOR_1_INPUT2, OUTPUT);
-	gCtx.ioExpander.pinMode(IO_EXPANDER_MOTOR_2_INPUT1, OUTPUT);
-	gCtx.ioExpander.pinMode(IO_EXPANDER_MOTOR_2_INPUT2, OUTPUT);
-	gCtx.ioExpander.pinMode(IO_EXPANDER_MOTOR_3_INPUT1, OUTPUT);
-	gCtx.ioExpander.pinMode(IO_EXPANDER_MOTOR_3_INPUT2, OUTPUT);
-
-	gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_0_INPUT1, LOW);
-	gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_0_INPUT2, LOW);
-	gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_1_INPUT1, LOW);
-	gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_1_INPUT2, LOW);
-	gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_2_INPUT1, LOW);
-	gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_2_INPUT2, LOW);
-	gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_3_INPUT1, LOW);
-	gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_3_INPUT2, LOW);
-}
-
-void setAllMotorPins(int val1, int val2)
-{
-	gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_0_INPUT1, val1);
-	gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_0_INPUT2, val2);
-	gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_1_INPUT1, val1);
-	gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_1_INPUT2, val2);
-	gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_2_INPUT1, val1);
-	gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_2_INPUT2, val2);
-	gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_3_INPUT1, val1);
-	gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_3_INPUT2, val2);
-}
 
 void setup()
 {
@@ -127,23 +116,12 @@ void setup()
 		ticker.getObj().begin();
 	}
 
+	for(auto&& ticker : gGroupMonitors)
+	{
+		ticker.getObj().begin();
+	}
+
 	gPreviousMicros = micros();
-
-	setMotorPins();
-
-	//setAllMotorPins(HIGH, LOW);
-	//delay(1000);
-	//setAllMotorPins(LOW, LOW);
-	//delay(3000);
-
-	//gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_2_INPUT1, HIGH);
-	//gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_2_INPUT2, LOW);
-	//delay(3000);
-	//gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_2_INPUT1, LOW);
-	//gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_2_INPUT2, HIGH);
-	//delay(3000);
-	//gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_2_INPUT1, LOW);
-	//gCtx.ioExpander.digitalWrite(IO_EXPANDER_MOTOR_2_INPUT2, LOW);
 
 }
 
@@ -168,6 +146,11 @@ void loop()
 		countdown = std::min(gDisplay.tick(deltaSeconds), countdown);
 
 		for (auto&& ticker : gSoilMoistureSensors)
+		{
+			countdown = std::min(ticker.tick(deltaSeconds), countdown);
+		}
+
+		for (auto&& ticker : gGroupMonitors)
 		{
 			countdown = std::min(ticker.tick(deltaSeconds), countdown);
 		}

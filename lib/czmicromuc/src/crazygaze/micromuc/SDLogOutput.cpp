@@ -68,6 +68,8 @@ bool SDCardHelper::begin(int SSPin)
 	// list all files in the card with date and size
 	// CZ_LOG(logDefault, Log, F("Files found on the card (name, date and size in bytes): "));
 	// root.ls(LS_R | LS_DATE | LS_SIZE);
+
+	return true;
 }
 	
 SDLogOutput::SDLogOutput()

@@ -469,7 +469,7 @@ namespace
 			count = 0;
 			while (todo--)
 			{
-				Foo v{ 0x255 };
+				Foo v{ (1<<ELE_BITS)-1};
 				q.getAtIndex(count * ELE_BITS, (uint8_t*)&v, ELE_BITS);
 				CZ_TEST(v.v == (count & MAKE_MASK(ELE_BITS - 1, 0)));
 				count++;

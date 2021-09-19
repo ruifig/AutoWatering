@@ -131,7 +131,11 @@ struct Context
 
     void begin();
 
+#if MOCK_COMPONENTS
+    MockMCP23017Wrapper ioExpander;
+#else
     MCP23017Wrapper ioExpander;
+#endif
     Mux16Channels mux;
     ProgramData data;
 };
