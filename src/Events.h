@@ -13,8 +13,7 @@ struct Event
 		SoilMoistureSensorReading,
 		StartGroup,
 		StopGroup,
-		MotorStarted,
-		MotorStopped,
+		Motor
 	};
 
 	Event(Type type) : type(type) {}
@@ -68,36 +67,22 @@ struct StopGroupEvent : public Event
 	uint8_t index;
 };
 
-struct MotorStarted : public Event
+struct MotorEvent : public Event
 {
-	MotorStarted(uint8_t index)
-		: Event(Event::MotorStarted)
+	MotorEvent(uint8_t index, bool started)
+		: Event(Event::Motor)
 		, index(index)
+		, started(started)
 	{
 	}
 
 	virtual void log() const override
 	{
-		CZ_LOG(logDefault, Log, F("MotorStarted(%d)"), (int)index);
+		CZ_LOG(logDefault, Log, F("MotorEvent(%d, %s)"), (int)index, started ? "started" : "stopped");
 	}
 	
 	uint8_t index;
-};
-
-struct MotorStopped : public Event
-{
-	MotorStopped(uint8_t index)
-		: Event(Event::MotorStopped)
-		, index(index)
-	{
-	}
-
-	virtual void log() const override
-	{
-		CZ_LOG(logDefault, Log, F("MotorStopped(%d)"), (int)index);
-	}
-	
-	uint8_t index;
+	bool started;
 };
 
 } // namespace cz

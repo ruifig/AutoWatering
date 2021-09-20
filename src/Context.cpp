@@ -81,6 +81,12 @@ void GroupData::setMoistureSensorValues(int currentValue, int airValue, int wate
 	// Add to history
 	GraphPoint point = {0, 0};
 	point.val = map(m_currentValue, m_airValue, m_waterValue, 0, GRAPH_POINT_MAXVAL);
+
+	// Since a motor can be turned on then off without a sensor reading in between, we use
+	// m_pendingMotorDrawing as a reminder there was a motor event, and so we'll draw that motor plot
+	// on the next sensor reading
+	point.on = m_motorIsOn || m_pendingMotorDrawing;
+	m_pendingMotorDrawing = false;
 	if (m_history.isFull())
 	{
 		m_history.pop();
@@ -89,6 +95,20 @@ void GroupData::setMoistureSensorValues(int currentValue, int airValue, int wate
 	m_updateCount++;
 
 	Component::raiseEvent(SoilMoistureSensorReadingEvent(m_index));
+}
+
+void GroupData::setMotorState(bool state)
+{
+	m_motorIsOn = state;
+
+	// Note that we never set m_pendingMotorDrawing to false here, otherwise there would be some motor events
+	// that would not be drawn
+	if (state)
+	{
+		m_pendingMotorDrawing = true;
+	}
+
+	Component::raiseEvent(MotorEvent(m_index, m_motorIsOn));
 }
 
 void GroupData::start()

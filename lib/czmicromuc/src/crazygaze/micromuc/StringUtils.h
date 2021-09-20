@@ -23,6 +23,136 @@ void strCatPrintf(char* dest, const __FlashStringHelper* fmt, ...);
  * The supplied buffer must be big enough to include n character plus the null terminator
  */
 char* duplicateChar(char* dest, int n, char ch);
-	
+
+
+struct detail
+{
+
+	static void skipTo(const char*& src, int c)
+	{
+		while (*src && *src != c)
+		{
+			++src;
+		}
+	}
+
+	static void skipToAfter(const char*& src, int c)
+	{
+		skipTo(src, c);
+		if (*src && *src == c)
+		{
+			++src;
+		}
+	}
+
+
+	static int advance(const char*& src)
+	{
+		const char* start = src;
+
+		if (*src == '"')
+		{
+			++src;
+			skipToAfter(src, '"');
+		}
+		else
+		{
+			skipTo(src, ' ');
+		}
+
+		int size = src - start;
+
+		while (*src && *src == ' ')
+		{
+			++src;
+		}
+
+		return size;
+	}
+
+	static bool parseParam(const char* src, int& dst)
+	{
+		int c = *src;
+		if (c == '+' || c == '-' || (c >= '0' && c <= '9'))
+		{
+			dst = atoi(src);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	static bool parseParam(const char* src, float& dst)
+	{
+		int c = *src;
+		if (c=='.' || c == '+' || c == '-' || (c >= '0' && c <= '9'))
+		{
+			dst = static_cast<float>(atof(src));
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	static bool parseParam(const char* src, char* dst)
+	{
+		const char* ptr = src;
+		int size = advance(ptr);
+		if (*src == '"')
+		{
+			ptr = src+1;
+			size -= 2;
+		}
+		else
+		{
+			ptr = src;
+		}
+
+		memcpy(dst, ptr, size);
+		dst[size] = 0;
+		return true;
+	}
+
+	template<typename TFirst, typename... Args>
+	static bool parse(const char*& src, TFirst& first, Args&... args)
+	{
+		if (detail::parseParam(src, first))
+		{
+			detail::advance(src);
+			return parse(src, args...);
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	template<typename TFirst>
+	static bool parse(const char*& src, TFirst& first)
+	{
+		if (detail::parseParam(src, first))
+		{
+			detail::advance(src);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+};
+
+template<typename TFirst, typename... Args>
+bool parse(const char*& src, TFirst& first, Args&... args)
+{
+	return detail::parse(src, first, args...);
+}
+
+
 	
 } // namespace cz

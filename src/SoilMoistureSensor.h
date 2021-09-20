@@ -34,11 +34,11 @@ class SoilMoistureSensor : public Component
 	SoilMoistureSensor(const SoilMoistureSensor&) = delete;
 	const SoilMoistureSensor& operator=(const SoilMoistureSensor&) = delete;
 
-	void begin();
+	virtual void begin();
 	virtual float tick(float deltaSeconds) override;
 	virtual void onEvent(const Event& evt) override;
 
-  private:
+  protected:
 	enum class State : uint8_t
 	{
 		Initializing,
@@ -59,10 +59,48 @@ class SoilMoistureSensor : public Component
 	IOExpanderPin m_vinPin;
 	MultiplexerPin m_dataPin;
 
+	virtual int readSensor();
+
 	void changeToState(State newState);
 	void onLeaveState();
 	void onEnterState();
 	bool tryEnterReadingState();
+};
+
+class MockSoilMoistureSensor : public SoilMoistureSensor
+{
+public:
+	using SoilMoistureSensor::SoilMoistureSensor;
+
+	virtual void begin() override;
+	virtual float tick(float deltaSeconds) override;
+	virtual void onEvent(const Event& evt) override;
+
+protected:
+
+
+	virtual int readSensor() override;
+
+	struct
+	{
+		int dryValue;
+		int waterValue;
+
+		// reported value lags behind target value a bits, so we can simulate response time.
+		// The sensor won't report moisture as soon as the motor turns on
+		float currentValue;
+		float targetValue;
+
+		// How fast the current value chases the target value
+		float currentValueChaseRate = 5.0f;
+		// How fast the target value changes when the motor is on
+		float targetValueOnRate = 15.0f;
+		// How fast the target value changes when the motor is off
+		float targetValueOffRate = 1.0f;
+
+		bool motorIsOn = false;
+	} m_mock;
+
 };
 
 }  // namespace cz

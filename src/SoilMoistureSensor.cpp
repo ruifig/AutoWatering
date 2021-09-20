@@ -2,6 +2,7 @@
 #include "Utils.h"
 #include <crazygaze/micromuc/Logging.h>
 #include <crazygaze/micromuc/Profiler.h>
+#include <crazygaze/micromuc/MathUtils.h>
 #include <Arduino.h>
 
 namespace cz
@@ -83,8 +84,9 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 			int airValue = data.getAirValue();
 			int waterValue = data.getWaterValue();
 
-			// Read the sensor
-			int currentValue = m_ctx.mux.read(m_dataPin);
+			// Using a function to read the sensor, so we can provide a mock value when using the mock version
+			int currentValue = readSensor();
+
 			if (currentValue > airValue)
 			{
 				airValue = currentValue;
@@ -94,7 +96,6 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 				waterValue = currentValue;
 			}
 
-			//CZ_LOG(logDefault, Log, F("SoilMoistureSensor(%d) : %d"), m_index, currentValue);
 			data.setMoistureSensorValues(currentValue, airValue, waterValue);
 			#if FASTER_ITERATION && 0
 				for(int i=0; i<5; i++)
@@ -113,6 +114,12 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 	return m_nextTickWait;
 }
 
+int SoilMoistureSensor::readSensor()
+{
+	int currentValue = m_ctx.mux.read(m_dataPin);
+	CZ_LOG(logDefault, Log, F("SoilMoistureSensor(%d) : %d"), m_index, currentValue);
+	return currentValue;
+}
 
 void SoilMoistureSensor::onEvent(const Event& evt)
 {
@@ -187,31 +194,78 @@ void SoilMoistureSensor::onEnterState()
 	}
 }
 
-#if 0
-uint8_t SoilMoistureSensor::readValue()
+//////////////////////////////////////////////////////////////////////////
+// MockSoilMoistureSensor
+//////////////////////////////////////////////////////////////////////////
+
+void MockSoilMoistureSensor::begin()
 {
-	//
-	// Take a measurement by turning the sensor ON, do a ready, then switch it OFF
-	//
-	digitalWrite(m_vinPin, HIGH); // Switch the sensor ON
-	delay(200); // Delay to give the sensor time to read the moisture level
-	m_lastPinValue = analogRead(m_dataPin);
+	SoilMoistureSensor::begin();
 
-	if (m_lastPinValue > m_airValue)
-	{
-		m_airValue = m_lastPinValue;
-	}
-	else if (m_lastPinValue < m_waterValue)
-	{
-		m_waterValue = m_lastPinValue;
-	}
-	digitalWrite(m_vinPin, LOW); // Switch the sensor OFF
-
-	int percentage = map(m_lastPinValue, m_airValue, m_waterValue, 0, 100);
-
-	return percentage;
+	m_mock.dryValue = random(540,590);
+	m_mock.waterValue = random(160, 210);
+	m_mock.targetValue = m_mock.currentValue = m_mock.dryValue;
 }
 
-#endif
+float MockSoilMoistureSensor::tick(float deltaSeconds)
+{
+	float tickResult = SoilMoistureSensor::tick(deltaSeconds);
+
+	if (m_mock.motorIsOn)
+	{
+		m_mock.targetValue -= m_mock.targetValueOnRate * deltaSeconds;
+		m_mock.targetValue = max(m_mock.waterValue, m_mock.targetValue);
+	}
+	else
+	{
+		m_mock.targetValue += m_mock.targetValueOffRate * deltaSeconds;
+		m_mock.targetValue = min(m_mock.dryValue, m_mock.targetValue);
+	}
+
+	if (isNearlyEqual(m_mock.currentValue, m_mock.targetValue))
+	{
+		// Do nothing
+	}
+	else if (m_mock.currentValue < m_mock.targetValue)
+	{
+		m_mock.currentValue += m_mock.currentValueChaseRate * deltaSeconds;
+		m_mock.currentValue = min(m_mock.currentValue, m_mock.targetValue);
+	}
+	else // currentValue > targetValue
+	{
+		m_mock.currentValue -= m_mock.currentValueChaseRate * deltaSeconds;
+		m_mock.currentValue = max(m_mock.currentValue, m_mock.targetValue);
+	}
+
+	return tickResult;
+} 
+
+void MockSoilMoistureSensor::onEvent(const Event& evt)
+{
+	SoilMoistureSensor::onEvent(evt);
+
+	if (evt.type == Event::Motor)
+	{
+		const MotorEvent& e = static_cast<const MotorEvent&>(evt);
+		if (e.index == m_index)
+		{
+			m_mock.motorIsOn = e.started;
+		}
+	}
+
+}
+
+int MockSoilMoistureSensor::readSensor()
+{
+	char buf1[10];
+	char buf2[10];
+
+	CZ_LOG(logDefault, Log, F("MockSoilMoistureSensor(%d) : %s, target=%s")
+		, m_index
+		, dtostrf(m_mock.currentValue, 0, 3, buf1)
+		, dtostrf(m_mock.targetValue , 0, 3, buf2))
+
+	return static_cast<int>(m_mock.currentValue);
+}
 
 }  // namespace cz

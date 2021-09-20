@@ -41,7 +41,7 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 #endif
 
 #ifndef MOCK_COMPONENTS
-	#define MOCK_COMPONENTS 0
+	#define MOCK_COMPONENTS 1
 #endif
 
 /**
@@ -111,7 +111,7 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 /**
  * How many sensors to support
  */
-#define NUM_MOISTURESENSORS 4
+#define NUM_MOISTURESENSORS 1
 
 /**
  * When we want to take a moisture reading, we enable power to the the sensor and need to wait a bit before doing the

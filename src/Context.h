@@ -27,6 +27,8 @@ namespace cz
 
 		void setMoistureSensorValues(int currentValue, int airValue, int waterValue);
 
+		void setMotorState(bool state);
+
 		// Starts running this group (aka: It will monitor and water)
 		void start();
 		// Stops running this group (aka: Stops monitoring and watering)
@@ -88,6 +90,8 @@ namespace cz
         unsigned int m_airValue = 513;
         unsigned int m_waterValue = 512;
         unsigned int m_currentValue = 0;
+		bool m_motorIsOn = false;
+		bool m_pendingMotorDrawing = false;
 		uint8_t m_currentPercentageValue = 0;
         //! Value below which irrigation should be turned on
         int m_threshold = 0;

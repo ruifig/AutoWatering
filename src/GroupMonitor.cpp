@@ -24,14 +24,14 @@ void GroupMonitor::turnMotorOn(bool direction)
 {
 	m_ctx.ioExpander.digitalWrite(m_motorPin1, direction ? LOW : HIGH);
 	m_ctx.ioExpander.digitalWrite(m_motorPin2, direction ? HIGH : LOW);
-	raiseEvent(MotorStarted(m_index));
+	m_ctx.data.getGroupData(m_index).setMotorState(true);
 }
 
 void GroupMonitor::turnMotorOff()
 {
 	m_ctx.ioExpander.digitalWrite(m_motorPin1, LOW);
 	m_ctx.ioExpander.digitalWrite(m_motorPin2, LOW);
-	raiseEvent(MotorStopped(m_index));
+	m_ctx.data.getGroupData(m_index).setMotorState(false);
 }
 
 float GroupMonitor::tick(float deltaSeconds)

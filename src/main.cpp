@@ -55,7 +55,11 @@ Context gCtx;
 	using TickingMethod = TickerPolicy::TTimeAlwaysTick<float>;
 #endif
 
-using SoilMoistureSensorTicker = TTicker<SoilMoistureSensor, float, TickingMethod>;
+#if MOCK_COMPONENTS
+	using SoilMoistureSensorTicker = TTicker<MockSoilMoistureSensor, float, TickingMethod>;
+#else
+	using SoilMoistureSensorTicker = TTicker<SoilMoistureSensor, float, TickingMethod>;
+#endif
 
 SoilMoistureSensorTicker gSoilMoistureSensors[NUM_MOISTURESENSORS] =
 {
@@ -76,9 +80,15 @@ using GroupMonitorTicker = TTicker<GroupMonitor, float, TickingMethod>;
 GroupMonitorTicker gGroupMonitors[NUM_MOISTURESENSORS] =
 {
 	{ true, gCtx, 0, IO_EXPANDER_MOTOR_0_INPUT1, IO_EXPANDER_MOTOR_0_INPUT2},
-	{ true, gCtx, 1, IO_EXPANDER_MOTOR_1_INPUT1, IO_EXPANDER_MOTOR_1_INPUT2},
-	{ true, gCtx, 2, IO_EXPANDER_MOTOR_2_INPUT1, IO_EXPANDER_MOTOR_2_INPUT2},
-	{ true, gCtx, 3, IO_EXPANDER_MOTOR_3_INPUT1, IO_EXPANDER_MOTOR_3_INPUT2}
+#if NUM_MOISTURESENSORS>1
+	,{ true, gCtx, 1, IO_EXPANDER_MOTOR_1_INPUT1, IO_EXPANDER_MOTOR_1_INPUT2}
+#endif
+#if NUM_MOISTURESENSORS>2
+	,{ true, gCtx, 2, IO_EXPANDER_MOTOR_2_INPUT1, IO_EXPANDER_MOTOR_2_INPUT2}
+#endif
+#if NUM_MOISTURESENSORS>3
+	,{ true, gCtx, 3, IO_EXPANDER_MOTOR_3_INPUT1, IO_EXPANDER_MOTOR_3_INPUT2}
+#endif
 };
 
 
@@ -133,7 +143,7 @@ void loop()
 {
 	PROFILER_STARTRUN();
 
-	CZ_LOG(logDefault, Log, F("stack_size=%u"), stack_size());
+	CZ_LOG(logDefault, Verbose, F("stack_size=%u"), stack_size());
 
 	unsigned long nowMicros = micros();
 	// NOTE: If using subtraction, there is no need to handle wrap around
@@ -157,19 +167,51 @@ void loop()
 
 	}
 
-
 	// We use this so that we can just put a breakpoint in here and force the code to run when we want to check the profiler data
 	if (CZ_PROFILER || true)
 	{
 		if (gSerialStringReader.tryRead())
 		{
-			if (strcmp_P(gSerialStringReader.retrieve(), (const char*)F("profiler_log"))==0)
+			char cmd[20];
+			const char* src = gSerialStringReader.retrieve(); 
+			parse(src, cmd);
+
+			auto parseCommand = [&cmd, &src](auto&... params) -> bool
+			{
+				if (parse(src, params...))
+				{
+					return true;
+				}
+				else
+				{
+					CZ_LOG(logDefault, Error, F("Error parsing parameters for command \"%s\""), cmd);
+					return false;
+				}
+			};
+
+			if (strcmp_P(cmd, (const char*)F("profiler_log"))==0)
 			{
 				PROFILER_LOG();
 			}
-			else if (strcmp_P(gSerialStringReader.retrieve(), (const char*)F("profiler_reset"))==0)
+			else if (strcmp_P(cmd, (const char*)F("profiler_reset"))==0)
 			{
 				PROFILER_RESET();
+			}
+			else if (strcmp_P(cmd, (const char*)F("motor_off"))==0)
+			{
+				int idx;
+				if (parseCommand(idx) && idx < NUM_MOISTURESENSORS)
+				{
+					gGroupMonitors[idx].getObj().turnMotorOff();
+				}
+			}
+			else if (strcmp_P(cmd, (const char*)F("motor_on"))==0)
+			{
+				int idx;
+				if (parseCommand(idx) && idx < NUM_MOISTURESENSORS)
+				{
+					gGroupMonitors[idx].getObj().turnMotorOn();
+				}
 			}
 			else
 			{
