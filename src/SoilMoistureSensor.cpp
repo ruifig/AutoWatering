@@ -5,6 +5,7 @@
 #include "crazygaze/micromuc/MathUtils.h"
 #include "crazygaze/micromuc/StringUtils.h"
 #include <Arduino.h>
+#include <algorithm>
 
 namespace cz
 {
@@ -205,12 +206,12 @@ float MockSoilMoistureSensor::tick(float deltaSeconds)
 	if (m_mock.motorIsOn)
 	{
 		m_mock.targetValue -= m_mock.targetValueOnRate * deltaSeconds;
-		m_mock.targetValue = max(m_mock.waterValue, m_mock.targetValue);
+		m_mock.targetValue = std::max((float)m_mock.waterValue, m_mock.targetValue);
 	}
 	else
 	{
 		m_mock.targetValue += m_mock.targetValueOffRate * deltaSeconds;
-		m_mock.targetValue = min(m_mock.dryValue, m_mock.targetValue);
+		m_mock.targetValue = std::min((float)m_mock.dryValue, m_mock.targetValue);
 	}
 
 	if (isNearlyEqual(m_mock.currentValue, m_mock.targetValue))
@@ -225,12 +226,12 @@ float MockSoilMoistureSensor::tick(float deltaSeconds)
 	else if (m_mock.currentValue < m_mock.targetValue)
 	{
 		m_mock.currentValue += m_mock.currentValueChaseRate * deltaSeconds;
-		m_mock.currentValue = min(m_mock.currentValue, m_mock.targetValue);
+		m_mock.currentValue = std::min(m_mock.currentValue, m_mock.targetValue);
 	}
 	else // currentValue > targetValue
 	{
 		m_mock.currentValue -= m_mock.currentValueChaseRate * deltaSeconds;
-		m_mock.currentValue = max(m_mock.currentValue, m_mock.targetValue);
+		m_mock.currentValue = std::max(m_mock.currentValue, m_mock.targetValue);
 	}
 
 	return tickResult;
@@ -253,6 +254,15 @@ void MockSoilMoistureSensor::onEvent(const Event& evt)
 			{
 				m_mock.currentValueChaseDelay = ms_delayChaseValue;
 			}
+		}
+	}
+	else if (evt.type == Event::SetMockSensorValue)
+	{
+		const SetMockSensorValueEvent& e = static_cast<const SetMockSensorValueEvent&>(evt);
+		if (e.index == m_index)
+		{
+			m_mock.targetValue = m_mock.currentValue = std::clamp(e.value, m_mock.waterValue, m_mock.dryValue);
+			m_mock.currentValueChaseDelay = 0;
 		}
 	}
 

@@ -29,7 +29,6 @@ class GroupMonitor : public Component
 	uint8_t m_index;
 
 	float m_totalTime = 0;
-	bool isOn = false;
 };
 
 } // namespace cz

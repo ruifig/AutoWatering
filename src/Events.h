@@ -15,7 +15,10 @@ struct Event
 		SoilMoistureSensorReading,
 		StartGroup,
 		StopGroup,
-		Motor
+		Motor,
+		
+		// Only used for mocking components
+		SetMockSensorValue
 	};
 
 	Event(Type type) : type(type) {}
@@ -111,6 +114,24 @@ struct MotorEvent : public Event
 	
 	uint8_t index;
 	bool started;
+};
+
+struct SetMockSensorValueEvent : public Event
+{
+	SetMockSensorValueEvent(uint8_t index, int value)
+		: Event(Event::SetMockSensorValue)
+		, index(index)
+		, value(value)
+	{
+	}
+
+	virtual void log() const override
+	{
+		CZ_LOG(logDefault, Log, F("SetMockSensorValueEvent(%d, %d)"), (int)index, value);
+	}
+	
+	uint8_t index;
+	int value;
 };
 
 } // namespace cz

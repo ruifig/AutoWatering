@@ -218,6 +218,14 @@ void loop()
 					gGroupMonitors[idx].getObj().turnMotorOn();
 				}
 			}
+			else if (strcmp_P(cmd, (const char*)F("setmocksensor"))==0)
+			{
+				int idx, value;
+				if (parseCommand(idx, value) && idx < NUM_MOISTURESENSORS)
+				{
+					Component::raiseEvent(SetMockSensorValueEvent(idx, value));
+				}
+			}
 			else if (strcmp_P(cmd, (const char*)F("save"))==0)
 			{
 				gCtx.data.saveToEEPROM();

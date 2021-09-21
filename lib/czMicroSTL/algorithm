@@ -10,6 +10,13 @@
 
 namespace std
 {
+	#ifdef max
+		#undef max
+	#endif
+
+	#ifdef min
+		#undef min
+	#endif
 
     template<class T> 
     const T& min(const T& a, const T& b)
@@ -22,5 +29,16 @@ namespace std
     {
         return (a < b) ? b : a;
     }
+
+	template<class T>
+	constexpr const T& clamp( const T& v, const T& lo, const T& hi )
+	{
+		if (v < lo)
+			return lo;
+		else if (hi < v)
+			return hi;
+		else
+			return v;
+	}
 
 }
