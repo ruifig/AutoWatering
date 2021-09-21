@@ -123,7 +123,7 @@
       <Value>USB_VID=0x2341</Value>
       <Value>USB_PID=0x0010</Value>
       <Value>USB_MANUFACTURER="\"Arduino LLC\""</Value>
-      <Value>CZ_LOG_ENABLED=1</Value>
+      <Value>CZ_LOG_ENABLED=0</Value>
       <Value>NDEBUG</Value>
       <Value>CZ_SERIAL_LOG_ENABLED=0</Value>
       <Value>CZ_PROFILER=0</Value>

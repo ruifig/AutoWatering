@@ -26,7 +26,7 @@ namespace cz
 	  public:
 		void begin(uint8_t index);
 
-		void setMoistureSensorValues(int currentValue, int airValue, int waterValue);
+		void setMoistureSensorValues(int currentValue);
 
 		void setMotorState(bool state);
 
@@ -37,80 +37,98 @@ namespace cz
 
 		unsigned int getAirValue() const
 		{
-			return m_airValue;
+			return m_cfg.airValue;
 		}
 
 		unsigned int getWaterValue() const
 		{
-			return m_waterValue;
+			return m_cfg.waterValue;
 		}
 
 		unsigned int getCurrentValue() const
 		{
-			return m_currentValue;
+			return m_cfg.currentValue;
 		}
 
 		unsigned int getPercentageValue() const
 		{
-			return m_currentPercentageValue;
+			return map(m_cfg.currentValue, m_cfg.airValue, m_cfg.waterValue, 0, 100);
 		}
 
 		unsigned int getPercentageThreshold() const
 		{
-			return m_thresholdPercentage;
+			return map(m_cfg.thresholdValue, m_cfg.airValue, m_cfg.waterValue, 0, 100);
 		}
 
 		float getSamplingInterval() const
 		{
-			return m_samplingInterval;
+			return m_cfg.samplingInterval;
 		}
 
 		float getShotDuration() const
 		{
-			return m_shotDuration;	
-		}
-
-		void resetChanged()
-		{
-			m_updateCount = 0;
+			return m_cfg.shotDuration;	
 		}
 
 		const HistoryQueue& getHistory()
 		{
-			return m_history;
+			return m_cfg.history;
 		}
 
-		unsigned int getNumReadings() const
+		uint32_t getNumReadings() const
 		{
-			return m_numReadings;
+			return m_cfg.numReadings;
 		}
 
 		void resetHistory();
 
-	  private:
-		EEPtr saveToEEPROM(EEPtr dst);
+
+	protected:
+		friend class ProgramData;
+		EEPtr saveToEEPROM(EEPtr dst) const;
 		EEPtr LoadFromEEPROM(EEPtr src);
+
+	  private:
 
 		// How many seconds to wait between samplings
 		uint8_t m_index;
-		bool m_running = false;
-		float m_samplingInterval = MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL;
-		float m_shotDuration = DEFAULT_SHOT_DURATION;
-		int m_numReadings = 0;
-		unsigned int m_airValue = 513;
-		unsigned int m_waterValue = 512;
-		unsigned int m_currentValue = 0;
+
+		// Data that should be saved/loaded
+		struct
+		{
+			// Tells if this group is currently running
+			bool running = false;
+			// Sensor sampling interval in seconds
+			float samplingInterval = MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL;
+			// Motor shot duration in seconds
+			float shotDuration = DEFAULT_SHOT_DURATION;
+			// Number of sensor readings done
+			uint32_t numReadings = 0;
+
+			// The sensor values decreases as moisture increases. (High Value = Dry, Low Value = Wet)
+			// Air and water values are calculated automatically as sensor values are provided. This means the user wipe clean the sensor
+			// to set the air value, and then submerse the sensor to set the water value.
+			// Having air and water properly is not a requirement for things to work, since what matter is that the system know what 
+			// sensor value is the threshold to turn on/off the motor
+			#define START_AIR_VALUE 400
+			#define START_WATER_VALUE 300
+			unsigned int airValue = START_AIR_VALUE;
+			unsigned int waterValue = START_WATER_VALUE;
+			// Current sensor value
+			unsigned int currentValue = START_AIR_VALUE - (START_AIR_VALUE-START_WATER_VALUE)/2;
+
+			// Value above which irrigation should be turned on
+			// NOTE: ABOVE because higher values means drier.
+			// Using 0 as initial value, which means it will not turn on the motor until things are setup properly
+			unsigned int thresholdValue = 0;
+
+			HistoryQueue history;
+		} m_cfg;
+
 		bool m_motorIsOn = false;
+		// Used so we can detect when the motor was turned on and off before a sensor data point is inserted, so we can
+		// add the motor flag to the next sensor data point when that happens.
 		bool m_pendingMotorPoint = false;
-		uint8_t m_currentPercentageValue = 0;
-		//! Value below which irrigation should be turned on
-		int m_threshold = 0;
-		// #TODO : Remove or implement this properly
-		int m_thresholdPercentage = 50;
-		//! Returns the current value in 0..100 format (aka: Percentage)
-		int calcCurrentPercentage() const;
-		HistoryQueue m_history;
-		int m_updateCount = 0;
 	};
 
 class ProgramData
@@ -122,10 +140,8 @@ public:
 	bool tryAcquireMoistureSensorMutex();
 	void releaseMoistureSensorMutex();
 
-	//void logMoistureSensors();
-
 	void loadFromEEPROM();
-	void saveToEEPROM();
+	void saveToEEPROM() const;
 
 	void begin();
   private:

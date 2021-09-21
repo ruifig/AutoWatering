@@ -81,22 +81,10 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 	case State::Reading:
 		{
 			GroupData& data = m_ctx.data.getGroupData(m_index);
-			int airValue = data.getAirValue();
-			int waterValue = data.getWaterValue();
 
 			// Using a function to read the sensor, so we can provide a mock value when using the mock version
 			int currentValue = readSensor();
-
-			if (currentValue > airValue)
-			{
-				airValue = currentValue;
-			}
-			else if (currentValue < waterValue)
-			{
-				waterValue = currentValue;
-			}
-
-			data.setMoistureSensorValues(currentValue, airValue, waterValue);
+			data.setMoistureSensorValues(currentValue);
 			#if FASTER_ITERATION && 0
 				for(int i=0; i<5; i++)
 				{
