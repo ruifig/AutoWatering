@@ -193,7 +193,7 @@ void MockSoilMoistureSensor::begin()
 
 	m_mock.dryValue = random(540,590);
 	m_mock.waterValue = random(160, 210);
-	m_mock.targetValue = m_mock.currentValue = m_mock.dryValue;
+	m_mock.targetValue = m_mock.currentValue = random(m_mock.waterValue, m_mock.dryValue);
 }
 
 float MockSoilMoistureSensor::tick(float deltaSeconds)
