@@ -78,8 +78,9 @@ public:
 
 protected:
 
-
 	virtual int readSensor() override;
+
+	static constexpr int ms_delayChaseValue = 5;
 
 	struct
 	{
@@ -92,11 +93,17 @@ protected:
 		float targetValue;
 
 		// How fast the current value chases the target value
-		float currentValueChaseRate = 5.0f;
+		float currentValueChaseRate = 8.0f;
 		// How fast the target value changes when the motor is on
-		float targetValueOnRate = 15.0f;
+		float targetValueOnRate = 10.0f;
 		// How fast the target value changes when the motor is off
 		float targetValueOffRate = 1.0f;
+
+		// How long in seconds to wait for the currentValue to start chasing the target value.
+		// This is useful to simulate the fact that once the motor is turned on, it might take a bit for the soil
+		// to soak the water and for the sensor to react.
+
+		float currentValueChaseDelay = 0;
 
 		bool motorIsOn = false;
 	} m_mock;

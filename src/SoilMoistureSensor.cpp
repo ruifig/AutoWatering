@@ -199,6 +199,8 @@ float MockSoilMoistureSensor::tick(float deltaSeconds)
 {
 	float tickResult = SoilMoistureSensor::tick(deltaSeconds);
 
+	// Note: The target value needs to be updated before the current value, so that once the motor is off and things stabilize
+	// the current value and target value will match at the end fo the tick
 	if (m_mock.motorIsOn)
 	{
 		m_mock.targetValue -= m_mock.targetValueOnRate * deltaSeconds;
@@ -213,6 +215,11 @@ float MockSoilMoistureSensor::tick(float deltaSeconds)
 	if (isNearlyEqual(m_mock.currentValue, m_mock.targetValue))
 	{
 		// Do nothing
+	}
+	else if (m_mock.currentValueChaseDelay > 0)
+	{
+		// If we have an active delay, then update the delay and do nothing else
+		m_mock.currentValueChaseDelay -= deltaSeconds;
 	}
 	else if (m_mock.currentValue < m_mock.targetValue)
 	{
@@ -238,6 +245,13 @@ void MockSoilMoistureSensor::onEvent(const Event& evt)
 		if (e.index == m_index)
 		{
 			m_mock.motorIsOn = e.started;
+
+			// If things are stable (current value caught up with target value), and there is no currently active delay,
+			// then start a delay
+			if (isNearlyEqual(m_mock.currentValue, m_mock.targetValue) && m_mock.currentValueChaseDelay<=0)
+			{
+				m_mock.currentValueChaseDelay = ms_delayChaseValue;
+			}
 		}
 	}
 
