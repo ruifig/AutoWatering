@@ -8,6 +8,29 @@
 namespace cz
 {
 
+EEPtr updateEEPROM(EEPtr dst, const uint8_t* src, unsigned int size)
+{
+	while(size--)
+	{
+		(*dst).update(*src);
+		++dst;
+		++src;
+	}
+	return dst;
+}
+
+EEPtr readEEPROM(EEPtr src, uint8_t* dst, unsigned int size)
+{
+	while(size--)
+	{
+		*dst = *src; 
+		++dst;
+		++src;
+	}
+
+	return src;
+}
+
 void Context::begin()
 {
 	static_assert(IO_EXPANDER_ADDR>=0x21 && IO_EXPANDER_ADDR<=0x27, "Wrong macro value");
@@ -139,6 +162,15 @@ void GroupData::resetHistory()
 	m_updateCount = 0;
 }
 
+EEPtr GroupData::saveToEEPROM(EEPtr dst)
+{
+	return updateEEPROM(dst, reinterpret_cast<uint8_t*>(this), sizeof(*this));
+}
+
+EEPtr GroupData::LoadFromEEPROM(EEPtr src)
+{
+	return readEEPROM(src, reinterpret_cast<uint8_t*>(this), sizeof(*this));
+}
 
 void ProgramData::begin()
 {
@@ -154,6 +186,24 @@ GroupData& ProgramData::getGroupData(uint8_t index)
 {
 	CZ_ASSERT(index < NUM_MOISTURESENSORS);
 	return m_group[index];
+}
+
+void ProgramData::saveToEEPROM()
+{
+	unsigned long startTime = micros();
+	updateEEPROM(EEPROM.begin(), reinterpret_cast<uint8_t*>(this), sizeof(*this));
+	unsigned long elapsedMs = (micros() - startTime) / 1000;
+	CZ_LOG(logDefault, Log, "Save to EEPROM took %u ms", elapsedMs);
+	Component::raiseEvent(ConfigSaveEvent());
+}
+
+void ProgramData::loadFromEEPROM()
+{
+	unsigned long startTime = micros();
+	readEEPROM(EEPROM.begin(), reinterpret_cast<uint8_t*>(this), sizeof(*this));
+	unsigned long elapsedMs = (micros() - startTime) / 1000;
+	CZ_LOG(logDefault, Log, "Load from EEPROM took %u ms", elapsedMs);
+	Component::raiseEvent(ConfigLoadEvent());
 }
 
 

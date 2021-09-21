@@ -152,7 +152,7 @@ namespace gfx
 class Widget
 {
   public:
-	virtual void draw() = 0;
+	virtual void draw(bool forceDraw = false) = 0;
   private:
 };
 
@@ -239,7 +239,7 @@ class StaticLabel : public BaseLabel
 	{
 	}
 
-	virtual void draw() override
+	virtual void draw(bool forceDraw = false) override
 	{
 		StaticLabelData data;
 		memcpy_P(&data, m_data_P, sizeof(data));
@@ -275,7 +275,7 @@ class FixedLabel : public BaseLabel
 		}
 	}
 
-	virtual void draw() override
+	virtual void draw(bool forceDraw = false) override
 	{
 		FixedLabelData data;
 		memcpy_P(&data, m_data_P, sizeof(data));
@@ -298,9 +298,9 @@ class FixedNumLabel : public BaseLabel
 	{
 	}
 
-	virtual void draw() override
+	virtual void draw(bool forceDraw = false) override
 	{
-		if (!m_needsRedraw)
+		if (!m_needsRedraw && !forceDraw)
 			return;
 
 		FixedLabelData data;
@@ -328,10 +328,10 @@ class FixedNumLabel : public BaseLabel
 		}
 	}
 
-	void setValueAndDraw(int value)
+	void setValueAndDraw(int value, bool forceDraw = false)
 	{
 		setValue(value);
-		draw();
+		draw(forceDraw);
 	}
 
   private:

@@ -79,7 +79,7 @@ using GroupMonitorTicker = TTicker<GroupMonitor, float, TickingMethod>;
 
 GroupMonitorTicker gGroupMonitors[NUM_MOISTURESENSORS] =
 {
-	{ true, gCtx, 0, IO_EXPANDER_MOTOR_0_INPUT1, IO_EXPANDER_MOTOR_0_INPUT2},
+	{ true, gCtx, 0, IO_EXPANDER_MOTOR_0_INPUT1, IO_EXPANDER_MOTOR_0_INPUT2}
 #if NUM_MOISTURESENSORS>1
 	,{ true, gCtx, 1, IO_EXPANDER_MOTOR_1_INPUT1, IO_EXPANDER_MOTOR_1_INPUT2}
 #endif
@@ -197,7 +197,7 @@ void loop()
 			{
 				PROFILER_RESET();
 			}
-			else if (strcmp_P(cmd, (const char*)F("motor_off"))==0)
+			else if (strcmp_P(cmd, (const char*)F("motoroff"))==0)
 			{
 				int idx;
 				if (parseCommand(idx) && idx < NUM_MOISTURESENSORS)
@@ -205,13 +205,21 @@ void loop()
 					gGroupMonitors[idx].getObj().turnMotorOff();
 				}
 			}
-			else if (strcmp_P(cmd, (const char*)F("motor_on"))==0)
+			else if (strcmp_P(cmd, (const char*)F("motoron"))==0)
 			{
 				int idx;
 				if (parseCommand(idx) && idx < NUM_MOISTURESENSORS)
 				{
 					gGroupMonitors[idx].getObj().turnMotorOn();
 				}
+			}
+			else if (strcmp_P(cmd, (const char*)F("save"))==0)
+			{
+				gCtx.data.saveToEEPROM();
+			}
+			else if (strcmp_P(cmd, (const char*)F("load"))==0)
+			{
+				gCtx.data.loadFromEEPROM();
 			}
 			else
 			{

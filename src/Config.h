@@ -111,7 +111,7 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 /**
  * How many sensors to support
  */
-#define NUM_MOISTURESENSORS 1
+#define NUM_MOISTURESENSORS 4
 
 /**
  * When we want to take a moisture reading, we enable power to the the sensor and need to wait a bit before doing the
@@ -128,10 +128,13 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
  * Default sensor sampling interval in seconds
  */
 #if FASTER_ITERATION
-	#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 0.000001f
+	//#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 0.000001f
+	#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 1.0f
 #else
 	#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 60.0f
 #endif
+
+#define DEFAULT_SHOT_DURATION 5.0f;
 
 /**
  * Time in seconds for the LCD's backlight to be turned if no buttons are pressed

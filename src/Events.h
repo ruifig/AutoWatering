@@ -10,6 +10,8 @@ struct Event
 {
 	enum Type
 	{
+		ConfigLoad,
+		ConfigSave,
 		SoilMoistureSensorReading,
 		StartGroup,
 		StopGroup,
@@ -20,6 +22,32 @@ struct Event
 	virtual void log() const = 0;
 
 	Type type;
+};
+
+struct ConfigLoadEvent : public Event
+{
+	ConfigLoadEvent()
+		: Event(Event::ConfigLoad)
+	{
+	}
+	
+	virtual void log() const override
+	{
+		CZ_LOG(logDefault, Log, F("ConfigLoadEvent"));
+	}
+};
+
+struct ConfigSaveEvent : public Event
+{
+	ConfigSaveEvent()
+		: Event(Event::ConfigSave)
+	{
+	}
+	
+	virtual void log() const override
+	{
+		CZ_LOG(logDefault, Log, F("ConfigSaveEvent"));
+	}
 };
 
 struct SoilMoistureSensorReadingEvent : public Event

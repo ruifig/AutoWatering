@@ -136,6 +136,7 @@
             <Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\variants\mega</Value>
             <Value>%24(ProjectDir)\lib\Wire\src</Value>
             <Value>%24(ProjectDir)\lib\SPI\src</Value>
+            <Value>%24(ProjectDir)\lib\EEPROM\src</Value>
             <Value>%24(ProjectDir)\lib\Adafruit RGB LCD Shield Library</Value>
             <Value>%24(ProjectDir)\lib\Adafruit RGB LCD Shield Library\utility</Value>
             <Value>%24(ProjectDir)\lib\Adafruit TouchScreen</Value>
@@ -237,6 +238,7 @@
             <Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\variants\mega</Value>
             <Value>%24(ProjectDir)\lib\Wire\src</Value>
             <Value>%24(ProjectDir)\lib\SPI\src</Value>
+            <Value>%24(ProjectDir)\lib\EEPROM\src</Value>
             <Value>%24(ProjectDir)\lib\Adafruit RGB LCD Shield Library</Value>
             <Value>%24(ProjectDir)\lib\Adafruit RGB LCD Shield Library\utility</Value>
             <Value>%24(ProjectDir)\lib\Adafruit TouchScreen</Value>
@@ -341,6 +343,7 @@
             <Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\variants\mega</Value>
             <Value>%24(ProjectDir)\lib\Wire\src</Value>
             <Value>%24(ProjectDir)\lib\SPI\src</Value>
+            <Value>%24(ProjectDir)\lib\EEPROM\src</Value>
             <Value>%24(ProjectDir)\lib\Adafruit RGB LCD Shield Library</Value>
             <Value>%24(ProjectDir)\lib\Adafruit RGB LCD Shield Library\utility</Value>
             <Value>%24(ProjectDir)\lib\Adafruit TouchScreen</Value>
@@ -390,7 +393,9 @@
     <Folder Include="lib\czmicromuc\src" />
     <Folder Include="lib\czmicromuc\src\crazygaze" />
     <Folder Include="lib\czmicromuc\src\crazygaze\micromuc" />
+    <Folder Include="lib\EEPROM\src" />
     <Folder Include="lib\MemoryFree" />
+    <Folder Include="lib\EEPROM" />
     <Folder Include="lib\SD" />
     <Folder Include="lib\SD\src" />
     <Folder Include="lib\SD\src\utility" />
@@ -536,6 +541,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="lib\czmicromuc\src\crazygaze\micromuc\Ticker.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="lib\EEPROM\src\EEPROM.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="lib\MCUFRIEND_kbv\FreeDefaultFonts.h">

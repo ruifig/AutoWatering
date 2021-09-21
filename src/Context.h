@@ -5,6 +5,7 @@
 #include "Mux16Channels.h"
 #include "Utils.h"
 #include <crazygaze/micromuc/Queue.h>
+#include <EEPROM.h>
 
 namespace cz
 {
@@ -20,8 +21,8 @@ namespace cz
 
 	using HistoryQueue = TStaticFixedCapacityQueue<GraphPoint, GRAPH_NUMPOINTS>;
 
-    class GroupData
-    {
+	class GroupData
+	{
 	  public:
 		void begin(uint8_t index);
 
@@ -64,6 +65,11 @@ namespace cz
 			return m_samplingInterval;
 		}
 
+		float getShotDuration() const
+		{
+			return m_shotDuration;	
+		}
+
 		void resetChanged()
 		{
 			m_updateCount = 0;
@@ -82,66 +88,74 @@ namespace cz
 		void resetHistory();
 
 	  private:
-        // How many seconds to wait between samplings
+		EEPtr saveToEEPROM(EEPtr dst);
+		EEPtr LoadFromEEPROM(EEPtr src);
+
+		// How many seconds to wait between samplings
 		uint8_t m_index;
 		bool m_running = false;
-        float m_samplingInterval = MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL;
+		float m_samplingInterval = MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL;
+		float m_shotDuration = DEFAULT_SHOT_DURATION;
 		int m_numReadings = 0;
-        unsigned int m_airValue = 513;
-        unsigned int m_waterValue = 512;
-        unsigned int m_currentValue = 0;
+		unsigned int m_airValue = 513;
+		unsigned int m_waterValue = 512;
+		unsigned int m_currentValue = 0;
 		bool m_motorIsOn = false;
 		bool m_pendingMotorDrawing = false;
 		uint8_t m_currentPercentageValue = 0;
-        //! Value below which irrigation should be turned on
-        int m_threshold = 0;
+		//! Value below which irrigation should be turned on
+		int m_threshold = 0;
 		// #TODO : Remove or implement this properly
-        int m_thresholdPercentage = 50;
-        //! Returns the current value in 0..100 format (aka: Percentage)
-        int calcCurrentPercentage() const;
+		int m_thresholdPercentage = 50;
+		//! Returns the current value in 0..100 format (aka: Percentage)
+		int calcCurrentPercentage() const;
 		HistoryQueue m_history;
 		int m_updateCount = 0;
-    };
+	};
 
 class ProgramData
 {
 public:
-    GroupData& getGroupData(uint8_t index);
+	GroupData& getGroupData(uint8_t index);
 
-    // We only allow 1 sensor to be active at one give time, so we use this as a kind of mutex
-    bool tryAcquireMoistureSensorMutex();
-    void releaseMoistureSensorMutex();
+	// We only allow 1 sensor to be active at one give time, so we use this as a kind of mutex
+	bool tryAcquireMoistureSensorMutex();
+	void releaseMoistureSensorMutex();
 
 	//void logMoistureSensors();
 
+	void loadFromEEPROM();
+	void saveToEEPROM();
+
 	void begin();
   private:
-    GroupData m_group[NUM_MOISTURESENSORS];
-    bool m_moistureSensorMutex = false;
+	GroupData m_group[NUM_MOISTURESENSORS];
+	bool m_moistureSensorMutex = false;
 };
 
 struct Context
 {
-    Context()
-        : mux(
-            ioExpander,
-            IO_EXPANDER_TO_MULTIPLEXER_S0,
-            IO_EXPANDER_TO_MULTIPLEXER_S1,
-            IO_EXPANDER_TO_MULTIPLEXER_S2,
-            IO_EXPANDER_TO_MULTIPLEXER_S3,
-            ARDUINO_MULTIPLEXER_ZPIN)
-    {
-    }
+	Context()
+		: mux(
+			ioExpander,
+			IO_EXPANDER_TO_MULTIPLEXER_S0,
+			IO_EXPANDER_TO_MULTIPLEXER_S1,
+			IO_EXPANDER_TO_MULTIPLEXER_S2,
+			IO_EXPANDER_TO_MULTIPLEXER_S3,
+			ARDUINO_MULTIPLEXER_ZPIN)
+	{
+	}
 
-    void begin();
+	void begin();
 
 #if MOCK_COMPONENTS
-    MockMCP23017Wrapper ioExpander;
+	MockMCP23017Wrapper ioExpander;
 #else
-    MCP23017Wrapper ioExpander;
+	MCP23017Wrapper ioExpander;
 #endif
-    Mux16Channels mux;
-    ProgramData data;
+	Mux16Channels mux;
+	ProgramData data;
 };
 
 } // namespace cz
+

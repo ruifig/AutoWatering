@@ -237,6 +237,7 @@ float DisplayTFT::tick(float deltaSeconds)
 	}
 #endif
 
+	m_forceDrawOnNextTick = false;
 	return 1.0f / 30.0f;
 }
 	
@@ -244,6 +245,11 @@ void DisplayTFT::onEvent(const Event& evt)
 {
 	switch(evt.type)
 	{
+		case Event::ConfigLoad:
+			changeToState(State::Overview);
+			m_forceDrawOnNextTick = true;
+		break;
+
 		case Event::SoilMoistureSensorReading:
 		{
 			auto idx = static_cast<const SoilMoistureSensorReadingEvent&>(evt).index;
@@ -368,7 +374,6 @@ void DisplayTFT::onEnterState()
 	{
 	case State::Initializing:
 		{
-			memset(m_soilMoistureSensorUpdates, 255, sizeof(m_soilMoistureSensorUpdates));
 			initializeScreen();
 		}
 		break;
@@ -382,8 +387,9 @@ void DisplayTFT::onEnterState()
 		break;
 
 	case State::Overview:
+		memset(m_soilMoistureSensorUpdates, 255, sizeof(m_soilMoistureSensorUpdates));
 		drawHistoryBoxes();
-		m_sensorMainMenu.draw();
+		m_sensorMainMenu.draw(true);
 		break;
 
 	default:
@@ -465,9 +471,9 @@ void DisplayTFT::drawOverview()
 		//
 		{
 			PROFILE_SCOPE(F("drawTextValues"));
-			sensorLabels[i][0].setValueAndDraw(data.getWaterValue());
-			sensorLabels[i][1].setValueAndDraw(data.getPercentageValue());
-			sensorLabels[i][2].setValueAndDraw(data.getAirValue());
+			sensorLabels[i][0].setValueAndDraw(data.getWaterValue(), m_forceDrawOnNextTick);
+			sensorLabels[i][1].setValueAndDraw(data.getPercentageValue(), m_forceDrawOnNextTick);
+			sensorLabels[i][2].setValueAndDraw(data.getAirValue(), m_forceDrawOnNextTick);
 		}
 
 	}

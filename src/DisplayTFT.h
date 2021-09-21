@@ -76,6 +76,7 @@ class DisplayTFT : public Component
 	float m_timeSinceLastTouch = 0;
 	bool m_screenOff = false;
 	uint8_t m_soilMoistureSensorUpdates[NUM_MOISTURESENSORS];
+	bool m_forceDrawOnNextTick = false;
 
 	SensorMainMenu m_sensorMainMenu;
 
