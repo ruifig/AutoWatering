@@ -101,7 +101,7 @@ namespace cz
 		unsigned int m_waterValue = 512;
 		unsigned int m_currentValue = 0;
 		bool m_motorIsOn = false;
-		bool m_pendingMotorDrawing = false;
+		bool m_pendingMotorPoint = false;
 		uint8_t m_currentPercentageValue = 0;
 		//! Value below which irrigation should be turned on
 		int m_threshold = 0;

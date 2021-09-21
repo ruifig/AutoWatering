@@ -352,7 +352,6 @@ void DisplayTFT::plotHistory(int16_t x, int16_t y, int16_t h, const TFixedCapaci
 		oldDrawIdx++;
 
 		// The height for the plotting is h-1 because we reserve the top pixel for the motor on/off
-		//int yy = map(p.val, 0, 100, 0,  h - 2);
 		if (doDrawLevel)
 		{
 			int yy = p.val;

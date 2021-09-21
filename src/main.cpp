@@ -24,6 +24,9 @@
 
 using namespace cz;
 
+//////////////////////////////////////////////////////////////////////////
+// Make sure the compiler is using 1-byte alignment to save space
+//////////////////////////////////////////////////////////////////////////
 class AlignmentCheck
 {
 	char* a;
@@ -32,6 +35,8 @@ class AlignmentCheck
 	uint8_t d;
 };
 static_assert(sizeof(AlignmentCheck) == 2*2 + 1*2, "Default struct alignment is not 1");
+//////////////////////////////////////////////////////////////////////////
+
 
 void operator delete(void* ptr, unsigned int size)
 {

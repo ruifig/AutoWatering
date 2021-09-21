@@ -106,10 +106,10 @@ void GroupData::setMoistureSensorValues(int currentValue, int airValue, int wate
 	point.val = map(m_currentValue, m_airValue, m_waterValue, 0, GRAPH_POINT_MAXVAL);
 
 	// Since a motor can be turned on then off without a sensor reading in between, we use
-	// m_pendingMotorDrawing as a reminder there was a motor event, and so we'll draw that motor plot
+	// m_pendingMotorPoint as a reminder there was a motor event, and so we'll draw that motor plot
 	// on the next sensor reading
-	point.on = m_motorIsOn || m_pendingMotorDrawing;
-	m_pendingMotorDrawing = false;
+	point.on = m_motorIsOn || m_pendingMotorPoint;
+	m_pendingMotorPoint = false;
 	if (m_history.isFull())
 	{
 		m_history.pop();
@@ -124,11 +124,11 @@ void GroupData::setMotorState(bool state)
 {
 	m_motorIsOn = state;
 
-	// Note that we never set m_pendingMotorDrawing to false here, otherwise there would be some motor events
+	// Note that we never set m_pendingMotorPoint to false here, otherwise there would be some motor events
 	// that would not be drawn
 	if (state)
 	{
-		m_pendingMotorDrawing = true;
+		m_pendingMotorPoint = true;
 	}
 
 	Component::raiseEvent(MotorEvent(m_index, m_motorIsOn));
@@ -175,7 +175,7 @@ EEPtr GroupData::LoadFromEEPROM(EEPtr src)
 void ProgramData::begin()
 {
 	uint8_t idx = 0;
-	for(auto&& g : m_group)
+	for(GroupData& g : m_group)
 	{
 		g.begin(idx);
 		idx++;
@@ -193,7 +193,7 @@ void ProgramData::saveToEEPROM()
 	unsigned long startTime = micros();
 	updateEEPROM(EEPROM.begin(), reinterpret_cast<uint8_t*>(this), sizeof(*this));
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
-	CZ_LOG(logDefault, Log, "Save to EEPROM took %u ms", elapsedMs);
+	CZ_LOG(logDefault, Log, "Saving %u bytes to EEPROM took %u ms", sizeof(*this), elapsedMs);
 	Component::raiseEvent(ConfigSaveEvent());
 }
 
@@ -202,7 +202,7 @@ void ProgramData::loadFromEEPROM()
 	unsigned long startTime = micros();
 	readEEPROM(EEPROM.begin(), reinterpret_cast<uint8_t*>(this), sizeof(*this));
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
-	CZ_LOG(logDefault, Log, "Load from EEPROM took %u ms", elapsedMs);
+	CZ_LOG(logDefault, Log, "Loading %u bytes from EEPROM took %u ms", sizeof(*this), elapsedMs);
 	Component::raiseEvent(ConfigLoadEvent());
 }
 
