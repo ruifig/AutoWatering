@@ -275,9 +275,9 @@ void DisplayTFT::onEvent(const Event& evt)
 
 void DisplayTFT::changeToState(State newState)
 {
-    CZ_LOG(logDefault, Log, F("DisplayTFT::%s %dms %s->%s")
+    CZ_LOG(logDefault, Log, F("DisplayTFT::%s %ssec %s->%s")
         , __FUNCTION__
-		, (int)(m_timeInState * 1000.f)
+		, *FloatToString(m_timeInState)
         , ms_stateNames[(int)m_state]
         , ms_stateNames[(int)newState]);
 

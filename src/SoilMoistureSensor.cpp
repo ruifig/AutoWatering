@@ -1,8 +1,9 @@
 #include "SoilMoistureSensor.h"
 #include "Utils.h"
-#include <crazygaze/micromuc/Logging.h>
-#include <crazygaze/micromuc/Profiler.h>
-#include <crazygaze/micromuc/MathUtils.h>
+#include "crazygaze/micromuc/Logging.h"
+#include "crazygaze/micromuc/Profiler.h"
+#include "crazygaze/micromuc/MathUtils.h"
+#include "crazygaze/micromuc/StringUtils.h"
 #include <Arduino.h>
 
 namespace cz
@@ -116,10 +117,10 @@ void SoilMoistureSensor::onEvent(const Event& evt)
 void SoilMoistureSensor::changeToState(State newState)
 {
 	#if 0
-	CZ_LOG(logDefault, Log, F("SoilMoistureSensor(%d)::%s: %dms %s->%s")
+	CZ_LOG(logDefault, Log, F("SoilMoistureSensor(%d)::%s: %ssec %s->%s")
 		, (int)m_index
 		, __FUNCTION__
-		, (int)(m_timeInState * 1000.f)
+		, *FloatToString(m_timeInState)
 		, ms_stateNames[(int)m_state]
 		, ms_stateNames[(int)newState]);
 	#endif
@@ -259,13 +260,10 @@ void MockSoilMoistureSensor::onEvent(const Event& evt)
 
 int MockSoilMoistureSensor::readSensor()
 {
-	char buf1[10];
-	char buf2[10];
-
 	CZ_LOG(logDefault, Log, F("MockSoilMoistureSensor(%d) : %s, target=%s")
 		, m_index
-		, dtostrf(m_mock.currentValue, 0, 3, buf1)
-		, dtostrf(m_mock.targetValue , 0, 3, buf2))
+		, *FloatToString(m_mock.currentValue)
+		, *FloatToString(m_mock.targetValue))
 
 	return static_cast<int>(m_mock.currentValue);
 }

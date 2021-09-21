@@ -153,6 +153,22 @@ bool parse(const char*& src, TFirst& first, Args&... args)
 	return detail::parse(src, first, args...);
 }
 
+template<int BufSize=20, int MinWidth=0, int Precision=3> 
+struct FloatToString
+{
+	inline explicit FloatToString(float val)
+	{
+		dtostrf(val, MinWidth, Precision, str);
+	}
+
+	inline const char* operator*() const
+	{
+		return str;
+	}
+
+	char str[BufSize];
+};
+
 
 	
 } // namespace cz

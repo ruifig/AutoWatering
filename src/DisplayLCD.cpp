@@ -1,6 +1,7 @@
 #include "DisplayLCD.h"
 #include "Utils.h"
 #include "crazygaze/micromuc/Logging.h"
+#include "crazygaze/micromuc/StringUtils.h"
 
 namespace cz
 {
@@ -77,8 +78,9 @@ void DisplayLCD::setBacklight(bool state)
 
 void DisplayLCD::changeToState(State newState)
 {
-    CZ_LOG(logDefault, Log, F("DisplayLCD::%s %dms %s->%s")
+    CZ_LOG(logDefault, Log, F("DisplayLCD::%s %ssec %s->%s")
         , __FUNCTION__
+		, *FloatToString(m_timeInState)
 		, (int)(m_timeInState * 1000.f)
         , ms_stateNames[(int)m_state]
         , ms_stateNames[(int)newState]);
