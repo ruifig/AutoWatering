@@ -270,10 +270,12 @@ void MockSoilMoistureSensor::onEvent(const Event& evt)
 
 int MockSoilMoistureSensor::readSensor()
 {
+#if 0
 	CZ_LOG(logDefault, Log, F("MockSoilMoistureSensor(%d) : %s, target=%s")
 		, m_index
 		, *FloatToString(m_mock.currentValue)
 		, *FloatToString(m_mock.targetValue))
+#endif
 
 	return static_cast<int>(m_mock.currentValue);
 }

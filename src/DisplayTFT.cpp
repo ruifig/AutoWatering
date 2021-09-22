@@ -462,6 +462,7 @@ void DisplayTFT::drawOverview()
 		{
 			PROFILE_SCOPE(F("plotHistory"));
 			Rect rect = getHistoryPlotRect(i);
+			// #RVF : getPercentageThreshold (the last parameter) won't work properly, because we are passing 0..100, but the GraphPoint doesn't use a value of 0..100
 			plotHistory(rect.x, rect.y, GRAPH_HEIGHT, history, -static_cast<int>(m_soilMoistureSensorUpdates[i]), data.getPercentageThreshold());
 		}
 

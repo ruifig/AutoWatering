@@ -24,20 +24,44 @@ void GroupMonitor::turnMotorOn(bool direction)
 {
 	m_ctx.ioExpander.digitalWrite(m_motorPin1, direction ? LOW : HIGH);
 	m_ctx.ioExpander.digitalWrite(m_motorPin2, direction ? HIGH : LOW);
-	m_ctx.data.getGroupData(m_index).setMotorState(true);
+	GroupData& data = m_ctx.data.getGroupData(m_index);
+	data.setMotorState(true);
+	m_motorOffCountdown = data.getShotDuration();
 }
 
 void GroupMonitor::turnMotorOff()
 {
 	m_ctx.ioExpander.digitalWrite(m_motorPin1, LOW);
 	m_ctx.ioExpander.digitalWrite(m_motorPin2, LOW);
-	m_ctx.data.getGroupData(m_index).setMotorState(false);
+	GroupData& data = m_ctx.data.getGroupData(m_index);
+	data.setMotorState(false);
 }
 
 float GroupMonitor::tick(float deltaSeconds)
 {
-	m_totalTime += deltaSeconds;
-	
+	GroupData& data = m_ctx.data.getGroupData(m_index);
+
+	if (m_motorOffCountdown > 0) // Motor is on
+	{
+		m_motorOffCountdown -= deltaSeconds;
+		if (m_motorOffCountdown < 0)
+		{
+			turnMotorOff();
+		}
+	}
+	else if (m_motorOffCountdown <= -MINIMUM_TIME_BETWEEN_MOTOR_ON)
+	{
+		if (data.getCurrentValue() > data.getThresholdValue())
+		{
+			turnMotorOn(true);
+		}
+	}
+	else // m_motorOffCountdown is in the ]-MINIMUM_TIME_BETWEEN_MOTOR_ON, 0] range
+	{
+		// keep counting down until we get to <= -MINIMUM_TIME_BETWEEN_MOTOR_ON
+		m_motorOffCountdown -= deltaSeconds;
+	}
+
 	return 0.2f;
 }
 

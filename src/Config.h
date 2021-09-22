@@ -134,7 +134,15 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 	#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 60.0f
 #endif
 
-#define DEFAULT_SHOT_DURATION 5.0f;
+#define DEFAULT_SHOT_DURATION 5.0f
+
+/**
+ * Minimum time required to pass (in seconds) before a group turns the motor ON again.
+ * This is useful so a group doesn't keep giving motor shots before the sensor reacts properly. It forces a minimum wait
+ * before automated shots.
+ * This does NOT affect manual shots.
+ */
+#define MINIMUM_TIME_BETWEEN_MOTOR_ON (DEFAULT_SHOT_DURATION*2.0f)
 
 /**
  * Time in seconds for the LCD's backlight to be turned if no buttons are pressed

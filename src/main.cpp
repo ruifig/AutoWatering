@@ -177,7 +177,7 @@ void loop()
 	{
 		if (gSerialStringReader.tryRead())
 		{
-			char cmd[20];
+			char cmd[30];
 			const char* src = gSerialStringReader.retrieve(); 
 			parse(src, cmd);
 
@@ -218,12 +218,31 @@ void loop()
 					gGroupMonitors[idx].getObj().turnMotorOn();
 				}
 			}
+			else if (strcmp_P(cmd, (const char*)F("setgroupthreshold"))==0)
+			{
+				int idx, value;
+				if (parseCommand(idx, value) && idx < NUM_MOISTURESENSORS)
+				{
+					gCtx.data.getGroupData(idx).setThresholdValue(value);
+				}
+			}
 			else if (strcmp_P(cmd, (const char*)F("setmocksensor"))==0)
 			{
 				int idx, value;
 				if (parseCommand(idx, value) && idx < NUM_MOISTURESENSORS)
 				{
 					Component::raiseEvent(SetMockSensorValueEvent(idx, value));
+				}
+			}
+			else if (strcmp_P(cmd, (const char*)F("setmocksensors"))==0)
+			{
+				int value;
+				if (parseCommand(value))
+				{
+					for(int idx=0; idx<NUM_MOISTURESENSORS; idx++)
+					{
+						Component::raiseEvent(SetMockSensorValueEvent(idx, value));
+					}
 				}
 			}
 			else if (strcmp_P(cmd, (const char*)F("save"))==0)

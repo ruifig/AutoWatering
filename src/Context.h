@@ -55,6 +55,16 @@ namespace cz
 			return map(m_cfg.currentValue, m_cfg.airValue, m_cfg.waterValue, 0, 100);
 		}
 
+		void setThresholdValue(unsigned int value)
+		{
+			m_cfg.thresholdValue = value;
+		}
+
+		unsigned int getThresholdValue() const
+		{
+			return m_cfg.thresholdValue;
+		}
+
 		unsigned int getPercentageThreshold() const
 		{
 			return map(m_cfg.thresholdValue, m_cfg.airValue, m_cfg.waterValue, 0, 100);

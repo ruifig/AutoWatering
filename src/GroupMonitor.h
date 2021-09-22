@@ -28,7 +28,11 @@ class GroupMonitor : public Component
 	IOExpanderPin m_motorPin2;
 	uint8_t m_index;
 
-	float m_totalTime = 0;
+	// This serves two purposes
+	// * If >0 then it means the motor is ON and we're counting down to turn it off
+	// * If <= 0 then it means the motor is OFF, and...
+	//		* If <= (-MINIMUM_TIME_BETWEEN_MOTOR_ON) then we can do another sensor sheck
+	float m_motorOffCountdown = -MINIMUM_TIME_BETWEEN_MOTOR_ON;
 };
 
 } // namespace cz
