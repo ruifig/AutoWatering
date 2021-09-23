@@ -14,7 +14,7 @@
 	#define CUSTOM_RESET_PIN PK0 // PK0 is Arduino Mega's A8 pin
 #else
 	#define CUSTOM_RESET_PORT PORTL
-	#define CUSTOM_RESET_PIN PL7 // PK0 is Arduino Mega's D42 pin
+	#define CUSTOM_RESET_PIN PL7 // PL7 is Arduino Mega's D42 pin
 #endif
 
 #if ARDUINO < 101
