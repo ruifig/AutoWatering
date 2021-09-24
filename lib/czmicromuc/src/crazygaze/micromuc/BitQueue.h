@@ -15,7 +15,6 @@ namespace cz
  */
 class FixedCapacityBitQueue
 {
-public:
 
 private:
 	uint8_t* m_data;
@@ -123,6 +122,11 @@ public:
 	uint8_t m_buffer[((SIZE_BITS+1) / 8) + (((SIZE_BITS+1) % 8) ? 1 : 0)];
 	TStaticFixedBitCapacityQueue() : FixedCapacityBitQueue(m_buffer, SIZE_BITS+1)
 	{
+	}
+
+	void fixupDataAfterLoad()
+	{
+		m_data = m_buffer;
 	}
 };
 

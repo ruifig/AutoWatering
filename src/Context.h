@@ -135,6 +135,7 @@ namespace cz
 			HistoryQueue history;
 		} m_cfg;
 
+
 		bool m_motorIsOn = false;
 		// Used so we can detect when the motor was turned on and off before a sensor data point is inserted, so we can
 		// add the motor flag to the next sensor data point when that happens.

@@ -87,6 +87,7 @@ class DisplayTFT : public Component
 	void drawOverview();
 	void drawHistoryBoxes();
 
+	// #RVF : Revise this comments. They are all over the place, not up to date, and confusing
 	/**
 	 * Plots a dot graph starting at x,y, with height h.
 	 * One graph point per value (along the x axis), and the value range (vertical) is mapped so that:

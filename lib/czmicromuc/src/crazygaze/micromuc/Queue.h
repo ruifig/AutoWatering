@@ -18,7 +18,7 @@ public:
 	using Type = T;
 	static_assert(std::is_pod<Type>::value, "Type must be a POD");
 
-private:
+protected:
 	T* m_data;
 	int m_capacity;
 	int m_tail; // write position
@@ -174,6 +174,11 @@ public:
 
 	TStaticFixedCapacityQueue() : TFixedCapacityQueue<T>(m_buffer, SIZE + 1)
 	{
+	}
+
+	void fixupDataAfterLoad()
+	{
+		TFixedCapacityQueue<T>::m_data = m_buffer;
 	}
 };
 

@@ -171,7 +171,9 @@ EEPtr GroupData::saveToEEPROM(EEPtr dst) const
 
 EEPtr GroupData::LoadFromEEPROM(EEPtr src)
 {
-	return readEEPROM(src, reinterpret_cast<uint8_t*>(&m_cfg), sizeof(m_cfg));
+	src = readEEPROM(src, reinterpret_cast<uint8_t*>(&m_cfg), sizeof(m_cfg));
+	m_cfg.history.fixupDataAfterLoad();
+	return src;
 }
 
 void ProgramData::begin()

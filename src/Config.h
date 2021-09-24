@@ -166,7 +166,7 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
  */
 
  #if FASTER_ITERATION
-	#define INTRO_DURATION 1.0f
+	#define INTRO_DURATION 0.1f
 #else
 	#define INTRO_DURATION 1.0f
 #endif

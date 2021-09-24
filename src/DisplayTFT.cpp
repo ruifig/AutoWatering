@@ -305,6 +305,7 @@ void DisplayTFT::onLeaveState()
 }
 
 
+#if 1
 void DisplayTFT::plotHistory(int16_t x, int16_t y, int16_t h, const TFixedCapacityQueue<GraphPoint>& data, int previousDrawOffset, uint8_t valThreshold /*, const GraphPoint* oldData, int oldCount*/)
 {
 	CZ_ASSERT(previousDrawOffset<=0);
@@ -365,6 +366,51 @@ void DisplayTFT::plotHistory(int16_t x, int16_t y, int16_t h, const TFixedCapaci
 	}
 
 }
+#else
+//#pragma GCC push_options
+//#pragma GCC optimize ("O0")
+void DisplayTFT::plotHistory(int16_t x, int16_t y, int16_t h, const TFixedCapacityQueue<GraphPoint>& data, int _previousDrawOffset, uint8_t valThreshold /*, const GraphPoint* oldData, int oldCount*/)
+{
+	int bottomY = y + h - 1;
+
+	//uint8_t done[GRAPH_NUMPOINTS];
+	//memset(done, sizeof(done), 255);
+
+	const int count = data.size();
+	for(int i=0; i<count; i++)
+	{
+
+		GraphPoint p = data.getAtIndex(i);
+		//done[i] = p.val;
+		int xx = x + i;
+
+		bool doDrawLevel = false;
+		bool doDrawMotor = false;
+
+		gScreen.drawFastVLine(xx, y, h, Colour_Black);
+		doDrawLevel = true;
+		doDrawMotor = true;
+
+		// The height for the plotting is h-1 because we reserve the top pixel for the motor on/off
+		if (doDrawLevel)
+		{
+			int yy = p.val;
+			gScreen.drawPixel(xx, bottomY - yy, p.val < valThreshold ? GRAPH_MOISTURE_LOW_COLOUR : GRAPH_MOISTURE_OK_COLOUR);
+		}
+
+		if (doDrawMotor)
+		{
+			gScreen.drawPixel(xx, y, p.on ? GRAPH_MOTOR_ON_COLOUR : GRAPH_MOTOR_OFF_COLOUR);
+		}
+	}
+
+	//CZ_LOG(logDefault, Log, F("Done %d"), count);
+
+}
+
+//#pragma GCC pop_options
+
+#endif
 
 
 void DisplayTFT::onEnterState()
