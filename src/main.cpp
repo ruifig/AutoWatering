@@ -173,7 +173,7 @@ void loop()
 	}
 
 	// We use this so that we can just put a breakpoint in here and force the code to run when we want to check the profiler data
-	if (CZ_PROFILER || true)
+	#if CONSOLE_COMMANDS
 	{
 		if (gSerialStringReader.tryRead())
 		{
@@ -247,11 +247,11 @@ void loop()
 			}
 			else if (strcmp_P(cmd, (const char*)F("save"))==0)
 			{
-				gCtx.data.saveToEEPROM();
+				gCtx.data.save();
 			}
 			else if (strcmp_P(cmd, (const char*)F("load"))==0)
 			{
-				gCtx.data.loadFromEEPROM();
+				gCtx.data.load();
 			}
 			else
 			{
@@ -259,6 +259,7 @@ void loop()
 			}
 		}
 	}
+	#endif // CONSOLE_COMMANDS
 
 	gPreviousMicros = nowMicros;
 }

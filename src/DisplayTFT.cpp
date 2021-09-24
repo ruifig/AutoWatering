@@ -305,7 +305,7 @@ void DisplayTFT::onLeaveState()
 }
 
 
-#if 1
+#if 0
 void DisplayTFT::plotHistory(int16_t x, int16_t y, int16_t h, const TFixedCapacityQueue<GraphPoint>& data, int previousDrawOffset, uint8_t valThreshold /*, const GraphPoint* oldData, int oldCount*/)
 {
 	CZ_ASSERT(previousDrawOffset<=0);

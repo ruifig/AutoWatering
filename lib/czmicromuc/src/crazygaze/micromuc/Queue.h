@@ -55,6 +55,11 @@ public:
 		return (m_tail + m_capacity - m_head) % m_capacity;
 	}
 
+	int capacity() const
+	{
+		return m_capacity;
+	}
+
 	bool push(const Type& val)
 	{
 		if (isFull())
@@ -174,11 +179,6 @@ public:
 
 	TStaticFixedCapacityQueue() : TFixedCapacityQueue<T>(m_buffer, SIZE + 1)
 	{
-	}
-
-	void fixupDataAfterLoad()
-	{
-		TFixedCapacityQueue<T>::m_data = m_buffer;
 	}
 };
 

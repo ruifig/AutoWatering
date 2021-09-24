@@ -124,9 +124,9 @@
       <Value>USB_PID=0x0010</Value>
       <Value>USB_MANUFACTURER="\"Arduino LLC\""</Value>
       <Value>NDEBUG</Value>
-      <Value>CZ_LOG_ENABLED=1</Value>
-      <Value>CZ_SERIAL_LOG_ENABLED=1</Value>
-      <Value>CZ_PROFILER=1</Value>
+      <Value>CZ_LOG_ENABLED=0</Value>
+      <Value>CZ_SERIAL_LOG_ENABLED=0</Value>
+      <Value>CZ_PROFILER=0</Value>
       <Value>FASTER_ITERATION=1</Value>
     </ListValues>
   </avrgcccpp.compiler.symbols.DefSymbols>

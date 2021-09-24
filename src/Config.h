@@ -58,6 +58,14 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 	#define SD_CARD_LOGGING 0
 #endif
 
+#ifndef CONSOLE_COMMANDS
+	#if CZ_DEBUG
+		#define CONSOLE_COMMANDS 1
+	#else
+		#define CONSOLE_COMMANDS 0
+	#endif
+#endif
+
 /**
  * What i2c address to use for the io expander (0x21..0x27)
  * Note: Don't use address 0x20, because it's used by LCD shield display

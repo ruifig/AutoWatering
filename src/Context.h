@@ -82,7 +82,7 @@ namespace cz
 
 		const HistoryQueue& getHistory()
 		{
-			return m_cfg.history;
+			return m_history;
 		}
 
 		uint32_t getNumReadings() const
@@ -95,8 +95,8 @@ namespace cz
 
 	protected:
 		friend class ProgramData;
-		EEPtr saveToEEPROM(EEPtr dst) const;
-		EEPtr LoadFromEEPROM(EEPtr src);
+		void save(EEPtr& dst) const;
+		void load(EEPtr& src);
 
 	  private:
 
@@ -131,10 +131,9 @@ namespace cz
 			// NOTE: ABOVE because higher values means drier.
 			// Using 0 as initial value, which means it will not turn on the motor until things are setup properly
 			unsigned int thresholdValue = 0;
-
-			HistoryQueue history;
 		} m_cfg;
 
+		HistoryQueue m_history;
 
 		bool m_motorIsOn = false;
 		// Used so we can detect when the motor was turned on and off before a sensor data point is inserted, so we can
@@ -151,8 +150,8 @@ public:
 	bool tryAcquireMoistureSensorMutex();
 	void releaseMoistureSensorMutex();
 
-	void loadFromEEPROM();
-	void saveToEEPROM() const;
+	void save() const;
+	void load();
 
 	void begin();
   private:

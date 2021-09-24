@@ -8,7 +8,7 @@
 namespace cz
 {
 
-EEPtr updateEEPROM(EEPtr dst, const uint8_t* src, unsigned int size)
+void updateEEPROM(EEPtr& dst, const uint8_t* src, unsigned int size)
 {
 	while(size--)
 	{
@@ -16,10 +16,9 @@ EEPtr updateEEPROM(EEPtr dst, const uint8_t* src, unsigned int size)
 		++dst;
 		++src;
 	}
-	return dst;
 }
 
-EEPtr readEEPROM(EEPtr src, uint8_t* dst, unsigned int size)
+void readEEPROM(EEPtr& src, uint8_t* dst, unsigned int size)
 {
 	while(size--)
 	{
@@ -27,8 +26,52 @@ EEPtr readEEPROM(EEPtr src, uint8_t* dst, unsigned int size)
 		++dst;
 		++src;
 	}
+}
 
-	return src;
+template<typename T, typename = std::enable_if_t<
+	std::is_arithmetic_v<T> ||
+	std::is_same_v<T, GraphPoint>
+	> >
+void save(EEPtr& dst, const T& v)
+{
+	updateEEPROM(dst, reinterpret_cast<const uint8_t*>(&v), sizeof(v));
+}
+
+template<typename T, typename = std::enable_if_t<
+	std::is_arithmetic_v<T> ||
+	std::is_same_v<T, GraphPoint>
+	> >
+void load(EEPtr& src, T& v)
+{
+	readEEPROM(src, reinterpret_cast<uint8_t*>(&v), sizeof(v));
+}
+
+
+template<typename T>
+void save(EEPtr& src, const TFixedCapacityQueue<T>& v)
+{
+	int size = v.size();
+	save(src, size);
+	for(int idx=0; idx<size; idx++)
+	{
+		const T& t = v.getAtIndex(idx);
+		save(src, t);
+	}
+}
+
+template<typename T>
+void load(EEPtr& src, TFixedCapacityQueue<T>& v)
+{
+	v.clear();
+	int size;
+	load(src, size);
+	CZ_ASSERT(size<=v.capacity());
+	while(size--)
+	{
+		T t;
+		load(src, t);
+		v.push(t);
+	}
 }
 
 void Context::begin()
@@ -50,42 +93,42 @@ void GroupData::begin(uint8_t index)
 #if FASTER_ITERATION
 	for(int i=0; i<20; i++)
 	{
-		m_cfg.history.push({GRAPH_POINT_MAXVAL, false});
+		m_history.push({GRAPH_POINT_MAXVAL, false});
 	}
 
 	for(int i=0; i<20; i++)
 	{
-		m_cfg.history.push({0, false});
+		m_history.push({0, false});
 	}
 
 	for(int i=0; i<20; i++)
 	{
-		m_cfg.history.push({GRAPH_POINT_MAXVAL/4, true});
+		m_history.push({GRAPH_POINT_MAXVAL/4, true});
 	}
 
 	for(int i=0; i<20; i++)
 	{
-		m_cfg.history.push({GRAPH_POINT_MAXVAL/2 -1, false});
+		m_history.push({GRAPH_POINT_MAXVAL/2 -1, false});
 	}
 
 	for(int i=0; i<20; i++)
 	{
-		m_cfg.history.push({GRAPH_POINT_MAXVAL/2, true});
+		m_history.push({GRAPH_POINT_MAXVAL/2, true});
 	}
 
 	for(int i=0; i<20; i++)
 	{
-		m_cfg.history.push({(GRAPH_POINT_MAXVAL*3)/4, false});
+		m_history.push({(GRAPH_POINT_MAXVAL*3)/4, false});
 	}
 
 	for(int i=0; i<20; i++)
 	{
-		m_cfg.history.push({GRAPH_POINT_MAXVAL, true});
+		m_history.push({GRAPH_POINT_MAXVAL, true});
 	}
 
-	while(!m_cfg.history.isFull())
+	while(!m_history.isFull())
 	{
-		m_cfg.history.push({GRAPH_POINT_MAXVAL/3, false});
+		m_history.push({GRAPH_POINT_MAXVAL/3, false});
 	}
 
 #endif
@@ -114,11 +157,11 @@ void GroupData::setMoistureSensorValues(int currentValue)
 	// on the next sensor reading
 	point.on = m_motorIsOn || m_pendingMotorPoint;
 	m_pendingMotorPoint = false;
-	if (m_cfg.history.isFull())
+	if (m_history.isFull())
 	{
-		m_cfg.history.pop();
+		m_history.pop();
 	}
-	m_cfg.history.push(point);
+	m_history.push(point);
 
 	Component::raiseEvent(SoilMoistureSensorReadingEvent(m_index));
 }
@@ -161,19 +204,19 @@ void GroupData::stop()
 
 void GroupData::resetHistory()
 {
-	m_cfg.history.clear();
+	m_history.clear();
 }
 
-EEPtr GroupData::saveToEEPROM(EEPtr dst) const
+void GroupData::save(EEPtr& dst) const
 {
-	return updateEEPROM(dst, reinterpret_cast<const uint8_t*>(&m_cfg), sizeof(m_cfg));
+	updateEEPROM(dst, reinterpret_cast<const uint8_t*>(&m_cfg), sizeof(m_cfg));
+	cz::save(dst, m_history);
 }
 
-EEPtr GroupData::LoadFromEEPROM(EEPtr src)
+void GroupData::load(EEPtr& src)
 {
-	src = readEEPROM(src, reinterpret_cast<uint8_t*>(&m_cfg), sizeof(m_cfg));
-	m_cfg.history.fixupDataAfterLoad();
-	return src;
+	readEEPROM(src, reinterpret_cast<uint8_t*>(&m_cfg), sizeof(m_cfg));
+	cz::load(src, m_history);
 }
 
 void ProgramData::begin()
@@ -192,14 +235,14 @@ GroupData& ProgramData::getGroupData(uint8_t index)
 	return m_group[index];
 }
 
-void ProgramData::saveToEEPROM() const
+void ProgramData::save() const
 {
 	unsigned long startTime = micros();
 	EEPtr ptr = EEPROM.begin();
 
 	for(const GroupData& g : m_group)
 	{
-		ptr = g.saveToEEPROM(ptr);
+		g.save(ptr);
 	}
 	
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
@@ -207,14 +250,14 @@ void ProgramData::saveToEEPROM() const
 	Component::raiseEvent(ConfigSaveEvent());
 }
 
-void ProgramData::loadFromEEPROM()
+void ProgramData::load()
 {
 	unsigned long startTime = micros();
 	EEPtr ptr = EEPROM.begin();
 
 	for(GroupData& g : m_group)
 	{
-		ptr = g.LoadFromEEPROM(ptr);
+		g.load(ptr);
 	}
 	
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
