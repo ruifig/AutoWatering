@@ -224,6 +224,7 @@ float DisplayTFT::tick(float deltaSeconds)
 		break;
 	case State::Overview:
 		drawOverview();
+		m_forceDrawOnNextTick = false;
 		break;
 	default:
 		CZ_UNEXPECTED();
@@ -237,7 +238,6 @@ float DisplayTFT::tick(float deltaSeconds)
 	}
 #endif
 
-	m_forceDrawOnNextTick = false;
 	return 1.0f / 30.0f;
 }
 	
@@ -247,20 +247,12 @@ void DisplayTFT::onEvent(const Event& evt)
 	{
 		case Event::ConfigLoad:
 			changeToState(State::Overview);
-			m_forceDrawOnNextTick = true;
 		break;
 
 		case Event::SoilMoistureSensorReading:
 		{
 			auto idx = static_cast<const SoilMoistureSensorReadingEvent&>(evt).index;
-
-			// We only increment if < GRAPH_NUMPOINTS, so we don't wrap around to 0 if it happens the display is not updated
-			// for a very long time (shouldn't happen), or if the sensors update too quickly before the screen updates (shouldn't happen).
-			// This is needed because the number of sensor updates is used to optimize the sensor history drawing.
-			if (m_soilMoistureSensorUpdates[idx]<GRAPH_NUMPOINTS)
-			{
-				++m_soilMoistureSensorUpdates[idx];
-			}
+			m_sensorUpdates[idx]++;
 		}
 		break;
 
@@ -305,112 +297,80 @@ void DisplayTFT::onLeaveState()
 }
 
 
-#if 0
-void DisplayTFT::plotHistory(int16_t x, int16_t y, int16_t h, const TFixedCapacityQueue<GraphPoint>& data, int previousDrawOffset, uint8_t valThreshold /*, const GraphPoint* oldData, int oldCount*/)
+void DisplayTFT::plotHistory(int groupIndex)
 {
-	CZ_ASSERT(previousDrawOffset<=0);
+	constexpr int h = GRAPH_HEIGHT;
+	Rect rect = getHistoryPlotRect(groupIndex);
+	GroupData& data = m_ctx.data.getGroupData(groupIndex);
+	const HistoryQueue& history = data.getHistory();
 
-	// If the previous draw offset is 0, it means the graph data hasn't changed, so no need to redraw
-	if (previousDrawOffset==0)
+	int bottomY = rect.y + h - 1;
+
+	const int count = history.size();
+	
+	uint8_t done[GRAPH_NUMPOINTS+1];
+	memset(done,255, sizeof(done));
+
+	// If there were more than 1 update, we don't have the info to scroll. We need to redraw
+	bool redraw = m_sensorUpdates[groupIndex] > 1 ? true : false;
+	if (redraw)
 	{
-		return;
+		CZ_LOG(logDefault, Warning, F("Too many sensor udpates (%u)"), m_sensorUpdates[groupIndex]);
 	}
-	int bottomY = y + h - 1;
+	redraw |= m_forceDrawOnNextTick;
 
-	const int count = data.size();
-	int oldDrawIdx = previousDrawOffset;
-	for(int i=0; i<count; i++)
+	done[0] = history.getAtIndex(0).val;
+
+	for(int i=1; i<count; i++)
 	{
+		int xx = rect.x + i - 1;
+		GraphPoint p = history.getAtIndex(i);
+		GraphPoint oldp = history.getAtIndex(i-1);
+		done[i] = p.val;
 
-		GraphPoint p = data.getAtIndex(i);
-		int xx = x + i;
+		bool drawMotor = false;
+		bool drawLevel = false;
 
-		bool doDrawLevel = false;
-		bool doDrawMotor = false;
-
-		if (oldDrawIdx >= 0)
+		if (redraw)
 		{
-			GraphPoint oldPoint = data.getAtIndex(oldDrawIdx);
-			if (oldPoint.val != p.val)
-			{
-				int yy = oldPoint.val;
-				// erase previous dot
-				gScreen.drawPixel(xx, bottomY - yy, Colour_Black);
-				doDrawLevel = true;
-			}
-
-			if (oldPoint.on != p.on)
-			{
-				doDrawMotor = true;
-			}
+			// erase vertical line
+			gScreen.drawFastVLine(xx, rect.y, h, Colour_Black);
+			drawMotor = true;
+			drawLevel = true;
 		}
 		else
 		{
-			gScreen.drawFastVLine(xx, y, h, Colour_Black);
-			doDrawLevel = true;
-			doDrawMotor = true;
-		}
-		oldDrawIdx++;
+			// Since the motor on/off info is an horizontal line, we don't need to erase the previous. We just paint the pixel
+			// at the right color if it changed
+			if (oldp.on != p.on)
+			{
+				drawMotor = true;
+			}
 
-		// The height for the plotting is h-1 because we reserve the top pixel for the motor on/off
-		if (doDrawLevel)
-		{
-			int yy = p.val;
-			gScreen.drawPixel(xx, bottomY - yy, p.val < valThreshold ? GRAPH_MOISTURE_LOW_COLOUR : GRAPH_MOISTURE_OK_COLOUR);
+			if (oldp.val != p.val)
+			{
+				// Erase previous moisture level point
+				gScreen.drawPixel(xx, bottomY - oldp.val, Colour_Black);
+				drawLevel = true;
+			}
 		}
 
-		if (doDrawMotor)
+		if (drawMotor)
 		{
-			gScreen.drawPixel(xx, y, p.on ? GRAPH_MOTOR_ON_COLOUR : GRAPH_MOTOR_OFF_COLOUR);
+			// draw new motor on/off
+			gScreen.drawPixel(xx, rect.y, p.on ? GRAPH_MOTOR_ON_COLOUR : GRAPH_MOTOR_OFF_COLOUR);
+		}
+
+		if (drawLevel)
+		{
+			// Draw new moisture level
+			gScreen.drawPixel(xx, bottomY - p.val, GRAPH_MOISTURELEVEL_COLOUR);
 		}
 	}
 
+	m_sensorUpdates[groupIndex] = 0;
+	CZ_LOG(logDefault, Log, F("DOne"));
 }
-#else
-//#pragma GCC push_options
-//#pragma GCC optimize ("O0")
-void DisplayTFT::plotHistory(int16_t x, int16_t y, int16_t h, const TFixedCapacityQueue<GraphPoint>& data, int _previousDrawOffset, uint8_t valThreshold /*, const GraphPoint* oldData, int oldCount*/)
-{
-	int bottomY = y + h - 1;
-
-	//uint8_t done[GRAPH_NUMPOINTS];
-	//memset(done, sizeof(done), 255);
-
-	const int count = data.size();
-	for(int i=0; i<count; i++)
-	{
-
-		GraphPoint p = data.getAtIndex(i);
-		//done[i] = p.val;
-		int xx = x + i;
-
-		bool doDrawLevel = false;
-		bool doDrawMotor = false;
-
-		gScreen.drawFastVLine(xx, y, h, Colour_Black);
-		doDrawLevel = true;
-		doDrawMotor = true;
-
-		// The height for the plotting is h-1 because we reserve the top pixel for the motor on/off
-		if (doDrawLevel)
-		{
-			int yy = p.val;
-			gScreen.drawPixel(xx, bottomY - yy, p.val < valThreshold ? GRAPH_MOISTURE_LOW_COLOUR : GRAPH_MOISTURE_OK_COLOUR);
-		}
-
-		if (doDrawMotor)
-		{
-			gScreen.drawPixel(xx, y, p.on ? GRAPH_MOTOR_ON_COLOUR : GRAPH_MOTOR_OFF_COLOUR);
-		}
-	}
-
-	//CZ_LOG(logDefault, Log, F("Done %d"), count);
-
-}
-
-//#pragma GCC pop_options
-
-#endif
 
 
 void DisplayTFT::onEnterState()
@@ -432,7 +392,8 @@ void DisplayTFT::onEnterState()
 		break;
 
 	case State::Overview:
-		memset(m_soilMoistureSensorUpdates, 255, sizeof(m_soilMoistureSensorUpdates));
+		m_forceDrawOnNextTick = true;
+		memset(m_sensorUpdates, 0, sizeof(m_sensorUpdates));
 		drawHistoryBoxes();
 		m_sensorMainMenu.draw(true);
 		break;
@@ -492,7 +453,7 @@ void DisplayTFT::drawOverview()
 
 	for(int i=0; i<NUM_MOISTURESENSORS; i++)
 	{
-		if (m_soilMoistureSensorUpdates[i]==0)
+		if (!m_forceDrawOnNextTick && m_sensorUpdates[i] == 0)
 		{
 			continue;
 		}
@@ -507,9 +468,7 @@ void DisplayTFT::drawOverview()
 		//
 		{
 			PROFILE_SCOPE(F("plotHistory"));
-			Rect rect = getHistoryPlotRect(i);
-			// #RVF : getPercentageThreshold (the last parameter) won't work properly, because we are passing 0..100, but the GraphPoint doesn't use a value of 0..100
-			plotHistory(rect.x, rect.y, GRAPH_HEIGHT, history, -static_cast<int>(m_soilMoistureSensorUpdates[i]), data.getPercentageThreshold());
+			plotHistory(i);
 		}
 
 		//
@@ -523,8 +482,6 @@ void DisplayTFT::drawOverview()
 		}
 
 	}
-
-	memset(m_soilMoistureSensorUpdates, 0, sizeof(m_soilMoistureSensorUpdates));
 
 }
 

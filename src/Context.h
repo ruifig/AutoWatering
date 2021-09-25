@@ -19,7 +19,10 @@ namespace cz
 
 	static_assert(sizeof(GraphPoint)==1, "GraphPoint size must be 1");
 
-	using HistoryQueue = TStaticFixedCapacityQueue<GraphPoint, GRAPH_NUMPOINTS>;
+	// We set space for GRAPH_NUMPOINT+1 to make it easier to deal with the display scrolling.
+	// Considering there was just 1 update to the queue since the last draw, we can do the following:
+	// The first point to draw is index 1, and to draw index 1, we erase the pixel in that pixel with the info from index 0
+	using HistoryQueue = TStaticFixedCapacityQueue<GraphPoint, GRAPH_NUMPOINTS + 1>;
 
 	class GroupData
 	{
