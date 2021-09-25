@@ -24,38 +24,30 @@ namespace cz
 
 using namespace gfx;
 
-namespace
-{
+//////////////////////////////////////////////////////////////////////////
+// InitializeState
+//////////////////////////////////////////////////////////////////////////
 
-
-constexpr Rect getHistoryPlotRect(int index)
+void DisplayTFT::InitializeState::tick(float deltaSeconds)
 {
-	Rect rect{0};
-	// Don't start a 0, so we leave space to add the small markers
-	rect.x = 3;
-	// 1+ to leave a line for the box
-	// + X at the end to add a space between different history plots
-	rect.y = 1 + (index*(GRAPH_HEIGHT + 5));
-	rect.height = GRAPH_HEIGHT;
-	rect.width = GRAPH_NUMPOINTS;
-	return rect;
+	m_outer.changeToState(m_outer.m_states.intro);
 }
 
-// Make sure we have enough space at the bottom for the menu
-static_assert((SCREEN_HEIGHT - (getHistoryPlotRect(3).y + getHistoryPlotRect(3).height)) > 64, "Need enough space left at the bototm for the menu (64 pixels high)");
-
-constexpr Pos getMenuButtonPos(uint8_t col, uint8_t row)
+void DisplayTFT::InitializeState::onEnter()
 {
-	Pos pos{0};
-	pos.x = (32 + 3) * col;
-	pos.y = getHistoryPlotRect(3).y + getHistoryPlotRect(3).height + 3 + (32 + 3) * row;
-	return pos;
+	initializeScreen();
 }
 
+void DisplayTFT::InitializeState::onLeave()
+{
+}
 
-//
-// Intro screen
-//
+//////////////////////////////////////////////////////////////////////////
+// IntroState
+//////////////////////////////////////////////////////////////////////////
+
+namespace { namespace Intro {
+
 const char introLabel1_value_P[] PROGMEM = "AutoWatering";
 const StaticLabelData introLabel1_P PROGMEM =
 {
@@ -89,6 +81,57 @@ const StaticLabelData introLabel3_P PROGMEM =
 	0
 };
 
+} } // namespace Intro
+
+
+void DisplayTFT::IntroState::tick(float deltaSeconds)
+{
+	if (m_outer.m_timeInState >= INTRO_DURATION)
+	{
+		m_outer.changeToState(m_outer.m_states.overview);
+	}
+}
+
+void DisplayTFT::IntroState::onEnter()
+{
+	StaticLabel(&Intro::introLabel1_P).draw();
+	StaticLabel(&Intro::introLabel2_P).draw();
+	StaticLabel(&Intro::introLabel3_P).draw();
+}
+
+void DisplayTFT::IntroState::onLeave()
+{
+}
+
+//////////////////////////////////////////////////////////////////////////
+// OverviewState
+//////////////////////////////////////////////////////////////////////////
+
+namespace { namespace Overview {
+
+constexpr Rect getHistoryPlotRect(int index)
+{
+	Rect rect{0};
+	// Don't start a 0, so we leave space to add the small markers
+	rect.x = 3;
+	// 1+ to leave a line for the box
+	// + X at the end to add a space between different history plots
+	rect.y = 1 + (index*(GRAPH_HEIGHT + 5));
+	rect.height = GRAPH_HEIGHT;
+	rect.width = GRAPH_NUMPOINTS;
+	return rect;
+}
+
+// Make sure we have enough space at the bottom for the menu
+static_assert((SCREEN_HEIGHT - (getHistoryPlotRect(3).y + getHistoryPlotRect(3).height)) > 64, "Need enough space left at the bototm for the menu (64 pixels high)");
+
+constexpr Pos getMenuButtonPos(uint8_t col, uint8_t row)
+{
+	Pos pos{0};
+	pos.x = (32 + 3) * col;
+	pos.y = getHistoryPlotRect(3).y + getHistoryPlotRect(3).height + 3 + (32 + 3) * row;
+	return pos;
+}
 
 //
 // Sensor data (left to the history plot)
@@ -151,102 +194,37 @@ FixedNumLabel sensorLabels[NUM_MOISTURESENSORS][3] =
 #endif
 };
 
-}
+} } // namespace Overview
 
-
-//
-// SensorMainMenu
-//
-void SensorMainMenu::init()
+void DisplayTFT::OverviewState::init()
 {
-	m_buttons[Start].init(gScreen, img_Play, getMenuButtonPos(0,0), Colour_Black);
-	m_buttons[Stop].init(gScreen, img_Stop, getMenuButtonPos(0,0), Colour_Black);
-	m_buttons[Shot].init(gScreen, img_Shot, getMenuButtonPos(1,0), Colour_Black);
-	m_buttons[Settings].init(gScreen, img_Settings, getMenuButtonPos(2,0), Colour_Black);
-	m_buttons[Stop].setState(ButtonState::Hidden);
-}
-
-void SensorMainMenu::tick(float deltaSeconds)
-{
-}
-
-void SensorMainMenu::draw(bool forceDraw)
-{
-	for(auto&& btn : m_buttons)
-	{
-		btn.draw(forceDraw);
-	}
-}
-
-const char* const DisplayTFT::ms_stateNames[3]=
-{
-	"Initializing",
-	"Intro",
-	"Overview"
-};
-
-DisplayTFT::DisplayTFT(Context& ctx)
-	: m_ctx(ctx)
-	// For better pressure precision, we need to know the resistance
-	// between X+ and X- Use any multimeter to read it
-	// For the one we're using, its 300 ohms across the X plate
-	, m_ts(XP, YP, XM, YM, 300)
-{
-}
-
-void DisplayTFT::begin()
-{
-
 	m_sensorMainMenu.init();
-
-	onEnterState();
 }
 
-float DisplayTFT::tick(float deltaSeconds)
+void DisplayTFT::OverviewState::tick(float deltaSeconds)
 {
-	PROFILE_SCOPE(F("DisplayTFT"));
-
-	m_timeInState += deltaSeconds;
-	m_timeSinceLastTouch += deltaSeconds;
-
-	//CZ_LOG(logDefault, Log, F("DisplayTFT::%s: state=%s, timeInState = %d"), __FUNCTION__, ms_stateNames[(int)m_state], (int)m_timeInState);
-
-	switch(m_state)
-	{
-	case State::Initializing:
-		changeToState(State::Intro);
-		break;
-	case State::Intro:
-		if (m_timeInState >= INTRO_DURATION)
-		{
-			changeToState(State::Overview);
-		}
-		break;
-	case State::Overview:
-		drawOverview();
-		m_forceDrawOnNextTick = false;
-		break;
-	default:
-		CZ_UNEXPECTED();
-	}
-
-#if 0
-	if (m_timeSinceLastTouch >= DEFAULT_LCD_BACKLIGHT_TIMEOUT)
-	{
-		m_screenOff = true;
-		gScreen.fillScreen(Colour_Black);
-	}
-#endif
-
-	return 1.0f / 30.0f;
+	drawOverview();
+	m_forceRedraw = false;
 }
-	
-void DisplayTFT::onEvent(const Event& evt)
+
+void DisplayTFT::OverviewState::onEnter()
+{
+	m_forceRedraw = true;
+	memset(m_sensorUpdates, 0, sizeof(m_sensorUpdates));
+	drawHistoryBoxes();
+	m_sensorMainMenu.draw(true);
+}
+
+void DisplayTFT::OverviewState::onLeave()
+{
+}
+
+void DisplayTFT::OverviewState::onEvent(const Event& evt)
 {
 	switch(evt.type)
 	{
 		case Event::ConfigLoad:
-			changeToState(State::Overview);
+			m_forceRedraw = true;
 		break;
 
 		case Event::SoilMoistureSensorReading:
@@ -256,52 +234,94 @@ void DisplayTFT::onEvent(const Event& evt)
 		}
 		break;
 
-		case Event::StartGroup:
-		{
-			auto idx = static_cast<const StartGroupEvent&>(evt).index;
-
-		}
-		break;
 	}
 }
 
-void DisplayTFT::changeToState(State newState)
+void DisplayTFT::OverviewState::drawOverview()
 {
-    CZ_LOG(logDefault, Log, F("DisplayTFT::%s %ssec %s->%s")
-        , __FUNCTION__
-		, *FloatToString(m_timeInState)
-        , ms_stateNames[(int)m_state]
-        , ms_stateNames[(int)newState]);
+	PROFILE_SCOPE(F("OverviewState::drawOverview"));
 
-    onLeaveState();
-	gScreen.fillScreen(Colour_Black);
-    m_state = newState;
-    m_timeInState = 0.0f;
-    onEnterState();
-}
-
-void DisplayTFT::onLeaveState()
-{
-	switch (m_state)
+	for(int i=0; i<NUM_MOISTURESENSORS; i++)
 	{
-	case State::Initializing:
-		break;
-	case State::Intro:
-		break;
-	case State::Overview:
-		break;
+		if (!m_forceRedraw && m_sensorUpdates[i] == 0)
+		{
+			continue;
+		}
 
-	default:
-		CZ_UNEXPECTED();
+		PROFILE_SCOPE(F("sensorDrawing"));
+
+		GroupData& data = m_outer.m_ctx.data.getGroupData(i);
+		const HistoryQueue& history = data.getHistory();
+
+		//
+		// Draw history
+		//
+		{
+			PROFILE_SCOPE(F("plotHistory"));
+			plotHistory(i);
+		}
+
+		//
+		// Draw values
+		//
+		{
+			PROFILE_SCOPE(F("drawTextValues"));
+			Overview::sensorLabels[i][0].setValueAndDraw(data.getWaterValue(), m_forceRedraw);
+			Overview::sensorLabels[i][1].setValueAndDraw(data.getPercentageValue(), m_forceRedraw);
+			Overview::sensorLabels[i][2].setValueAndDraw(data.getAirValue(), m_forceRedraw);
+		}
+
 	}
+
 }
 
+void DisplayTFT::OverviewState::drawHistoryBoxes()
+{
+	PROFILE_SCOPE(F("OverviewState::drawHistoryBoxes"));
 
-void DisplayTFT::plotHistory(int groupIndex)
+	for(int i=0; i<NUM_MOISTURESENSORS; i++)
+	{
+		Rect rect = Overview::getHistoryPlotRect(i);
+		gScreen.drawRect(rect.x-1 , rect.y-1, rect.width+2, rect.height+2, Colour_VeryDarkGrey);
+
+		constexpr int16_t h = GRAPH_HEIGHT;
+		int bottomY = rect.y + rect.height - 1;
+		gScreen.drawFastHLine(0, bottomY - map(0, 0, 100, 0, h - 1),   2, Colour_DarkGrey);
+		gScreen.drawFastHLine(0, bottomY - map(20, 0, 100, 0, h - 1),  2, Colour_DarkGrey);
+		gScreen.drawFastHLine(0, bottomY - map(40, 0, 100, 0, h - 1),  2, Colour_DarkGrey);
+		gScreen.drawFastHLine(0, bottomY - map(60, 0, 100, 0, h - 1),  2, Colour_DarkGrey);
+		gScreen.drawFastHLine(0, bottomY - map(80, 0, 100, 0, h - 1),  2, Colour_DarkGrey);
+		gScreen.drawFastHLine(0, bottomY - map(100, 0, 100, 0, h - 1), 2, Colour_DarkGrey);
+	}
+
+	// #RVF : Remove this
+	#if 0
+		#define TEST_ICON(idx, name) \
+			drawRGBBitmap_P(32*idx,SCREEN_HEIGHT-32*2 - 3, img_##name, img_##name##_bitmask, img_##name##_width, img_##name##_height, PINK); \
+			drawRGBBitmapDisabled_P(32*idx,SCREEN_HEIGHT-32*1, img_##name, img_##name##_bitmask, img_##name##_width, img_##name##_height, PINK);
+
+		TEST_ICON(0, Play);
+		TEST_ICON(1, Stop);
+		TEST_ICON(2, Shot);
+		TEST_ICON(3, Calibrate);
+		TEST_ICON(4, Settings);
+		TEST_ICON(5, Save);
+		TEST_ICON(6, SetSensorInterval);
+		TEST_ICON(7, SetWateringDuration);
+		TEST_ICON(8, Close);
+		TEST_ICON(9, SetThreshold);
+
+		TEST_ICON(0, Add);
+		TEST_ICON(1, Remove);
+	#endif
+
+}
+
+void DisplayTFT::OverviewState::plotHistory(int groupIndex)
 {
 	constexpr int h = GRAPH_HEIGHT;
-	Rect rect = getHistoryPlotRect(groupIndex);
-	GroupData& data = m_ctx.data.getGroupData(groupIndex);
+	Rect rect = Overview::getHistoryPlotRect(groupIndex);
+	GroupData& data = m_outer.m_ctx.data.getGroupData(groupIndex);
 	const HistoryQueue& history = data.getHistory();
 
 	int bottomY = rect.y + h - 1;
@@ -317,7 +337,7 @@ void DisplayTFT::plotHistory(int groupIndex)
 	{
 		CZ_LOG(logDefault, Warning, F("Too many sensor udpates (%u)"), m_sensorUpdates[groupIndex]);
 	}
-	redraw |= m_forceDrawOnNextTick;
+	redraw |= m_forceRedraw;
 
 	done[0] = history.getAtIndex(0).val;
 
@@ -369,120 +389,96 @@ void DisplayTFT::plotHistory(int groupIndex)
 	}
 
 	m_sensorUpdates[groupIndex] = 0;
-	CZ_LOG(logDefault, Log, F("DOne"));
+	CZ_LOG(logDefault, Log, F("Done"));
 }
 
-
-void DisplayTFT::onEnterState()
+//
+// SensorMainMenu
+//
+void SensorMainMenu::init()
 {
-	switch(m_state)
+	m_buttons[Start].init(gScreen, img_Play, Overview::getMenuButtonPos(0,0), Colour_Black);
+	m_buttons[Stop].init(gScreen, img_Stop, Overview::getMenuButtonPos(0,0), Colour_Black);
+	m_buttons[Shot].init(gScreen, img_Shot, Overview::getMenuButtonPos(1,0), Colour_Black);
+	m_buttons[Settings].init(gScreen, img_Settings, Overview::getMenuButtonPos(2,0), Colour_Black);
+	m_buttons[Stop].setState(ButtonState::Hidden);
+}
+
+void SensorMainMenu::tick(float deltaSeconds)
+{
+}
+
+void SensorMainMenu::draw(bool forceDraw)
+{
+	for(auto&& btn : m_buttons)
 	{
-	case State::Initializing:
-		{
-			initializeScreen();
-		}
-		break;
-
-	case State::Intro:
-		{
-			StaticLabel(&introLabel1_P).draw();
-			StaticLabel(&introLabel2_P).draw();
-			StaticLabel(&introLabel3_P).draw();
-		}
-		break;
-
-	case State::Overview:
-		m_forceDrawOnNextTick = true;
-		memset(m_sensorUpdates, 0, sizeof(m_sensorUpdates));
-		drawHistoryBoxes();
-		m_sensorMainMenu.draw(true);
-		break;
-
-	default:
-		CZ_UNEXPECTED();
+		btn.draw(forceDraw);
 	}
 }
+	
 
 
-void DisplayTFT::drawHistoryBoxes()
+//////////////////////////////////////////////////////////////////////////
+// DisplayTFT
+//////////////////////////////////////////////////////////////////////////
+
+
+DisplayTFT::DisplayTFT(Context& ctx)
+	: m_ctx(ctx)
+	// For better pressure precision, we need to know the resistance
+	// between X+ and X- Use any multimeter to read it
+	// For the one we're using, its 300 ohms across the X plate
+	, m_ts(XP, YP, XM, YM, 300)
+	, m_states(*this)
 {
-	PROFILE_SCOPE(F("drawHistoryBoxes"));
-
-	for(int i=0; i<NUM_MOISTURESENSORS; i++)
-	{
-		Rect rect = getHistoryPlotRect(i);
-		gScreen.drawRect(rect.x-1 , rect.y-1, rect.width+2, rect.height+2, Colour_VeryDarkGrey);
-
-		constexpr int16_t h = GRAPH_HEIGHT;
-		int bottomY = rect.y + rect.height - 1;
-		gScreen.drawFastHLine(0, bottomY - map(0, 0, 100, 0, h - 1),   2, Colour_DarkGrey);
-		gScreen.drawFastHLine(0, bottomY - map(20, 0, 100, 0, h - 1),  2, Colour_DarkGrey);
-		gScreen.drawFastHLine(0, bottomY - map(40, 0, 100, 0, h - 1),  2, Colour_DarkGrey);
-		gScreen.drawFastHLine(0, bottomY - map(60, 0, 100, 0, h - 1),  2, Colour_DarkGrey);
-		gScreen.drawFastHLine(0, bottomY - map(80, 0, 100, 0, h - 1),  2, Colour_DarkGrey);
-		gScreen.drawFastHLine(0, bottomY - map(100, 0, 100, 0, h - 1), 2, Colour_DarkGrey);
-	}
-
-	// #RVF : Remove this
-	#if 0
-		#define TEST_ICON(idx, name) \
-			drawRGBBitmap_P(32*idx,SCREEN_HEIGHT-32*2 - 3, img_##name, img_##name##_bitmask, img_##name##_width, img_##name##_height, PINK); \
-			drawRGBBitmapDisabled_P(32*idx,SCREEN_HEIGHT-32*1, img_##name, img_##name##_bitmask, img_##name##_width, img_##name##_height, PINK);
-
-		TEST_ICON(0, Play);
-		TEST_ICON(1, Stop);
-		TEST_ICON(2, Shot);
-		TEST_ICON(3, Calibrate);
-		TEST_ICON(4, Settings);
-		TEST_ICON(5, Save);
-		TEST_ICON(6, SetSensorInterval);
-		TEST_ICON(7, SetWateringDuration);
-		TEST_ICON(8, Close);
-		TEST_ICON(9, SetThreshold);
-
-		TEST_ICON(0, Add);
-		TEST_ICON(1, Remove);
-	#endif
-
-
 }
 
-void DisplayTFT::drawOverview()
+void DisplayTFT::begin()
 {
-	PROFILE_SCOPE(F("DisplayTFT:drawOverview"));
+	m_states.initialize.init();
+	m_states.intro.init();
+	m_states.overview.init();
+	changeToState(m_states.initialize);
+}
 
-	for(int i=0; i<NUM_MOISTURESENSORS; i++)
+float DisplayTFT::tick(float deltaSeconds)
+{
+	PROFILE_SCOPE(F("DisplayTFT::tick"));
+
+	m_timeInState += deltaSeconds;
+
+	//CZ_LOG(logDefault, Log, F("DisplayTFT::%s: state=%s, timeInState = %d"), __FUNCTION__, ms_stateNames[(int)m_state], (int)m_timeInState);
+	m_state->tick(deltaSeconds);
+
+	return 1.0f / 30.0f;
+}
+	
+void DisplayTFT::onEvent(const Event& evt)
+{
+	m_state->onEvent(evt);	
+}
+
+void DisplayTFT::changeToState(DisplayState& newState)
+{
+	// NOTE: We need to take into account m_state will not be yet set if we are starting up
+#if CZ_LOG_ENABLED
+	CZ_LOG(logDefault, Log, F("DisplayTFT::%s %ssec %s->%s")
+		, __FUNCTION__
+		, *FloatToString(m_timeInState)
+		, m_state ? m_state->getName() : "NONE"
+		, newState.getName());
+#endif
+
+	if (m_state)
 	{
-		if (!m_forceDrawOnNextTick && m_sensorUpdates[i] == 0)
-		{
-			continue;
-		}
-
-		PROFILE_SCOPE(F("sensorDrawing"));
-
-		GroupData& data = m_ctx.data.getGroupData(i);
-		const HistoryQueue& history = data.getHistory();
-
-		//
-		// Draw history
-		//
-		{
-			PROFILE_SCOPE(F("plotHistory"));
-			plotHistory(i);
-		}
-
-		//
-		// Draw values
-		//
-		{
-			PROFILE_SCOPE(F("drawTextValues"));
-			sensorLabels[i][0].setValueAndDraw(data.getWaterValue(), m_forceDrawOnNextTick);
-			sensorLabels[i][1].setValueAndDraw(data.getPercentageValue(), m_forceDrawOnNextTick);
-			sensorLabels[i][2].setValueAndDraw(data.getAirValue(), m_forceDrawOnNextTick);
-		}
-
+		m_state->onLeave();
 	}
 
+	gScreen.fillScreen(Colour_Black);
+	m_state = &newState;
+    m_timeInState = 0.0f;
+	m_state->onEnter();
 }
+
 
 } // namespace cz

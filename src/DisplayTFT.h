@@ -22,7 +22,6 @@ class Menu
   protected:
 };
 
-
 class SensorMainMenu : public Menu
 {
   public:
@@ -58,38 +57,107 @@ class DisplayTFT : public Component
 	virtual float tick(float deltaSeconds) override;
 	virtual void onEvent(const Event& evt) override;
 
+
   private:
 
-	enum class State : uint8_t
+	//
+	// DisplayState
+	//
+	class DisplayState
 	{
-		Initializing,
-		Intro,
-		Overview
+	public:
+		DisplayState(DisplayTFT& outer) : m_outer(outer) {}
+		virtual ~DisplayState() {}
+	#if CZ_LOG_ENABLED
+		virtual const char* getName() const = 0;
+	#endif
+		virtual void init() {}
+		virtual void tick(float deltaSeconds) = 0;
+		virtual void onEnter() = 0;
+		virtual void onLeave() = 0;
+		virtual void onEvent(const Event& evt) {}
+	protected:
+		DisplayTFT& m_outer;
+		bool m_forceRedraw = false;
 	};
 
-	static const char* const ms_stateNames[3];
+	//
+	// InitializeState
+	//
+	class InitializeState : public DisplayState
+	{
+	public:
+		using DisplayState::DisplayState;
+	#if CZ_LOG_ENABLED
+		virtual const char* getName() const { return "Initialize"; }
+	#endif
+		virtual void tick(float deltaSeconds) override;
+		virtual void onEnter() override;
+		virtual void onLeave() override;
+	protected:
+	};
+
+	//
+	// IntroState
+	//
+	class IntroState : public DisplayState
+	{
+	public:
+		using DisplayState::DisplayState;
+	#if CZ_LOG_ENABLED
+		virtual const char* getName() const { return "Intro"; }
+	#endif
+		virtual void tick(float deltaSeconds) override;
+		virtual void onEnter() override;
+		virtual void onLeave() override;
+	protected:
+	};
+
+	//
+	// OverviewState
+	//
+	class OverviewState : public DisplayState
+	{
+	public:
+		using DisplayState::DisplayState;
+	#if CZ_LOG_ENABLED
+		virtual const char* getName() const { return "Overview"; }
+	#endif
+		virtual void init() override;
+		virtual void tick(float deltaSeconds) override;
+		virtual void onEnter() override;
+		virtual void onLeave() override;
+		virtual void onEvent(const Event& evt) override;
+
+	protected:
+
+		void drawOverview();
+		void drawHistoryBoxes();
+		void plotHistory(int groupIndex);
+
+		uint8_t m_sensorUpdates[NUM_MOISTURESENSORS];
+		SensorMainMenu m_sensorMainMenu;
+	};
 
 	Context& m_ctx;
 	TouchScreen m_ts;
-	State m_state = State::Initializing;
+
+	struct States
+	{
+		States(DisplayTFT& outer)
+			: initialize(outer)
+			, intro(outer)
+			, overview(outer)
+		{
+		}
+		InitializeState initialize;
+		IntroState intro;
+		OverviewState overview;
+	} m_states;
+
+	DisplayState* m_state = nullptr;
 	float m_timeInState = 0;
-	float m_timeSinceLastTouch = 0;
-	bool m_screenOff = false;
-
-	uint8_t m_sensorUpdates[NUM_MOISTURESENSORS];
-	bool m_forceDrawOnNextTick = false;
-
-	SensorMainMenu m_sensorMainMenu;
-
-	void changeToState(State newState);
-	void onLeaveState();
-	void onEnterState();
-
-	void drawOverview();
-	void drawHistoryBoxes();
-	void plotHistory(int groupIndex);
-
-
+	void changeToState(DisplayState& newState);
 };
 	
 	
