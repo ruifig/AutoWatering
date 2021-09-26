@@ -328,9 +328,6 @@ void DisplayTFT::OverviewState::plotHistory(int groupIndex)
 
 	const int count = history.size();
 	
-	uint8_t done[GRAPH_NUMPOINTS+1];
-	memset(done,255, sizeof(done));
-
 	// If there were more than 1 update, we don't have the info to scroll. We need to redraw
 	bool redraw = m_sensorUpdates[groupIndex] > 1 ? true : false;
 	if (redraw)
@@ -339,14 +336,11 @@ void DisplayTFT::OverviewState::plotHistory(int groupIndex)
 	}
 	redraw |= m_forceRedraw;
 
-	done[0] = history.getAtIndex(0).val;
-
 	for(int i=1; i<count; i++)
 	{
 		int xx = rect.x + i - 1;
 		GraphPoint p = history.getAtIndex(i);
 		GraphPoint oldp = history.getAtIndex(i-1);
-		done[i] = p.val;
 
 		bool drawMotor = false;
 		bool drawLevel = false;
@@ -389,7 +383,6 @@ void DisplayTFT::OverviewState::plotHistory(int groupIndex)
 	}
 
 	m_sensorUpdates[groupIndex] = 0;
-	CZ_LOG(logDefault, Log, F("Done"));
 }
 
 //

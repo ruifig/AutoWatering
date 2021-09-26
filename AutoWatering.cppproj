@@ -128,6 +128,7 @@
       <Value>CZ_SERIAL_LOG_ENABLED=0</Value>
       <Value>CZ_PROFILER=0</Value>
       <Value>FASTER_ITERATION=1</Value>
+      <Value>CONSOLE_COMMANDS=0</Value>
     </ListValues>
   </avrgcccpp.compiler.symbols.DefSymbols>
   <avrgcccpp.compiler.directories.IncludePaths>
@@ -228,6 +229,7 @@
       <Value>CZ_SERIAL_LOG_ENABLED=1</Value>
       <Value>CZ_PROFILER=1</Value>
       <Value>FASTER_ITERATION=1</Value>
+      <Value>CONSOLE_COMMANDS=1</Value>
     </ListValues>
   </avrgcccpp.compiler.symbols.DefSymbols>
   <avrgcccpp.compiler.directories.IncludePaths>
@@ -333,6 +335,7 @@
       <Value>CZ_SERIAL_LOG_ENABLED=1</Value>
       <Value>CZ_PROFILER=1</Value>
       <Value>FASTER_ITERATION=1</Value>
+      <Value>CONSOLE_COMMANDS=1</Value>
     </ListValues>
   </avrgcccpp.compiler.symbols.DefSymbols>
   <avrgcccpp.compiler.directories.IncludePaths>
