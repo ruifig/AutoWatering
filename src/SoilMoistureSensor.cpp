@@ -52,6 +52,7 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 	PROFILE_SCOPE(F("MoistureSensor"));
 
 	m_timeInState += deltaSeconds;
+	GroupData& data = m_ctx.data.getGroupData(m_index);
 
 #if FASTER_ITERATION
 	m_nextTickWait = 0.001f;
@@ -67,7 +68,7 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 		break;
 
 	case State::PoweredDown:
-		if (m_timeInState >= m_ctx.data.getGroupData(m_index).getSamplingInterval())
+		if (data.isRunning() && m_timeInState >= data.getSamplingInterval())
 		{
 			changeToState(State::PoweringUp);
 		}
@@ -82,7 +83,6 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 
 	case State::Reading:
 		{
-			GroupData& data = m_ctx.data.getGroupData(m_index);
 
 			// Using a function to read the sensor, so we can provide a mock value when using the mock version
 			int currentValue = readSensor();

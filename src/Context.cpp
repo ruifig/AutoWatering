@@ -188,7 +188,7 @@ void GroupData::start()
 	}
 
 	m_cfg.running = true;
-	Component::raiseEvent(StartGroupEvent(m_index));
+	Component::raiseEvent(GroupEvent(m_index, true));
 }
 
 void GroupData::stop()
@@ -199,7 +199,7 @@ void GroupData::stop()
 	}
 
 	m_cfg.running = false;
-	Component::raiseEvent(StopGroupEvent(m_index));
+	Component::raiseEvent(GroupEvent(m_index, false));
 }
 
 void GroupData::resetHistory()

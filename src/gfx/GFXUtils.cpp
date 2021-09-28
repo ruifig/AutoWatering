@@ -215,8 +215,9 @@ ImageButton::ImageButton()
 {
 }
 
-void ImageButton::init(Adafruit_GFX &gfx, const Image& img, const Pos& pos, uint16_t bkgColour)
+void ImageButton::init(uint8_t id, Adafruit_GFX &gfx, const Image& img, const Pos& pos, uint16_t bkgColour)
 {
+	m_id = id;
 	m_gfx = &gfx;
 	m_img = img;
 	m_pos = pos;

@@ -33,6 +33,7 @@ class SensorMainMenu : public Menu
 	virtual void draw(bool forceDraw = false) override;
 
   protected:
+	
 	enum
 	{
 		Start,
@@ -78,7 +79,6 @@ class DisplayTFT : public Component
 		virtual void onEvent(const Event& evt) {}
 	protected:
 		DisplayTFT& m_outer;
-		bool m_forceRedraw = false;
 	};
 
 	//
@@ -119,7 +119,7 @@ class DisplayTFT : public Component
 	class OverviewState : public DisplayState
 	{
 	public:
-		using DisplayState::DisplayState;
+		OverviewState(DisplayTFT& outer);
 	#if CZ_LOG_ENABLED
 		virtual const char* getName() const { return "Overview"; }
 	#endif
@@ -135,8 +135,11 @@ class DisplayTFT : public Component
 		void drawHistoryBoxes();
 		void plotHistory(int groupIndex);
 
+		bool m_forceRedraw[NUM_MOISTURESENSORS];
 		uint8_t m_sensorUpdates[NUM_MOISTURESENSORS];
 		SensorMainMenu m_sensorMainMenu;
+		// 0...N-1, or 255 if no group selected
+		uint8_t m_selectedGroup = 255;
 	};
 
 	Context& m_ctx;
@@ -158,6 +161,18 @@ class DisplayTFT : public Component
 	DisplayState* m_state = nullptr;
 	float m_timeInState = 0;
 	void changeToState(DisplayState& newState);
+
+	struct
+	{
+		bool pressed;
+		Pos pos;
+		// A "press" condition requires us to touch and untouch the screen, so we need to hold the previous value
+		// to compare against in the next tick
+		TSPoint tmp;
+	} m_touch;
+
+	void updateTouch();
+
 };
 	
 	

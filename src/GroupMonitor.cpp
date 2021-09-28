@@ -65,8 +65,25 @@ float GroupMonitor::tick(float deltaSeconds)
 	return 0.2f;
 }
 
+
+#warning Was here making GroupMonitor have states so we are sure it turns the motor OFF if the user disables the group
 void GroupMonitor::onEvent(const Event& evt)
 {
+#if 0
+	switch(evt.type)
+	{
+		case Event::ConfigLoad:
+		break;
+
+		case Event::Group:
+		{
+			const GroupEvent& e = static_cast<const GroupEvent&>(evt);
+		}
+		break;
+
+		break;
+	}
+#endif
 }
 	
 } // namespace cz

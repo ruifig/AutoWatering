@@ -50,6 +50,12 @@ struct Rect
 	  return ((x >= this->x) && (x < (int16_t)(this->x + this->width)) &&
 	          (y >= this->y) && (y < (int16_t)(this->y + this->height)));
 	}
+
+	// Returns a Rect expanded the number of specified pixels in all 4 directions (top/bottom/left/right)
+	Rect expand(int16_t pixels) const
+	{
+		return { x - pixels, y - pixels, width + pixels*2, height + pixels*2};
+	}
 };
 
 enum class HAlign : uint8_t
@@ -113,7 +119,7 @@ class ImageButton
 {
   public:
 	ImageButton();
-	void init(Adafruit_GFX &gfx, const Image& img, const Pos& pos, uint16_t bkgColour);
+	void init(uint8_t id, Adafruit_GFX &gfx, const Image& img, const Pos& pos, uint16_t bkgColour);
 	void draw(bool forceDraw = false);
 	bool contains(int16_t x, int16_t y) const;
 	bool setEnabled(bool enabled);
@@ -126,6 +132,7 @@ class ImageButton
 	bool justReleased() const;
 
   protected:
+	uint8_t m_id;
 	Adafruit_GFX* m_gfx;
 	Pos m_pos;
 	Image m_img;

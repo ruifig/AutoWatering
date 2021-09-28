@@ -64,8 +64,8 @@ class Colour
 		int16_t greyscale = (0.2126 * red) + (0.7152 * green / 2.0) + (0.0722 * blue);
 		return Colour((greyscale<<11) + (greyscale<<6) + greyscale);
 	}
-
 };
+
 	static constexpr Colour Colour_Black(0x0000);
 	static constexpr Colour Colour_Blue(0x001F);
 	static constexpr Colour Colour_Cyan(0x07FF);

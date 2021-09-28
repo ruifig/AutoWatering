@@ -180,9 +180,17 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 #endif
 
 #define GRAPH_NUMPOINTS (320-32-2)
-#define GRAPH_MOTOR_ON_COLOUR TFT_YELLOW
-#define GRAPH_MOTOR_OFF_COLOUR TFT_BLACK
-#define GRAPH_MOISTURELEVEL_COLOUR TFT_RED
+#define GRAPH_VALUES_TEXT_COLOUR Colour_DarkGrey
+#define GRAPH_VALUES_BKG_COLOUR Colour_Black
+#define GRAPH_BORDER_COLOUR Colour_VeryDarkGrey
+#define GRAPH_SELECTEDBORDER_COLOUR Colour_Green
+#define GRAPH_BKG_COLOUR Colour_Black
+#define GRAPH_NOTRUNNING_TEXT_COLOUR Colour_Red
+#define GRAPH_MOTOR_ON_COLOUR Colour_Yellow
+#define GRAPH_MOTOR_OFF_COLOUR Colour_Black
+#define GRAPH_MOISTURELEVEL_COLOUR Colour_Red
+
+
 
 
 //

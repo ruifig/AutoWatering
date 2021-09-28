@@ -13,8 +13,7 @@ struct Event
 		ConfigLoad,
 		ConfigSave,
 		SoilMoistureSensorReading,
-		StartGroup,
-		StopGroup,
+		Group,
 		Motor,
 		
 		// Only used for mocking components
@@ -68,34 +67,21 @@ struct SoilMoistureSensorReadingEvent : public Event
 	uint8_t index;
 };
 
-struct StartGroupEvent : public Event
+struct GroupEvent : public Event
 {
-	StartGroupEvent(uint8_t index)
-		: Event(Event::StartGroup)
+	GroupEvent(uint8_t index, bool started)
+		: Event(Event::Group)
 		, index(index)
+		, started(started)
 	{}
 
 	virtual void log() const override
 	{
-		CZ_LOG(logDefault, Log, F("StartGroupEvent(%d)"), (int)index);
+		CZ_LOG(logDefault, Log, F("GroupEvent(%d, %s)"), (int)index, started ? "started" : "stopped");
 	}
 	
 	uint8_t index;
-};
-
-struct StopGroupEvent : public Event
-{
-	StopGroupEvent(uint8_t index)
-		: Event(Event::StopGroup)
-		, index(index)
-	{}
-
-	virtual void log() const override
-	{
-		CZ_LOG(logDefault, Log, F("StopGroupEvent(%d)"), (int)index);
-	}
-	
-	uint8_t index;
+	bool started;
 };
 
 struct MotorEvent : public Event

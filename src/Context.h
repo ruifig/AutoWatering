@@ -38,6 +38,11 @@ namespace cz
 		// Stops running this group (aka: Stops monitoring and watering)
 		void stop();
 
+		bool isRunning() const
+		{
+			return m_cfg.running;
+		}
+
 		unsigned int getAirValue() const
 		{
 			return m_cfg.airValue;
