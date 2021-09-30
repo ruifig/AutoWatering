@@ -131,6 +131,8 @@ void GroupData::begin(uint8_t index)
 		m_history.push({GRAPH_POINT_MAXVAL/3, false});
 	}
 
+	m_cfg.running = (index==0 || index==1) ? false : true;
+
 #endif
 }
 

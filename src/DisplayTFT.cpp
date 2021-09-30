@@ -30,6 +30,7 @@ enum class ButtonID : uint8_t
 	StopGroup,
 	Shot,
 	Settings
+	Max,
 };
 
 using namespace gfx;
@@ -263,6 +264,14 @@ void DisplayTFT::OverviewState::init()
 
 void DisplayTFT::OverviewState::tick(float deltaSeconds)
 {
+
+	if (m_outer.m_touch.pressed)
+	{
+		if (m_sensorMainMenu[n])
+		
+		
+	}
+
 	drawOverview();
 	memset(m_forceRedraw, false, sizeof(m_forceRedraw));
 }
@@ -554,13 +563,15 @@ void DisplayTFT::updateTouch()
 	pinMode(YP, OUTPUT); //restore shared pins
 	pinMode(XM, OUTPUT);
 
+	//CZ_LOG(logDefault, Log, F("Touch=(%3d,%3d,%3d)"), p.x, p.y, p.z);
+
 	m_touch.pressed = false;
 	// If we are not touching right now, but were in the previous call, that means we have a press event
 	if (p.z < TS_MIN_PRESSURE && m_touch.tmp.z >= TS_MIN_PRESSURE)
 	{
 		// Map to screen coordinates
-		m_touch.pos.x = map(p.y, TS_MINY, TS_MAXY, 0, gScreen.width());
-		m_touch.pos.y = map(p.x, TS_MAXX, TS_MINX, 0, gScreen.height());
+		m_touch.pos.x = map(m_touch.tmp.y, TS_MINY, TS_MAXY, 0, gScreen.width());
+		m_touch.pos.y = map(m_touch.tmp.x, TS_MAXX, TS_MINX, 0, gScreen.height());
 		m_touch.pressed = true;
 		CZ_LOG(logDefault, Log, F("Press=(%3d,%3d)"), m_touch.pos.x, m_touch.pos.y);
 	}
