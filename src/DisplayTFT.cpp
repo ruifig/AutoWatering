@@ -11,27 +11,25 @@
 #define YM 9   // can be a digital pin
 #define XP 8   // can be a digital pin
 
-#define TS_MINX 105
-#define TS_MINY 66
-#define TS_MAXX 915
-#define TS_MAXY 892
-#define TS_MIN_PRESSURE 100
+#if 0
+	#define TS_MINX 105
+	#define TS_MINY 66
+	#define TS_MAXX 915
+	#define TS_MAXY 892
+#else
+	#define TS_MINX 108
+	#define TS_MINY 84
+	#define TS_MAXX 910
+	#define TS_MAXY 888
+#endif
 
+#define TS_MIN_PRESSURE 100
 #define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 240
 
 namespace cz
 {
 
-
-enum class ButtonID : uint8_t
-{
-	StartGroup,
-	StopGroup,
-	Shot,
-	Settings
-	Max,
-};
 
 using namespace gfx;
 
@@ -62,34 +60,43 @@ namespace { namespace Intro {
 const char introLabel1_value_P[] PROGMEM = "AutoWatering";
 const StaticLabelData introLabel1_P PROGMEM =
 {
-	{10, 10, SCREEN_WIDTH - 20, SCREEN_HEIGHT - 20 }, // box
-	HAlign::Left, VAlign::Top,  (const __FlashStringHelper*)introLabel1_value_P,
-	LARGE_FONT,
-	Colour_Green,
-	Colour_Black,
-	GFX_FLAG_ERASEBKG
+	{
+		{10, 10, SCREEN_WIDTH - 20, SCREEN_HEIGHT - 20 }, // box
+		HAlign::Left, VAlign::Top,
+		LARGE_FONT,
+		Colour_Green,
+		Colour_Black,
+		WidgetFlag::None
+	},
+	(const __FlashStringHelper*)introLabel1_value_P
 };
 
 const char introLabel2_value_P[] PROGMEM = "By";
 const StaticLabelData introLabel2_P PROGMEM =
 {
-	{10, 10, SCREEN_WIDTH - 20, SCREEN_HEIGHT - 20 }, // box
-	HAlign::Center, VAlign::Center,  (const __FlashStringHelper*)introLabel2_value_P,
-	LARGE_FONT,
-	Colour_Green,
-	Colour_Black,
-	0
+	{
+		{10, 10, SCREEN_WIDTH - 20, SCREEN_HEIGHT - 20 }, // box
+		HAlign::Center, VAlign::Center,
+		LARGE_FONT,
+		Colour_Green,
+		Colour_Black,
+		WidgetFlag::None
+	},
+	(const __FlashStringHelper*)introLabel2_value_P
 };
 
 const char introLabel3_value_P[] PROGMEM = "Rui Figueira";
 const StaticLabelData introLabel3_P PROGMEM =
 {
-	{10, 10, SCREEN_WIDTH - 20, SCREEN_HEIGHT - 20 }, // box
-	HAlign::Right, VAlign::Bottom,  (const __FlashStringHelper*)introLabel3_value_P,
-	LARGE_FONT,
-	Colour_Green,
-	Colour_Black,
-	0
+	{
+		{10, 10, SCREEN_WIDTH - 20, SCREEN_HEIGHT - 20 }, // box
+		HAlign::Right, VAlign::Bottom,
+		LARGE_FONT,
+		Colour_Green,
+		Colour_Black,
+		WidgetFlag::None
+	},
+	(const __FlashStringHelper*)introLabel3_value_P
 };
 
 } } // namespace Intro
@@ -122,14 +129,24 @@ namespace { namespace Overview {
 
 constexpr Rect getHistoryPlotRect(int index)
 {
-	Rect rect{0};
-	// Don't start a 0, so we leave space to add the small markers
-	rect.x = 3;
-	// 1+ to leave a line for the box
-	// + X at the end to add a space between different history plots
-	rect.y = 1 + (index*(GRAPH_HEIGHT + 5));
-	rect.height = GRAPH_HEIGHT;
-	rect.width = GRAPH_NUMPOINTS;
+	Rect rect(
+		// Don't start a 0, so we leave space to add the small markers
+		3,
+		// 1+ to leave a line for the box
+		// + X at the end to add a space between different history plots
+		1 + (index*(GRAPH_HEIGHT + 5)),
+		GRAPH_NUMPOINTS, // width
+		GRAPH_HEIGHT // height
+	);
+#if 0
+		// Don't start a 0, so we leave space to add the small markers
+		rect.x = 3;
+		// 1+ to leave a line for the box
+		// + X at the end to add a space between different history plots
+		rect.y = 1 + (index*(GRAPH_HEIGHT + 5));
+		rect.height = GRAPH_HEIGHT;
+		rect.width = GRAPH_NUMPOINTS;
+		#endif
 	return rect;
 }
 
@@ -148,41 +165,53 @@ const char notRunning_value_P[] PROGMEM = "Not Running";
 const StaticLabelData notRunning_data_P[NUM_MOISTURESENSORS] PROGMEM =
 {
 	{
-		getHistoryPlotRect(0), // box
-		HAlign::Center, VAlign::Center,  (const __FlashStringHelper*)notRunning_value_P,
-		MEDIUM_FONT,
-		GRAPH_NOTRUNNING_TEXT_COLOUR,
-		GRAPH_BKG_COLOUR,
-		0 // no flags
+		{
+			getHistoryPlotRect(0), // box
+			HAlign::Center, VAlign::Center,
+			MEDIUM_FONT,
+			GRAPH_NOTRUNNING_TEXT_COLOUR,
+			GRAPH_BKG_COLOUR,
+			WidgetFlag::None
+		},
+		(const __FlashStringHelper*)notRunning_value_P
 	}
 #if NUM_MOISTURESENSORS > 1
 	,{
-		getHistoryPlotRect(1), // box
-		HAlign::Center, VAlign::Center,  (const __FlashStringHelper*)notRunning_value_P,
-		MEDIUM_FONT,
-		GRAPH_NOTRUNNING_TEXT_COLOUR,
-		GRAPH_BKG_COLOUR,
-		0 // no flags
+		{
+			getHistoryPlotRect(1), // box
+			HAlign::Center, VAlign::Center,
+			MEDIUM_FONT,
+			GRAPH_NOTRUNNING_TEXT_COLOUR,
+			GRAPH_BKG_COLOUR,
+			WidgetFlag::None
+		},
+		(const __FlashStringHelper*)notRunning_value_P
 	}
 #endif
 #if NUM_MOISTURESENSORS > 2
 	,{
-		getHistoryPlotRect(2), // box
-		HAlign::Center, VAlign::Center,  (const __FlashStringHelper*)notRunning_value_P,
-		MEDIUM_FONT,
-		GRAPH_NOTRUNNING_TEXT_COLOUR,
-		GRAPH_BKG_COLOUR,
-		0 // no flags
+		{
+			getHistoryPlotRect(2), // box
+			HAlign::Center, VAlign::Center,
+			MEDIUM_FONT,
+			GRAPH_NOTRUNNING_TEXT_COLOUR,
+			GRAPH_BKG_COLOUR,
+			WidgetFlag::None
+		},
+		(const __FlashStringHelper*)notRunning_value_P
 	}
 #endif
 #if NUM_MOISTURESENSORS > 3
 	,{
-		getHistoryPlotRect(3), // box
-		HAlign::Center, VAlign::Center,  (const __FlashStringHelper*)notRunning_value_P,
-		MEDIUM_FONT,
-		GRAPH_NOTRUNNING_TEXT_COLOUR,
-		GRAPH_BKG_COLOUR,
-		0 // no flags
+		{
+			getHistoryPlotRect(3), // box
+			HAlign::Center, VAlign::Center,
+			MEDIUM_FONT,
+			GRAPH_NOTRUNNING_TEXT_COLOUR,
+			GRAPH_BKG_COLOUR,
+			WidgetFlag::None
+		},
+		(const __FlashStringHelper*)notRunning_value_P
 	}
 #endif
 
@@ -203,13 +232,13 @@ const FixedLabelData sensor##SENSOR_INDEX##line##LINE_INDEX PROGMEM = \
 	HAlign::Center, VAlign::Center, \
 	TINY_FONT, \
 	GRAPH_VALUES_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
-	GFX_FLAG_ERASEBKG | FLAGS \
+	WidgetFlag::EraseBkg | FLAGS \
 };
 
 #define DEFINE_SENSOR_LABELS(SENSOR_INDEX) \
-	DEFINE_SENSOR_LABEL_LINE(SENSOR_INDEX, 0, 0) \
-	DEFINE_SENSOR_LABEL_LINE(SENSOR_INDEX, 1, GFX_FLAG_MUMASPERCENTAGE) \
-	DEFINE_SENSOR_LABEL_LINE(SENSOR_INDEX, 2, 0) \
+	DEFINE_SENSOR_LABEL_LINE(SENSOR_INDEX, 0, WidgetFlag::None) \
+	DEFINE_SENSOR_LABEL_LINE(SENSOR_INDEX, 1, WidgetFlag::NumAsPercentage) \
+	DEFINE_SENSOR_LABEL_LINE(SENSOR_INDEX, 2, WidgetFlag::None) \
 
 DEFINE_SENSOR_LABELS(0)
 DEFINE_SENSOR_LABELS(1)
@@ -264,13 +293,6 @@ void DisplayTFT::OverviewState::init()
 
 void DisplayTFT::OverviewState::tick(float deltaSeconds)
 {
-
-	if (m_outer.m_touch.pressed)
-	{
-		if (m_sensorMainMenu[n])
-		
-		
-	}
 
 	drawOverview();
 	memset(m_forceRedraw, false, sizeof(m_forceRedraw));
@@ -499,11 +521,15 @@ void SensorMainMenu::init()
 		m_buttons[(int)id].init((int)id, std::forward<decltype(params)>(params)...);
 	};
 
-	initButton(ButtonID::StartGroup, gScreen, img_Play, Overview::getMenuButtonPos(0,0), Colour_Black);
-	initButton(ButtonID::StopGroup, gScreen, img_Stop, Overview::getMenuButtonPos(0,0), Colour_Black);
-	initButton(ButtonID::Shot, gScreen, img_Shot, Overview::getMenuButtonPos(1,0), Colour_Black);
-	initButton(ButtonID::Settings, gScreen, img_Settings, Overview::getMenuButtonPos(2,0), Colour_Black);
+	initButton(ButtonID::StartGroup, gScreen, Overview::getMenuButtonPos(0,0), Colour_Black, img_Play);
+	initButton(ButtonID::StopGroup, gScreen, Overview::getMenuButtonPos(0,0), Colour_Black, img_Stop);
+	initButton(ButtonID::Shot, gScreen, Overview::getMenuButtonPos(1,0), Colour_Black, img_Shot);
+	initButton(ButtonID::Settings, gScreen, Overview::getMenuButtonPos(2,0), Colour_Black, img_Settings);
 	m_buttons[(int)ButtonID::StopGroup].setState(ButtonState::Hidden);
+
+	m_textBtn[0].init(10, gScreen, SMALL_FONT, {Overview::getMenuButtonPos(0,1), 32*3, 55}, Colour_White, Colour_Pink, Colour_VeryDarkGrey, "Hello!", 1);
+	m_textBtn[1].init(10, gScreen, SMALL_FONT, {Overview::getMenuButtonPos(3,1), 32*3, 55}, Colour_White, Colour_Pink, Colour_VeryDarkGrey, "There!", 2);
+	m_textBtn[1].setInverted(true);
 }
 
 void SensorMainMenu::tick(float deltaSeconds)
@@ -516,6 +542,12 @@ void SensorMainMenu::draw(bool forceDraw)
 	{
 		btn.draw(forceDraw);
 	}
+
+	for(auto&& btn : m_textBtn)
+	{
+		btn.draw(forceDraw);
+	}
+
 }
 	
 
@@ -563,7 +595,10 @@ void DisplayTFT::updateTouch()
 	pinMode(YP, OUTPUT); //restore shared pins
 	pinMode(XM, OUTPUT);
 
-	//CZ_LOG(logDefault, Log, F("Touch=(%3d,%3d,%3d)"), p.x, p.y, p.z);
+	if (p.z > TS_MIN_PRESSURE)
+	{
+		//CZ_LOG(logDefault, Log, F("Touch=(%3d,%3d,%3d)"), p.x, p.y, p.z);
+	}
 
 	m_touch.pressed = false;
 	// If we are not touching right now, but were in the previous call, that means we have a press event

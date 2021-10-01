@@ -4,7 +4,8 @@
 #include <Adafruit_GFX.h>
 #include <MCUFRIEND_kbv.h>
 #include <TouchScreen.h>
-#include "gfx/GFXUtils.h"
+#include "gfx/Label.h"
+#include "gfx/Button.h"
 
 namespace cz
 {
@@ -21,6 +22,16 @@ class Menu
 		
   protected:
 };
+
+enum class ButtonID : uint8_t
+{
+	StartGroup,
+	StopGroup,
+	Shot,
+	Settings,
+	Max
+};
+
 
 class SensorMainMenu : public Menu
 {
@@ -42,7 +53,9 @@ class SensorMainMenu : public Menu
 		Settings,
 		Max
 	};
-	ImageButton m_buttons[Max];
+	gfx::ImageButton m_buttons[Max];
+
+	gfx::TextButton m_textBtn[2];
 };
 
 class DisplayTFT : public Component
