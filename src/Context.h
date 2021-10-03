@@ -191,5 +191,7 @@ struct Context
 	ProgramData data;
 };
 
+extern Context ggCtx;
+
 } // namespace cz
 

@@ -15,6 +15,7 @@
 #include "crazygaze/micromuc/Logging.h"
 #include <algorithm>
 #include <utility>
+#include <memory>
 
 #include "AT24C.h"
 #include "crazygaze/micromuc/SDLogOutput.h"
@@ -28,9 +29,6 @@ using namespace cz;
 	SDCardHelper gSDCard;
 	SDLogOutput gSdLogOutput;
 #endif
-
-Context gCtx;
-
 
 #if 1
 	// Use normal ticking, where the object is only ticked as often as it wants
@@ -48,15 +46,15 @@ Context gCtx;
 
 SoilMoistureSensorTicker gSoilMoistureSensors[NUM_MOISTURESENSORS] =
 {
-	{true, gCtx, 0, IO_EXPANDER_VPIN_SENSOR_0, MULTIPLEXER_MOISTURE_SENSOR_0}
+	{true, 0, IO_EXPANDER_VPIN_SENSOR_0, MULTIPLEXER_MOISTURE_SENSOR_0}
 #if NUM_MOISTURESENSORS>1
-	,{true, gCtx, 1, IO_EXPANDER_VPIN_SENSOR_1, MULTIPLEXER_MOISTURE_SENSOR_1}
+	,{true, 1, IO_EXPANDER_VPIN_SENSOR_1, MULTIPLEXER_MOISTURE_SENSOR_1}
 #endif
 #if NUM_MOISTURESENSORS>2
-	,{true, gCtx, 2, IO_EXPANDER_VPIN_SENSOR_2, MULTIPLEXER_MOISTURE_SENSOR_2}
+	,{true, 2, IO_EXPANDER_VPIN_SENSOR_2, MULTIPLEXER_MOISTURE_SENSOR_2}
 #endif
 #if NUM_MOISTURESENSORS>3
-	,{true, gCtx, 3, IO_EXPANDER_VPIN_SENSOR_3, MULTIPLEXER_MOISTURE_SENSOR_3}
+	,{true, 3, IO_EXPANDER_VPIN_SENSOR_3, MULTIPLEXER_MOISTURE_SENSOR_3}
 #endif
 };
 
@@ -64,22 +62,37 @@ using GroupMonitorTicker = TTicker<GroupMonitor, float, TickingMethod>;
 
 GroupMonitorTicker gGroupMonitors[NUM_MOISTURESENSORS] =
 {
-	{ true, gCtx, 0, IO_EXPANDER_MOTOR_0_INPUT1, IO_EXPANDER_MOTOR_0_INPUT2}
+	{ true, 0, IO_EXPANDER_MOTOR_0_INPUT1, IO_EXPANDER_MOTOR_0_INPUT2}
 #if NUM_MOISTURESENSORS>1
-	,{ true, gCtx, 1, IO_EXPANDER_MOTOR_1_INPUT1, IO_EXPANDER_MOTOR_1_INPUT2}
+	,{ true, 1, IO_EXPANDER_MOTOR_1_INPUT1, IO_EXPANDER_MOTOR_1_INPUT2}
 #endif
 #if NUM_MOISTURESENSORS>2
-	,{ true, gCtx, 2, IO_EXPANDER_MOTOR_2_INPUT1, IO_EXPANDER_MOTOR_2_INPUT2}
+	,{ true, 2, IO_EXPANDER_MOTOR_2_INPUT1, IO_EXPANDER_MOTOR_2_INPUT2}
 #endif
 #if NUM_MOISTURESENSORS>3
-	,{ true, gCtx, 3, IO_EXPANDER_MOTOR_3_INPUT1, IO_EXPANDER_MOTOR_3_INPUT2}
+	,{ true, 3, IO_EXPANDER_MOTOR_3_INPUT1, IO_EXPANDER_MOTOR_3_INPUT2}
 #endif
 };
 
 
-TTicker<DisplayTFT, float, TickingMethod> gDisplay(true, gCtx);
+TTicker<DisplayTFT, float, TickingMethod> gDisplay(true);
 
 unsigned long gPreviousMicros = 0;
+
+struct Foo
+{
+	Foo(int a, int b, int c)
+	: a(a), b(b), c(c)
+	{
+	}
+
+	void log()
+	{
+		CZ_LOG(logDefault, Log, F("Foo(%d,%d,%d)"), a, b ,c);
+	}
+
+	int a,b,c;
+};
 
 FunctionTicker gMemLoggerFunc([]()
 {
@@ -100,7 +113,7 @@ void setup()
 #endif
 
 #if SD_CARD_LOGGING
-	if (gSDCard.begin(SD_CARD_SS_PIN))
+	if (gSDCard.betin(SD_CARD_SS_PIN))
 	{
 		gSdLogOutput.begin(gSDCard.root, "log.txt", true);
 		CZ_LOG(logDefault, Log, "SD card log file initialized");
@@ -109,7 +122,15 @@ void setup()
 
 	setupMemoryAreas(2048);
 
-	gCtx.begin();
+	{
+		auto ptr = std::make_unique<Foo>(1,2,3);
+		ptr->log();
+		logMemory();
+	}
+	logMemory();
+
+
+	ggCtx.begin();
 	gDisplay.getObj().begin();
 
 	for(auto&& ticker : gSoilMoistureSensors)
@@ -206,7 +227,7 @@ void loop()
 				int idx, value;
 				if (parseCommand(idx, value) && idx < NUM_MOISTURESENSORS)
 				{
-					gCtx.data.getGroupData(idx).setThresholdValue(value);
+					ggCtx.data.getGroupData(idx).setThresholdValue(value);
 				}
 			}
 			else if (strcmp_P(cmd, (const char*)F("setmocksensor"))==0)
@@ -230,11 +251,11 @@ void loop()
 			}
 			else if (strcmp_P(cmd, (const char*)F("save"))==0)
 			{
-				gCtx.data.save();
+				ggCtx.data.save();
 			}
 			else if (strcmp_P(cmd, (const char*)F("load"))==0)
 			{
-				gCtx.data.load();
+				ggCtx.data.load();
 			}
 			else
 			{

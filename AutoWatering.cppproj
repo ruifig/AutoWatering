@@ -266,6 +266,7 @@
     <Folder Include="lib\czmicromuc\src" />
     <Folder Include="lib\czmicromuc\src\crazygaze" />
     <Folder Include="lib\czmicromuc\src\crazygaze\micromuc" />
+    <Folder Include="lib\czMicroSTL\impl" />
     <Folder Include="lib\EEPROM\src" />
     <Folder Include="lib\EEPROM" />
     <Folder Include="lib\memdebug" />
@@ -418,6 +419,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="lib\czmicromuc\src\crazygaze\micromuc\Ticker.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="lib\czMicroSTL\impl\unique_ptr.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="lib\EEPROM\src\EEPROM.h">
@@ -680,6 +684,9 @@
       <SubType>compile</SubType>
     </None>
     <None Include="lib\czMicroSTL\initializer_list">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="lib\czMicroSTL\memory">
       <SubType>compile</SubType>
     </None>
     <None Include="lib\czMicroSTL\mutex">

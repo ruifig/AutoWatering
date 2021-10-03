@@ -8,6 +8,8 @@
 namespace cz
 {
 
+Context ggCtx;
+
 void updateEEPROM(EEPtr& dst, const uint8_t* src, unsigned int size)
 {
 	while(size--)

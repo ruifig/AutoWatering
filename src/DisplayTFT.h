@@ -1,11 +1,11 @@
 #pragma once
-#include "Context.h"
 #include "Component.h"
+#include "Config.h"
+#include "gfx/Label.h"
+#include "gfx/Button.h"
 #include <Adafruit_GFX.h>
 #include <MCUFRIEND_kbv.h>
 #include <TouchScreen.h>
-#include "gfx/Label.h"
-#include "gfx/Button.h"
 
 namespace cz
 {
@@ -59,7 +59,7 @@ class SensorMainMenu : public Menu
 class DisplayTFT : public Component
 {
   public:
-	DisplayTFT(Context& ctx);
+	DisplayTFT();
 	
 	// Disable copying
 	DisplayTFT(const DisplayTFT&) = delete;
@@ -153,7 +153,6 @@ class DisplayTFT : public Component
 		uint8_t m_selectedGroup = 255;
 	};
 
-	Context& m_ctx;
 	TouchScreen m_ts;
 
 	struct States

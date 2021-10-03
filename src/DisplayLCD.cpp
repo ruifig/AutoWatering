@@ -1,4 +1,5 @@
 #include "DisplayLCD.h"
+#include "Context.h"
 #include "Utils.h"
 #include "crazygaze/micromuc/Logging.h"
 #include "crazygaze/micromuc/StringUtils.h"
@@ -13,8 +14,7 @@ const char* const DisplayLCD::ms_stateNames[3] =
 	"Overview"
 };
 
-DisplayLCD::DisplayLCD(Context& ctx)
-    : m_ctx(ctx)
+DisplayLCD::DisplayLCD()
 {
 }
 

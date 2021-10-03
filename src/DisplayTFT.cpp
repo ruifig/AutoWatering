@@ -1,4 +1,5 @@
 #include "DisplayTFT.h"
+#include "Context.h"
 #include "Utils.h"
 #include "crazygaze/micromuc/Logging.h"
 #include "crazygaze/micromuc/StringUtils.h"
@@ -341,7 +342,7 @@ void DisplayTFT::OverviewState::drawOverview()
 
 		PROFILE_SCOPE(F("groupDrawing"));
 
-		GroupData& data = m_outer.m_ctx.data.getGroupData(i);
+		GroupData& data = ggCtx.data.getGroupData(i);
 		const HistoryQueue& history = data.getHistory();
 
 		//
@@ -440,7 +441,7 @@ void DisplayTFT::OverviewState::plotHistory(int groupIndex)
 {
 	constexpr int h = GRAPH_HEIGHT;
 	Rect rect = Overview::getHistoryPlotRect(groupIndex);
-	GroupData& data = m_outer.m_ctx.data.getGroupData(groupIndex);
+	GroupData& data = ggCtx.data.getGroupData(groupIndex);
 	const HistoryQueue& history = data.getHistory();
 
 	int bottomY = rect.y + h - 1;
@@ -514,10 +515,10 @@ void SensorMainMenu::init()
 		m_buttons[(int)id].init((int)id, std::forward<decltype(params)>(params)...);
 	};
 
-	initButton(ButtonID::StartGroup, gScreen, Overview::getMenuButtonPos(0,0), Colour_Black, img_Play);
-	initButton(ButtonID::StopGroup, gScreen, Overview::getMenuButtonPos(0,0), Colour_Black, img_Stop);
-	initButton(ButtonID::Shot, gScreen, Overview::getMenuButtonPos(1,0), Colour_Black, img_Shot);
-	initButton(ButtonID::Settings, gScreen, Overview::getMenuButtonPos(2,0), Colour_Black, img_Settings);
+	initButton(ButtonID::StartGroup, Overview::getMenuButtonPos(0,0), Colour_Black, img_Play);
+	initButton(ButtonID::StopGroup, Overview::getMenuButtonPos(0,0), Colour_Black, img_Stop);
+	initButton(ButtonID::Shot, Overview::getMenuButtonPos(1,0), Colour_Black, img_Shot);
+	initButton(ButtonID::Settings, Overview::getMenuButtonPos(2,0), Colour_Black, img_Settings);
 	m_buttons[(int)ButtonID::StopGroup].setState(ButtonState::Hidden);
 }
 
@@ -540,12 +541,11 @@ void SensorMainMenu::draw(bool forceDraw)
 //////////////////////////////////////////////////////////////////////////
 
 
-DisplayTFT::DisplayTFT(Context& ctx)
-	: m_ctx(ctx)
+DisplayTFT::DisplayTFT()
 	// For better pressure precision, we need to know the resistance
 	// between X+ and X- Use any multimeter to read it
 	// For the one we're using, its 300 ohms across the X plate
-	, m_ts(XP, YP, XM, YM, 300)
+	: m_ts(XP, YP, XM, YM, 300)
 	, m_states(*this)
 {
 }

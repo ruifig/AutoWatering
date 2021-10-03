@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Context.h"
 #include <Adafruit_RGBLCDShield.h>
 
 namespace cz
@@ -9,7 +8,7 @@ namespace cz
 class DisplayLCD
 {
   public:
-	DisplayLCD(Context& ctx);
+	DisplayLCD();
 
 	// Disable copying
 	DisplayLCD(const DisplayLCD&) = delete;
@@ -29,7 +28,6 @@ class DisplayLCD
 
 	static const char* const ms_stateNames[3];
 
-	Context& m_ctx;
 	Adafruit_RGBLCDShield m_lcd;
 	float m_timeInState = 0;
 	float m_lastButtonPress = 0;
