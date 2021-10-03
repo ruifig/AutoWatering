@@ -54,8 +54,6 @@ class SensorMainMenu : public Menu
 		Max
 	};
 	gfx::ImageButton m_buttons[Max];
-
-	gfx::TextButton m_textBtn[2];
 };
 
 class DisplayTFT : public Component

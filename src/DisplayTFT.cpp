@@ -11,17 +11,10 @@
 #define YM 9   // can be a digital pin
 #define XP 8   // can be a digital pin
 
-#if 0
-	#define TS_MINX 105
-	#define TS_MINY 66
-	#define TS_MAXX 915
-	#define TS_MAXY 892
-#else
-	#define TS_MINX 108
-	#define TS_MINY 84
-	#define TS_MAXX 910
-	#define TS_MAXY 888
-#endif
+#define TS_MINX 108
+#define TS_MINY 84
+#define TS_MAXX 910
+#define TS_MAXY 888
 
 #define TS_MIN_PRESSURE 100
 #define SCREEN_WIDTH 320
@@ -526,10 +519,6 @@ void SensorMainMenu::init()
 	initButton(ButtonID::Shot, gScreen, Overview::getMenuButtonPos(1,0), Colour_Black, img_Shot);
 	initButton(ButtonID::Settings, gScreen, Overview::getMenuButtonPos(2,0), Colour_Black, img_Settings);
 	m_buttons[(int)ButtonID::StopGroup].setState(ButtonState::Hidden);
-
-	m_textBtn[0].init(10, gScreen, SMALL_FONT, {Overview::getMenuButtonPos(0,1), 32*3, 55}, Colour_White, Colour_Pink, Colour_VeryDarkGrey, "Hello!", 1);
-	m_textBtn[1].init(10, gScreen, SMALL_FONT, {Overview::getMenuButtonPos(3,1), 32*3, 55}, Colour_White, Colour_Pink, Colour_VeryDarkGrey, "There!", 2);
-	m_textBtn[1].setInverted(true);
 }
 
 void SensorMainMenu::tick(float deltaSeconds)
@@ -542,12 +531,6 @@ void SensorMainMenu::draw(bool forceDraw)
 	{
 		btn.draw(forceDraw);
 	}
-
-	for(auto&& btn : m_textBtn)
-	{
-		btn.draw(forceDraw);
-	}
-
 }
 	
 

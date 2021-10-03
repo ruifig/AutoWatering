@@ -3,6 +3,5 @@
 
 namespace cz
 {
-
 } // namespace cz
 

@@ -75,203 +75,118 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <ToolchainSettings>
       <AvrGccCpp>
-        <avrgcc.common.Device>-mmcu=atmega2560 -B "%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\gcc\dev\atmega2560"</avrgcc.common.Device>
-        <avrgcc.common.optimization.RelaxBranches>True</avrgcc.common.optimization.RelaxBranches>
-        <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
-        <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
-        <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
-        <avrgcc.common.outputfiles.srec>True</avrgcc.common.outputfiles.srec>
-        <avrgcc.common.outputfiles.usersignatures>False</avrgcc.common.outputfiles.usersignatures>
-        <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
-        <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
-        <avrgcc.compiler.symbols.DefSymbols>
-          <ListValues>
-            <Value>F_CPU=16000000L</Value>
-            <Value>ARDUINO=108013</Value>
-            <Value>ARDUINO_AVR_MEGA2560</Value>
-            <Value>ARDUINO_ARCH_AVR</Value>
-            <Value>USB_VID=0x2341</Value>
-            <Value>USB_PID=0x0010</Value>
-            <Value>USB_MANUFACTURER="\"Arduino LLC\""</Value>
-            <Value>NDEBUG</Value>
-          </ListValues>
-        </avrgcc.compiler.symbols.DefSymbols>
-        <avrgcc.compiler.directories.IncludePaths>
-          <ListValues>
-            <Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\include\</Value>
-            <Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\core</Value>
-            <Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\variants\mega</Value>
-            <Value>%24(ProjectDir)\lib\SPI</Value>
-            <Value>%24(ProjectDir)\lib\SPI\src</Value>
-            <Value>%24(ProjectDir)\lib\Wire\src</Value>
-            <Value>%24(ProjectDir)\lib\Wire\src\utility</Value>
-          </ListValues>
-        </avrgcc.compiler.directories.IncludePaths>
-        <avrgcc.compiler.optimization.level>Optimize for size (-Os)</avrgcc.compiler.optimization.level>
-        <avrgcc.compiler.optimization.OtherFlags>-flto -fno-fat-lto-objects</avrgcc.compiler.optimization.OtherFlags>
-        <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
-        <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
-        <avrgcc.compiler.miscellaneous.OtherFlags>-std=gnu99 -std=gnu11</avrgcc.compiler.miscellaneous.OtherFlags>
-        <avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>
-        <avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>
-        <avrgcccpp.compiler.symbols.DefSymbols>
-          <ListValues>
-            <Value>F_CPU=16000000L</Value>
-            <Value>ARDUINO=108013</Value>
-            <Value>ARDUINO_AVR_MEGA2560</Value>
-            <Value>ARDUINO_ARCH_AVR</Value>
-            <Value>USB_VID=0x2341</Value>
-            <Value>USB_PID=0x0010</Value>
-            <Value>USB_MANUFACTURER="\"Arduino LLC\""</Value>
-            <Value>NDEBUG</Value>
-            <Value>CZ_LOG_ENABLED=0</Value>
-            <Value>CZ_SERIAL_LOG_ENABLED=0</Value>
-            <Value>CZ_PROFILER=0</Value>
-            <Value>FASTER_ITERATION=1</Value>
-            <Value>CONSOLE_COMMANDS=0</Value>
-          </ListValues>
-        </avrgcccpp.compiler.symbols.DefSymbols>
-        <avrgcccpp.compiler.directories.IncludePaths>
-          <ListValues>
-            <Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\include\</Value>
-            <Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\core</Value>
-            <Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\variants\mega</Value>
-            <Value>%24(ProjectDir)\lib\Wire\src</Value>
-            <Value>%24(ProjectDir)\lib\SPI\src</Value>
-            <Value>%24(ProjectDir)\lib\EEPROM\src</Value>
-            <Value>%24(ProjectDir)\lib\Adafruit RGB LCD Shield Library</Value>
-            <Value>%24(ProjectDir)\lib\Adafruit RGB LCD Shield Library\utility</Value>
-            <Value>%24(ProjectDir)\lib\Adafruit TouchScreen</Value>
-            <Value>%24(ProjectDir)\lib\Adafruit BusIO</Value>
-            <Value>%24(ProjectDir)\lib\Adafruit GFX Library</Value>
-            <Value>%24(ProjectDir)\lib\MCUFRIEND_kbv</Value>
-            <Value>%24(ProjectDir)\lib\czMicroSTL</Value>
-            <Value>%24(ProjectDir)\lib\czAT24C</Value>
-            <Value>%24(ProjectDir)\lib\czmicromuc\src</Value>
-            <Value>%24(ProjectDir)\lib\SD\src</Value>
-            <Value>%24(ProjectDir)\lib\SD\src\utility</Value>
-            <Value>%24(ProjectDir)\lib\MemoryFree</Value>
-          </ListValues>
-        </avrgcccpp.compiler.directories.IncludePaths>
-        <avrgcccpp.compiler.optimization.level>Optimize for size (-Os)</avrgcccpp.compiler.optimization.level>
-        <avrgcccpp.compiler.optimization.OtherFlags>-fno-threadsafe-statics -flto</avrgcccpp.compiler.optimization.OtherFlags>
-        <avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>
-        <avrgcccpp.compiler.miscellaneous.OtherFlags>-std=gnu++17 -std=c++17 -include %24(ProjectDir)\src\SystemHeaders.h</avrgcccpp.compiler.miscellaneous.OtherFlags>
-        <avrgcccpp.linker.libraries.Libraries>
-          <ListValues>
-            <Value>libm</Value>
-          </ListValues>
-        </avrgcccpp.linker.libraries.Libraries>
-        <avrgcccpp.linker.miscellaneous.LinkerFlags>-Os</avrgcccpp.linker.miscellaneous.LinkerFlags>
-        <avrgcccpp.assembler.general.IncludePaths>
-          <ListValues>
-            <Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\include\</Value>
-          </ListValues>
-        </avrgcccpp.assembler.general.IncludePaths>
-        <avrgcccpp.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcccpp.assembler.debugging.DebugLevel>
-      </AvrGccCpp>
+  <avrgcc.common.Device>-mmcu=atmega2560 -B "%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\gcc\dev\atmega2560"</avrgcc.common.Device>
+  <avrgcc.common.optimization.RelaxBranches>True</avrgcc.common.optimization.RelaxBranches>
+  <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
+  <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
+  <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
+  <avrgcc.common.outputfiles.srec>True</avrgcc.common.outputfiles.srec>
+  <avrgcc.common.outputfiles.usersignatures>False</avrgcc.common.outputfiles.usersignatures>
+  <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcc.compiler.symbols.DefSymbols><ListValues>
+  <Value>F_CPU=16000000L</Value>
+  <Value>ARDUINO=108013</Value>
+  <Value>ARDUINO_AVR_MEGA2560</Value>
+  <Value>ARDUINO_ARCH_AVR</Value>
+  <Value>USB_VID=0x2341</Value>
+  <Value>USB_PID=0x0010</Value>
+  <Value>USB_MANUFACTURER="\"Arduino LLC\""</Value>
+  <Value>NDEBUG</Value>
+</ListValues></avrgcc.compiler.symbols.DefSymbols>
+  <avrgcc.compiler.directories.IncludePaths><ListValues><Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\include\</Value><Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\core</Value><Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\variants\mega</Value><Value>%24(ProjectDir)\lib\SPI</Value><Value>%24(ProjectDir)\lib\SPI\src</Value><Value>%24(ProjectDir)\lib\Wire\src</Value><Value>%24(ProjectDir)\lib\Wire\src\utility</Value></ListValues></avrgcc.compiler.directories.IncludePaths>
+  <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
+  <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcc.compiler.miscellaneous.OtherFlags>-std=gnu99 -std=gnu11</avrgcc.compiler.miscellaneous.OtherFlags>
+  <avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcccpp.compiler.symbols.DefSymbols><ListValues>
+  <Value>F_CPU=16000000L</Value>
+  <Value>ARDUINO=108013</Value>
+  <Value>ARDUINO_AVR_MEGA2560</Value>
+  <Value>ARDUINO_ARCH_AVR</Value>
+  <Value>USB_VID=0x2341</Value>
+  <Value>USB_PID=0x0010</Value>
+  <Value>USB_MANUFACTURER="\"Arduino LLC\""</Value>
+  <Value>FASTER_ITERATION=1</Value>
+  <Value>NDEBUG</Value>
+  <Value>CZ_LOG_ENABLED=0</Value>
+  <Value>CZ_SERIAL_LOG_ENABLED=0</Value>
+  <Value>CZ_PROFILER=0</Value>
+  <Value>CONSOLE_COMMANDS=0</Value>
+</ListValues></avrgcccpp.compiler.symbols.DefSymbols>
+  <avrgcccpp.compiler.directories.IncludePaths><ListValues><Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\include\</Value><Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\core</Value><Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\variants\mega</Value><Value>%24(ProjectDir)\lib\Wire\src</Value><Value>%24(ProjectDir)\lib\SPI\src</Value><Value>%24(ProjectDir)\lib\EEPROM\src</Value><Value>%24(ProjectDir)\lib\Adafruit RGB LCD Shield Library</Value><Value>%24(ProjectDir)\lib\Adafruit RGB LCD Shield Library\utility</Value><Value>%24(ProjectDir)\lib\Adafruit TouchScreen</Value><Value>%24(ProjectDir)\lib\Adafruit BusIO</Value><Value>%24(ProjectDir)\lib\Adafruit GFX Library</Value><Value>%24(ProjectDir)\lib\MCUFRIEND_kbv</Value><Value>%24(ProjectDir)\lib\czMicroSTL</Value><Value>%24(ProjectDir)\lib\czAT24C</Value><Value>%24(ProjectDir)\lib\czmicromuc\src</Value><Value>%24(ProjectDir)\lib\SD\src</Value><Value>%24(ProjectDir)\lib\SD\src\utility</Value><Value>%24(ProjectDir)\lib</Value></ListValues></avrgcccpp.compiler.directories.IncludePaths>
+  <avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcccpp.compiler.miscellaneous.OtherFlags>-std=gnu++17 -std=c++17 -include %24(ProjectDir)\src\SystemHeaders.h</avrgcccpp.compiler.miscellaneous.OtherFlags>
+  <avrgcccpp.linker.libraries.Libraries><ListValues><Value>libm</Value></ListValues></avrgcccpp.linker.libraries.Libraries>
+  <avrgcccpp.linker.miscellaneous.LinkerFlags>-Os</avrgcccpp.linker.miscellaneous.LinkerFlags>
+  <avrgcccpp.assembler.general.IncludePaths><ListValues><Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\include\</Value></ListValues></avrgcccpp.assembler.general.IncludePaths>
+  <avrgcccpp.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcccpp.assembler.debugging.DebugLevel>
+  <avrgcc.compiler.optimization.level>Optimize for size (-Os)</avrgcc.compiler.optimization.level>
+  <avrgcc.compiler.optimization.OtherFlags>-flto -fno-fat-lto-objects</avrgcc.compiler.optimization.OtherFlags>
+  <avrgcccpp.compiler.optimization.level>Optimize for size (-Os)</avrgcccpp.compiler.optimization.level>
+  <avrgcccpp.compiler.optimization.OtherFlags>-fno-threadsafe-statics -flto</avrgcccpp.compiler.optimization.OtherFlags>
+</AvrGccCpp>
     </ToolchainSettings>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <ToolchainSettings>
       <AvrGccCpp>
-        <avrgcc.common.Device>-mmcu=atmega2560 -B "%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\gcc\dev\atmega2560"</avrgcc.common.Device>
-        <avrgcc.common.optimization.RelaxBranches>True</avrgcc.common.optimization.RelaxBranches>
-        <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
-        <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
-        <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
-        <avrgcc.common.outputfiles.srec>True</avrgcc.common.outputfiles.srec>
-        <avrgcc.common.outputfiles.usersignatures>False</avrgcc.common.outputfiles.usersignatures>
-        <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
-        <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
-        <avrgcc.compiler.symbols.DefSymbols>
-          <ListValues>
-            <Value>F_CPU=16000000L</Value>
-            <Value>ARDUINO=108013</Value>
-            <Value>ARDUINO_AVR_MEGA2560</Value>
-            <Value>ARDUINO_ARCH_AVR</Value>
-            <Value>USB_VID=0x2341</Value>
-            <Value>USB_PID=0x0010</Value>
-            <Value>USB_MANUFACTURER="\"Arduino LLC\""</Value>
-            <Value>DEBUG</Value>
-            <Value>_DEBUG</Value>
-          </ListValues>
-        </avrgcc.compiler.symbols.DefSymbols>
-        <avrgcc.compiler.directories.IncludePaths>
-          <ListValues>
-            <Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\include\</Value>
-            <Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\core</Value>
-            <Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\variants\mega</Value>
-            <Value>%24(ProjectDir)\lib\SPI</Value>
-            <Value>%24(ProjectDir)\lib\SPI\src</Value>
-            <Value>%24(ProjectDir)\lib\Wire\src</Value>
-            <Value>%24(ProjectDir)\lib\Wire\src\utility</Value>
-          </ListValues>
-        </avrgcc.compiler.directories.IncludePaths>
-        <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
-        <avrgcc.compiler.optimization.DebugLevel>Maximum (-g3)</avrgcc.compiler.optimization.DebugLevel>
-        <avrgcc.compiler.optimization.OtherDebuggingFlags>-gdwarf-2</avrgcc.compiler.optimization.OtherDebuggingFlags>
-        <avrgcc.compiler.miscellaneous.OtherFlags>-std=gnu99 -std=gnu11</avrgcc.compiler.miscellaneous.OtherFlags>
-        <avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>
-        <avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>
-        <avrgcccpp.compiler.symbols.DefSymbols>
-          <ListValues>
-            <Value>F_CPU=16000000L</Value>
-            <Value>ARDUINO=108013</Value>
-            <Value>ARDUINO_AVR_MEGA2560</Value>
-            <Value>ARDUINO_ARCH_AVR</Value>
-            <Value>USB_VID=0x2341</Value>
-            <Value>USB_PID=0x0010</Value>
-            <Value>USB_MANUFACTURER="\"Arduino LLC\""</Value>
-            <Value>DEBUG</Value>
-            <Value>_DEBUG</Value>
-            <Value>CZ_LOG_ENABLED=1</Value>
-            <Value>CZ_SERIAL_LOG_ENABLED=1</Value>
-            <Value>CZ_PROFILER=1</Value>
-            <Value>FASTER_ITERATION=1</Value>
-            <Value>CONSOLE_COMMANDS=1</Value>
-          </ListValues>
-        </avrgcccpp.compiler.symbols.DefSymbols>
-        <avrgcccpp.compiler.directories.IncludePaths>
-          <ListValues>
-            <Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\include\</Value>
-            <Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\core</Value>
-            <Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\variants\mega</Value>
-            <Value>%24(ProjectDir)\lib\Wire\src</Value>
-            <Value>%24(ProjectDir)\lib\SPI\src</Value>
-            <Value>%24(ProjectDir)\lib\EEPROM\src</Value>
-            <Value>%24(ProjectDir)\lib\Adafruit RGB LCD Shield Library</Value>
-            <Value>%24(ProjectDir)\lib\Adafruit RGB LCD Shield Library\utility</Value>
-            <Value>%24(ProjectDir)\lib\Adafruit TouchScreen</Value>
-            <Value>%24(ProjectDir)\lib\Adafruit BusIO</Value>
-            <Value>%24(ProjectDir)\lib\Adafruit GFX Library</Value>
-            <Value>%24(ProjectDir)\lib\MCUFRIEND_kbv</Value>
-            <Value>%24(ProjectDir)\lib\czMicroSTL</Value>
-            <Value>%24(ProjectDir)\lib\czAT24C</Value>
-            <Value>%24(ProjectDir)\lib\czmicromuc\src</Value>
-            <Value>%24(ProjectDir)\lib\SD\src</Value>
-            <Value>%24(ProjectDir)\lib\SD\src\utility</Value>
-            <Value>%24(ProjectDir)\lib\MemoryFree</Value>
-          </ListValues>
-        </avrgcccpp.compiler.directories.IncludePaths>
-        <avrgcccpp.compiler.optimization.OtherFlags>-fno-threadsafe-statics</avrgcccpp.compiler.optimization.OtherFlags>
-        <avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>
-        <avrgcccpp.compiler.optimization.DebugLevel>Maximum (-g3)</avrgcccpp.compiler.optimization.DebugLevel>
-        <avrgcccpp.compiler.optimization.OtherDebuggingFlags>-gdwarf-2</avrgcccpp.compiler.optimization.OtherDebuggingFlags>
-        <avrgcccpp.compiler.miscellaneous.OtherFlags>-std=gnu++17 -std=c++17 -include %24(ProjectDir)\src\SystemHeaders.h</avrgcccpp.compiler.miscellaneous.OtherFlags>
-        <avrgcccpp.linker.libraries.Libraries>
-          <ListValues>
-            <Value>libm</Value>
-          </ListValues>
-        </avrgcccpp.linker.libraries.Libraries>
-        <avrgcccpp.linker.miscellaneous.LinkerFlags>-Os</avrgcccpp.linker.miscellaneous.LinkerFlags>
-        <avrgcccpp.assembler.general.IncludePaths>
-          <ListValues>
-            <Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\include\</Value>
-          </ListValues>
-        </avrgcccpp.assembler.general.IncludePaths>
-        <avrgcccpp.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcccpp.assembler.debugging.DebugLevel>
-      </AvrGccCpp>
+  <avrgcc.common.Device>-mmcu=atmega2560 -B "%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\gcc\dev\atmega2560"</avrgcc.common.Device>
+  <avrgcc.common.optimization.RelaxBranches>True</avrgcc.common.optimization.RelaxBranches>
+  <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
+  <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
+  <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
+  <avrgcc.common.outputfiles.srec>True</avrgcc.common.outputfiles.srec>
+  <avrgcc.common.outputfiles.usersignatures>False</avrgcc.common.outputfiles.usersignatures>
+  <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcc.compiler.symbols.DefSymbols><ListValues>
+  <Value>F_CPU=16000000L</Value>
+  <Value>ARDUINO=108013</Value>
+  <Value>ARDUINO_AVR_MEGA2560</Value>
+  <Value>ARDUINO_ARCH_AVR</Value>
+  <Value>USB_VID=0x2341</Value>
+  <Value>USB_PID=0x0010</Value>
+  <Value>USB_MANUFACTURER="\"Arduino LLC\""</Value>
+  <Value>DEBUG</Value>
+  <Value>_DEBUG</Value>
+</ListValues></avrgcc.compiler.symbols.DefSymbols>
+  <avrgcc.compiler.directories.IncludePaths><ListValues><Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\include\</Value><Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\core</Value><Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\variants\mega</Value><Value>%24(ProjectDir)\lib\SPI</Value><Value>%24(ProjectDir)\lib\SPI\src</Value><Value>%24(ProjectDir)\lib\Wire\src</Value><Value>%24(ProjectDir)\lib\Wire\src\utility</Value></ListValues></avrgcc.compiler.directories.IncludePaths>
+  <avrgcc.compiler.optimization.PackStructureMembers>False</avrgcc.compiler.optimization.PackStructureMembers>
+  <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcc.compiler.miscellaneous.OtherFlags>-std=gnu99 -std=gnu11</avrgcc.compiler.miscellaneous.OtherFlags>
+  <avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcccpp.compiler.symbols.DefSymbols><ListValues>
+  <Value>F_CPU=16000000L</Value>
+  <Value>ARDUINO=108013</Value>
+  <Value>ARDUINO_AVR_MEGA2560</Value>
+  <Value>ARDUINO_ARCH_AVR</Value>
+  <Value>USB_VID=0x2341</Value>
+  <Value>USB_PID=0x0010</Value>
+  <Value>USB_MANUFACTURER="\"Arduino LLC\""</Value>
+  <Value>FASTER_ITERATION=1</Value>
+  <Value>DEBUG</Value>
+  <Value>_DEBUG</Value>
+  <Value>CZ_LOG_ENABLED=1</Value>
+  <Value>CZ_SERIAL_LOG_ENABLED=1</Value>
+  <Value>CZ_PROFILER=1</Value>
+  <Value>CONSOLE_COMMANDS=1</Value>
+</ListValues></avrgcccpp.compiler.symbols.DefSymbols>
+  <avrgcccpp.compiler.directories.IncludePaths><ListValues><Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\include\</Value><Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\core</Value><Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\variants\mega</Value><Value>%24(ProjectDir)\lib\Wire\src</Value><Value>%24(ProjectDir)\lib\SPI\src</Value><Value>%24(ProjectDir)\lib\EEPROM\src</Value><Value>%24(ProjectDir)\lib\Adafruit RGB LCD Shield Library</Value><Value>%24(ProjectDir)\lib\Adafruit RGB LCD Shield Library\utility</Value><Value>%24(ProjectDir)\lib\Adafruit TouchScreen</Value><Value>%24(ProjectDir)\lib\Adafruit BusIO</Value><Value>%24(ProjectDir)\lib\Adafruit GFX Library</Value><Value>%24(ProjectDir)\lib\MCUFRIEND_kbv</Value><Value>%24(ProjectDir)\lib\czMicroSTL</Value><Value>%24(ProjectDir)\lib\czAT24C</Value><Value>%24(ProjectDir)\lib\czmicromuc\src</Value><Value>%24(ProjectDir)\lib\SD\src</Value><Value>%24(ProjectDir)\lib\SD\src\utility</Value><Value>%24(ProjectDir)\lib</Value></ListValues></avrgcccpp.compiler.directories.IncludePaths>
+  <avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcccpp.compiler.miscellaneous.OtherFlags>-std=gnu++17 -std=c++17 -include %24(ProjectDir)\src\SystemHeaders.h</avrgcccpp.compiler.miscellaneous.OtherFlags>
+  <avrgcccpp.linker.libraries.Libraries><ListValues><Value>libm</Value></ListValues></avrgcccpp.linker.libraries.Libraries>
+  <avrgcccpp.linker.miscellaneous.LinkerFlags>-Os</avrgcccpp.linker.miscellaneous.LinkerFlags>
+  <avrgcccpp.assembler.general.IncludePaths><ListValues><Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\include\</Value></ListValues></avrgcccpp.assembler.general.IncludePaths>
+  <avrgcccpp.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcccpp.assembler.debugging.DebugLevel>
+  <avrgcc.compiler.optimization.DebugLevel>Maximum (-g3)</avrgcc.compiler.optimization.DebugLevel>
+  <avrgcc.compiler.optimization.OtherDebuggingFlags>-gdwarf-2</avrgcc.compiler.optimization.OtherDebuggingFlags>
+  <avrgcccpp.compiler.optimization.OtherFlags>-fno-threadsafe-statics</avrgcccpp.compiler.optimization.OtherFlags>
+  <avrgcccpp.compiler.optimization.DebugLevel>Maximum (-g3)</avrgcccpp.compiler.optimization.DebugLevel>
+  <avrgcccpp.compiler.optimization.OtherDebuggingFlags>-gdwarf-2</avrgcccpp.compiler.optimization.OtherDebuggingFlags>
+</AvrGccCpp>
     </ToolchainSettings>
     <UsesExternalMakeFile>False</UsesExternalMakeFile>
     <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
@@ -281,104 +196,61 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'Development' ">
     <ToolchainSettings>
       <AvrGccCpp>
-        <avrgcc.common.Device>-mmcu=atmega2560 -B "%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\gcc\dev\atmega2560"</avrgcc.common.Device>
-        <avrgcc.common.optimization.RelaxBranches>True</avrgcc.common.optimization.RelaxBranches>
-        <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
-        <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
-        <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
-        <avrgcc.common.outputfiles.srec>True</avrgcc.common.outputfiles.srec>
-        <avrgcc.common.outputfiles.usersignatures>False</avrgcc.common.outputfiles.usersignatures>
-        <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
-        <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
-        <avrgcc.compiler.symbols.DefSymbols>
-          <ListValues>
-            <Value>F_CPU=16000000L</Value>
-            <Value>ARDUINO=108013</Value>
-            <Value>ARDUINO_AVR_MEGA2560</Value>
-            <Value>ARDUINO_ARCH_AVR</Value>
-            <Value>USB_VID=0x2341</Value>
-            <Value>USB_PID=0x0010</Value>
-            <Value>USB_MANUFACTURER="\"Arduino LLC\""</Value>
-            <Value>NDEBUG</Value>
-          </ListValues>
-        </avrgcc.compiler.symbols.DefSymbols>
-        <avrgcc.compiler.directories.IncludePaths>
-          <ListValues>
-            <Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\include\</Value>
-            <Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\core</Value>
-            <Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\variants\mega</Value>
-            <Value>%24(ProjectDir)\lib\SPI</Value>
-            <Value>%24(ProjectDir)\lib\SPI\src</Value>
-            <Value>%24(ProjectDir)\lib\Wire\src</Value>
-            <Value>%24(ProjectDir)\lib\Wire\src\utility</Value>
-          </ListValues>
-        </avrgcc.compiler.directories.IncludePaths>
-        <avrgcc.compiler.optimization.level>Optimize for size (-Os)</avrgcc.compiler.optimization.level>
-        <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
-        <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
-        <avrgcc.compiler.optimization.DebugLevel>Maximum (-g3)</avrgcc.compiler.optimization.DebugLevel>
-        <avrgcc.compiler.optimization.OtherDebuggingFlags>-gdwarf-2</avrgcc.compiler.optimization.OtherDebuggingFlags>
-        <avrgcc.compiler.miscellaneous.OtherFlags>-std=gnu99 -std=gnu11</avrgcc.compiler.miscellaneous.OtherFlags>
-        <avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>
-        <avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>
-        <avrgcccpp.compiler.symbols.DefSymbols>
-          <ListValues>
-            <Value>F_CPU=16000000L</Value>
-            <Value>ARDUINO=108013</Value>
-            <Value>ARDUINO_AVR_MEGA2560</Value>
-            <Value>ARDUINO_ARCH_AVR</Value>
-            <Value>USB_VID=0x2341</Value>
-            <Value>USB_PID=0x0010</Value>
-            <Value>USB_MANUFACTURER="\"Arduino LLC\""</Value>
-            <Value>NDEBUG</Value>
-            <Value>CZ_LOG_ENABLED=1</Value>
-            <Value>CZ_SERIAL_LOG_ENABLED=1</Value>
-            <Value>CZ_PROFILER=1</Value>
-            <Value>FASTER_ITERATION=1</Value>
-            <Value>CONSOLE_COMMANDS=1</Value>
-          </ListValues>
-        </avrgcccpp.compiler.symbols.DefSymbols>
-        <avrgcccpp.compiler.directories.IncludePaths>
-          <ListValues>
-            <Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\include\</Value>
-            <Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\core</Value>
-            <Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\variants\mega</Value>
-            <Value>%24(ProjectDir)\lib\Wire\src</Value>
-            <Value>%24(ProjectDir)\lib\SPI\src</Value>
-            <Value>%24(ProjectDir)\lib\EEPROM\src</Value>
-            <Value>%24(ProjectDir)\lib\Adafruit RGB LCD Shield Library</Value>
-            <Value>%24(ProjectDir)\lib\Adafruit RGB LCD Shield Library\utility</Value>
-            <Value>%24(ProjectDir)\lib\Adafruit TouchScreen</Value>
-            <Value>%24(ProjectDir)\lib\Adafruit BusIO</Value>
-            <Value>%24(ProjectDir)\lib\Adafruit GFX Library</Value>
-            <Value>%24(ProjectDir)\lib\MCUFRIEND_kbv</Value>
-            <Value>%24(ProjectDir)\lib\czMicroSTL</Value>
-            <Value>%24(ProjectDir)\lib\czAT24C</Value>
-            <Value>%24(ProjectDir)\lib\czmicromuc\src</Value>
-            <Value>%24(ProjectDir)\lib\SD\src</Value>
-            <Value>%24(ProjectDir)\lib\SD\src\utility</Value>
-            <Value>%24(ProjectDir)\lib\MemoryFree</Value>
-          </ListValues>
-        </avrgcccpp.compiler.directories.IncludePaths>
-        <avrgcccpp.compiler.optimization.level>Optimize for size (-Os)</avrgcccpp.compiler.optimization.level>
-        <avrgcccpp.compiler.optimization.OtherFlags>-fno-threadsafe-statics</avrgcccpp.compiler.optimization.OtherFlags>
-        <avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>
-        <avrgcccpp.compiler.optimization.DebugLevel>Maximum (-g3)</avrgcccpp.compiler.optimization.DebugLevel>
-        <avrgcccpp.compiler.optimization.OtherDebuggingFlags>-gdwarf-2</avrgcccpp.compiler.optimization.OtherDebuggingFlags>
-        <avrgcccpp.compiler.miscellaneous.OtherFlags>-std=gnu++17 -std=c++17 -include %24(ProjectDir)\src\SystemHeaders.h</avrgcccpp.compiler.miscellaneous.OtherFlags>
-        <avrgcccpp.linker.libraries.Libraries>
-          <ListValues>
-            <Value>libm</Value>
-          </ListValues>
-        </avrgcccpp.linker.libraries.Libraries>
-        <avrgcccpp.linker.miscellaneous.LinkerFlags>-Os</avrgcccpp.linker.miscellaneous.LinkerFlags>
-        <avrgcccpp.assembler.general.IncludePaths>
-          <ListValues>
-            <Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\include\</Value>
-          </ListValues>
-        </avrgcccpp.assembler.general.IncludePaths>
-        <avrgcccpp.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcccpp.assembler.debugging.DebugLevel>
-      </AvrGccCpp>
+  <avrgcc.common.Device>-mmcu=atmega2560 -B "%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\gcc\dev\atmega2560"</avrgcc.common.Device>
+  <avrgcc.common.optimization.RelaxBranches>True</avrgcc.common.optimization.RelaxBranches>
+  <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
+  <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
+  <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
+  <avrgcc.common.outputfiles.srec>True</avrgcc.common.outputfiles.srec>
+  <avrgcc.common.outputfiles.usersignatures>False</avrgcc.common.outputfiles.usersignatures>
+  <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcc.compiler.symbols.DefSymbols><ListValues>
+  <Value>F_CPU=16000000L</Value>
+  <Value>ARDUINO=108013</Value>
+  <Value>ARDUINO_AVR_MEGA2560</Value>
+  <Value>ARDUINO_ARCH_AVR</Value>
+  <Value>USB_VID=0x2341</Value>
+  <Value>USB_PID=0x0010</Value>
+  <Value>USB_MANUFACTURER="\"Arduino LLC\""</Value>
+  <Value>NDEBUG</Value>
+</ListValues></avrgcc.compiler.symbols.DefSymbols>
+  <avrgcc.compiler.directories.IncludePaths><ListValues><Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\include\</Value><Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\core</Value><Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\variants\mega</Value><Value>%24(ProjectDir)\lib\SPI</Value><Value>%24(ProjectDir)\lib\SPI\src</Value><Value>%24(ProjectDir)\lib\Wire\src</Value><Value>%24(ProjectDir)\lib\Wire\src\utility</Value></ListValues></avrgcc.compiler.directories.IncludePaths>
+  <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
+  <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcc.compiler.miscellaneous.OtherFlags>-std=gnu99 -std=gnu11</avrgcc.compiler.miscellaneous.OtherFlags>
+  <avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcccpp.compiler.symbols.DefSymbols><ListValues>
+  <Value>F_CPU=16000000L</Value>
+  <Value>ARDUINO=108013</Value>
+  <Value>ARDUINO_AVR_MEGA2560</Value>
+  <Value>ARDUINO_ARCH_AVR</Value>
+  <Value>USB_VID=0x2341</Value>
+  <Value>USB_PID=0x0010</Value>
+  <Value>USB_MANUFACTURER="\"Arduino LLC\""</Value>
+  <Value>FASTER_ITERATION=1</Value>
+  <Value>NDEBUG</Value>
+  <Value>CZ_LOG_ENABLED=1</Value>
+  <Value>CZ_SERIAL_LOG_ENABLED=1</Value>
+  <Value>CZ_PROFILER=1</Value>
+  <Value>CONSOLE_COMMANDS=1</Value>
+</ListValues></avrgcccpp.compiler.symbols.DefSymbols>
+  <avrgcccpp.compiler.directories.IncludePaths><ListValues><Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\include\</Value><Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\core</Value><Value>%24(ProjectDir)\atmelstudio_lib\ArduinoCore\include\variants\mega</Value><Value>%24(ProjectDir)\lib\Wire\src</Value><Value>%24(ProjectDir)\lib\SPI\src</Value><Value>%24(ProjectDir)\lib\EEPROM\src</Value><Value>%24(ProjectDir)\lib\Adafruit RGB LCD Shield Library</Value><Value>%24(ProjectDir)\lib\Adafruit RGB LCD Shield Library\utility</Value><Value>%24(ProjectDir)\lib\Adafruit TouchScreen</Value><Value>%24(ProjectDir)\lib\Adafruit BusIO</Value><Value>%24(ProjectDir)\lib\Adafruit GFX Library</Value><Value>%24(ProjectDir)\lib\MCUFRIEND_kbv</Value><Value>%24(ProjectDir)\lib\czMicroSTL</Value><Value>%24(ProjectDir)\lib\czAT24C</Value><Value>%24(ProjectDir)\lib\czmicromuc\src</Value><Value>%24(ProjectDir)\lib\SD\src</Value><Value>%24(ProjectDir)\lib\SD\src\utility</Value><Value>%24(ProjectDir)\lib</Value></ListValues></avrgcccpp.compiler.directories.IncludePaths>
+  <avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcccpp.compiler.miscellaneous.OtherFlags>-std=gnu++17 -std=c++17 -include %24(ProjectDir)\src\SystemHeaders.h</avrgcccpp.compiler.miscellaneous.OtherFlags>
+  <avrgcccpp.linker.libraries.Libraries><ListValues><Value>libm</Value></ListValues></avrgcccpp.linker.libraries.Libraries>
+  <avrgcccpp.linker.miscellaneous.LinkerFlags>-Os</avrgcccpp.linker.miscellaneous.LinkerFlags>
+  <avrgcccpp.assembler.general.IncludePaths><ListValues><Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.6.364\include\</Value></ListValues></avrgcccpp.assembler.general.IncludePaths>
+  <avrgcccpp.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcccpp.assembler.debugging.DebugLevel>
+  <avrgcc.compiler.optimization.level>Optimize for size (-Os)</avrgcc.compiler.optimization.level>
+  <avrgcc.compiler.optimization.DebugLevel>Maximum (-g3)</avrgcc.compiler.optimization.DebugLevel>
+  <avrgcc.compiler.optimization.OtherDebuggingFlags>-gdwarf-2</avrgcc.compiler.optimization.OtherDebuggingFlags>
+  <avrgcccpp.compiler.optimization.level>Optimize for size (-Os)</avrgcccpp.compiler.optimization.level>
+  <avrgcccpp.compiler.optimization.OtherFlags>-fno-threadsafe-statics</avrgcccpp.compiler.optimization.OtherFlags>
+  <avrgcccpp.compiler.optimization.DebugLevel>Maximum (-g3)</avrgcccpp.compiler.optimization.DebugLevel>
+  <avrgcccpp.compiler.optimization.OtherDebuggingFlags>-gdwarf-2</avrgcccpp.compiler.optimization.OtherDebuggingFlags>
+</AvrGccCpp>
     </ToolchainSettings>
     <OutputPath>bin\Development\</OutputPath>
   </PropertyGroup>
@@ -395,8 +267,9 @@
     <Folder Include="lib\czmicromuc\src\crazygaze" />
     <Folder Include="lib\czmicromuc\src\crazygaze\micromuc" />
     <Folder Include="lib\EEPROM\src" />
-    <Folder Include="lib\MemoryFree" />
     <Folder Include="lib\EEPROM" />
+    <Folder Include="lib\memdebug" />
+    <Folder Include="lib\stackmon" />
     <Folder Include="lib\SD" />
     <Folder Include="lib\SD\src" />
     <Folder Include="lib\SD\src\utility" />
@@ -589,10 +462,10 @@
     <Compile Include="lib\MCUFRIEND_kbv\utility\pin_shield_8.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="lib\MemoryFree\MemoryFree.cpp">
+    <Compile Include="lib\memdebug\memdebug.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="lib\MemoryFree\MemoryFree.h">
+    <Compile Include="lib\memdebug\memdebug.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="lib\SD\src\File.cpp">
@@ -638,6 +511,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="lib\SPI\SPI.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="lib\stackmon\stackmon.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="lib\stackmon\stackmon.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="lib\Wire\src\utility\twi.c">
@@ -727,6 +606,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\MCP23S17Wrapper.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\MemorySetup.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\MemorySetup.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\Mux16Channels.cpp">

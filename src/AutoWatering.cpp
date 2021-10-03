@@ -20,29 +20,9 @@
 #include "crazygaze/micromuc/SDLogOutput.h"
 #include "crazygaze/micromuc/Profiler.h"
 #include "crazygaze/micromuc/SerialStringReader.h"
-#include "MemoryFree.h"
+#include "MemorySetup.h"
 
 using namespace cz;
-
-//////////////////////////////////////////////////////////////////////////
-// Make sure the compiler is using 1-byte alignment to save space
-//////////////////////////////////////////////////////////////////////////
-class AlignmentCheck
-{
-	char* a;
-	uint8_t b;
-	char* c;
-	uint8_t d;
-};
-static_assert(sizeof(AlignmentCheck) == 2*2 + 1*2, "Default struct alignment is not 1");
-//////////////////////////////////////////////////////////////////////////
-
-
-void operator delete(void* ptr, unsigned int size)
-{
-	free(ptr);
-}
-
 
 #if SD_CARD_LOGGING
 	SDCardHelper gSDCard;
@@ -101,6 +81,10 @@ TTicker<DisplayTFT, float, TickingMethod> gDisplay(true, gCtx);
 
 unsigned long gPreviousMicros = 0;
 
+FunctionTicker gMemLoggerFunc([]()
+{
+	logMemory();
+}, 10.0f);
 
 void setup()
 {
@@ -122,6 +106,8 @@ void setup()
 		CZ_LOG(logDefault, Log, "SD card log file initialized");
 	}
 #endif
+
+	setupMemoryAreas(2048);
 
 	gCtx.begin();
 	gDisplay.getObj().begin();
@@ -148,8 +134,6 @@ void loop()
 {
 	PROFILER_STARTRUN();
 
-	CZ_LOG(logDefault, Verbose, F("stack_size=%u"), stack_size());
-
 	unsigned long nowMicros = micros();
 	// NOTE: If using subtraction, there is no need to handle wrap around
 	// See: https://arduino.stackexchange.com/questions/33572/arduino-countdown-without-using-delay/33577#33577
@@ -169,9 +153,8 @@ void loop()
 		{
 			countdown = std::min(ticker.tick(deltaSeconds), countdown);
 		}
-
 	}
-
+	
 	// We use this so that we can just put a breakpoint in here and force the code to run when we want to check the profiler data
 	#if CONSOLE_COMMANDS
 	{
@@ -260,6 +243,8 @@ void loop()
 		}
 	}
 	#endif // CONSOLE_COMMANDS
+
+	gMemLoggerFunc.tick(deltaSeconds);
 
 	gPreviousMicros = nowMicros;
 }
