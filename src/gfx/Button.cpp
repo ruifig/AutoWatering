@@ -8,10 +8,9 @@ namespace cz::gfx
 // BaseButton
 //////////////////////////////////////////////////////////////////////////
 
-void BaseButton::initHelper(uint8_t id, Adafruit_GFX &gfx, const Rect& pos, uint16_t bkgColour)
+void BaseButton::initHelper(uint8_t id, const Rect& pos, uint16_t bkgColour)
 {
 	m_id = id;
-	m_gfx = &gfx;
 	m_pos = pos;
 	m_bkgColour = bkgColour;
 	m_currState = ButtonState::Released;
@@ -52,9 +51,9 @@ ImageButton::ImageButton()
 {
 }
 
-void ImageButton::init(uint8_t id, Adafruit_GFX &gfx, const Pos& pos, uint16_t bkgColour, const Image& img)
+void ImageButton::init(uint8_t id, const Pos& pos, uint16_t bkgColour, const Image& img)
 {
-	initHelper(id, gfx, {pos.x, pos.y, img.width, img.height}, bkgColour);
+	initHelper(id, {pos.x, pos.y, img.width, img.height}, bkgColour);
 	m_img = img;
 }
 
@@ -89,9 +88,9 @@ void ImageButton::draw(bool forceDraw)
 // TextButton
 //////////////////////////////////////////////////////////////////////////
 
-void TextButton::init(uint8_t id, Adafruit_GFX &gfx, const GFXfont* font, const Rect& pos, uint16_t bkgColour, uint16_t outlineColour, uint16_t textColour, const char* text, uint8_t textMagnification)
+void TextButton::init(uint8_t id, const GFXfont* font, const Rect& pos, uint16_t bkgColour, uint16_t outlineColour, uint16_t textColour, const char* text, uint8_t textMagnification)
 {
-	BaseButton::initHelper(id, gfx, pos, bkgColour);
+	BaseButton::initHelper(id, pos, bkgColour);
 	m_outlineColour = outlineColour;
 	m_textColour = textColour;
 	m_textMagX = textMagnification;
@@ -121,32 +120,32 @@ void TextButton::draw(bool forceDraw)
 	}
 	
 	uint8_t r = min(m_pos.width, m_pos.height) / 4; // Corner radius
-	m_gfx->fillRoundRect(m_pos.x, m_pos.y, m_pos.width, m_pos.height, r, fillColour);
-	m_gfx->drawRoundRect(m_pos.x, m_pos.y, m_pos.width, m_pos.height, r, m_outlineColour);
+	gScreen.fillRoundRect(m_pos.x, m_pos.y, m_pos.width, m_pos.height, r, fillColour);
+	gScreen.drawRoundRect(m_pos.x, m_pos.y, m_pos.width, m_pos.height, r, m_outlineColour);
 
 	// set the button's text size first, it 's used by getTextBounds()
-	m_gfx->setTextSize(m_textMagX, m_textMagY);
+	gScreen.setTextSize(m_textMagX, m_textMagY);
 
-	m_gfx->setFont(m_font);
+	gScreen.setFont(m_font);
 
 	// if a custom font is used, calculate the text cursor from the
 	// font's data and the string
-	if(m_gfx->getGfxFont())
+	if(gScreen.getGfxFont())
 	{
 		// give the string and virtual cursor and get the enclosing rectangle
-		m_gfx->getTextBounds(m_text, m_pos.x, m_pos.y+m_pos.height,
+		gScreen.getTextBounds(m_text, m_pos.x, m_pos.y+m_pos.height,
 		&text_x, &text_y, &text_w, &text_h);
 		// with this rectangle set the cursor to center the text in the button
-		m_gfx->setCursor((m_pos.x + ((m_pos.width - text_w) / 2) - 1), (m_pos.y + ((m_pos.height + text_h) / 2)));
+		gScreen.setCursor((m_pos.x + ((m_pos.width - text_w) / 2) - 1), (m_pos.y + ((m_pos.height + text_h) / 2)));
 	}
 	else
 	{
 		// Default font
-		m_gfx->setCursor(m_pos.x + (m_pos.width/2) - (strlen(m_text) * 3 * m_textMagX),
+		gScreen.setCursor(m_pos.x + (m_pos.width/2) - (strlen(m_text) * 3 * m_textMagX),
 		m_pos.y + (m_pos.height/2) - (4 * m_textMagY));
 	}
-	m_gfx->setTextColor(textColour);
-	m_gfx->print(m_text);
+	gScreen.setTextColor(textColour);
+	gScreen.print(m_text);
 }
 
 #if 0

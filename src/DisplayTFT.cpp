@@ -342,7 +342,7 @@ void DisplayTFT::OverviewState::drawOverview()
 
 		PROFILE_SCOPE(F("groupDrawing"));
 
-		GroupData& data = ggCtx.data.getGroupData(i);
+		GroupData& data = gCtx.data.getGroupData(i);
 		const HistoryQueue& history = data.getHistory();
 
 		//
@@ -441,7 +441,7 @@ void DisplayTFT::OverviewState::plotHistory(int groupIndex)
 {
 	constexpr int h = GRAPH_HEIGHT;
 	Rect rect = Overview::getHistoryPlotRect(groupIndex);
-	GroupData& data = ggCtx.data.getGroupData(groupIndex);
+	GroupData& data = gCtx.data.getGroupData(groupIndex);
 	const HistoryQueue& history = data.getHistory();
 
 	int bottomY = rect.y + h - 1;

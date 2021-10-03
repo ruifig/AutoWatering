@@ -29,10 +29,9 @@ class BaseButton : public Widget
 
   protected:	
 
-	void initHelper(uint8_t id, Adafruit_GFX &gfx, const Rect& pos, uint16_t bkgColour);
+	void initHelper(uint8_t id, const Rect& pos, uint16_t bkgColour);
 	
 	uint8_t m_id;
-	Adafruit_GFX* m_gfx;
 	Rect m_pos;
 	uint16_t m_bkgColour;
 	ButtonState m_lastState;
@@ -48,7 +47,7 @@ class ImageButton : public BaseButton
 {
   public:
 	ImageButton();
-	void init(uint8_t id, Adafruit_GFX &gfx, const Pos& pos, uint16_t bkgColour, const Image& img);
+	void init(uint8_t id, const Pos& pos, uint16_t bkgColour, const Image& img);
 	// Widget
 	virtual void draw(bool forceDraw = false) override;
 	//
@@ -64,7 +63,7 @@ class ImageButton : public BaseButton
 class TextButton : public BaseButton
 {
   public:
-	void init(uint8_t id, Adafruit_GFX &gfx, const GFXfont* font, const Rect& pos, uint16_t bkgColour, uint16_t outlineColour, uint16_t textColour, const char* text, uint8_t textMagnification = 1);
+	void init(uint8_t id, const GFXfont* font, const Rect& pos, uint16_t bkgColour, uint16_t outlineColour, uint16_t textColour, const char* text, uint8_t textMagnification = 1);
 
 	void setInverted(bool inverted)
 	{

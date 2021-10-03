@@ -15,7 +15,8 @@ class AlignmentCheck
 };
 static_assert(sizeof(AlignmentCheck) == 2*2 + 1*2, "Default struct alignment is not 1");
 
-
+//
+// #RVF : is this needed ?
 void operator delete(void* ptr, unsigned int size)
 {
 	free(ptr);

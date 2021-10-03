@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 #include <assert.h>
-#include "Context.h"
+#include "Config.h"
 #include "Component.h"
 
 namespace cz
@@ -23,12 +23,11 @@ class SoilMoistureSensor : public Component
   public:
 
 	/**
-	 * @param ctx program context
 	 * @param index Sensor's index within the program data
 	 * @param vinPin What io expander pin we are using to power this sensor
 	 * @param dataPin What multiplexer pin we are using to read the sensor
 	 */
-	SoilMoistureSensor(Context& ctx, uint8_t index, IOExpanderPin vinPin, MultiplexerPin dataPin);
+	SoilMoistureSensor(uint8_t index, IOExpanderPin vinPin, MultiplexerPin dataPin);
 
 	// Disable copying
 	SoilMoistureSensor(const SoilMoistureSensor&) = delete;
@@ -50,7 +49,6 @@ class SoilMoistureSensor : public Component
 	static const char* const ms_stateNames[3];
 #endif
 
-	Context& m_ctx;
 	float m_timeInState = 0;
 	float m_nextTickWait = 0;
 	State m_state = State::Initializing;

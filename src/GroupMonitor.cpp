@@ -1,11 +1,11 @@
 #include "GroupMonitor.h"
+#include "Context.h"
 
 namespace cz
 {
 
-GroupMonitor::GroupMonitor(Context& ctx, uint8_t index, IOExpanderPin motorPin1, IOExpanderPin motorPin2)
-	: m_ctx(ctx)
-	, m_index(index)
+GroupMonitor::GroupMonitor(uint8_t index, IOExpanderPin motorPin1, IOExpanderPin motorPin2)
+	: m_index(index)
 	, m_motorPin1(motorPin1)
 	, m_motorPin2(motorPin2)
 {
@@ -13,33 +13,33 @@ GroupMonitor::GroupMonitor(Context& ctx, uint8_t index, IOExpanderPin motorPin1,
 
 void GroupMonitor::begin()
 {
-	m_ctx.ioExpander.pinMode(m_motorPin1, OUTPUT);
-	m_ctx.ioExpander.pinMode(m_motorPin2, OUTPUT);
+	gCtx.ioExpander.pinMode(m_motorPin1, OUTPUT);
+	gCtx.ioExpander.pinMode(m_motorPin2, OUTPUT);
 
-	m_ctx.ioExpander.digitalWrite(m_motorPin1, LOW);
-	m_ctx.ioExpander.digitalWrite(m_motorPin2, LOW);
+	gCtx.ioExpander.digitalWrite(m_motorPin1, LOW);
+	gCtx.ioExpander.digitalWrite(m_motorPin2, LOW);
 }
 
 void GroupMonitor::turnMotorOn(bool direction)
 {
-	m_ctx.ioExpander.digitalWrite(m_motorPin1, direction ? LOW : HIGH);
-	m_ctx.ioExpander.digitalWrite(m_motorPin2, direction ? HIGH : LOW);
-	GroupData& data = m_ctx.data.getGroupData(m_index);
+	gCtx.ioExpander.digitalWrite(m_motorPin1, direction ? LOW : HIGH);
+	gCtx.ioExpander.digitalWrite(m_motorPin2, direction ? HIGH : LOW);
+	GroupData& data = gCtx.data.getGroupData(m_index);
 	data.setMotorState(true);
 	m_motorOffCountdown = data.getShotDuration();
 }
 
 void GroupMonitor::turnMotorOff()
 {
-	m_ctx.ioExpander.digitalWrite(m_motorPin1, LOW);
-	m_ctx.ioExpander.digitalWrite(m_motorPin2, LOW);
-	GroupData& data = m_ctx.data.getGroupData(m_index);
+	gCtx.ioExpander.digitalWrite(m_motorPin1, LOW);
+	gCtx.ioExpander.digitalWrite(m_motorPin2, LOW);
+	GroupData& data = gCtx.data.getGroupData(m_index);
 	data.setMotorState(false);
 }
 
 float GroupMonitor::tick(float deltaSeconds)
 {
-	GroupData& data = m_ctx.data.getGroupData(m_index);
+	GroupData& data = gCtx.data.getGroupData(m_index);
 
 	if (m_motorOffCountdown > 0) // Motor is on
 	{

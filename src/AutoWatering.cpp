@@ -130,7 +130,7 @@ void setup()
 	logMemory();
 
 
-	ggCtx.begin();
+	gCtx.begin();
 	gDisplay.getObj().begin();
 
 	for(auto&& ticker : gSoilMoistureSensors)
@@ -227,7 +227,7 @@ void loop()
 				int idx, value;
 				if (parseCommand(idx, value) && idx < NUM_MOISTURESENSORS)
 				{
-					ggCtx.data.getGroupData(idx).setThresholdValue(value);
+					gCtx.data.getGroupData(idx).setThresholdValue(value);
 				}
 			}
 			else if (strcmp_P(cmd, (const char*)F("setmocksensor"))==0)
@@ -251,11 +251,11 @@ void loop()
 			}
 			else if (strcmp_P(cmd, (const char*)F("save"))==0)
 			{
-				ggCtx.data.save();
+				gCtx.data.save();
 			}
 			else if (strcmp_P(cmd, (const char*)F("load"))==0)
 			{
-				ggCtx.data.load();
+				gCtx.data.load();
 			}
 			else
 			{

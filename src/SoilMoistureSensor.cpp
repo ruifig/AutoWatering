@@ -1,5 +1,6 @@
 #include "SoilMoistureSensor.h"
 #include "Utils.h"
+#include "Context.h"
 #include "crazygaze/micromuc/Logging.h"
 #include "crazygaze/micromuc/Profiler.h"
 #include "crazygaze/micromuc/MathUtils.h"
@@ -19,9 +20,8 @@ const char* const SoilMoistureSensor::ms_stateNames[3] =
 };
 #endif
 
-SoilMoistureSensor::SoilMoistureSensor(Context& ctx, uint8_t index, IOExpanderPin vinPin, MultiplexerPin dataPin)
-	: m_ctx(ctx)
-	, m_index(index)
+SoilMoistureSensor::SoilMoistureSensor(uint8_t index, IOExpanderPin vinPin, MultiplexerPin dataPin)
+	: m_index(index)
 	, m_vinPin(vinPin)
 	, m_dataPin(dataPin)
 {
@@ -35,7 +35,7 @@ void SoilMoistureSensor::begin()
 bool SoilMoistureSensor::tryEnterReadingState()
 {
 	// From Initializing, we jump straight to a first reading
-	if (m_ctx.data.tryAcquireMoistureSensorMutex())
+	if (gCtx.data.tryAcquireMoistureSensorMutex())
 	{
 		changeToState(State::Reading);
 		return true;
@@ -51,7 +51,7 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 	PROFILE_SCOPE(F("MoistureSensor"));
 
 	m_timeInState += deltaSeconds;
-	GroupData& data = m_ctx.data.getGroupData(m_index);
+	GroupData& data = gCtx.data.getGroupData(m_index);
 
 #if FASTER_ITERATION
 	m_nextTickWait = 0.001f;
@@ -94,7 +94,7 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 
 int SoilMoistureSensor::readSensor()
 {
-	int currentValue = m_ctx.mux.read(m_dataPin);
+	int currentValue = gCtx.mux.read(m_dataPin);
 	CZ_LOG(logDefault, Log, F("SoilMoistureSensor(%d) : %d"), m_index, currentValue);
 	return currentValue;
 }
@@ -132,9 +132,9 @@ void SoilMoistureSensor::onLeaveState()
 
 	case State::Reading:
 		//  Turn power off
-		m_ctx.ioExpander.digitalWrite(m_vinPin, LOW);
+		gCtx.ioExpander.digitalWrite(m_vinPin, LOW);
 		// release the mutex so other sensors can read
-		m_ctx.data.releaseMoistureSensorMutex();
+		gCtx.data.releaseMoistureSensorMutex();
 		break;
 
 	default:
@@ -147,9 +147,9 @@ void SoilMoistureSensor::onEnterState()
 	switch (m_state)
 	{
 	case State::Initializing:
-		m_ctx.ioExpander.pinMode(m_vinPin, OUTPUT);
+		gCtx.ioExpander.pinMode(m_vinPin, OUTPUT);
 		// Switch the sensor off
-		m_ctx.ioExpander.digitalWrite(m_vinPin, LOW);
+		gCtx.ioExpander.digitalWrite(m_vinPin, LOW);
 		break;
 
 	case State::PoweredDown:
@@ -157,7 +157,7 @@ void SoilMoistureSensor::onEnterState()
 
 	case State::Reading:
 		//  To take a measurement, we turn the sensor ON, wait a bit, then switch it off
-		m_ctx.ioExpander.digitalWrite(m_vinPin, HIGH);
+		gCtx.ioExpander.digitalWrite(m_vinPin, HIGH);
 		m_nextTickWait = MOISTURESENSOR_POWERUP_WAIT;
 		break;
 
