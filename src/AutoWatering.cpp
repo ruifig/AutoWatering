@@ -144,7 +144,6 @@ void setup()
 	}
 
 	gPreviousMicros = micros();
-
 }
 
 PROFILER_CREATE(30);

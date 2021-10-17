@@ -24,7 +24,6 @@ extern "C" {
  
 #include <stddef.h>
  
- 
 extern size_t getMemoryUsed();
 extern size_t getFreeMemory();
 extern size_t getLargestAvailableMemoryBlock();

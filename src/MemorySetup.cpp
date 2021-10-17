@@ -1,7 +1,7 @@
 #include "MemorySetup.h"
 #include "crazygaze/micromuc/Logging.h"
-#include "memdebug/memdebug.h"
-#include "stackmon/stackmon.h"
+#include "memdebug.h"
+#include "stackmon.h"
 
 //////////////////////////////////////////////////////////////////////////
 // Make sure the compiler is using 1-byte alignment to save space

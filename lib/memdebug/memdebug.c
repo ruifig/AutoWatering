@@ -10,12 +10,16 @@
  *
  *  http://andybrown.me.uk/ws/terms-and-conditions
  */
- 
+
 #ifdef DEBUG
  
 #include <stdlib.h>
 #include <avr/io.h>
 #include "memdebug.h"
+ 
+#ifdef __cplusplus
+extern "C" {
+#endif
  
  
 /**
@@ -171,5 +175,8 @@ size_t getLargestNonFreeListBlock()
   return cp-brkval;
 }
  
+#ifdef __cplusplus
+}
+#endif
  
 #endif // DEBUG

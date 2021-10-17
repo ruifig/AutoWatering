@@ -16,9 +16,9 @@ namespace
 
 const char* getFilename(const char* file)
 {
-	char* a = strrchr(file, '\\');
-	char* b = strrchr(file, '/');
-	char* c = std::max(a, b);
+	const char* a = strrchr(file, '\\');
+	const char* b = strrchr(file, '/');
+	const char* c = std::max(a, b);
 	return c ? c+1 : file;
 }
 

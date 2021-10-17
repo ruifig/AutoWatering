@@ -5,7 +5,8 @@
         "map": "cpp",
         "utility": "cpp",
         "basic_definitions": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "mutex": "cpp"
     },
     "gitlens.advanced.blame.customArguments": [],
 
