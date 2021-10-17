@@ -13,29 +13,22 @@
  *  http://andybrown.me.uk/ws/terms-and-conditions
  */
  
- 
-#ifdef DEBUG
- 
- 
 #ifdef __cplusplus
 extern "C" {
 #endif
  
- 
 #include <stddef.h>
  
-extern size_t getMemoryUsed();
-extern size_t getFreeMemory();
-extern size_t getLargestAvailableMemoryBlock();
-extern size_t getLargestBlockInFreeList();
-extern int getNumberOfBlocksInFreeList();
-extern size_t getFreeListSize();
-extern size_t getLargestNonFreeListBlock();
+size_t getMemoryUsed();
+size_t getFreeMemory();
+size_t getLargestAvailableMemoryBlock();
+size_t getLargestBlockInFreeList();
+int getNumberOfBlocksInFreeList();
+size_t getFreeListSize();
+size_t getLargestNonFreeListBlock();
  
  
 #ifdef __cplusplus
 }
 #endif
- 
- 
-#endif // DEBUG
+

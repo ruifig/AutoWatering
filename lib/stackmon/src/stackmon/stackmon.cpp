@@ -38,14 +38,14 @@
  * The stack is by convention at the top of the SRAM, growing down towards
  * the address at which this variable resides.
  */
-extern uint8_t _end;
+extern char _end;
 
 /** Gain access to linker symbol for base of the stack.
  * This symbol is defined to be the address at the bootom of the stack.
  */
-extern uint8_t __stack;
+extern char __stack;
 
-extern uint8_t* __malloc_heap_end;
+extern char* __malloc_heap_end;
 
 /**************************************************************************
  * Macros
@@ -71,7 +71,7 @@ void StackPaint(void) __attribute__ ((naked)) __attribute__ ((section (".init1")
 void StackPaint(void)
 {
 #if 1
-	uint8_t *p = __malloc_heap_end;
+	char *p = __malloc_heap_end;
 
 	while(p <= &__stack)
 	{
@@ -117,7 +117,7 @@ void StackPaint(void)
 void calcStack(uint16_t* freeStack, uint16_t* usedStack)
 {
     //const uint8_t *p = &_end;
-	const uint8_t* p = __malloc_heap_end;
+	const char* p = __malloc_heap_end;
     uint16_t       c = 0;
 
     while(*p == STACK_CANARY && p <= &__stack)

@@ -33,7 +33,7 @@
 	#define CZ_PROFILER 0
 #endif
 
-#define __FILENAME__ getFilename(__FILE__)
+#define __FILENAME__ ::cz::getFilename(__FILE__)
 
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__)
 	#define CZ_AVR 1

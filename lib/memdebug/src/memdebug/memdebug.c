@@ -11,8 +11,6 @@
  *  http://andybrown.me.uk/ws/terms-and-conditions
  */
 
-#ifdef DEBUG
- 
 #include <stdlib.h>
 #include <avr/io.h>
 #include "memdebug.h"
@@ -179,4 +177,3 @@ size_t getLargestNonFreeListBlock()
 }
 #endif
  
-#endif // DEBUG
