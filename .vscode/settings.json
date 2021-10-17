@@ -14,4 +14,5 @@
     "gitlens.currentLine.enabled": false, // in modern version
     "gitlens.codeLens.authors.enabled": false,
     "gitlens.codeLens.recentChange.enabled": false,
+    "editor.tabSize": 4
 }
