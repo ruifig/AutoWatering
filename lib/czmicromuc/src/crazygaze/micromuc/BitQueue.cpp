@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <assert.h>
 
-#define CZ_TEST(expression) if (!(expression)) { ::cz::_doAssert(__FILENAME__, __LINE__, #expression); }
+#define CZ_TEST(expression) if (!(expression)) { ::cz::_doAssert(__FILENAME__, __LINE__, F(#expression)); }
 
 #define INT_MSB (sizeof(unsigned)*8-1)
 #define BIT_MASK(H,L) (((unsigned) -1 >> (INT_MSB - (H))) & ~((1U << (L)) - 1))

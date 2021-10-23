@@ -17,6 +17,7 @@ static_assert(sizeof(AlignmentCheck) == 2*2 + 1*2, "Default struct alignment is 
 
 //
 // #RVF : is this needed ?
+// If this is not defined, I get undefined references in destructors when linking. Need to understand why.
 void operator delete(void* ptr, unsigned int size)
 {
 	free(ptr);

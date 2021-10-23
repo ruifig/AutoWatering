@@ -14,7 +14,7 @@ namespace std
 	template <class T>
 	inline T&& forward(typename remove_reference<T>::type&& t) noexcept
 	{
-		static_assert(!std::is_lvalue_reference<T>::value,
+		static_assert(!std::is_lvalue_reference_v<T>,
 					"Can not forward an rvalue as an lvalue.");
 		return static_cast<T&&>(t);
 	}

@@ -88,7 +88,7 @@ void SDLogOutput::begin(SdFile& dirFile, const char* name, bool truncate)
 
 	if (!m_file.open(dirFile, name, (O_CREAT | O_WRITE | O_APPEND) | (truncate ? O_TRUNC : 0)))
 	{
-		CZ_LOG(logDefault, Error, "Error opening log file %s", name);
+		CZ_LOG(logDefault, Error, F("Error opening log file %s"), name);
 		return;
 	}
 	

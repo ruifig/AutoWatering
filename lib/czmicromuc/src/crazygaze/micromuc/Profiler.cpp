@@ -108,7 +108,7 @@ void Profiler::log()
 		LogOutput::logToAllSimple(F("** Done **\n"));
 	}
 
-	Serial.flush();
+	LogOutput::flush();
 }
 
 void Profiler::reset()

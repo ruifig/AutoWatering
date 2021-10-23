@@ -215,6 +215,16 @@ void LogOutput::logToAllSimple(const __FlashStringHelper* str)
 	}
 }
 
+void LogOutput::flush()
+{
+	auto data = getSharedData();
+	auto lk = std::unique_lock<std::mutex>(data->mtx);
+	for (auto&& out : data->outputs)
+	{
+		out->flushImpl();
+	}
+}
+
 #if CZ_SERIAL_LOG_ENABLED
 
 void SerialLogOutput::logSimple(const char* str)
@@ -224,6 +234,10 @@ void SerialLogOutput::logSimple(const char* str)
 void SerialLogOutput::logSimple(const __FlashStringHelper* str)
 {
 	Serial.print(str);
+}
+void SerialLogOutput::flushImpl()
+{
+	Serial.flush();
 }
 
 namespace

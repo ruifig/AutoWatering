@@ -94,10 +94,13 @@ public:
 	static void logToAllSimple(const char* str);
 	static void logToAllSimple(const __FlashStringHelper* str);
 
+	static void flush();
+
 private:
 	
 	virtual void logSimple(const char* str) = 0;
 	virtual void logSimple(const __FlashStringHelper* str) = 0;
+	virtual void flushImpl() = 0;
 	static void logPrefix(const LogCategoryBase* category, LogVerbosity verbosity);
 
 	struct SharedData
@@ -115,6 +118,7 @@ class SerialLogOutput : public LogOutput
 private:
 	virtual void logSimple(const char* str) override;
 	virtual void logSimple(const __FlashStringHelper* str) override;
+	virtual void flushImpl() override;
 };
 #endif
 
@@ -143,7 +147,7 @@ private:
 					::cz::LogOutput::logToAll(&NAME, ::cz::LogVerbosity::VERBOSITY, fmt, ##__VA_ARGS__);     \
 					if (::cz::LogVerbosity::VERBOSITY == ::cz::LogVerbosity::Fatal)                          \
 					{                                                                                        \
-						::cz::_doAssert(__FILE__, __LINE__, fmt, ##__VA_ARGS__);                             \
+						::cz::_doAssert(__FILENAME__, __LINE__, fmt, ##__VA_ARGS__);                         \
 					}                                                                                        \
 				}                                                                                            \
 			}                                                                                                \

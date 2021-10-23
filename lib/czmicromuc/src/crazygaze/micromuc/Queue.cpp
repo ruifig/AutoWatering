@@ -6,7 +6,7 @@
 #include <assert.h>
 #include <initializer_list>
 
-#define CZ_TEST(expression) if (!(expression)) { ::cz::_doAssert(__FILENAME__, __LINE__, #expression); }
+#define CZ_TEST(expression) if (!(expression)) { ::cz::_doAssert(__FILENAME__, __LINE__, F(#expression)); }
 
 //////////////////////////////////////////////////////////////////////////
 // Tests

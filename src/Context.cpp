@@ -250,7 +250,7 @@ void ProgramData::save() const
 	}
 	
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
-	CZ_LOG(logDefault, Log, "Saving %u bytes to EEPROM took %u ms", ptr.index, elapsedMs);
+	CZ_LOG(logDefault, Log, F("Saving %u bytes to EEPROM took %u ms"), ptr.index, elapsedMs);
 	Component::raiseEvent(ConfigSaveEvent());
 }
 
@@ -265,7 +265,7 @@ void ProgramData::load()
 	}
 	
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
-	CZ_LOG(logDefault, Log, "Loading %u bytes from EEPROM took %u ms", ptr.index, elapsedMs);
+	CZ_LOG(logDefault, Log, F("Loading %u bytes from EEPROM took %u ms"), ptr.index, elapsedMs);
 	Component::raiseEvent(ConfigLoadEvent());
 }
 
