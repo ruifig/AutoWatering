@@ -160,10 +160,10 @@ void FixedCapacityBitQueue::dropBits(unsigned int numBits)
 
 	while (numBits)
 	{
-		unsigned int idx = m_head / 8;
 		unsigned int L = m_head % 8;
 		unsigned int todo = std::min(numBits, std::min(8 - L, m_capacity - m_head));
 #if CZ_BITQUEUE_ZERO_ONPOP
+		unsigned int idx = m_head / 8;
 		unsigned int H = L + todo - 1;
 		m_data[idx] = ZERO_BITS(m_data[idx], H, L);
 #endif
@@ -317,7 +317,7 @@ namespace
 	{
 		// Fill the test data with: 1,2,3,...,255
 		uint8_t testData[QSIZE_BYTES];
-		for (int idx = 0; idx < QSIZE_BYTES; idx++)
+		for (unsigned idx = 0; idx < QSIZE_BYTES; idx++)
 		{
 			testData[idx] = idx;
 		}

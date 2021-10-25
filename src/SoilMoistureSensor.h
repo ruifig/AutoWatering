@@ -56,7 +56,7 @@ class SoilMoistureSensor : public Component
 	IOExpanderPin m_vinPin;
 	MultiplexerPin m_dataPin;
 
-	virtual int readSensor();
+	virtual unsigned int readSensor();
 
 	void changeToState(State newState);
 	void onLeaveState();
@@ -75,7 +75,7 @@ public:
 
 protected:
 
-	virtual int readSensor() override;
+	virtual unsigned int readSensor() override;
 
 	static constexpr int ms_delayChaseValue = 5;
 

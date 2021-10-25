@@ -4,6 +4,99 @@
 
 namespace cz
 {
+
+namespace detail
+{
+
+	void skipTo(const char*& src, int c)
+	{
+		while (*src && *src != c)
+		{
+			++src;
+		}
+	}
+
+	void skipToAfter(const char*& src, int c)
+	{
+		skipTo(src, c);
+		if (*src && *src == c)
+		{
+			++src;
+		}
+	}
+
+	int advance(const char*& src)
+	{
+		const char* start = src;
+
+		if (*src == '"')
+		{
+			++src;
+			skipToAfter(src, '"');
+		}
+		else
+		{
+			skipTo(src, ' ');
+		}
+
+		int size = src - start;
+
+		while (*src && *src == ' ')
+		{
+			++src;
+		}
+
+		return size;
+	}
+
+	bool parseParam(const char* src, int& dst)
+	{
+		int c = *src;
+		if (c == '+' || c == '-' || (c >= '0' && c <= '9'))
+		{
+			dst = atoi(src);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	bool parseParam(const char* src, float& dst)
+	{
+		int c = *src;
+		if (c=='.' || c == '+' || c == '-' || (c >= '0' && c <= '9'))
+		{
+			dst = static_cast<float>(atof(src));
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	bool parseParam(const char* src, char* dst)
+	{
+		const char* ptr = src;
+		int size = advance(ptr);
+		if (*src == '"')
+		{
+			ptr = src+1;
+			size -= 2;
+		}
+		else
+		{
+			ptr = src;
+		}
+
+		memcpy(dst, ptr, size);
+		dst[size] = 0;
+		return true;
+	}
+}
+
 	
 char* getTemporaryString()
 {

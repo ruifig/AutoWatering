@@ -326,6 +326,8 @@ void DisplayTFT::OverviewState::onEvent(const Event& evt)
 		}
 		break;
 
+		default:
+		break;
 	}
 }
 
@@ -343,7 +345,6 @@ void DisplayTFT::OverviewState::drawOverview()
 		PROFILE_SCOPE(F("groupDrawing"));
 
 		GroupData& data = gCtx.data.getGroupData(i);
-		const HistoryQueue& history = data.getHistory();
 
 		//
 		// Draw history

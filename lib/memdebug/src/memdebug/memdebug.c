@@ -73,7 +73,7 @@ size_t getMemoryUsed()
 size_t getFreeMemory()
 {
 // Custom change from me (Rui Figueira):
-// I've changed this account for the fact __malloc_heap_end might be set, in which case that marks the upper limit
+// I've changed this to account for the fact __malloc_heap_end might be set, in which case that marks the upper limit
 //
 	if (__malloc_heap_end==0)
 	{

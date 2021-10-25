@@ -78,7 +78,7 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 			if (m_timeInState >= MOISTURESENSOR_POWERUP_WAIT)
 			{
 				// Using a function to read the sensor, so we can provide a mock value when using the mock version
-				int currentValue = readSensor();
+				unsigned int currentValue = readSensor();
 				data.setMoistureSensorValues(currentValue);
 				changeToState(State::PoweredDown);
 			}
@@ -92,10 +92,10 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 	return m_nextTickWait;
 }
 
-int SoilMoistureSensor::readSensor()
+unsigned int SoilMoistureSensor::readSensor()
 {
-	int currentValue = gCtx.mux.read(m_dataPin);
-	CZ_LOG(logDefault, Log, F("SoilMoistureSensor(%d) : %d"), m_index, currentValue);
+	unsigned int currentValue = gCtx.mux.read(m_dataPin);
+	CZ_LOG(logDefault, Log, F("SoilMoistureSensor(%d) : %u"), m_index, currentValue);
 	return currentValue;
 }
 
@@ -250,7 +250,7 @@ void MockSoilMoistureSensor::onEvent(const Event& evt)
 
 }
 
-int MockSoilMoistureSensor::readSensor()
+unsigned MockSoilMoistureSensor::readSensor()
 {
 #if 0
 	CZ_LOG(logDefault, Log, F("MockSoilMoistureSensor(%d) : %s, target=%s")

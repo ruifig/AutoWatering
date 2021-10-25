@@ -1,4 +1,3 @@
-
 #include <Arduino.h>
 
 #ifdef AVR8_BREAKPOINT_MODE
@@ -121,14 +120,7 @@ void setup()
 #endif
 
 	setupMemoryAreas(2048);
-
-	{
-		auto ptr = std::make_unique<Foo>(1,2,3);
-		ptr->log();
-		logMemory();
-	}
 	logMemory();
-
 
 	gCtx.begin();
 	gDisplay.getObj().begin();

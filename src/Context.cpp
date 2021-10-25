@@ -138,7 +138,7 @@ void GroupData::begin(uint8_t index)
 #endif
 }
 
-void GroupData::setMoistureSensorValues(int currentValue)
+void GroupData::setMoistureSensorValues(unsigned int currentValue)
 {
 	m_cfg.numReadings++;
 	m_cfg.currentValue = currentValue;

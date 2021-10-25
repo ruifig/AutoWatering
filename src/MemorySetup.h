@@ -1,5 +1,9 @@
 #pragma once
 
+/*
+There is a good explanation of the memory layout at : https://www.nongnu.org/avr-libc/user-manual/malloc.html
+*/
+
 #include "crazygaze/micromuc/Logging.h"
 
 /*

@@ -97,11 +97,6 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 #define IO_EXPANDER_VPIN_SENSOR_2 cz::IOExpanderPin(6)
 #define IO_EXPANDER_VPIN_SENSOR_3 cz::IOExpanderPin(7)
 
-#define IO_EXPANDER_VPIN_SENSOR_0 cz::IOExpanderPin(4)
-#define IO_EXPANDER_VPIN_SENSOR_1 cz::IOExpanderPin(5)
-#define IO_EXPANDER_VPIN_SENSOR_2 cz::IOExpanderPin(6)
-#define IO_EXPANDER_VPIN_SENSOR_3 cz::IOExpanderPin(7)
-
 #define IO_EXPANDER_MOTOR_0_INPUT1 cz::IOExpanderPin(8)
 #define IO_EXPANDER_MOTOR_0_INPUT2 cz::IOExpanderPin(9)
 #define IO_EXPANDER_MOTOR_1_INPUT1 cz::IOExpanderPin(10)

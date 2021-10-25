@@ -6,7 +6,10 @@
         "utility": "cpp",
         "basic_definitions": "cpp",
         "algorithm": "cpp",
-        "mutex": "cpp"
+        "mutex": "cpp",
+        "type_traits": "cpp",
+        "vector": "cpp",
+        "cstddef": "cpp"
     },
     "gitlens.advanced.blame.customArguments": [],
 

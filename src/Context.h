@@ -29,7 +29,7 @@ namespace cz
 	  public:
 		void begin(uint8_t index);
 
-		void setMoistureSensorValues(int currentValue);
+		void setMoistureSensorValues(unsigned int currentValue);
 
 		void setMotorState(bool state);
 
