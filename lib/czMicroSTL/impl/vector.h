@@ -11,6 +11,7 @@ It's not meant to be a full replacement, so depending on needs, some things my b
 #include <cstddef>
 #include <algorithm>
 #include <utility>
+#include <new.h>
 
 #define CZ_VECTOR_ASSERT(x) assert(x)
 #define CZ_VECTOR_ASSERT_SLOW(x) assert(x)

@@ -150,6 +150,7 @@
             <Value>%24(ProjectDir)\lib\SD\src\utility</Value>
             <Value>%24(ProjectDir)\lib\memdebug\src</Value>
             <Value>%24(ProjectDir)\lib\stackmon\src</Value>
+            <Value>%24(ProjectDir)\lib\czmut\lib\czmut\src</Value>
           </ListValues>
         </avrgcccpp.compiler.directories.IncludePaths>
         <avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>
@@ -253,6 +254,7 @@
             <Value>%24(ProjectDir)\lib\SD\src\utility</Value>
             <Value>%24(ProjectDir)\lib\memdebug\src</Value>
             <Value>%24(ProjectDir)\lib\stackmon\src</Value>
+            <Value>%24(ProjectDir)\lib\czmut\lib\czmut\src</Value>
           </ListValues>
         </avrgcccpp.compiler.directories.IncludePaths>
         <avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>
@@ -359,6 +361,7 @@
             <Value>%24(ProjectDir)\lib\SD\src\utility</Value>
             <Value>%24(ProjectDir)\lib\memdebug\src</Value>
             <Value>%24(ProjectDir)\lib\stackmon\src</Value>
+            <Value>%24(ProjectDir)\lib\czmut\lib\czmut\src</Value>
           </ListValues>
         </avrgcccpp.compiler.directories.IncludePaths>
         <avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>
@@ -400,11 +403,17 @@
     <Folder Include="lib\czmicromuc\src\crazygaze\micromuc" />
     <Folder Include="lib\czMicroSTL\impl" />
     <Folder Include="lib\czMicroSTL\tests" />
+    <Folder Include="lib\czmut\lib" />
+    <Folder Include="lib\czmut\lib\czmut" />
+    <Folder Include="lib\czmut\lib\czmut\src" />
+    <Folder Include="lib\czmut\lib\czmut\src\czmut" />
+    <Folder Include="lib\czmut\lib\czmut\src\czmut\helpers" />
     <Folder Include="lib\EEPROM\src" />
     <Folder Include="lib\EEPROM" />
     <Folder Include="lib\memdebug\" />
     <Folder Include="lib\memdebug\src" />
     <Folder Include="lib\memdebug\src\memdebug\" />
+    <Folder Include="lib\czmut" />
     <Folder Include="lib\stackmon\" />
     <Folder Include="lib\stackmon\src" />
     <Folder Include="lib\SD" />
@@ -495,9 +504,9 @@
     <Compile Include="lib\Adafruit TouchScreen\TouchScreen.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="lib\czAT24C\AT24C.cpp">
+    <None Include="lib\czAT24C\AT24C.cpp">
       <SubType>compile</SubType>
-    </Compile>
+    </None>
     <Compile Include="lib\czAT24C\AT24C.h">
       <SubType>compile</SubType>
     </Compile>
@@ -564,7 +573,19 @@
     <Compile Include="lib\czMicroSTL\impl\vector.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="lib\czMicroSTL\tests\vector_tests.cpp">
+    <None Include="lib\czMicroSTL\tests\vector_tests.cpp">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="lib\czmut\lib\czmut\src\czmut\czmut.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="lib\czmut\lib\czmut\src\czmut\czmut.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="lib\czmut\lib\czmut\src\czmut\helpers\ministd.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="lib\czmut\lib\czmut\src\czmut\helpers\vaargs_to_string_array.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="lib\EEPROM\src\EEPROM.h">
@@ -845,6 +866,9 @@
       <SubType>compile</SubType>
     </None>
     <None Include="lib\czMicroSTL\vector">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="lib\czmut\lib\czmut\src\czmut\helpers\initializer_list">
       <SubType>compile</SubType>
     </None>
     <None Include="lib\MCUFRIEND_kbv\keywords.txt">
