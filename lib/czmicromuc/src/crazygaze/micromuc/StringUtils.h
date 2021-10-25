@@ -30,6 +30,7 @@ namespace detail
 	void skipTo(const char*& src, int c);
 	void skipToAfter(const char*& src, int c);
 	int advance(const char*& src);
+	bool parseParam(const char* src, bool& dst);
 	bool parseParam(const char* src, int& dst);
 	bool parseParam(const char* src, float& dst);
 	bool parseParam(const char* src, char* dst);

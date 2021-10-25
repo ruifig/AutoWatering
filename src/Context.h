@@ -33,10 +33,10 @@ namespace cz
 
 		void setMotorState(bool state);
 
-		// Starts running this group (aka: It will monitor and water)
-		void start();
-		// Stops running this group (aka: Stops monitoring and watering)
-		void stop();
+		// Turns this group on or off
+		// On : It will monitor and water
+		// Off : Stops monitoring and watering
+		void setRunning(bool state);
 
 		bool isRunning() const
 		{
@@ -93,13 +93,7 @@ namespace cz
 			return m_history;
 		}
 
-		uint32_t getNumReadings() const
-		{
-			return m_cfg.numReadings;
-		}
-
 		void resetHistory();
-
 
 	protected:
 		friend class ProgramData;

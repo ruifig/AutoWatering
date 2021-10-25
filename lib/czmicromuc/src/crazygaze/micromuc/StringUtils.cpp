@@ -49,6 +49,18 @@ namespace detail
 		return size;
 	}
 
+	bool parseParam(const char* src, bool& dst)
+	{
+		int dummy;
+		if (!parseParam(src, dummy))
+		{
+			return false;
+		}
+
+		return dummy==0 ? false : true;
+	}
+
+
 	bool parseParam(const char* src, int& dst)
 	{
 		int c = *src;

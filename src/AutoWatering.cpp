@@ -221,6 +221,22 @@ void loop()
 					gCtx.data.getGroupData(idx).setThresholdValue(value);
 				}
 			}
+			else if (strcmp_P(cmd, (const char*)F("startgroup"))==0)
+			{
+				int idx;
+				if (parseCommand(idx) && idx < NUM_MOISTURESENSORS)
+				{
+					gCtx.data.getGroupData(idx).setRunning(true);
+				}
+			}
+			else if (strcmp_P(cmd, (const char*)F("stopgroup"))==0)
+			{
+				int idx;
+				if (parseCommand(idx) && idx < NUM_MOISTURESENSORS)
+				{
+					gCtx.data.getGroupData(idx).setRunning(false);
+				}
+			}
 			else if (strcmp_P(cmd, (const char*)F("setmocksensor"))==0)
 			{
 				int idx, value;

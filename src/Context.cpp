@@ -184,26 +184,15 @@ void GroupData::setMotorState(bool state)
 	Component::raiseEvent(MotorEvent(m_index, m_motorIsOn));
 }
 
-void GroupData::start()
+void GroupData::setRunning(bool state)
 {
-	if (m_cfg.running)
+	if (m_cfg.running == state)
 	{
 		return;
 	}
 
-	m_cfg.running = true;
-	Component::raiseEvent(GroupEvent(m_index, true));
-}
-
-void GroupData::stop()
-{
-	if (!m_cfg.running)
-	{
-		return;
-	}
-
-	m_cfg.running = false;
-	Component::raiseEvent(GroupEvent(m_index, false));
+	m_cfg.running = state;
+	Component::raiseEvent(GroupEvent(m_index, state));
 }
 
 void GroupData::resetHistory()

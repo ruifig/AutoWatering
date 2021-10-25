@@ -26,6 +26,10 @@ class GroupMonitor : public Component
 	IOExpanderPin m_motorPin2;
 	uint8_t m_index;
 
+	// Tells if there was a sensor reading since the last watering.
+	// This is used to make sure we don't turn on the motor unless there was a recent sensor reading
+	bool m_sensorReadingSinceLastShot;
+
 	// This serves two purposes
 	// * If >0 then it means the motor is ON and we're counting down to turn it off
 	// * If <= 0 then it means the motor is OFF, and...

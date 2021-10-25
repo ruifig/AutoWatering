@@ -8,6 +8,7 @@ GroupMonitor::GroupMonitor(uint8_t index, IOExpanderPin motorPin1, IOExpanderPin
 	: m_index(index)
 	, m_motorPin1(motorPin1)
 	, m_motorPin2(motorPin2)
+	, m_sensorReadingSinceLastShot(0)
 {
 }
 
@@ -40,6 +41,10 @@ void GroupMonitor::turnMotorOff()
 float GroupMonitor::tick(float deltaSeconds)
 {
 	GroupData& data = gCtx.data.getGroupData(m_index);
+	if (!data.isRunning())
+	{
+		return 1.0f;
+	}
 
 	if (m_motorOffCountdown > 0) // Motor is on
 	{
@@ -51,9 +56,10 @@ float GroupMonitor::tick(float deltaSeconds)
 	}
 	else if (m_motorOffCountdown <= -MINIMUM_TIME_BETWEEN_MOTOR_ON)
 	{
-		if (data.getCurrentValue() > data.getThresholdValue())
+		if (m_sensorReadingSinceLastShot && data.getCurrentValue() > data.getThresholdValue())
 		{
 			turnMotorOn(true);
+			m_sensorReadingSinceLastShot = false;
 		}
 	}
 	else // m_motorOffCountdown is in the ]-MINIMUM_TIME_BETWEEN_MOTOR_ON, 0] range
@@ -65,25 +71,36 @@ float GroupMonitor::tick(float deltaSeconds)
 	return 0.2f;
 }
 
-
-#warning Was here making GroupMonitor have states so we are sure it turns the motor OFF if the user disables the group
 void GroupMonitor::onEvent(const Event& evt)
 {
-#if 0
 	switch(evt.type)
 	{
 		case Event::ConfigLoad:
 		break;
 
-		case Event::Group:
+		case Event::SoilMoistureSensorReading:
 		{
-			const GroupEvent& e = static_cast<const GroupEvent&>(evt);
+			const auto& e = static_cast<const SoilMoistureSensorReadingEvent&>(evt);
+			if (e.index == m_index)
+			{
+				m_sensorReadingSinceLastShot = true;
+			}
 		}
 		break;
 
+		case Event::Group:
+		{
+			const GroupEvent& e = static_cast<const GroupEvent&>(evt);
+			if (e.index == m_index && e.started == false)
+			{
+				turnMotorOff();
+			}
+		}
+		break;
+
+		default:
 		break;
 	}
-#endif
 }
 	
 } // namespace cz
