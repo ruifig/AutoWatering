@@ -59,8 +59,8 @@ const StaticLabelData introLabel1_P PROGMEM =
 		{10, 10, SCREEN_WIDTH - 20, SCREEN_HEIGHT - 20 }, // box
 		HAlign::Left, VAlign::Top,
 		LARGE_FONT,
-		Colour_Green,
-		Colour_Black,
+		INTRO_TEXT_COLOUR,
+		SCREEN_BKG_COLOUR,
 		WidgetFlag::None
 	},
 	(const __FlashStringHelper*)introLabel1_value_P
@@ -73,8 +73,8 @@ const StaticLabelData introLabel2_P PROGMEM =
 		{10, 10, SCREEN_WIDTH - 20, SCREEN_HEIGHT - 20 }, // box
 		HAlign::Center, VAlign::Center,
 		LARGE_FONT,
-		Colour_Green,
-		Colour_Black,
+		INTRO_TEXT_COLOUR,
+		SCREEN_BKG_COLOUR,
 		WidgetFlag::None
 	},
 	(const __FlashStringHelper*)introLabel2_value_P
@@ -87,8 +87,8 @@ const StaticLabelData introLabel3_P PROGMEM =
 		{10, 10, SCREEN_WIDTH - 20, SCREEN_HEIGHT - 20 }, // box
 		HAlign::Right, VAlign::Bottom,
 		LARGE_FONT,
-		Colour_Green,
-		Colour_Black,
+		INTRO_TEXT_COLOUR,
+		SCREEN_BKG_COLOUR,
 		WidgetFlag::None
 	},
 	(const __FlashStringHelper*)introLabel3_value_P
@@ -213,6 +213,7 @@ void DisplayTFT::OverviewState::init()
 
 void DisplayTFT::OverviewState::tick(float deltaSeconds)
 {
+	m_sensorMainMenu.tick(deltaSeconds);
 	draw();
 }
 
@@ -220,7 +221,7 @@ void DisplayTFT::OverviewState::onEnter()
 {
 	m_forceRedraw = true;
 	memset(m_sensorUpdates, 0, sizeof(m_sensorUpdates));
-	m_sensorMainMenu.draw(true);
+	m_sensorMainMenu.setForceDraw();
 }
 
 void DisplayTFT::OverviewState::onLeave()
@@ -229,6 +230,8 @@ void DisplayTFT::OverviewState::onLeave()
 
 void DisplayTFT::OverviewState::onEvent(const Event& evt)
 {
+	m_sensorMainMenu.onEvent(evt);
+	
 	for(GroupGraph& w : m_groupGraphs)
 	{
 		w.onEvent(evt);
@@ -291,22 +294,71 @@ void SensorMainMenu::init()
 		m_buttons[(int)id].init((int)id, std::forward<decltype(params)>(params)...);
 	};
 
-	initButton(ButtonID::StartGroup, Overview::getMenuButtonPos(0,0), Colour_Black, img_Play);
-	initButton(ButtonID::StopGroup, Overview::getMenuButtonPos(0,0), Colour_Black, img_Stop);
-	initButton(ButtonID::Shot, Overview::getMenuButtonPos(1,0), Colour_Black, img_Shot);
-	initButton(ButtonID::Settings, Overview::getMenuButtonPos(2,0), Colour_Black, img_Settings);
-	m_buttons[(int)ButtonID::StopGroup].setState(ButtonState::Hidden);
+	initButton(ButtonID::StartGroup, Overview::getMenuButtonPos(0,0), SCREEN_BKG_COLOUR, img_Play);
+	initButton(ButtonID::StopGroup, Overview::getMenuButtonPos(0,0), SCREEN_BKG_COLOUR, img_Stop);
+	initButton(ButtonID::Shot, Overview::getMenuButtonPos(1,0), SCREEN_BKG_COLOUR, img_Shot);
+	initButton(ButtonID::Settings, Overview::getMenuButtonPos(2,0), SCREEN_BKG_COLOUR, img_Settings);
+
+	enable();
 }
 
 void SensorMainMenu::tick(float deltaSeconds)
 {
+	draw();
 }
 
-void SensorMainMenu::draw(bool forceDraw)
+void SensorMainMenu::updateButtons()
 {
-	for(auto&& btn : m_buttons)
+	bool isGroupSelected = gCtx.data.getSelectedGroup()==-1 ? false : true;
+	bool groupIsRunning = isGroupSelected ? gCtx.data.getGroupData(gCtx.data.getSelectedGroup()).isRunning() : false;
+
+	m_buttons[(int)ButtonID::StartGroup].setVisible(!(isGroupSelected && groupIsRunning));
+	m_buttons[(int)ButtonID::StartGroup].setEnabled(isGroupSelected && !groupIsRunning);
+
+	m_buttons[(int)ButtonID::StopGroup].setVisible(isGroupSelected && groupIsRunning);
+	m_buttons[(int)ButtonID::Shot].setEnabled(isGroupSelected);
+	m_buttons[(int)ButtonID::Settings].setEnabled(isGroupSelected);
+}
+
+void SensorMainMenu::onEvent(const Event& evt)
+{
+	switch (evt.type)
 	{
-		btn.draw(forceDraw);
+		case Event::GroupSelected:
+		case Event::GroupOnOff:
+		case Event::ConfigLoad:
+		{
+			updateButtons();
+		}
+		break;
+	}
+}
+
+void SensorMainMenu::draw()
+{
+	for(gfx::ImageButton& btn : m_buttons)
+	{
+		btn.draw(m_forceDraw);
+	}
+	m_forceDraw = false;
+}
+
+void SensorMainMenu::enable()
+{
+	for(gfx::ImageButton& btn : m_buttons)
+	{
+		btn.setEnabled(true);
+		btn.setClearWhenHidden(false);
+	}
+
+	updateButtons();
+}
+
+void SensorMainMenu::disable()
+{
+	for(gfx::ImageButton& btn : m_buttons)
+	{
+		btn.setEnabled(false);
 	}
 }
 	
@@ -394,7 +446,7 @@ void DisplayTFT::changeToState(DisplayState& newState)
 		m_state->onLeave();
 	}
 
-	gScreen.fillScreen(Colour_Black);
+	gScreen.fillScreen(SCREEN_BKG_COLOUR);
 	m_state = &newState;
     m_timeInState = 0.0f;
 	m_state->onEnter();

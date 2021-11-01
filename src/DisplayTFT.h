@@ -19,9 +19,17 @@ class Menu
 
 	virtual void init() = 0;
 	virtual void tick(float deltaSeconds) = 0;
-	virtual void draw(bool forceDraw) = 0;
+	virtual void onEvent(const Event& evt) = 0;
 		
+	void setForceDraw()
+	{
+		m_forceDraw = true;
+	}
+	
   protected:
+	virtual void draw() = 0;
+
+	bool m_forceDraw = false;
 };
 
 enum class ButtonID : uint8_t
@@ -42,9 +50,13 @@ class SensorMainMenu : public Menu
 
 	virtual void init() override;
 	virtual void tick(float deltaSeconds) override;
-	virtual void draw(bool forceDraw = false) override;
+	virtual void onEvent(const Event& evt) override;
 
   protected:
+	virtual void draw() override;
+	void enable();
+	void disable();
+	void updateButtons();
 	
 	enum
 	{
@@ -55,6 +67,7 @@ class SensorMainMenu : public Menu
 		Max
 	};
 	gfx::ImageButton m_buttons[Max];
+	bool m_forceDraw = false;
 };
 
 class DisplayTFT : public Component

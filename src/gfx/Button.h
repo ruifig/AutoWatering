@@ -19,14 +19,13 @@ class BaseButton : public Widget
 	using Widget::Widget;
 
 	bool contains(int16_t x, int16_t y) const;
-	bool isDisabled() const
-	{
-		return m_currState == ButtonState::Disabled;
-	}
 
-	void setState(ButtonState state);
+	void setEnabled(bool enabled);
+	void setVisible(bool visible);
+	void setPressed(bool pressed);
 	bool justReleased() const;
 
+	void setClearWhenHidden(bool doClear);
   protected:	
 
 	void initHelper(uint8_t id, const Rect& pos, uint16_t bkgColour);
@@ -34,9 +33,13 @@ class BaseButton : public Widget
 	uint8_t m_id;
 	Rect m_pos;
 	uint16_t m_bkgColour;
-	ButtonState m_lastState;
-	ButtonState m_currState;
-	bool m_needsRedraw;
+
+	bool m_needsRedraw : 1;
+	bool m_visible : 1;
+	bool m_enabled : 1;
+	bool m_pressed : 1;
+	bool m_lastPressed : 1;
+	bool m_clearWhenHidden : 1;
 };
 
 

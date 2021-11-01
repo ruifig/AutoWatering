@@ -174,6 +174,10 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 	#define INTRO_DURATION 1.0f
 #endif
 
+#define SCREEN_BKG_COLOUR Colour_Black
+
+#define INTRO_TEXT_COLOUR Colour_Green
+
 #define GRAPH_NUMPOINTS (320-32-2)
 #define GRAPH_VALUES_TEXT_COLOUR Colour_DarkGrey
 #define GRAPH_VALUES_BKG_COLOUR Colour_Black

@@ -1,4 +1,5 @@
 #include "Button.h"
+#include "../Config.h"
 
 namespace cz::gfx
 {
@@ -13,9 +14,12 @@ void BaseButton::initHelper(uint8_t id, const Rect& pos, uint16_t bkgColour)
 	m_id = id;
 	m_pos = pos;
 	m_bkgColour = bkgColour;
-	m_currState = ButtonState::Released;
-	m_lastState = ButtonState::Released;
 	m_needsRedraw = true;
+	m_visible = true;
+	m_enabled = true;
+	m_pressed = false;
+	m_lastPressed = false;
+	m_clearWhenHidden = true;
 }
 
 bool BaseButton::contains(int16_t x, int16_t y) const
@@ -23,20 +27,44 @@ bool BaseButton::contains(int16_t x, int16_t y) const
 	return m_pos.contains(x, y);
 }
 
-void BaseButton::setState(ButtonState state)
-{
-	if (state != m_currState)
-	{
-		m_needsRedraw = true;
-	}
-
-	m_lastState = m_currState;
-	m_currState = state;
-}
-
 bool BaseButton::justReleased() const
 {
-	return m_currState==ButtonState::Released && m_lastState == ButtonState::Pressed;
+	return m_pressed == false && m_lastPressed == true;
+}
+
+void BaseButton::setEnabled(bool enabled)
+{
+	m_enabled = enabled;
+	m_needsRedraw = true;
+	if (!enabled)
+	{
+		m_pressed = false;
+	}
+}
+
+void BaseButton::setVisible(bool visible)
+{
+	m_visible = visible;
+	m_needsRedraw = true;
+	if (!visible)
+	{
+		m_pressed = false;
+	}
+}
+
+void BaseButton::setPressed(bool pressed)
+{
+	if (m_visible && m_enabled)
+	{
+		m_pressed = pressed;
+		m_needsRedraw = true;
+	}
+}
+
+void BaseButton::setClearWhenHidden(bool doClear)
+{
+	m_clearWhenHidden = doClear;
+	m_needsRedraw = true;
 }
 
 #pragma endregion
@@ -64,17 +92,20 @@ void ImageButton::draw(bool forceDraw)
 		return;
 	}
 
-	if (m_currState == ButtonState::Hidden)
+	if (!m_visible)
 	{
-		 // do nothing;
+		if (m_clearWhenHidden)
+		{
+			drawRect(m_pos, SCREEN_BKG_COLOUR );
+		}
 	}
-	else if (m_currState == ButtonState::Disabled)
+	else if (m_enabled)
 	{
-		drawRGBBitmapDisabled_P(m_pos.x, m_pos.y, m_img.bmp, m_img.mask, m_img.width, m_img.height, Colour_Black);
+		drawRGBBitmap_P(m_pos.x, m_pos.y, m_img.bmp, m_img.mask, m_img.width, m_img.height, SCREEN_BKG_COLOUR);
 	}
 	else
 	{
-		drawRGBBitmap_P(m_pos.x, m_pos.y, m_img.bmp, m_img.mask, m_img.width, m_img.height, Colour_Black);
+		drawRGBBitmapDisabled_P(m_pos.x, m_pos.y, m_img.bmp, m_img.mask, m_img.width, m_img.height, SCREEN_BKG_COLOUR);
 	}
 
 	m_needsRedraw = false;
