@@ -3,6 +3,7 @@
 #include "Config.h"
 #include "gfx/Label.h"
 #include "gfx/Button.h"
+#include "GroupGraph.h"
 #include <Adafruit_GFX.h>
 #include <MCUFRIEND_kbv.h>
 #include <TouchScreen.h>
@@ -142,11 +143,10 @@ class DisplayTFT : public Component
 
 	protected:
 
-		void drawOverview();
-		void drawHistoryBoxes();
-		void plotHistory(int groupIndex);
+		void draw();
 
-		bool m_forceRedraw[NUM_MOISTURESENSORS];
+		GroupGraph m_groupGraphs[NUM_MOISTURESENSORS];
+		bool m_forceRedraw;
 		uint8_t m_sensorUpdates[NUM_MOISTURESENSORS];
 		SensorMainMenu m_sensorMainMenu;
 		// 0...N-1, or 255 if no group selected

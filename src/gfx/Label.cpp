@@ -70,7 +70,10 @@ FixedNumLabel::FixedNumLabel(const FixedLabelData* data_P, int value)
 void FixedNumLabel::draw(bool forceDraw)
 {
 	if (!m_needsRedraw && !forceDraw)
-	return;
+	{
+		return;
+	}
+
 
 	FixedLabelData data;
 	memcpy_P(&data, m_data_P, sizeof(data));

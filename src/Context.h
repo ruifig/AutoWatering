@@ -156,9 +156,20 @@ public:
 	void load();
 
 	void begin();
+
+	//
+	// Returns the selected group
+	// -1 means no group selected
+	int8_t getSelectedGroup() const;
+
+	// Sets the selected group
+	// -1 means no group selected
+	void setSelectedGroup(int8_t index);
+	
   private:
 	GroupData m_group[NUM_MOISTURESENSORS];
 	bool m_moistureSensorMutex = false;
+	int8_t selectedGroup = -1;
 };
 
 struct Context

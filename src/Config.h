@@ -178,7 +178,8 @@ using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 #define GRAPH_VALUES_TEXT_COLOUR Colour_DarkGrey
 #define GRAPH_VALUES_BKG_COLOUR Colour_Black
 #define GRAPH_BORDER_COLOUR Colour_VeryDarkGrey
-#define GRAPH_SELECTEDBORDER_COLOUR Colour_Green
+#define GRAPH_SELECTED_BORDER_COLOUR Colour_Green
+#define GRAPH_NOTSELECTED_BORDER_COLOUR Colour_Black
 #define GRAPH_BKG_COLOUR Colour_Black
 #define GRAPH_NOTRUNNING_TEXT_COLOUR Colour_Red
 #define GRAPH_MOTOR_ON_COLOUR Colour_Yellow

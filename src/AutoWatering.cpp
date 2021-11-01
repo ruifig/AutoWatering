@@ -237,6 +237,14 @@ void loop()
 					gCtx.data.getGroupData(idx).setRunning(false);
 				}
 			}
+			else if (strcmp_P(cmd, (const char*)F("selectgroup"))==0)
+			{
+				int8_t idx;
+				if (parseCommand(idx) && idx < NUM_MOISTURESENSORS)
+				{
+					gCtx.data.setSelectedGroup(idx);
+				}
+			}
 			else if (strcmp_P(cmd, (const char*)F("setmocksensor"))==0)
 			{
 				int idx, value;

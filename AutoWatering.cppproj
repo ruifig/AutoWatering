@@ -719,6 +719,9 @@
     <Compile Include="src\Context.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\DisplayCommon.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\DisplayLCD.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -759,6 +762,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\gfx\Widget.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\GroupGraph.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\GroupGraph.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\GroupMonitor.cpp">

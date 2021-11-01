@@ -75,6 +75,21 @@ namespace detail
 		}
 	}
 
+	bool parseParam(const char* src, int8_t& dst)
+	{
+		int val;
+		bool res = parseParam(src, val);
+		if (res && val>=-128 && val<=127)
+		{
+			dst = static_cast<int8_t>(val);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
 	bool parseParam(const char* src, float& dst)
 	{
 		int c = *src;

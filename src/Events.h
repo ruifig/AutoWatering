@@ -13,7 +13,8 @@ struct Event
 		ConfigLoad,
 		ConfigSave,
 		SoilMoistureSensorReading,
-		Group,
+		GroupOnOff,
+		GroupSelected,
 		Motor,
 		
 		// Only used for mocking components
@@ -67,21 +68,41 @@ struct SoilMoistureSensorReadingEvent : public Event
 	uint8_t index;
 };
 
-struct GroupEvent : public Event
+struct GroupOnOffEvent : public Event
 {
-	GroupEvent(uint8_t index, bool started)
-		: Event(Event::Group)
+	GroupOnOffEvent(uint8_t index, bool started)
+		: Event(Event::GroupOnOff)
 		, index(index)
 		, started(started)
 	{}
 
 	virtual void log() const override
 	{
-		CZ_LOG(logDefault, Log, F("GroupEvent(%d, %s)"), (int)index, started ? "started" : "stopped");
+		CZ_LOG(logDefault, Log, F("GroupOnOffEvent(%d, %s)"), (int)index, started ? "started" : "stopped");
 	}
 	
 	uint8_t index;
 	bool started;
+};
+
+struct GroupSelectedEvent : public Event
+{
+	GroupSelectedEvent(int8_t index, int8_t previousIndex)
+		: Event(Event::GroupSelected)
+		, index(index)
+		, previousIndex(previousIndex)
+	{}
+
+	virtual void log() const override
+	{
+		CZ_LOG(logDefault, Log, F("GroupSelectedEvent(%d, %d)"), (int)index, (int)previousIndex);
+	}
+	
+	// What group was selected
+	// If -1, then there is no group selected
+	int8_t index;
+	// What group was previously selected, or -1 if there was not group previously selected
+	int8_t previousIndex;
 };
 
 struct MotorEvent : public Event

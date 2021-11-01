@@ -88,9 +88,9 @@ void GroupMonitor::onEvent(const Event& evt)
 		}
 		break;
 
-		case Event::Group:
+		case Event::GroupOnOff:
 		{
-			const GroupEvent& e = static_cast<const GroupEvent&>(evt);
+			const GroupOnOffEvent& e = static_cast<const GroupOnOffEvent&>(evt);
 			if (e.index == m_index && e.started == false)
 			{
 				turnMotorOff();

@@ -192,7 +192,7 @@ void GroupData::setRunning(bool state)
 	}
 
 	m_cfg.running = state;
-	Component::raiseEvent(GroupEvent(m_index, state));
+	Component::raiseEvent(GroupOnOffEvent(m_index, state));
 }
 
 void GroupData::resetHistory()
@@ -220,6 +220,18 @@ void ProgramData::begin()
 		g.begin(idx);
 		idx++;
 	}
+}
+
+int8_t ProgramData::getSelectedGroup() const
+{
+	return selectedGroup;
+}
+
+void ProgramData::setSelectedGroup(int8_t index)
+{
+	int8_t previousIndex = selectedGroup;
+	selectedGroup = index;
+	Component::raiseEvent(GroupSelectedEvent(index, previousIndex));
 }
 
 GroupData& ProgramData::getGroupData(uint8_t index)
