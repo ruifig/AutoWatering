@@ -16,6 +16,5 @@ constexpr Rect getHistoryPlotRect(int index)
 	);
 	return rect;
 }
-	
-	
+
 } // namespace cz

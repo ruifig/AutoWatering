@@ -29,8 +29,9 @@ struct Event
 
 struct ConfigLoadEvent : public Event
 {
-	ConfigLoadEvent()
+	ConfigLoadEvent(int8_t group = -1)
 		: Event(Event::ConfigLoad)
+		, group(group)
 	{
 	}
 	
@@ -38,11 +39,15 @@ struct ConfigLoadEvent : public Event
 	{
 		CZ_LOG(logDefault, Log, F("ConfigLoadEvent"));
 	}
+
+	// if -1, then its loading the entire config.
+	// if !=-1 then its loading this specific group only
+	int8_t group;
 };
 
 struct ConfigSaveEvent : public Event
 {
-	ConfigSaveEvent()
+	ConfigSaveEvent(int8_t group = -1)
 		: Event(Event::ConfigSave)
 	{
 	}
@@ -51,6 +56,10 @@ struct ConfigSaveEvent : public Event
 	{
 		CZ_LOG(logDefault, Log, F("ConfigSaveEvent"));
 	}
+
+	// if -1, then its saving the entire config.
+	// if !=-1 then its saving this specific group only
+	int8_t group;
 };
 
 struct SoilMoistureSensorReadingEvent : public Event

@@ -15,6 +15,7 @@ public:
 	virtual void draw(bool forceDraw = false) override;
 	void onEvent(const Event& evt);
 	void init(int8_t index);
+	bool contains(const Pos& pos) const;
 private:
 
 	void plotHistory();

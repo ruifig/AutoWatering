@@ -27,6 +27,11 @@ bool BaseButton::contains(int16_t x, int16_t y) const
 	return m_pos.contains(x, y);
 }
 
+bool BaseButton::contains(const Pos& pos) const
+{
+	return m_pos.contains(pos);
+}
+
 bool BaseButton::justReleased() const
 {
 	return m_pressed == false && m_lastPressed == true;
@@ -96,7 +101,7 @@ void ImageButton::draw(bool forceDraw)
 	{
 		if (m_clearWhenHidden)
 		{
-			drawRect(m_pos, SCREEN_BKG_COLOUR );
+			fillRect(m_pos, SCREEN_BKG_COLOUR );
 		}
 	}
 	else if (m_enabled)

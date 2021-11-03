@@ -63,8 +63,8 @@ FixedNumLabel::FixedNumLabel(const FixedLabelData* data_P, int value)
 	: m_data_P(data_P)
 	, m_value(value)
 	, m_needsRedraw(true)
+	, m_hasValue(false)
 {
-
 }
 
 void FixedNumLabel::draw(bool forceDraw)
@@ -74,27 +74,43 @@ void FixedNumLabel::draw(bool forceDraw)
 		return;
 	}
 
-
-	FixedLabelData data;
-	memcpy_P(&data, m_data_P, sizeof(data));
-	const char *str;
-	if (enumHasAnyFlags(data.flags, WidgetFlag::NumAsPercentage))
+	FixedLabelData data = getFixedData();
+	if (m_hasValue)
 	{
-		str = formatString(F("%3u%%"), m_value);
+		const char *str;
+		if (enumHasAnyFlags(data.flags, WidgetFlag::NumAsPercentage))
+		{
+			str = formatString(F("%3u%%"), m_value);
+		}
+		else
+		{
+			str = itoa(m_value, getTemporaryString(), 10);
+		}
+
+		drawImpl(data, str);
 	}
 	else
 	{
-		str = itoa(m_value, getTemporaryString(), 10);
+		fillRect(data.pos, data.bkgColour);
 	}
 
-	drawImpl(data, str);
 	m_needsRedraw = false;
+}
+
+void FixedNumLabel::clearValue()
+{
+	if (m_hasValue)
+	{
+		m_hasValue = false;
+		m_needsRedraw = true;
+	}
 }
 
 void FixedNumLabel::setValue(int value)
 {
-	if (value != m_value)
+	if (!m_hasValue  || (value != m_value))
 	{
+		m_hasValue = true;
 		m_value = value;
 		m_needsRedraw = true;
 	}
@@ -104,6 +120,24 @@ void FixedNumLabel::setValueAndDraw(int value, bool forceDraw)
 {
 	setValue(value);
 	draw(forceDraw);
+}
+
+void FixedNumLabel::clearValueAndDraw(bool forceDraw)
+{
+	clearValue();
+	draw(forceDraw);
+}
+
+cz::Rect FixedNumLabel::getRect() const
+{
+	return getFixedData().pos;
+}
+
+cz::gfx::FixedLabelData FixedNumLabel::getFixedData() const
+{
+	FixedLabelData data;
+	memcpy_P(&data, m_data_P, sizeof(data));
+	return data;
 }
 
 } // namespace cz::gfx

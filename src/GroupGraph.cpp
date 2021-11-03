@@ -23,12 +23,23 @@ void GroupGraph::init(int8_t index)
 	m_redrawSelectedBox = false; 
 }
 
+bool GroupGraph::contains(const Pos& pos) const
+{
+	return getHistoryPlotRect(m_index).contains(pos);
+}
+
 void GroupGraph::onEvent(const Event& evt)
 {
 	switch(evt.type)
 	{
 		case Event::ConfigLoad:
-			m_forceRedraw = true;
+		{
+			int8_t group = static_cast<const ConfigLoadEvent&>(evt).group;
+			if (group == m_index)
+			{
+				m_forceRedraw = true;
+			}
+		}
 		break;
 
 		case Event::GroupOnOff:
@@ -89,7 +100,10 @@ void GroupGraph::draw(bool forceDraw)
 		drawOuterBox();
 	}
 
-	plotHistory();
+	if (m_forceRedraw || m_sensorUpdates)
+	{
+		plotHistory();
+	}
 	
 	//
 	// We only need to process the NOT RUNNING label if we are forcing a redraw AND the group is not running

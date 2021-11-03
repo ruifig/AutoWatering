@@ -19,9 +19,15 @@ class BaseButton : public Widget
 	using Widget::Widget;
 
 	bool contains(int16_t x, int16_t y) const;
+	bool contains(const Pos& pos) const;
+	bool canAcceptInput() const
+	{
+		return m_visible && m_enabled;
+	}
 
 	void setEnabled(bool enabled);
 	void setVisible(bool visible);
+
 	void setPressed(bool pressed);
 	bool justReleased() const;
 

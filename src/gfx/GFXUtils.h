@@ -63,10 +63,25 @@ struct Rect
 	{
 	}
 
+	//
+	// Initializes from two points. [topleft, bottomRight)
+	constexpr Rect(const Pos& topLeft, const Pos& bottomRight)
+		: x(topLeft.x)
+		, y(topLeft.y)
+		, width(bottomRight.x - topLeft.x)
+		, height(bottomRight.y - topLeft.y)
+	{
+	}
+
 	bool contains(int16_t x, int16_t y) const
 	{
 	  return ((x >= this->x) && (x < (int16_t)(this->x + this->width)) &&
 	          (y >= this->y) && (y < (int16_t)(this->y + this->height)));
+	}
+
+	bool contains(const Pos& pos) const
+	{
+		return contains(pos.x, pos.y);
 	}
 
 	// Returns a Rect expanded the number of specified pixels in all 4 directions (top/bottom/left/right)

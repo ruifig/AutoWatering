@@ -170,7 +170,7 @@ private:
 		{                                                                   \
 			if (::cz::LogVerbosity::VERBOSITY == ::cz::LogVerbosity::Fatal) \
 			{                                                               \
-				::cz::_doAssert(__FILENAME__, __LINE__, fmt, ##__VA_ARGS__);    \
+				::cz::_doAssert(__FILENAME__, __LINE__, fmt, ## __VA_ARGS__);    \
 			}                                                               \
 		}
 

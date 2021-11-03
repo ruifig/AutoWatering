@@ -101,6 +101,16 @@ unsigned int SoilMoistureSensor::readSensor()
 
 void SoilMoistureSensor::onEvent(const Event& evt)
 {
+	switch(evt.type)
+	{
+		case Event::ConfigLoad:
+		case Event::GroupOnOff:
+			if (!gCtx.data.getGroupData(m_index).isRunning())
+			{
+				changeToState(State::PoweredDown);
+			}
+		break;
+	}
 }
 
 void SoilMoistureSensor::changeToState(State newState)

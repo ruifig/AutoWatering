@@ -87,9 +87,13 @@ void Context::begin()
 }
 
 
-void GroupData::begin(uint8_t index)
+void GroupData::begin(uint8_t index, EEPtr& saveAddr)
 {
 	m_index = index;
+
+	CZ_LOG(logDefault, Log, F("Group %d has save address %d"), (int)index, saveAddr.index);
+	m_saveAddr = saveAddr;
+	saveAddr.index += sizeof(m_cfg) + sizeof(m_history);
 
 // Fill the history with some values, for testing purposes
 #if FASTER_ITERATION
@@ -202,36 +206,61 @@ void GroupData::resetHistory()
 
 void GroupData::save(EEPtr& dst) const
 {
+	CZ_ASSERT(dst==m_saveAddr);
 	updateEEPROM(dst, reinterpret_cast<const uint8_t*>(&m_cfg), sizeof(m_cfg));
 	cz::save(dst, m_history);
 }
 
 void GroupData::load(EEPtr& src)
 {
+	CZ_ASSERT(src==m_saveAddr);
 	readEEPROM(src, reinterpret_cast<uint8_t*>(&m_cfg), sizeof(m_cfg));
 	cz::load(src, m_history);
+}
+
+void GroupData::isolatedSave() const
+{
+	EEPtr tmp = m_saveAddr;
+	save(tmp);
+	Component::raiseEvent(ConfigSaveEvent(m_index));
+}
+
+void GroupData::isolatedLoad()
+{
+	EEPtr tmp = m_saveAddr;
+	load(tmp);
+	Component::raiseEvent(ConfigLoadEvent(m_index));
 }
 
 void ProgramData::begin()
 {
 	uint8_t idx = 0;
+	EEPtr ptr = EEPROM.begin();
 	for(GroupData& g : m_group)
 	{
-		g.begin(idx);
+		g.begin(idx, ptr);
 		idx++;
 	}
 }
 
 int8_t ProgramData::getSelectedGroup() const
 {
-	return selectedGroup;
+	return m_selectedGroup;
+}
+
+bool ProgramData::hasGroupSelected() const
+{
+	return m_selectedGroup == -1 ? false : true;
 }
 
 void ProgramData::setSelectedGroup(int8_t index)
 {
-	int8_t previousIndex = selectedGroup;
-	selectedGroup = index;
-	Component::raiseEvent(GroupSelectedEvent(index, previousIndex));
+	if (index != m_selectedGroup)
+	{
+		int8_t previousIndex = m_selectedGroup;
+		m_selectedGroup = index;
+		Component::raiseEvent(GroupSelectedEvent(index, previousIndex));
+	}
 }
 
 GroupData& ProgramData::getGroupData(uint8_t index)

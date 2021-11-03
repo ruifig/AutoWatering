@@ -51,6 +51,7 @@ class SensorMainMenu : public Menu
 	virtual void init() override;
 	virtual void tick(float deltaSeconds) override;
 	virtual void onEvent(const Event& evt) override;
+	bool processTouch(const Pos& pos);
 
   protected:
 	virtual void draw() override;

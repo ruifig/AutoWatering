@@ -27,7 +27,12 @@ namespace cz
 	class GroupData
 	{
 	  public:
-		void begin(uint8_t index);
+		GroupData()
+			: m_saveAddr(0)
+		{
+		}
+		
+		void begin(uint8_t index, EEPtr& saveAddr);
 
 		void setMoistureSensorValues(unsigned int currentValue);
 
@@ -93,6 +98,10 @@ namespace cz
 			return m_history;
 		}
 
+		// Load/save to be used by the menus
+		void isolatedSave() const;
+		void isolatedLoad();
+		
 		void resetHistory();
 
 	protected:
@@ -104,6 +113,7 @@ namespace cz
 
 		// How many seconds to wait between samplings
 		uint8_t m_index;
+		EEPtr m_saveAddr;
 
 		// Data that should be saved/loaded
 		struct
@@ -162,6 +172,10 @@ public:
 	// -1 means no group selected
 	int8_t getSelectedGroup() const;
 
+	//
+	// Returns true if a group is selected, false otherwise
+	bool hasGroupSelected() const;
+
 	// Sets the selected group
 	// -1 means no group selected
 	void setSelectedGroup(int8_t index);
@@ -169,7 +183,7 @@ public:
   private:
 	GroupData m_group[NUM_MOISTURESENSORS];
 	bool m_moistureSensorMutex = false;
-	int8_t selectedGroup = -1;
+	int8_t m_selectedGroup = -1;
 };
 
 struct Context

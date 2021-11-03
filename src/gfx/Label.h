@@ -77,12 +77,22 @@ class FixedLabel : public BaseLabel
 
 	virtual void draw(bool forceDraw = false) override
 	{
-		FixedLabelData data;
-		memcpy_P(&data, m_data_P, sizeof(data));
-		drawImpl(data, m_value);
+		drawImpl(getFixedData(), m_value);
+	}
+
+	Rect getRect() const
+	{
+		return getFixedData().pos;
 	}
 
   private:
+
+	FixedLabelData getFixedData() const
+	{
+		FixedLabelData data;
+		memcpy_P(&data, m_data_P, sizeof(data));
+		return data;
+	}
 	const FixedLabelData* m_data_P;
 	char m_value[m_bufSize];
 };
@@ -97,12 +107,18 @@ class FixedNumLabel : public BaseLabel
 	FixedNumLabel(const FixedLabelData* data_P, int value = 0);
 	virtual void draw(bool forceDraw = false) override;
 	void setValue(int value);
+	void clearValue();
 	void setValueAndDraw(int value, bool forceDraw = false);
+	void clearValueAndDraw(bool forceDraw = false);
+
+	Rect getRect() const;
 
   private:
+	FixedLabelData getFixedData() const;
 	const FixedLabelData* m_data_P;
 	int m_value;
-	bool m_needsRedraw;
+	bool m_needsRedraw : 1;
+	bool m_hasValue : 1;
 };
 
 	
