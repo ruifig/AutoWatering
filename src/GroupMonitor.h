@@ -15,12 +15,16 @@ class GroupMonitor : public Component
 	virtual float tick(float deltaSeconds) override;
 	virtual void onEvent(const Event& evt) override;
 
-	// This should not be use externally except for testing
-	void turnMotorOn(bool direction = true);
+	// Initiates an explicit shot
+	// If the motor is already running, it does nothing
+	void doShot();
+
 	// This should not be use externally except for testing
 	void turnMotorOff();
 	
   protected:
+
+	void turnMotorOn(bool direction = true);
 
 	IOExpanderPin m_motorPin1;
 	IOExpanderPin m_motorPin2;

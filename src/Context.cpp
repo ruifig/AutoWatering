@@ -188,6 +188,11 @@ void GroupData::setMotorState(bool state)
 	Component::raiseEvent(MotorEvent(m_index, m_motorIsOn));
 }
 
+bool GroupData::isMotorOn() const
+{
+	return m_motorIsOn;
+}
+
 void GroupData::setRunning(bool state)
 {
 	if (m_cfg.running == state)
@@ -243,9 +248,9 @@ void ProgramData::begin()
 	}
 }
 
-int8_t ProgramData::getSelectedGroup() const
+GroupData* ProgramData::getSelectedGroup()
 {
-	return m_selectedGroup;
+	return m_selectedGroup==-1 ? nullptr : &m_group[m_selectedGroup];
 }
 
 bool ProgramData::hasGroupSelected() const

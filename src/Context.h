@@ -37,6 +37,7 @@ namespace cz
 		void setMoistureSensorValues(unsigned int currentValue);
 
 		void setMotorState(bool state);
+		bool isMotorOn() const;
 
 		// Turns this group on or off
 		// On : It will monitor and water
@@ -96,6 +97,11 @@ namespace cz
 		const HistoryQueue& getHistory()
 		{
 			return m_history;
+		}
+
+		uint8_t getIndex() const
+		{
+			return m_index;
 		}
 
 		// Load/save to be used by the menus
@@ -168,13 +174,13 @@ public:
 	void begin();
 
 	//
-	// Returns the selected group
-	// -1 means no group selected
-	int8_t getSelectedGroup() const;
-
-	//
 	// Returns true if a group is selected, false otherwise
 	bool hasGroupSelected() const;
+
+	//
+	// Returns the selected group
+	// nullptr if no group is selected
+	GroupData* getSelectedGroup();
 
 	// Sets the selected group
 	// -1 means no group selected

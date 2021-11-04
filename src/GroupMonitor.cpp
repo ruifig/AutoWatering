@@ -21,11 +21,23 @@ void GroupMonitor::begin()
 	gCtx.ioExpander.digitalWrite(m_motorPin2, LOW);
 }
 
+void GroupMonitor::doShot()
+{
+	CZ_LOG(logDefault, Log, F("Initiating user requested shot for group %d"), m_index);
+	turnMotorOn(true);
+}
+
 void GroupMonitor::turnMotorOn(bool direction)
 {
+	GroupData& data = gCtx.data.getGroupData(m_index);
+	if (data.isMotorOn())
+	{
+		CZ_LOG(logDefault, Warning, F("Request to turn motor on for group %d ignored because motor was already on"), m_index);
+		return;
+	}
+
 	gCtx.ioExpander.digitalWrite(m_motorPin1, direction ? LOW : HIGH);
 	gCtx.ioExpander.digitalWrite(m_motorPin2, direction ? HIGH : LOW);
-	GroupData& data = gCtx.data.getGroupData(m_index);
 	data.setMotorState(true);
 	m_motorOffCountdown = data.getShotDuration();
 	m_sensorReadingSinceLastShot = false;

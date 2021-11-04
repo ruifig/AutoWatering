@@ -7,6 +7,7 @@
 #include "Icons.h"
 #include "DisplayCommon.h"
 
+void doGroupShot(uint8_t index);
 
 #define YP A3  // must be an analog pin, use "An" notation!
 #define XM A2  // must be an analog pin, use "An" notation!
@@ -367,7 +368,7 @@ bool SensorMainMenu::processTouch(const Pos& pos)
 		if (btn.canAcceptInput() && btn.contains(pos))
 		{
 			CZ_ASSERT(gCtx.data.hasGroupSelected());
-			gCtx.data.getGroupData(gCtx.data.getSelectedGroup()).setRunning(true);
+			gCtx.data.getSelectedGroup()->setRunning(true);
 			return true;
 		}
 	}
@@ -377,7 +378,7 @@ bool SensorMainMenu::processTouch(const Pos& pos)
 		if (btn.canAcceptInput() && btn.contains(pos))
 		{
 			CZ_ASSERT(gCtx.data.hasGroupSelected());
-			gCtx.data.getGroupData(gCtx.data.getSelectedGroup()).setRunning(false);
+			gCtx.data.getSelectedGroup()->setRunning(false);
 			return true;
 		}
 	}
@@ -387,8 +388,8 @@ bool SensorMainMenu::processTouch(const Pos& pos)
 		if (btn.canAcceptInput() && btn.contains(pos))
 		{
 			CZ_ASSERT(gCtx.data.hasGroupSelected());
-			// #RVF : Implement this
-			CZ_LOG(logDefault, Log, F("TODO: Implement shot!"));
+			GroupData* data = gCtx.data.getSelectedGroup();
+			doGroupShot(data->getIndex());
 			return true;
 		}
 	}
@@ -410,7 +411,7 @@ bool SensorMainMenu::processTouch(const Pos& pos)
 void SensorMainMenu::updateButtons()
 {
 	bool isGroupSelected = gCtx.data.hasGroupSelected();
-	bool groupIsRunning = isGroupSelected ? gCtx.data.getGroupData(gCtx.data.getSelectedGroup()).isRunning() : false;
+	bool groupIsRunning = isGroupSelected ? gCtx.data.getSelectedGroup()->isRunning() : false;
 
 	m_buttons[(int)ButtonID::StartGroup].setVisible(!(isGroupSelected && groupIsRunning));
 	m_buttons[(int)ButtonID::StartGroup].setEnabled(isGroupSelected && !groupIsRunning);
@@ -418,8 +419,8 @@ void SensorMainMenu::updateButtons()
 	m_buttons[(int)ButtonID::StopGroup].setVisible(isGroupSelected && groupIsRunning);
 
 	// Shot and Settings stay enabled even if the group is not running. This is intentional
-	//m_buttons[(int)ButtonID::Shot].setEnabled(isGroupSelected);
-	//m_buttons[(int)ButtonID::Settings].setEnabled(isGroupSelected);
+	m_buttons[(int)ButtonID::Shot].setEnabled(isGroupSelected);
+	m_buttons[(int)ButtonID::Settings].setEnabled(isGroupSelected);
 }
 
 void SensorMainMenu::onEvent(const Event& evt)
@@ -521,7 +522,7 @@ void DisplayTFT::updateTouch()
 		m_touch.pos.x = map(m_touch.tmp.y, TS_MINY, TS_MAXY, 0, gScreen.width());
 		m_touch.pos.y = map(m_touch.tmp.x, TS_MAXX, TS_MINX, 0, gScreen.height());
 		m_touch.pressed = true;
-		CZ_LOG(logDefault, Log, F("Press=(%3d,%3d)"), m_touch.pos.x, m_touch.pos.y);
+		CZ_LOG(logDefault, Verbose, F("Press=(%3d,%3d)"), m_touch.pos.x, m_touch.pos.y);
 	}
 
 	m_touch.tmp = p;

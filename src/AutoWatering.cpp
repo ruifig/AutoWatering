@@ -76,6 +76,11 @@ GroupMonitorTicker gGroupMonitors[NUM_MOISTURESENSORS] =
 
 TTicker<DisplayTFT, float, TickingMethod> gDisplay(true);
 
+void doGroupShot(uint8_t index)
+{
+	gGroupMonitors[index].getObj().doShot();
+}
+
 unsigned long gPreviousMicros = 0;
 
 struct Foo
@@ -210,7 +215,7 @@ void loop()
 				int idx;
 				if (parseCommand(idx) && idx < NUM_MOISTURESENSORS)
 				{
-					gGroupMonitors[idx].getObj().turnMotorOn();
+					gGroupMonitors[idx].getObj().doShot();
 				}
 			}
 			else if (strcmp_P(cmd, (const char*)F("setgroupthreshold"))==0)
