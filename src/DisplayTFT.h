@@ -20,6 +20,7 @@ class Menu
 	virtual void init() = 0;
 	virtual void tick(float deltaSeconds) = 0;
 	virtual void onEvent(const Event& evt) = 0;
+	virtual bool processTouch(const Pos& pos) = 0;
 		
 	void setForceDraw()
 	{
@@ -32,16 +33,6 @@ class Menu
 	bool m_forceDraw = false;
 };
 
-enum class ButtonID : uint8_t
-{
-	StartGroup,
-	StopGroup,
-	Shot,
-	Settings,
-	Max
-};
-
-
 class SensorMainMenu : public Menu
 {
   public:
@@ -51,24 +42,76 @@ class SensorMainMenu : public Menu
 	virtual void init() override;
 	virtual void tick(float deltaSeconds) override;
 	virtual void onEvent(const Event& evt) override;
-	bool processTouch(const Pos& pos);
+	virtual bool processTouch(const Pos& pos) override;
+
+	void enable();
+	void disable();
 
   protected:
 	virtual void draw() override;
-	void enable();
-	void disable();
 	void updateButtons();
-	
-	enum
+
+	enum class ButtonId : uint8_t
 	{
-		Start,
-		Stop,
+		StartGroup,
+		StopGroup,
 		Shot,
 		Settings,
 		Max
 	};
-	gfx::ImageButton m_buttons[Max];
+	gfx::ImageButton m_buttons[(int)ButtonId::Max];
 	bool m_forceDraw = false;
+};
+
+class SettingsMenu : public Menu
+{
+  public:
+	SettingsMenu() {}
+	virtual ~SettingsMenu() {}
+	virtual void init() override;
+	virtual void tick(float deltaSeconds) override;
+	virtual void onEvent(const Event& evt) override;
+	virtual bool processTouch(const Pos& pos) override;
+
+	void show();
+	void hide();
+
+  protected:
+	virtual void draw() override;
+
+	enum class State : uint8_t
+	{
+		Main,
+		CalibratingSensor,
+		SettingSensorInterval,
+		SettingShotDuration
+	};
+
+	State m_state = State::Main;
+
+	enum class ButtonId : uint8_t
+	{
+		// First line
+		CloseAndSave,
+		Calibrate,
+		SensorInterval,
+		ShotDuration,
+		CloseAndIgnore,
+
+		// Second line
+		SetGroupThreshold,
+		Minus,
+		Plus,
+		
+		Max
+	};
+
+	void setButton(ButtonId idx, bool enabled, bool visible);
+	// Sets a button range (inclusive
+	void setButtonRange(ButtonId first, ButtonId last, bool enabled, bool visible);
+
+
+	gfx::ImageButton m_buttons[(int)ButtonId::Max];
 };
 
 class DisplayTFT : public Component
@@ -163,6 +206,8 @@ class DisplayTFT : public Component
 		bool m_forceRedraw;
 		uint8_t m_sensorUpdates[NUM_MOISTURESENSORS];
 		SensorMainMenu m_sensorMainMenu;
+		SettingsMenu m_settingsMenu;
+
 		// 0...N-1, or 255 if no group selected
 		uint8_t m_selectedGroup = 255;
 	};

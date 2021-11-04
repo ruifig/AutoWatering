@@ -7,7 +7,7 @@ namespace cz::gfx
 //////////////////////////////////////////////////////////////////////////
 // BaseLabel
 //////////////////////////////////////////////////////////////////////////
-void BaseLabel::drawImplHelper(const FixedLabelData& data)
+void BaseLabel::drawImplHelper(const LabelData& data)
 {
 	if (enumHasAnyFlags(data.flags,WidgetFlag::EraseBkg))
 	{
@@ -23,7 +23,7 @@ void BaseLabel::drawImplHelper(const FixedLabelData& data)
 	gScreen.setTextColor((uint16_t)data.textColour);
 }
 
-void BaseLabel::drawImpl(const FixedLabelData& data, const char* value)
+void BaseLabel::drawImpl(const LabelData& data, const char* value)
 {
 	drawImplHelper(data);
 	printAligned(data.pos, data.halign, data.valign, value);
@@ -59,7 +59,7 @@ void StaticLabel::draw(bool forceDraw)
 // FixedNumLabel
 //////////////////////////////////////////////////////////////////////////
 
-FixedNumLabel::FixedNumLabel(const FixedLabelData* data_P, int value)
+FixedNumLabel::FixedNumLabel(const LabelData* data_P, int value)
 	: m_data_P(data_P)
 	, m_value(value)
 	, m_needsRedraw(true)
@@ -74,7 +74,7 @@ void FixedNumLabel::draw(bool forceDraw)
 		return;
 	}
 
-	FixedLabelData data = getFixedData();
+	LabelData data = getFixedData();
 	if (m_hasValue)
 	{
 		const char *str;
@@ -133,9 +133,9 @@ cz::Rect FixedNumLabel::getRect() const
 	return getFixedData().pos;
 }
 
-cz::gfx::FixedLabelData FixedNumLabel::getFixedData() const
+cz::gfx::LabelData FixedNumLabel::getFixedData() const
 {
-	FixedLabelData data;
+	LabelData data;
 	memcpy_P(&data, m_data_P, sizeof(data));
 	return data;
 }

@@ -139,7 +139,7 @@ constexpr Pos getMenuButtonPos(uint8_t col, uint8_t row)
 // Sensor data (left to the history plot)
 //
 #define DEFINE_SENSOR_LABEL_LINE(SENSOR_INDEX, LINE_INDEX, FLAGS) \
-const FixedLabelData sensor##SENSOR_INDEX##line##LINE_INDEX PROGMEM = \
+const LabelData sensor##SENSOR_INDEX##line##LINE_INDEX PROGMEM = \
 { \
 	{ \
 		getHistoryPlotRect(SENSOR_INDEX).x + getHistoryPlotRect(SENSOR_INDEX).width + 2, \
@@ -343,15 +343,15 @@ void DisplayTFT::OverviewState::draw()
 //
 void SensorMainMenu::init()
 {
-	auto initButton = [this](ButtonID id, auto&&... params)
+	auto initButton = [this](ButtonId id, auto&&... params)
 	{
 		m_buttons[(int)id].init((int)id, std::forward<decltype(params)>(params)...);
 	};
 
-	initButton(ButtonID::StartGroup, Overview::getMenuButtonPos(0,0), SCREEN_BKG_COLOUR, img_Play);
-	initButton(ButtonID::StopGroup, Overview::getMenuButtonPos(0,0), SCREEN_BKG_COLOUR, img_Stop);
-	initButton(ButtonID::Shot, Overview::getMenuButtonPos(1,0), SCREEN_BKG_COLOUR, img_Shot);
-	initButton(ButtonID::Settings, Overview::getMenuButtonPos(2,0), SCREEN_BKG_COLOUR, img_Settings);
+	initButton(ButtonId::StartGroup, Overview::getMenuButtonPos(0,0), SCREEN_BKG_COLOUR, img_Play);
+	initButton(ButtonId::StopGroup, Overview::getMenuButtonPos(0,0), SCREEN_BKG_COLOUR, img_Stop);
+	initButton(ButtonId::Shot, Overview::getMenuButtonPos(1,0), SCREEN_BKG_COLOUR, img_Shot);
+	initButton(ButtonId::Settings, Overview::getMenuButtonPos(2,0), SCREEN_BKG_COLOUR, img_Settings);
 
 	enable();
 }
@@ -364,7 +364,7 @@ void SensorMainMenu::tick(float deltaSeconds)
 bool SensorMainMenu::processTouch(const Pos& pos)
 {
 	{
-		ImageButton& btn = m_buttons[(int)ButtonID::StartGroup];
+		ImageButton& btn = m_buttons[(int)ButtonId::StartGroup];
 		if (btn.canAcceptInput() && btn.contains(pos))
 		{
 			CZ_ASSERT(gCtx.data.hasGroupSelected());
@@ -374,7 +374,7 @@ bool SensorMainMenu::processTouch(const Pos& pos)
 	}
 	
 	{
-		ImageButton& btn = m_buttons[(int)ButtonID::StopGroup];
+		ImageButton& btn = m_buttons[(int)ButtonId::StopGroup];
 		if (btn.canAcceptInput() && btn.contains(pos))
 		{
 			CZ_ASSERT(gCtx.data.hasGroupSelected());
@@ -384,7 +384,7 @@ bool SensorMainMenu::processTouch(const Pos& pos)
 	}
 
 	{
-		ImageButton& btn = m_buttons[(int)ButtonID::Shot];
+		ImageButton& btn = m_buttons[(int)ButtonId::Shot];
 		if (btn.canAcceptInput() && btn.contains(pos))
 		{
 			CZ_ASSERT(gCtx.data.hasGroupSelected());
@@ -395,7 +395,7 @@ bool SensorMainMenu::processTouch(const Pos& pos)
 	}
 	
 	{
-		ImageButton& btn = m_buttons[(int)ButtonID::Settings];
+		ImageButton& btn = m_buttons[(int)ButtonId::Settings];
 		if (btn.canAcceptInput() && btn.contains(pos))
 		{
 			CZ_ASSERT(gCtx.data.hasGroupSelected());
@@ -413,14 +413,14 @@ void SensorMainMenu::updateButtons()
 	bool isGroupSelected = gCtx.data.hasGroupSelected();
 	bool groupIsRunning = isGroupSelected ? gCtx.data.getSelectedGroup()->isRunning() : false;
 
-	m_buttons[(int)ButtonID::StartGroup].setVisible(!(isGroupSelected && groupIsRunning));
-	m_buttons[(int)ButtonID::StartGroup].setEnabled(isGroupSelected && !groupIsRunning);
+	m_buttons[(int)ButtonId::StartGroup].setVisible(!(isGroupSelected && groupIsRunning));
+	m_buttons[(int)ButtonId::StartGroup].setEnabled(isGroupSelected && !groupIsRunning);
 
-	m_buttons[(int)ButtonID::StopGroup].setVisible(isGroupSelected && groupIsRunning);
+	m_buttons[(int)ButtonId::StopGroup].setVisible(isGroupSelected && groupIsRunning);
 
 	// Shot and Settings stay enabled even if the group is not running. This is intentional
-	m_buttons[(int)ButtonID::Shot].setEnabled(isGroupSelected);
-	m_buttons[(int)ButtonID::Settings].setEnabled(isGroupSelected);
+	m_buttons[(int)ButtonId::Shot].setEnabled(isGroupSelected);
+	m_buttons[(int)ButtonId::Settings].setEnabled(isGroupSelected);
 }
 
 void SensorMainMenu::onEvent(const Event& evt)
@@ -464,7 +464,148 @@ void SensorMainMenu::disable()
 		btn.setEnabled(false);
 	}
 }
+
+//
+// SettingsMenu
+//
+
+void SettingsMenu::init()
+{
+	auto initButton = [this](ButtonId id, auto&&... params)
+	{
+		m_buttons[(int)id].init((int)id, std::forward<decltype(params)>(params)...);
+	};
+
+	// First line
+	initButton(ButtonId::CloseAndSave, Overview::getMenuButtonPos(0,1), SCREEN_BKG_COLOUR, img_Save);
+	initButton(ButtonId::Calibrate, Overview::getMenuButtonPos(1,1), SCREEN_BKG_COLOUR, img_Ruler);
+	initButton(ButtonId::SensorInterval, Overview::getMenuButtonPos(2,1), SCREEN_BKG_COLOUR, img_SetSensorInterval);
+	initButton(ButtonId::ShotDuration, Overview::getMenuButtonPos(3,1), SCREEN_BKG_COLOUR, img_SetWateringDuration);
+	// Leaving one empty grid space intentionally, so the CloseAndIgnore button is spaced away from the others
+	initButton(ButtonId::CloseAndIgnore, Overview::getMenuButtonPos(5,1), SCREEN_BKG_COLOUR, img_Close);
+
+	// Second line
+	initButton(ButtonId::SetGroupThreshold, Overview::getMenuButtonPos(2,2), SCREEN_BKG_COLOUR, img_SetThreshold);
+	initButton(ButtonId::Minus, Overview::getMenuButtonPos(1,2), SCREEN_BKG_COLOUR, img_Remove);
+	initButton(ButtonId::Plus, Overview::getMenuButtonPos(3,2), SCREEN_BKG_COLOUR, img_Add);
+
+	hide();
+}
+
+void SettingsMenu::tick(float deltaSeconds)
+{
+	draw();
+}
+
+bool SettingsMenu::processTouch(const Pos& pos)
+{
+#if 0
+	{
+		ImageButton& btn = m_buttons[(int)ButtonId::StartGroup];
+		if (btn.canAcceptInput() && btn.contains(pos))
+		{
+			CZ_ASSERT(gCtx.data.hasGroupSelected());
+			gCtx.data.getSelectedGroup()->setRunning(true);
+			return true;
+		}
+	}
 	
+	{
+		ImageButton& btn = m_buttons[(int)ButtonId::StopGroup];
+		if (btn.canAcceptInput() && btn.contains(pos))
+		{
+			CZ_ASSERT(gCtx.data.hasGroupSelected());
+			gCtx.data.getSelectedGroup()->setRunning(false);
+			return true;
+		}
+	}
+
+	{
+		ImageButton& btn = m_buttons[(int)ButtonId::Shot];
+		if (btn.canAcceptInput() && btn.contains(pos))
+		{
+			CZ_ASSERT(gCtx.data.hasGroupSelected());
+			GroupData* data = gCtx.data.getSelectedGroup();
+			doGroupShot(data->getIndex());
+			return true;
+		}
+	}
+	
+	{
+		ImageButton& btn = m_buttons[(int)ButtonId::Settings];
+		if (btn.canAcceptInput() && btn.contains(pos))
+		{
+			CZ_ASSERT(gCtx.data.hasGroupSelected());
+			// #RVF : Implement this
+			CZ_LOG(logDefault, Log, F("TODO: Implement Settings!"));
+			return true;
+		}
+	}
+#endif
+	return false;
+}
+
+#if 0
+void SettingsMenu::updateButtons()
+{
+	bool isGroupSelected = gCtx.data.hasGroupSelected();
+	bool groupIsRunning = isGroupSelected ? gCtx.data.getSelectedGroup()->isRunning() : false;
+
+	m_buttons[(int)ButtonId::StartGroup].setVisible(!(isGroupSelected && groupIsRunning));
+	m_buttons[(int)ButtonId::StartGroup].setEnabled(isGroupSelected && !groupIsRunning);
+
+	m_buttons[(int)ButtonId::StopGroup].setVisible(isGroupSelected && groupIsRunning);
+
+	// Shot and Settings stay enabled even if the group is not running. This is intentional
+	m_buttons[(int)ButtonId::Shot].setEnabled(isGroupSelected);
+	m_buttons[(int)ButtonId::Settings].setEnabled(isGroupSelected);
+}
+#endif
+
+void SettingsMenu::onEvent(const Event& evt)
+{
+}
+
+void SettingsMenu::draw()
+{
+	for(gfx::ImageButton& btn : m_buttons)
+	{
+		btn.draw(m_forceDraw);
+	}
+	m_forceDraw = false;
+}
+
+void SettingsMenu::setButton(ButtonId idx, bool enabled, bool visible)
+{
+	m_buttons[(int)idx].setEnabled(enabled);
+	m_buttons[(int)idx].setVisible(visible);
+	m_buttons[(int)idx].setClearWhenHidden(false);
+};
+
+void SettingsMenu::setButtonRange(ButtonId first, ButtonId last, bool enabled, bool visible)
+{
+	for(int idx = (int)first; idx <= (int)last; idx++)
+	{
+		m_buttons[idx].setEnabled(enabled);
+		m_buttons[idx].setVisible(visible);
+		m_buttons[idx].setClearWhenHidden(false);
+	}
+};
+
+void SettingsMenu::show()
+{
+	// CloseAndSave is hidden until we actually enter a proper settings changing menu
+	setButton(ButtonId::CloseAndSave, false, false);
+	setButtonRange(ButtonId::Calibrate, ButtonId::CloseAndIgnore, true, true);
+
+	setButtonRange(ButtonId::SetGroupThreshold, ButtonId::Plus, false, false);
+}
+
+void SettingsMenu::hide()
+{
+	setButtonRange(ButtonId::CloseAndSave, ButtonId::Plus, false, false);
+}
+
 
 
 //////////////////////////////////////////////////////////////////////////
