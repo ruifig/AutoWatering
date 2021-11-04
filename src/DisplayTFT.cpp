@@ -416,8 +416,10 @@ void SensorMainMenu::updateButtons()
 	m_buttons[(int)ButtonID::StartGroup].setEnabled(isGroupSelected && !groupIsRunning);
 
 	m_buttons[(int)ButtonID::StopGroup].setVisible(isGroupSelected && groupIsRunning);
-	m_buttons[(int)ButtonID::Shot].setEnabled(isGroupSelected);
-	m_buttons[(int)ButtonID::Settings].setEnabled(isGroupSelected);
+
+	// Shot and Settings stay enabled even if the group is not running. This is intentional
+	//m_buttons[(int)ButtonID::Shot].setEnabled(isGroupSelected);
+	//m_buttons[(int)ButtonID::Settings].setEnabled(isGroupSelected);
 }
 
 void SensorMainMenu::onEvent(const Event& evt)
