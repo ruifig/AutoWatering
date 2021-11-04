@@ -28,6 +28,7 @@ void GroupMonitor::turnMotorOn(bool direction)
 	GroupData& data = gCtx.data.getGroupData(m_index);
 	data.setMotorState(true);
 	m_motorOffCountdown = data.getShotDuration();
+	m_sensorReadingSinceLastShot = false;
 }
 
 void GroupMonitor::turnMotorOff()
@@ -41,10 +42,11 @@ void GroupMonitor::turnMotorOff()
 float GroupMonitor::tick(float deltaSeconds)
 {
 	GroupData& data = gCtx.data.getGroupData(m_index);
-	if (!data.isRunning())
-	{
-		return 1.0f;
-	}
+
+	//
+	// Even if the group is not running, we still need to tick and check if the motor is on, to handle
+	// user initiated shots
+	//
 
 	if (m_motorOffCountdown > 0) // Motor is on
 	{
@@ -56,10 +58,9 @@ float GroupMonitor::tick(float deltaSeconds)
 	}
 	else if (m_motorOffCountdown <= -MINIMUM_TIME_BETWEEN_MOTOR_ON)
 	{
-		if (m_sensorReadingSinceLastShot && data.getCurrentValue() > data.getThresholdValue())
+		if (data.isRunning() && m_sensorReadingSinceLastShot && data.getCurrentValue() > data.getThresholdValue())
 		{
 			turnMotorOn(true);
-			m_sensorReadingSinceLastShot = false;
 		}
 	}
 	else // m_motorOffCountdown is in the ]-MINIMUM_TIME_BETWEEN_MOTOR_ON, 0] range
