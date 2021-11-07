@@ -163,35 +163,35 @@ DEFINE_SENSOR_LABELS(1)
 DEFINE_SENSOR_LABELS(2)
 DEFINE_SENSOR_LABELS(3)
 
-FixedNumLabel sensorLabels[NUM_MOISTURESENSORS][3] =
+NumLabel<true> sensorLabels[NUM_MOISTURESENSORS][3] =
 {
 	{
-		{ &sensor0line0 },
-		{ &sensor0line1 },
-		{ &sensor0line2 }
+		{ sensor0line0 },
+		{ sensor0line1 },
+		{ sensor0line2 }
 	}
 #if NUM_MOISTURESENSORS>1
 	,
 	{
-		{ &sensor1line0 },
-		{ &sensor1line1 },
-		{ &sensor1line2 }
+		{ sensor1line0 },
+		{ sensor1line1 },
+		{ sensor1line2 }
 	}
 #endif
 #if NUM_MOISTURESENSORS>2
 	,
 	{
-		{ &sensor2line0 },
-		{ &sensor2line1 },
-		{ &sensor2line2 }
+		{ sensor2line0 },
+		{ sensor2line1 },
+		{ sensor2line2 }
 	}
 #endif
 #if NUM_MOISTURESENSORS>3
 	,
 	{
-		{ &sensor3line0 },
-		{ &sensor3line1 },
-		{ &sensor3line2 }
+		{ sensor3line0 },
+		{ sensor3line1 },
+		{ sensor3line2 }
 	}
 #endif
 };

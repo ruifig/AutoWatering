@@ -97,68 +97,158 @@ class FixedLabel : public BaseLabel
 	char m_value[m_bufSize];
 };
 
-#if 0
-template<int BUFSIZE=10>
-class Label : public BaseLabel
-{
-  public:
-	static int constexpr m_bufSize = BUFSIZE;
 
-	Label(const LabelData& data)
+template<bool FlashStorage>
+struct LabelDataStorage{ };
+
+//
+// Flash storage specialization
+//
+template<>
+struct LabelDataStorage<true>
+{
+protected:
+	LabelDataStorage(const LabelData& data_P)
+		: m_data_P(&data_P)
+	{
+	}
+
+	LabelData& getData()
+	{
+		// We use a global so we don't need to copy out
+		static LabelData tmp;
+		memcpy_P(&tmp, m_data_P, sizeof(tmp));
+		return tmp;
+	}
+
+private:
+	const LabelData* m_data_P = nullptr;
+};
+
+//
+// Ram storage specialization
+//
+template<>
+struct LabelDataStorage<false>
+{
+protected:
+	LabelDataStorage(const LabelData& data)
 		: m_data(data)
 	{
-		m_value[0] = 0;
-	}
-
-	virtual void draw(bool forceDraw = false) override
-	{
-		drawImpl(getFixedData(), m_value);
-	}
-
-	Rect getRect() const
-	{
-		return m_data.pos;
-	}
-
-	void setValue(const __FlashStringHelper* value)
-	{
-		strncpy_P(m_value, (const char*)value, m_bufSize);
-		m_value[m_bufSize-1] = 0;
-	}
-
-	void setValue(const char* value)
-	{
-		strncpy(m_value, value, m_bufSize);
-		m_value[m_bufSize-1] = 0;
 	}
 	
-  private:
+	LabelData& getData()
+	{
+		return m_data;
+	}
+
+private:
 	LabelData m_data;
-	char m_value[m_bufSize];
-	bool m_needsRedraw : 1;
 };
-#endif
 
 
 /**
  * Label that displays a number
  */
-class FixedNumLabel : public BaseLabel
+template<bool StorageLocation>
+class NumLabel : public BaseLabel, public LabelDataStorage<StorageLocation>
 {
   public:
 
-	FixedNumLabel(const LabelData* data_P, int value = 0);
-	virtual void draw(bool forceDraw = false) override;
-	void setValue(int value);
-	void clearValue();
-	void setValueAndDraw(int value, bool forceDraw = false);
-	void clearValueAndDraw(bool forceDraw = false);
+	/*
+	* \para data
+	*	If FlashStorage is true, then this should be a PROGMEM pointer
+	*/
+	NumLabel(const LabelData& data, int value = 0)
+		: LabelDataStorage<StorageLocation>(data) 
+		, m_value(value)
+		, m_needsRedraw(true)
+		, m_hasValue(false)
+	{
+	}
 
-	Rect getRect() const;
+	virtual void draw(bool forceDraw = false) override
+	{
+		if (!m_needsRedraw && !forceDraw)
+		{
+			return;
+		}
+
+		LabelData& data = LabelDataStorage<StorageLocation>::getData();
+		if (m_hasValue)
+		{
+			const char *str;
+			if (enumHasAnyFlags(data.flags, WidgetFlag::NumAsPercentage))
+			{
+				str = formatString(F("%3u%%"), m_value);
+			}
+			else
+			{
+				str = itoa(m_value, getTemporaryString(), 10);
+			}
+
+			drawImpl(data, str);
+		}
+		else
+		{
+			fillRect(data.pos, data.bkgColour);
+		}
+
+		m_needsRedraw = false;
+	}
+
+	void setValue(int value)
+	{
+		if (!m_hasValue  || (value != m_value))
+		{
+			m_hasValue = true;
+			m_value = value;
+			m_needsRedraw = true;
+		}
+	}
+
+	void clearValue()
+	{
+		if (m_hasValue)
+		{
+			m_hasValue = false;
+			m_needsRedraw = true;
+		}
+	}
+
+	void setValueAndDraw(int value, bool forceDraw)
+	{
+		setValue(value);
+		draw(forceDraw);
+	}
+
+	void clearValueAndDraw(bool forceDraw = false)
+	{
+		clearValue();
+		draw(forceDraw);
+	}
+	
+	// If using flash storage, we return an lvalue
+	template<
+		typename Dummy = void,
+		typename = std::enable_if_t<StorageLocation, Dummy>
+		>
+	cz::Rect getRect() const
+	{
+		return LabelDataStorage<StorageLocation>::getData().pos;
+	}
+
+	// If using ram, we return an a const reference
+	template<
+		typename Dummy = void,
+		typename = std::enable_if_t<!StorageLocation, Dummy>
+		>
+	const cz::Rect& getRect() const
+	{
+		return LabelDataStorage<StorageLocation>::getData().pos;
+	}
 
   private:
-	LabelData getFixedData() const;
-	const LabelData* m_data_P;
 	int m_value;
 	bool m_needsRedraw : 1;
 	bool m_hasValue : 1;

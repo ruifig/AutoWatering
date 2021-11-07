@@ -211,6 +211,7 @@ void GroupData::resetHistory()
 
 void GroupData::save(EEPtr& dst) const
 {
+	CZ_LOG(logDefault, Log, F("Saving group %d at address %d (saved=%d)"), m_index, dst.index, m_saveAddr.index);
 	CZ_ASSERT(dst==m_saveAddr);
 	updateEEPROM(dst, reinterpret_cast<const uint8_t*>(&m_cfg), sizeof(m_cfg));
 	cz::save(dst, m_history);
@@ -218,6 +219,7 @@ void GroupData::save(EEPtr& dst) const
 
 void GroupData::load(EEPtr& src)
 {
+	CZ_LOG(logDefault, Log, F("Loading group %d from address %d (saved=%d)"), m_index, src.index, m_saveAddr.index);
 	CZ_ASSERT(src==m_saveAddr);
 	readEEPROM(src, reinterpret_cast<uint8_t*>(&m_cfg), sizeof(m_cfg));
 	cz::load(src, m_history);
@@ -246,6 +248,8 @@ void ProgramData::begin()
 		g.begin(idx, ptr);
 		idx++;
 	}
+
+	CZ_LOG(logDefault, Log, F("Program save/load size is %d"), ptr.index);
 }
 
 GroupData* ProgramData::getSelectedGroup()
