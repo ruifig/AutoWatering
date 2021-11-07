@@ -273,6 +273,14 @@ void loop()
 			{
 				gCtx.data.save();
 			}
+			else if (strcmp_P(cmd, (const char*)F("savegroup"))==0)
+			{
+				uint8_t idx;
+				if (parseCommand(idx) && idx < NUM_MOISTURESENSORS)
+				{
+					gCtx.data.saveGroupConfig(idx);
+				}
+			}
 			else if (strcmp_P(cmd, (const char*)F("load"))==0)
 			{
 				gCtx.data.load();

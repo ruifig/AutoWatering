@@ -28,11 +28,10 @@ namespace cz
 	{
 	  public:
 		GroupData()
-			: m_saveAddr(0)
 		{
 		}
 		
-		void begin(uint8_t index, EEPtr& saveAddr);
+		void begin(uint8_t index);
 
 		void setMoistureSensorValues(unsigned int currentValue);
 
@@ -104,22 +103,21 @@ namespace cz
 			return m_index;
 		}
 
-		// Load/save to be used by the menus
-		void isolatedSave() const;
-		void isolatedLoad();
-		
 		void resetHistory();
 
 	protected:
 		friend class ProgramData;
-		void save(EEPtr& dst) const;
-		void load(EEPtr& src);
+		void save(EEPtr& dst, bool saveConfig, bool saveHistory) const;
+		void load(EEPtr& src, bool loadConfig, bool loadHistory);
+		int getConfigSize() const
+		{
+			return sizeof(m_cfg);
+		}
 
 	  private:
 
 		// How many seconds to wait between samplings
 		uint8_t m_index;
-		EEPtr m_saveAddr;
 
 		// Data that should be saved/loaded
 		struct
@@ -169,6 +167,9 @@ public:
 	void releaseMoistureSensorMutex();
 
 	void save() const;
+	
+	// Saves just 1 single group's config (and not the historyh
+	void saveGroupConfig(uint8_t index);
 	void load();
 
 	void begin();

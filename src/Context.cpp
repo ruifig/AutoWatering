@@ -87,13 +87,9 @@ void Context::begin()
 }
 
 
-void GroupData::begin(uint8_t index, EEPtr& saveAddr)
+void GroupData::begin(uint8_t index)
 {
 	m_index = index;
-
-	CZ_LOG(logDefault, Log, F("Group %d has save address %d"), (int)index, saveAddr.index);
-	m_saveAddr = saveAddr;
-	saveAddr.index += sizeof(m_cfg) + sizeof(m_history);
 
 // Fill the history with some values, for testing purposes
 #if FASTER_ITERATION
@@ -209,47 +205,45 @@ void GroupData::resetHistory()
 	m_history.clear();
 }
 
-void GroupData::save(EEPtr& dst) const
+void GroupData::save(EEPtr& dst, bool saveConfig, bool saveHistory) const
 {
-	CZ_LOG(logDefault, Log, F("Saving group %d at address %d (saved=%d)"), m_index, dst.index, m_saveAddr.index);
-	CZ_ASSERT(dst==m_saveAddr);
-	updateEEPROM(dst, reinterpret_cast<const uint8_t*>(&m_cfg), sizeof(m_cfg));
-	cz::save(dst, m_history);
+
+	if (saveConfig)
+	{
+		CZ_LOG(logDefault, Log, F("Saving group %d config at address %d"), m_index, dst.index);
+		updateEEPROM(dst, reinterpret_cast<const uint8_t*>(&m_cfg), sizeof(m_cfg));
+	}
+
+	if (saveHistory)
+	{
+		CZ_LOG(logDefault, Log, F("Saving group %d history at address %d"), m_index, dst.index);
+		cz::save(dst, m_history);
+	}
 }
 
-void GroupData::load(EEPtr& src)
+void GroupData::load(EEPtr& src, bool loadConfig, bool loadHistory)
 {
-	CZ_LOG(logDefault, Log, F("Loading group %d from address %d (saved=%d)"), m_index, src.index, m_saveAddr.index);
-	CZ_ASSERT(src==m_saveAddr);
-	readEEPROM(src, reinterpret_cast<uint8_t*>(&m_cfg), sizeof(m_cfg));
-	cz::load(src, m_history);
-}
+	if (loadConfig)
+	{
+		CZ_LOG(logDefault, Log, F("Loading group %d config from address %d"), m_index, src.index);
+		readEEPROM(src, reinterpret_cast<uint8_t*>(&m_cfg), sizeof(m_cfg));
+	}
 
-void GroupData::isolatedSave() const
-{
-	EEPtr tmp = m_saveAddr;
-	save(tmp);
-	Component::raiseEvent(ConfigSaveEvent(m_index));
-}
-
-void GroupData::isolatedLoad()
-{
-	EEPtr tmp = m_saveAddr;
-	load(tmp);
-	Component::raiseEvent(ConfigLoadEvent(m_index));
+	if (loadHistory)
+	{
+		CZ_LOG(logDefault, Log, F("Loading group %d history from address %d"), m_index, src.index);
+		cz::load(src, m_history);
+	}
 }
 
 void ProgramData::begin()
 {
 	uint8_t idx = 0;
-	EEPtr ptr = EEPROM.begin();
 	for(GroupData& g : m_group)
 	{
-		g.begin(idx, ptr);
+		g.begin(idx);
 		idx++;
 	}
-
-	CZ_LOG(logDefault, Log, F("Program save/load size is %d"), ptr.index);
 }
 
 GroupData* ProgramData::getSelectedGroup()
@@ -283,14 +277,37 @@ void ProgramData::save() const
 	unsigned long startTime = micros();
 	EEPtr ptr = EEPROM.begin();
 
+	// We save the configs first because they are fixed size, and so we can load/save groups individually when coming
+	// out of the configuration menu
 	for(const GroupData& g : m_group)
 	{
-		g.save(ptr);
+		g.save(ptr, true, false);
+	}
+
+	for(const GroupData& g : m_group)
+	{
+		g.save(ptr, false, true);
 	}
 	
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
 	CZ_LOG(logDefault, Log, F("Saving %u bytes to EEPROM took %u ms"), ptr.index, elapsedMs);
 	Component::raiseEvent(ConfigSaveEvent());
+}
+
+void ProgramData::saveGroupConfig(uint8_t index)
+{
+	unsigned long startTime = micros();
+	EEPtr ptr = EEPROM.begin();
+
+	for(uint8_t idx = 0; idx<index; ++idx)
+	{
+		ptr.index += m_group[idx].getConfigSize();
+	}
+
+	m_group[index].save(ptr, true, false);
+	unsigned long elapsedMs = (micros() - startTime) / 1000;
+	CZ_LOG(logDefault, Log, F("Saving %u bytes to EEPROM took %u ms"), ptr.index, elapsedMs);
+	Component::raiseEvent(ConfigLoadEvent());
 }
 
 void ProgramData::load()
@@ -300,7 +317,12 @@ void ProgramData::load()
 
 	for(GroupData& g : m_group)
 	{
-		g.load(ptr);
+		g.load(ptr, true, false);
+	}
+
+	for(GroupData& g : m_group)
+	{
+		g.load(ptr, false, true);
 	}
 	
 	unsigned long elapsedMs = (micros() - startTime) / 1000;

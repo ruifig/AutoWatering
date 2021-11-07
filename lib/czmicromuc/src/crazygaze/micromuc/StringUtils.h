@@ -33,6 +33,7 @@ namespace detail
 	bool parseParam(const char* src, bool& dst);
 	bool parseParam(const char* src, int& dst);
 	bool parseParam(const char* src, int8_t& dst);
+	bool parseParam(const char* src, uint8_t& dst);
 	bool parseParam(const char* src, float& dst);
 	bool parseParam(const char* src, char* dst);
 

@@ -60,7 +60,6 @@ namespace detail
 		return dummy==0 ? false : true;
 	}
 
-
 	bool parseParam(const char* src, int& dst)
 	{
 		int c = *src;
@@ -82,6 +81,21 @@ namespace detail
 		if (res && val>=-128 && val<=127)
 		{
 			dst = static_cast<int8_t>(val);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	bool parseParam(const char* src, uint8_t& dst)
+	{
+		int val;
+		bool res = parseParam(src, val);
+		if (res && val>=0 && val<=255)
+		{
+			dst = static_cast<uint8_t>(val);
 			return true;
 		}
 		else
