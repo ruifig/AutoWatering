@@ -29,7 +29,6 @@ class Menu
 	
   protected:
 	virtual void draw() = 0;
-
 	bool m_forceDraw = false;
 };
 
@@ -44,8 +43,9 @@ class SensorMainMenu : public Menu
 	virtual void onEvent(const Event& evt) override;
 	virtual bool processTouch(const Pos& pos) override;
 
-	void enable();
-	void disable();
+	void show();
+	void hide();
+	bool checkShowSettings();
 
   protected:
 	virtual void draw() override;
@@ -60,7 +60,7 @@ class SensorMainMenu : public Menu
 		Max
 	};
 	gfx::ImageButton m_buttons[(int)ButtonId::Max];
-	bool m_forceDraw = false;
+	bool m_showSettings : 1;
 };
 
 class SettingsMenu : public Menu
@@ -75,6 +75,7 @@ class SettingsMenu : public Menu
 
 	void show();
 	void hide();
+	bool checkClose(bool& doSave);
 
   protected:
 	virtual void draw() override;
@@ -110,8 +111,9 @@ class SettingsMenu : public Menu
 	// Sets a button range (inclusive
 	void setButtonRange(ButtonId first, ButtonId last, bool enabled, bool visible);
 
-
 	gfx::ImageButton m_buttons[(int)ButtonId::Max];
+
+	ButtonId m_pressedId = ButtonId::Max;	
 };
 
 class DisplayTFT : public Component
@@ -203,13 +205,11 @@ class DisplayTFT : public Component
 		void draw();
 
 		GroupGraph m_groupGraphs[NUM_MOISTURESENSORS];
-		bool m_forceRedraw;
 		uint8_t m_sensorUpdates[NUM_MOISTURESENSORS];
 		SensorMainMenu m_sensorMainMenu;
 		SettingsMenu m_settingsMenu;
-
-		// 0...N-1, or 255 if no group selected
-		uint8_t m_selectedGroup = 255;
+		bool m_forceRedraw : 1;
+		bool m_inSettingsMenu : 1;
 	};
 
 	TouchScreen m_ts;

@@ -113,15 +113,26 @@ protected:
 	{
 	}
 
+	const LabelData& getData() const
+	{
+		return getDataImpl();
+	}
+
 	LabelData& getData()
+	{
+		return const_cast<LabelData&>(getDataImpl());
+	}
+
+private:
+
+	const LabelData& getDataImpl() const
 	{
 		// We use a global so we don't need to copy out
 		static LabelData tmp;
 		memcpy_P(&tmp, m_data_P, sizeof(tmp));
 		return tmp;
 	}
-
-private:
+	
 	const LabelData* m_data_P = nullptr;
 };
 

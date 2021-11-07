@@ -1216,7 +1216,7 @@ const uint8_t img_Ruler_bitmask[] PROGMEM = {
 	0x7f, 0xff, 0xff, 0xfe, 0x1f, 0xff, 0xff, 0xf8, 
 	
 };
-const Image img_Ruler PROGMEM = { img_Ruler_bmp, img_Ruler_bitmask, img_Ruler_width, img_Ruler_height };
+const Image img_Ruler = { img_Ruler_bmp, img_Ruler_bitmask, img_Ruler_width, img_Ruler_height };
 
 
 } // namespace cz

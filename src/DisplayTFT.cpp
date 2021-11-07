@@ -124,7 +124,7 @@ void DisplayTFT::IntroState::onLeave()
 namespace { namespace Overview {
 
 // Make sure we have enough space at the bottom for the menu
-static_assert((SCREEN_HEIGHT - (getHistoryPlotRect(3).y + getHistoryPlotRect(3).height)) > 64, "Need enough space left at the bototm for the menu (64 pixels high)");
+static_assert((SCREEN_HEIGHT - (getHistoryPlotRect(3).y + getHistoryPlotRect(3).height)) > 64, "Need enough space left at the bottom for the menu (64 pixels high)");
 
 constexpr Pos getMenuButtonPos(uint8_t col, uint8_t row)
 {
@@ -211,6 +211,8 @@ void DisplayTFT::OverviewState::init()
 	}
 
 	m_sensorMainMenu.init();
+	m_settingsMenu.init();
+
 }
 
 void DisplayTFT::OverviewState::tick(float deltaSeconds)
@@ -220,7 +222,6 @@ void DisplayTFT::OverviewState::tick(float deltaSeconds)
 	if (m_outer.m_touch.pressed)
 	{
 		bool consumed = false;
-
 
 		for(int8_t idx = 0; idx<NUM_MOISTURESENSORS; idx++)
 		{
@@ -234,19 +235,56 @@ void DisplayTFT::OverviewState::tick(float deltaSeconds)
 
 		if (!consumed)
 		{
-			consumed = m_sensorMainMenu.processTouch(m_outer.m_touch.pos);
+			if (m_inSettingsMenu)
+			{
+				consumed = m_settingsMenu.processTouch(m_outer.m_touch.pos);
+			}
+			else
+			{
+				consumed = m_sensorMainMenu.processTouch(m_outer.m_touch.pos);
+			}
 		}
+
 	}
 
-	m_sensorMainMenu.tick(deltaSeconds);
+	if (!m_inSettingsMenu)
+	{
+		// Doing this before the tick, so if we switch to the Settings menu, the main menu has a chance to be drawn as disabled
+		if (m_sensorMainMenu.checkShowSettings())
+		{
+			CZ_LOG(logDefault, Log, F("Switching to settings"));
+			m_sensorMainMenu.hide();	
+			m_settingsMenu.show();
+			m_inSettingsMenu = true;
+		}
+
+		m_sensorMainMenu.tick(deltaSeconds);
+	}
+
+	if (m_inSettingsMenu)
+	{
+		bool doSave;
+		if (m_settingsMenu.checkClose(doSave))
+		{
+			CZ_LOG(logDefault, Log, F("Switching to main menu"));
+			m_settingsMenu.hide();
+			m_sensorMainMenu.show();
+			m_inSettingsMenu = false;
+		}
+
+		m_settingsMenu.tick(deltaSeconds);
+	}
+	
 	draw();
 }
 
 void DisplayTFT::OverviewState::onEnter()
 {
 	m_forceRedraw = true;
+	m_inSettingsMenu = false;
 	memset(m_sensorUpdates, 0, sizeof(m_sensorUpdates));
 	m_sensorMainMenu.setForceDraw();
+	m_settingsMenu.setForceDraw();
 }
 
 void DisplayTFT::OverviewState::onLeave()
@@ -255,7 +293,14 @@ void DisplayTFT::OverviewState::onLeave()
 
 void DisplayTFT::OverviewState::onEvent(const Event& evt)
 {
-	m_sensorMainMenu.onEvent(evt);
+	if (m_inSettingsMenu)
+	{
+		m_settingsMenu.onEvent(evt);
+	}
+	else
+	{
+		m_sensorMainMenu.onEvent(evt);
+	}
 	
 	for(GroupGraph& w : m_groupGraphs)
 	{
@@ -343,9 +388,12 @@ void DisplayTFT::OverviewState::draw()
 //
 void SensorMainMenu::init()
 {
+	m_showSettings = false;
+	
 	auto initButton = [this](ButtonId id, auto&&... params)
 	{
 		m_buttons[(int)id].init((int)id, std::forward<decltype(params)>(params)...);
+		m_buttons[(int)id].setClearWhenHidden(false);
 	};
 
 	initButton(ButtonId::StartGroup, Overview::getMenuButtonPos(0,0), SCREEN_BKG_COLOUR, img_Play);
@@ -353,7 +401,7 @@ void SensorMainMenu::init()
 	initButton(ButtonId::Shot, Overview::getMenuButtonPos(1,0), SCREEN_BKG_COLOUR, img_Shot);
 	initButton(ButtonId::Settings, Overview::getMenuButtonPos(2,0), SCREEN_BKG_COLOUR, img_Settings);
 
-	enable();
+	show();
 }
 
 void SensorMainMenu::tick(float deltaSeconds)
@@ -399,8 +447,7 @@ bool SensorMainMenu::processTouch(const Pos& pos)
 		if (btn.canAcceptInput() && btn.contains(pos))
 		{
 			CZ_ASSERT(gCtx.data.hasGroupSelected());
-			// #RVF : Implement this
-			CZ_LOG(logDefault, Log, F("TODO: Implement Settings!"));
+			m_showSettings = true;
 			return true;
 		}
 	}
@@ -446,22 +493,34 @@ void SensorMainMenu::draw()
 	m_forceDraw = false;
 }
 
-void SensorMainMenu::enable()
+void SensorMainMenu::show()
 {
 	for(gfx::ImageButton& btn : m_buttons)
 	{
-		btn.setEnabled(true);
-		btn.setClearWhenHidden(false);
+		btn.setVisible(true);
 	}
 
 	updateButtons();
 }
 
-void SensorMainMenu::disable()
+void SensorMainMenu::hide()
 {
 	for(gfx::ImageButton& btn : m_buttons)
 	{
-		btn.setEnabled(false);
+		btn.setVisible(false);
+	}
+}
+
+bool SensorMainMenu::checkShowSettings()
+{
+	if (m_showSettings)
+	{
+		m_showSettings = false;
+		return true;
+	}
+	else
+	{
+		return false;
 	}
 }
 
@@ -474,22 +533,23 @@ void SettingsMenu::init()
 	auto initButton = [this](ButtonId id, auto&&... params)
 	{
 		m_buttons[(int)id].init((int)id, std::forward<decltype(params)>(params)...);
+		m_buttons[(int)id].setClearWhenHidden(true);
 	};
 
 	// First line
-	initButton(ButtonId::CloseAndSave, Overview::getMenuButtonPos(0,1), SCREEN_BKG_COLOUR, img_Save);
-	initButton(ButtonId::Calibrate, Overview::getMenuButtonPos(1,1), SCREEN_BKG_COLOUR, img_Ruler);
-	initButton(ButtonId::SensorInterval, Overview::getMenuButtonPos(2,1), SCREEN_BKG_COLOUR, img_SetSensorInterval);
-	initButton(ButtonId::ShotDuration, Overview::getMenuButtonPos(3,1), SCREEN_BKG_COLOUR, img_SetWateringDuration);
+	initButton(ButtonId::CloseAndSave, Overview::getMenuButtonPos(0,0), SCREEN_BKG_COLOUR, img_Save);
+	initButton(ButtonId::Calibrate, Overview::getMenuButtonPos(1,0), SCREEN_BKG_COLOUR, img_Ruler);
+	initButton(ButtonId::SensorInterval, Overview::getMenuButtonPos(2,0), SCREEN_BKG_COLOUR, img_SetSensorInterval);
+	initButton(ButtonId::ShotDuration, Overview::getMenuButtonPos(3,0), SCREEN_BKG_COLOUR, img_SetWateringDuration);
 	// Leaving one empty grid space intentionally, so the CloseAndIgnore button is spaced away from the others
-	initButton(ButtonId::CloseAndIgnore, Overview::getMenuButtonPos(5,1), SCREEN_BKG_COLOUR, img_Close);
+	initButton(ButtonId::CloseAndIgnore, Overview::getMenuButtonPos(5,0), SCREEN_BKG_COLOUR, img_Close);
 
 	// Second line
-	initButton(ButtonId::SetGroupThreshold, Overview::getMenuButtonPos(2,2), SCREEN_BKG_COLOUR, img_SetThreshold);
-	initButton(ButtonId::Minus, Overview::getMenuButtonPos(1,2), SCREEN_BKG_COLOUR, img_Remove);
-	initButton(ButtonId::Plus, Overview::getMenuButtonPos(3,2), SCREEN_BKG_COLOUR, img_Add);
+	initButton(ButtonId::SetGroupThreshold, Overview::getMenuButtonPos(2,1), SCREEN_BKG_COLOUR, img_SetThreshold);
+	initButton(ButtonId::Minus, Overview::getMenuButtonPos(1,1), SCREEN_BKG_COLOUR, img_Remove);
+	initButton(ButtonId::Plus, Overview::getMenuButtonPos(3,1), SCREEN_BKG_COLOUR, img_Add);
 
-	hide();
+	//hide();
 }
 
 void SettingsMenu::tick(float deltaSeconds)
@@ -499,49 +559,26 @@ void SettingsMenu::tick(float deltaSeconds)
 
 bool SettingsMenu::processTouch(const Pos& pos)
 {
-#if 0
+	CZ_ASSERT(gCtx.data.hasGroupSelected());
+
 	{
-		ImageButton& btn = m_buttons[(int)ButtonId::StartGroup];
+		ImageButton& btn = m_buttons[(int)ButtonId::CloseAndSave];
 		if (btn.canAcceptInput() && btn.contains(pos))
 		{
-			CZ_ASSERT(gCtx.data.hasGroupSelected());
-			gCtx.data.getSelectedGroup()->setRunning(true);
+			m_pressedId = ButtonId::CloseAndSave;
 			return true;
 		}
 	}
 	
 	{
-		ImageButton& btn = m_buttons[(int)ButtonId::StopGroup];
+		ImageButton& btn = m_buttons[(int)ButtonId::CloseAndIgnore];
 		if (btn.canAcceptInput() && btn.contains(pos))
 		{
-			CZ_ASSERT(gCtx.data.hasGroupSelected());
-			gCtx.data.getSelectedGroup()->setRunning(false);
+			m_pressedId = ButtonId::CloseAndIgnore;
 			return true;
 		}
 	}
 
-	{
-		ImageButton& btn = m_buttons[(int)ButtonId::Shot];
-		if (btn.canAcceptInput() && btn.contains(pos))
-		{
-			CZ_ASSERT(gCtx.data.hasGroupSelected());
-			GroupData* data = gCtx.data.getSelectedGroup();
-			doGroupShot(data->getIndex());
-			return true;
-		}
-	}
-	
-	{
-		ImageButton& btn = m_buttons[(int)ButtonId::Settings];
-		if (btn.canAcceptInput() && btn.contains(pos))
-		{
-			CZ_ASSERT(gCtx.data.hasGroupSelected());
-			// #RVF : Implement this
-			CZ_LOG(logDefault, Log, F("TODO: Implement Settings!"));
-			return true;
-		}
-	}
-#endif
 	return false;
 }
 
@@ -579,7 +616,6 @@ void SettingsMenu::setButton(ButtonId idx, bool enabled, bool visible)
 {
 	m_buttons[(int)idx].setEnabled(enabled);
 	m_buttons[(int)idx].setVisible(visible);
-	m_buttons[(int)idx].setClearWhenHidden(false);
 };
 
 void SettingsMenu::setButtonRange(ButtonId first, ButtonId last, bool enabled, bool visible)
@@ -588,7 +624,6 @@ void SettingsMenu::setButtonRange(ButtonId first, ButtonId last, bool enabled, b
 	{
 		m_buttons[idx].setEnabled(enabled);
 		m_buttons[idx].setVisible(visible);
-		m_buttons[idx].setClearWhenHidden(false);
 	}
 };
 
@@ -607,6 +642,24 @@ void SettingsMenu::hide()
 }
 
 
+
+bool SettingsMenu::checkClose(bool& doSave)
+{
+	if (m_pressedId == ButtonId::CloseAndSave)
+	{
+		doSave = true;
+		m_pressedId = ButtonId::Max;
+		return true;
+	}
+	else if (m_pressedId == ButtonId::CloseAndIgnore)
+	{
+		doSave = false;
+		m_pressedId = ButtonId::Max;
+		return true;
+	}
+
+	return false;
+}
 
 //////////////////////////////////////////////////////////////////////////
 // DisplayTFT

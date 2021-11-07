@@ -48,7 +48,6 @@ void load(EEPtr& src, T& v)
 	readEEPROM(src, reinterpret_cast<uint8_t*>(&v), sizeof(v));
 }
 
-
 template<typename T>
 void save(EEPtr& src, const TFixedCapacityQueue<T>& v)
 {
