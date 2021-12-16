@@ -24,6 +24,52 @@ namespace cz
 	// The first point to draw is index 1, and to draw index 1, we erase the pixel in that pixel with the info from index 0
 	using HistoryQueue = TStaticFixedCapacityQueue<GraphPoint, GRAPH_NUMPOINTS + 1>;
 
+	// Data that should be saved/loaded
+	struct GroupConfig
+	{
+		// Tells if this group is currently running
+		bool running = false;
+		// Sensor sampling interval in seconds
+		float samplingInterval = MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL;
+		// Motor shot duration in seconds
+		float shotDuration = DEFAULT_SHOT_DURATION;
+		// Number of sensor readings done
+		uint32_t numReadings = 0;
+
+		// The sensor values decreases as moisture increases. (High Value = Dry, Low Value = Wet)
+		// Air and water values are calculated automatically as sensor values are provided. This means the user wipe clean the sensor
+		// to set the air value, and then submerse the sensor to set the water value.
+		// Having air and water properly is not a requirement for things to work, since what matter is that the system know what 
+		// sensor value is the threshold to turn on/off the motor
+		#define START_AIR_VALUE 400
+		#define START_WATER_VALUE 300
+		unsigned int airValue = START_AIR_VALUE;
+		unsigned int waterValue = START_WATER_VALUE;
+		// Current sensor value
+		unsigned int currentValue = START_AIR_VALUE - (START_AIR_VALUE-START_WATER_VALUE)/2;
+
+		// Value above which irrigation should be turned on
+		// NOTE: ABOVE because higher values means drier.
+		// Using 0 as initial value, which means it will not turn on the motor until things are setup properly
+		unsigned int thresholdValue = 0;
+
+		void setSensorValue(unsigned int currentValue_)
+		{
+			numReadings++;
+			currentValue = currentValue_;
+
+			if (currentValue > airValue)
+			{
+				airValue = currentValue;
+			}
+			else if (currentValue < waterValue)
+			{
+				waterValue = currentValue;
+			}
+		}
+
+	};
+
 	class GroupData
 	{
 	  public:
@@ -120,34 +166,7 @@ namespace cz
 		uint8_t m_index;
 
 		// Data that should be saved/loaded
-		struct
-		{
-			// Tells if this group is currently running
-			bool running = false;
-			// Sensor sampling interval in seconds
-			float samplingInterval = MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL;
-			// Motor shot duration in seconds
-			float shotDuration = DEFAULT_SHOT_DURATION;
-			// Number of sensor readings done
-			uint32_t numReadings = 0;
-
-			// The sensor values decreases as moisture increases. (High Value = Dry, Low Value = Wet)
-			// Air and water values are calculated automatically as sensor values are provided. This means the user wipe clean the sensor
-			// to set the air value, and then submerse the sensor to set the water value.
-			// Having air and water properly is not a requirement for things to work, since what matter is that the system know what 
-			// sensor value is the threshold to turn on/off the motor
-			#define START_AIR_VALUE 400
-			#define START_WATER_VALUE 300
-			unsigned int airValue = START_AIR_VALUE;
-			unsigned int waterValue = START_WATER_VALUE;
-			// Current sensor value
-			unsigned int currentValue = START_AIR_VALUE - (START_AIR_VALUE-START_WATER_VALUE)/2;
-
-			// Value above which irrigation should be turned on
-			// NOTE: ABOVE because higher values means drier.
-			// Using 0 as initial value, which means it will not turn on the motor until things are setup properly
-			unsigned int thresholdValue = 0;
-		} m_cfg;
+		GroupConfig m_cfg;
 
 		HistoryQueue m_history;
 
@@ -168,7 +187,7 @@ public:
 
 	void save() const;
 	
-	// Saves just 1 single group's config (and not the historyh
+	// Saves just 1 single group's config (and not the history
 	void saveGroupConfig(uint8_t index);
 	void load();
 
@@ -183,13 +202,18 @@ public:
 	// nullptr if no group is selected
 	GroupData* getSelectedGroup();
 
-	// Sets the selected group
+	// Tries to sets the selected group
+	// Depending on the state of the program, it might fail, such as if we are in menus
 	// -1 means no group selected
-	void setSelectedGroup(int8_t index);
+	bool trySetSelectedGroup(int8_t index);
+
+	// This should be called when entering and exiting menus
+	void setInMenu(bool inMenu);
 	
   private:
 	GroupData m_group[NUM_MOISTURESENSORS];
 	bool m_moistureSensorMutex = false;
+	bool m_inMenu = false;
 	int8_t m_selectedGroup = -1;
 };
 
@@ -215,6 +239,9 @@ struct Context
 #endif
 	Mux16Channels mux;
 	ProgramData data;
+
+	// Used as a temporary config data when configuring a group
+	GroupConfig settingsDummy;
 };
 
 extern Context gCtx;

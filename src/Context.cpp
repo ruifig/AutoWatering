@@ -139,17 +139,7 @@ void GroupData::begin(uint8_t index)
 
 void GroupData::setMoistureSensorValues(unsigned int currentValue)
 {
-	m_cfg.numReadings++;
-	m_cfg.currentValue = currentValue;
-
-	if (currentValue > m_cfg.airValue)
-	{
-		m_cfg.airValue = currentValue;
-	}
-	else if (currentValue < m_cfg.waterValue)
-	{
-		m_cfg.waterValue = currentValue;
-	}
+	m_cfg.setSensorValue(currentValue);
 
 	// Add to history
 	GraphPoint point = {0, 0};
@@ -255,14 +245,28 @@ bool ProgramData::hasGroupSelected() const
 	return m_selectedGroup == -1 ? false : true;
 }
 
-void ProgramData::setSelectedGroup(int8_t index)
+bool ProgramData::trySetSelectedGroup(int8_t index)
 {
-	if (index != m_selectedGroup)
+	if (m_inMenu)
 	{
-		int8_t previousIndex = m_selectedGroup;
-		m_selectedGroup = index;
-		Component::raiseEvent(GroupSelectedEvent(index, previousIndex));
+		return false;
 	}
+	else
+	{
+		if (index != m_selectedGroup)
+		{
+			int8_t previousIndex = m_selectedGroup;
+			m_selectedGroup = index;
+			Component::raiseEvent(GroupSelectedEvent(index, previousIndex));
+		}
+		return true;
+	}
+}
+
+void ProgramData::setInMenu(bool inMenu)
+{
+	m_inMenu = inMenu;
+	Component::raiseEvent(InMenuEvent(inMenu));
 }
 
 GroupData& ProgramData::getGroupData(uint8_t index)

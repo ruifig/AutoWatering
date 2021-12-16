@@ -41,13 +41,20 @@ class SoilMoistureSensor : public Component
 	enum class State : uint8_t
 	{
 		Initializing,
-		PoweredDown,
-		Reading
+		Paused, // Sensor is not running, either because we are in a menu, or the group is not running
+		Idle, // Sensor is active, and counting down to the next sensor read
+		Reading, // Sensor is powering up and performing a read
+		Calibrating
 	};
 
 #if CZ_LOG_ENABLED
-	static const char* const ms_stateNames[3];
+	static const char* const ms_stateNames[5];
 #endif
+
+	// Seconds since last sensor read.
+	// Keeping this separate from m_timeInState, so pausing the group or entering a menu doesn't cause the sensor reading timer
+	// to reset
+	float m_timeSinceLastRead = 0;
 
 	float m_timeInState = 0;
 	float m_nextTickWait = 0;

@@ -66,7 +66,7 @@ class SensorMainMenu : public Menu
 class SettingsMenu : public Menu
 {
   public:
-	SettingsMenu() {}
+	SettingsMenu();
 	virtual ~SettingsMenu() {}
 	virtual void init() override;
 	virtual void tick(float deltaSeconds) override;
@@ -114,6 +114,9 @@ class SettingsMenu : public Menu
 	gfx::ImageButton m_buttons[(int)ButtonId::Max];
 
 	ButtonId m_pressedId = ButtonId::Max;	
+
+	// Labels shown when in the Sensor calibration menu
+	gfx::NumLabel<true> m_sensorLabels[3];
 };
 
 class DisplayTFT : public Component
@@ -128,7 +131,6 @@ class DisplayTFT : public Component
 	void begin();
 	virtual float tick(float deltaSeconds) override;
 	virtual void onEvent(const Event& evt) override;
-
 
   private:
 

@@ -12,6 +12,7 @@ struct Event
 	{
 		ConfigLoad,
 		ConfigSave,
+		InMenu,
 		SoilMoistureSensorReading,
 		GroupOnOff,
 		GroupSelected,
@@ -60,6 +61,22 @@ struct ConfigSaveEvent : public Event
 	// if -1, then its saving the entire config.
 	// if !=-1 then its saving this specific group only
 	int8_t group;
+};
+
+struct InMenuEvent : public Event
+{
+	InMenuEvent(bool inMenu)
+		: Event(Event::InMenu)
+		, inMenu(inMenu)
+	{
+	}
+
+	virtual void log() const override
+	{
+		CZ_LOG(logDefault, Log, F("InMenu(%s)"), inMenu ? "true" : "false");
+	}
+
+	bool inMenu;
 };
 
 struct SoilMoistureSensorReadingEvent : public Event

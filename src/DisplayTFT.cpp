@@ -227,7 +227,7 @@ void DisplayTFT::OverviewState::tick(float deltaSeconds)
 		{
 			if (m_groupGraphs[idx].contains(m_outer.m_touch.pos))
 			{
-				gCtx.data.setSelectedGroup(idx);
+				gCtx.data.trySetSelectedGroup(idx);
 				consumed = true;
 				break;
 			}
@@ -528,6 +528,47 @@ bool SensorMainMenu::checkShowSettings()
 // SettingsMenu
 //
 
+#define DEFINE_SENSOR_CALIBRATION_LABEL_LINE(LINE_INDEX, FLAGS) \
+const LabelData sensorCalibrationSettings##LINE_INDEX PROGMEM = \
+{ \
+	{Overview::getMenuButtonPos(1, 1), 32, GRAPH_HEIGHT/3}, \
+	HAlign::Center, VAlign::Center, \
+	TINY_FONT, \
+	GRAPH_VALUES_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
+	WidgetFlag::EraseBkg | FLAGS \
+};
+
+DEFINE_SENSOR_CALIBRATION_LABEL_LINE(0, WidgetFlag::None)
+DEFINE_SENSOR_CALIBRATION_LABEL_LINE(1, WidgetFlag::NumAsPercentage)
+DEFINE_SENSOR_CALIBRATION_LABEL_LINE(2, WidgetFlag::None)
+
+#if 0
+#define DEFINE_SENSOR_LABEL_LINE(SENSOR_INDEX, LINE_INDEX, FLAGS) \
+const LabelData sensor##SENSOR_INDEX##line##LINE_INDEX PROGMEM = \
+{ \
+	{ \
+		getHistoryPlotRect(SENSOR_INDEX).x + getHistoryPlotRect(SENSOR_INDEX).width + 2, \
+		getHistoryPlotRect(SENSOR_INDEX).y + (LINE_INDEX * (GRAPH_HEIGHT/3)),  \
+		SCREEN_WIDTH - (getHistoryPlotRect(SENSOR_INDEX).x + getHistoryPlotRect(SENSOR_INDEX).width + 2), \
+		GRAPH_HEIGHT/3, \
+	}, \
+	HAlign::Center, VAlign::Center, \
+	TINY_FONT, \
+	GRAPH_VALUES_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
+	WidgetFlag::EraseBkg | FLAGS \
+};
+#endif
+
+SettingsMenu::SettingsMenu() :
+	m_sensorLabels
+	{
+		{ sensorCalibrationSettings0},
+		{ sensorCalibrationSettings1},
+		{ sensorCalibrationSettings2},
+	}
+{
+}
+
 void SettingsMenu::init()
 {
 	auto initButton = [this](ButtonId id, auto&&... params)
@@ -605,10 +646,20 @@ void SettingsMenu::onEvent(const Event& evt)
 
 void SettingsMenu::draw()
 {
+	GroupData* data = gCtx.data.getSelectedGroup();
+
 	for(gfx::ImageButton& btn : m_buttons)
 	{
 		btn.draw(m_forceDraw);
 	}
+
+	if (m_state == State::CalibratingSensor && data)
+	{
+		m_sensorLabels[0].setValueAndDraw(data->getWaterValue(), m_forceDraw);
+		m_sensorLabels[1].setValueAndDraw(data->getPercentageValue(), m_forceDraw);
+		m_sensorLabels[2].setValueAndDraw(data->getAirValue(), m_forceDraw);
+	}
+
 	m_forceDraw = false;
 }
 

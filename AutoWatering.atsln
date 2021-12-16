@@ -7,6 +7,12 @@ Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "AutoWatering", "AutoWaterin
 EndProject
 Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "ArduinoCore", "atmelstudio_lib\ArduinoCore\ArduinoCore.cppproj", "{DBD43DB8-0C6B-4D0C-901C-CCD781F6B924}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C720DF94-FA98-41E9-A644-AC3B362D1821}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+		TODO.md = TODO.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AVR = Debug|AVR
