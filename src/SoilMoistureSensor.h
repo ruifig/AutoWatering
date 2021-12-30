@@ -41,10 +41,8 @@ class SoilMoistureSensor : public Component
 	enum class State : uint8_t
 	{
 		Initializing,
-		Paused, // Sensor is not running, either because we are in a menu, or the group is not running
-		Idle, // Sensor is active, and counting down to the next sensor read
-		Reading, // Sensor is powering up and performing a read
-		Calibrating
+		PoweredDown,
+		Reading // Sensor is powering up to performe a read
 	};
 
 #if CZ_LOG_ENABLED

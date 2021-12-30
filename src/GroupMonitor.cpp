@@ -93,10 +93,14 @@ void GroupMonitor::onEvent(const Event& evt)
 
 		case Event::SoilMoistureSensorReading:
 		{
-			const auto& e = static_cast<const SoilMoistureSensorReadingEvent&>(evt);
-			if (e.index == m_index)
+			GroupData& data = gCtx.data.getGroupData(m_index);
+			if (data.isRunning())
 			{
-				m_sensorReadingSinceLastShot = true;
+				const auto& e = static_cast<const SoilMoistureSensorReadingEvent&>(evt);
+				if (e.index == m_index && !e.calibrating)
+				{
+					m_sensorReadingSinceLastShot = true;
+				}
 			}
 		}
 		break;

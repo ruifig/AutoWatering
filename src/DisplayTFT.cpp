@@ -531,7 +531,7 @@ bool SensorMainMenu::checkShowSettings()
 #define DEFINE_SENSOR_CALIBRATION_LABEL_LINE(LINE_INDEX, FLAGS) \
 const LabelData sensorCalibrationSettings##LINE_INDEX PROGMEM = \
 { \
-	{Overview::getMenuButtonPos(1, 1), 32, GRAPH_HEIGHT/3}, \
+	{Overview::getMenuButtonPos(1, 1).x, Overview::getMenuButtonPos(1,1).y + (LINE_INDEX * (GRAPH_HEIGHT/3)), 32, GRAPH_HEIGHT/3}, \
 	HAlign::Center, VAlign::Center, \
 	TINY_FONT, \
 	GRAPH_VALUES_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
@@ -653,11 +653,14 @@ void SettingsMenu::draw()
 		btn.draw(m_forceDraw);
 	}
 
-	if (m_state == State::CalibratingSensor && data)
+	if (data)
 	{
-		m_sensorLabels[0].setValueAndDraw(data->getWaterValue(), m_forceDraw);
-		m_sensorLabels[1].setValueAndDraw(data->getPercentageValue(), m_forceDraw);
-		m_sensorLabels[2].setValueAndDraw(data->getAirValue(), m_forceDraw);
+		if (m_state==State::Main || m_state==State::CalibratingSensor)
+		{
+			m_sensorLabels[0].setValueAndDraw(data->getWaterValue(), m_forceDraw);
+			m_sensorLabels[1].setValueAndDraw(data->getPercentageValue(), m_forceDraw);
+			m_sensorLabels[2].setValueAndDraw(data->getAirValue(), m_forceDraw);
+		}
 	}
 
 	m_forceDraw = false;
@@ -685,14 +688,20 @@ void SettingsMenu::show()
 	setButtonRange(ButtonId::Calibrate, ButtonId::CloseAndIgnore, true, true);
 
 	setButtonRange(ButtonId::SetGroupThreshold, ButtonId::Plus, false, false);
+
+	for(gfx::NumLabel<true>& label : m_sensorLabels)
+	{
+		label.clearValue();
+	}
+
+	gCtx.data.setInGroupConfigMenu(true);
 }
 
 void SettingsMenu::hide()
 {
 	setButtonRange(ButtonId::CloseAndSave, ButtonId::Plus, false, false);
+	gCtx.data.setInGroupConfigMenu(false);
 }
-
-
 
 bool SettingsMenu::checkClose(bool& doSave)
 {

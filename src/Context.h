@@ -79,7 +79,7 @@ namespace cz
 		
 		void begin(uint8_t index);
 
-		void setMoistureSensorValues(unsigned int currentValue);
+		void setMoistureSensorValues(unsigned int currentValue, bool isCalibrating);
 
 		void setMotorState(bool state);
 		bool isMotorOn() const;
@@ -151,6 +151,14 @@ namespace cz
 
 		void resetHistory();
 
+		void startCalibration();
+		void stopCalibration();
+
+		bool isCalibrating() const
+		{
+			return m_calibrating;
+		}
+
 	protected:
 		friend class ProgramData;
 		void save(EEPtr& dst, bool saveConfig, bool saveHistory) const;
@@ -174,6 +182,8 @@ namespace cz
 		// Used so we can detect when the motor was turned on and off before a sensor data point is inserted, so we can
 		// add the motor flag to the next sensor data point when that happens.
 		bool m_pendingMotorPoint = false;
+		// Set to true we start calibrating this group's sensor, and false when finishing
+		bool m_calibrating = false;
 	};
 
 class ProgramData
@@ -207,13 +217,20 @@ public:
 	// -1 means no group selected
 	bool trySetSelectedGroup(int8_t index);
 
-	// This should be called when entering and exiting menus
-	void setInMenu(bool inMenu);
+	// #RVF : Remove or rename this, if needed
+	// This should be called when entering and exiting the group configuring menu
+	// It will cause the necessary things to pause while we are configuring a group
+	void setInGroupConfigMenu(bool inMenu);
+
+	bool isInGroupConfigMenu() const
+	{
+		return m_inGroupConfigMenu;
+	}
 	
   private:
 	GroupData m_group[NUM_MOISTURESENSORS];
 	bool m_moistureSensorMutex = false;
-	bool m_inMenu = false;
+	bool m_inGroupConfigMenu = false;
 	int8_t m_selectedGroup = -1;
 };
 

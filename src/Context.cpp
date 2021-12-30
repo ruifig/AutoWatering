@@ -137,26 +137,29 @@ void GroupData::begin(uint8_t index)
 #endif
 }
 
-void GroupData::setMoistureSensorValues(unsigned int currentValue)
+void GroupData::setMoistureSensorValues(unsigned int currentValue, bool isCalibrating)
 {
 	m_cfg.setSensorValue(currentValue);
 
-	// Add to history
-	GraphPoint point = {0, 0};
-	point.val = map(m_cfg.currentValue, m_cfg.airValue, m_cfg.waterValue, 0, GRAPH_POINT_MAXVAL);
-
-	// Since a motor can be turned on then off without a sensor reading in between, we use
-	// m_pendingMotorPoint as a reminder there was a motor event, and so we'll draw that motor plot
-	// on the next sensor reading
-	point.on = m_motorIsOn || m_pendingMotorPoint;
-	m_pendingMotorPoint = false;
-	if (m_history.isFull())
+	// Add to history if this his a real value (as in, we are not calibrating this sensor)
+	if (!isCalibrating)
 	{
-		m_history.pop();
-	}
-	m_history.push(point);
+		GraphPoint point = {0, 0};
+		point.val = map(m_cfg.currentValue, m_cfg.airValue, m_cfg.waterValue, 0, GRAPH_POINT_MAXVAL);
 
-	Component::raiseEvent(SoilMoistureSensorReadingEvent(m_index));
+		// Since a motor can be turned on then off without a sensor reading in between, we use
+		// m_pendingMotorPoint as a reminder there was a motor event, and so we'll draw that motor plot
+		// on the next sensor reading
+		point.on = m_motorIsOn || m_pendingMotorPoint;
+		m_pendingMotorPoint = false;
+		if (m_history.isFull())
+		{
+			m_history.pop();
+		}
+		m_history.push(point);
+	}
+
+	Component::raiseEvent(SoilMoistureSensorReadingEvent(m_index, isCalibrating));
 }
 
 void GroupData::setMotorState(bool state)
@@ -187,6 +190,18 @@ void GroupData::setRunning(bool state)
 
 	m_cfg.running = state;
 	Component::raiseEvent(GroupOnOffEvent(m_index, state));
+}
+
+void GroupData::startCalibration()
+{
+	m_calibrating = true;
+	Component::raiseEvent(SensorCalibrationEvent(m_index, true));
+}
+
+void GroupData::stopCalibration()
+{
+	m_calibrating = false;
+	Component::raiseEvent(SensorCalibrationEvent(m_index, false));
 }
 
 void GroupData::resetHistory()
@@ -247,26 +262,23 @@ bool ProgramData::hasGroupSelected() const
 
 bool ProgramData::trySetSelectedGroup(int8_t index)
 {
-	if (m_inMenu)
+	if (m_inGroupConfigMenu)
 	{
 		return false;
 	}
-	else
+
+	if (index != m_selectedGroup)
 	{
-		if (index != m_selectedGroup)
-		{
-			int8_t previousIndex = m_selectedGroup;
-			m_selectedGroup = index;
-			Component::raiseEvent(GroupSelectedEvent(index, previousIndex));
-		}
-		return true;
+		int8_t previousIndex = m_selectedGroup;
+		m_selectedGroup = index;
+		Component::raiseEvent(GroupSelectedEvent(index, previousIndex));
 	}
+	return true;
 }
 
-void ProgramData::setInMenu(bool inMenu)
+void ProgramData::setInGroupConfigMenu(bool inMenu)
 {
-	m_inMenu = inMenu;
-	Component::raiseEvent(InMenuEvent(inMenu));
+	m_inGroupConfigMenu = inMenu;
 }
 
 GroupData& ProgramData::getGroupData(uint8_t index)

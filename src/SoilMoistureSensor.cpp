@@ -15,10 +15,8 @@ namespace cz
 const char* const SoilMoistureSensor::ms_stateNames[5] =
 {
 	"Initializing",
-	"Paused",
-	"Idle",
-	"Reading",
-	"Calibrating"
+	"PoweredDown",
+	"Reading"
 };
 #endif
 
@@ -55,9 +53,10 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 	m_timeInState += deltaSeconds;
 	m_timeSinceLastRead += deltaSeconds;
 	GroupData& data = gCtx.data.getGroupData(m_index);
+	bool isSelectedGroup = gCtx.data.getSelectedGroup() == &data ? true : false;
 
 #if FASTER_ITERATION
-	m_nextTickWait = 0.001f;
+	m_nextTickWait = 0.05f;
 #else
 	m_nextTickWait = 0.2f;
 #endif
@@ -65,17 +64,19 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 	switch (m_state)
 	{
 	case State::Initializing:
-		changeToState(data.isRunning() ? State::Idle : State::Paused);
+		changeToState(State::PoweredDown);
 		break;
 
-	case State::Paused:
-		break;
-
-	case State::Idle:
-		if (m_timeSinceLastRead >= data.getSamplingInterval())
+	case State::PoweredDown:
+		if (data.isRunning() || (isSelectedGroup && gCtx.data.isInGroupConfigMenu()))
 		{
-			tryEnterReadingState();
+			float samplingInterval = data.isCalibrating() ? MOISTURESENSOR_CALIBRATION_SAMPLINGINTERVAL : data.getSamplingInterval();
+			if (m_timeSinceLastRead >= samplingInterval)
+			{
+				tryEnterReadingState();
+			}
 		}
+		
 		break;
 
 	case State::Reading:
@@ -84,12 +85,12 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 			{
 				// Using a function to read the sensor, so we can provide a mock value when using the mock version
 				unsigned int currentValue = readSensor();
-				data.setMoistureSensorValues(currentValue);
+				data.setMoistureSensorValues(currentValue, data.isRunning() ? true : false);
 				m_timeSinceLastRead = 0;
-				changeToState(State::Idle);
+				changeToState(State::PoweredDown);
 			}
 		}
-		break;
+	break;
 
 	default:
 		CZ_UNEXPECTED();
@@ -111,14 +112,11 @@ void SoilMoistureSensor::onEvent(const Event& evt)
 	{
 		case Event::ConfigLoad:
 		case Event::GroupOnOff:
-			changeToState(gCtx.data.getGroupData(m_index).isRunning() ? State::Idle : State::Paused);
-			break;
-		case Event::InMenu:
+			if (!gCtx.data.getGroupData(m_index).isRunning())
 			{
-				bool isRunning = gCtx.data.getGroupData(m_index).isRunning();
-				bool inMenu = static_cast<const InMenuEvent&>(evt).inMenu;
-				changeToState((isRunning && !inMenu) ? State::Idle : State::Paused); 
+				changeToState(State::PoweredDown);
 			}
+			break;
 		break;
 	}
 }
@@ -147,7 +145,7 @@ void SoilMoistureSensor::onLeaveState()
 	case State::Initializing:
 		break;
 
-	case State::Idle:
+	case State::PoweredDown:
 		break;
 
 	case State::Reading:
@@ -172,16 +170,11 @@ void SoilMoistureSensor::onEnterState()
 		gCtx.ioExpander.digitalWrite(m_vinPin, LOW);
 		break;
 
-	case State::Idle:
+	case State::PoweredDown:
 		break;
 
 	case State::Reading:
 		//  To take a measurement, we turn the sensor ON, wait a bit, then switch it off
-		gCtx.ioExpander.digitalWrite(m_vinPin, HIGH);
-		m_nextTickWait = MOISTURESENSOR_POWERUP_WAIT;
-		break;
-
-	case State::Calibrating:
 		gCtx.ioExpander.digitalWrite(m_vinPin, HIGH);
 		m_nextTickWait = MOISTURESENSOR_POWERUP_WAIT;
 		break;

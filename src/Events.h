@@ -12,7 +12,7 @@ struct Event
 	{
 		ConfigLoad,
 		ConfigSave,
-		InMenu,
+		SensorCalibration,
 		SoilMoistureSensorReading,
 		GroupOnOff,
 		GroupSelected,
@@ -63,27 +63,33 @@ struct ConfigSaveEvent : public Event
 	int8_t group;
 };
 
-struct InMenuEvent : public Event
+// #RVF : Remove this is not used
+struct SensorCalibrationEvent : public Event
 {
-	InMenuEvent(bool inMenu)
-		: Event(Event::InMenu)
-		, inMenu(inMenu)
+	SensorCalibrationEvent(int8_t group, bool start)
+		: Event(Event::SensorCalibration)
+		, group(group)
+		, start(start)
 	{
 	}
 
 	virtual void log() const override
 	{
-		CZ_LOG(logDefault, Log, F("InMenu(%s)"), inMenu ? "true" : "false");
+		CZ_LOG(logDefault, Log, F("SensorCalibrationEvent(%s)"), start ? "true" : "false");
 	}
 
-	bool inMenu;
+	int8_t group;
+	// Calibration started or stopped
+	bool start;
 };
 
 struct SoilMoistureSensorReadingEvent : public Event
 {
-	SoilMoistureSensorReadingEvent(uint8_t index)
+	SoilMoistureSensorReadingEvent(uint8_t index, bool calibrating)
 		: Event(Event::SoilMoistureSensorReading)
-		, index(index) {}
+		, index(index)
+		, calibrating(calibrating)
+		{}
 
 	virtual void log() const override
 	{
@@ -92,6 +98,8 @@ struct SoilMoistureSensorReadingEvent : public Event
 	}
 
 	uint8_t index;
+	// If this is true, this was a reading done while calibrating, and some components might want to ignore it
+	bool calibrating;
 };
 
 struct GroupOnOffEvent : public Event
