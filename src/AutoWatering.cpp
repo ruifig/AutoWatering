@@ -4,6 +4,8 @@
 	#include "PluggableUSBDevice_fix.h"
 #endif
 
+#include "crazygaze/micromuc/Logging.h"
+
 #if PORTING_TO_RP2040
 
 #include "Config.h"
@@ -303,10 +305,17 @@ void loop()
 
 void setup()
 {
+	// If using avr-stub, we can't use Serial
+	Serial.begin(115200);
+	while (!Serial) {
+		; // wait for serial port to connect. Needed for native USB port only
+	}
 }
 
 void loop()
 {
+	CZ_LOG(logDefault, Log, F("millis=%lld"), millis());
+	delay(1000);
 }
 #endif
 

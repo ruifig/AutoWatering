@@ -77,9 +77,9 @@ class LogCategoryBase
 	static LogCategoryBase* find(const char* name);
 
   protected:
+	const char* m_name;
 	LogVerbosity m_verbosity;
 	LogVerbosity m_compileTimeVerbosity;
-	const char* m_name;
 	LogCategoryBase* m_next = nullptr;
 	static LogCategoryBase* ms_first;
 };

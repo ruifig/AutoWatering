@@ -30,7 +30,7 @@ namespace
 	template<class Q>
 	bool __attribute__((noinline)) equals(Q& q, std::initializer_list<typename Q::Type> list)
 	{
-		if (q.size() != list.size())
+		if (static_cast<size_t>(q.size()) != list.size())
 			return false;
 
 		for(int i = 0; i < q.size(); i++)

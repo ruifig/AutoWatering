@@ -134,7 +134,7 @@ namespace cz
 		 * \param index index of the element, if found
 		 * \return true if found, false otherwise
 		 */
-		static const bool _find(const Type* start, const Type* end, const Type &val, int &index)
+		static bool _find(const Type* start, const Type* end, const Type &val, int &index)
 		{
 			CZ_ASSERT(start<=end);
 
@@ -154,7 +154,7 @@ namespace cz
 
 		/*! Finds an element inside the specified range
 		*/
-		static const bool _find(const Type* start, const Type* end, const Type &val)
+		static bool _find(const Type* start, const Type* end, const Type &val)
 		{
 			CZ_ASSERT(start<=end);
 
