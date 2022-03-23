@@ -18,7 +18,9 @@
 #include <utility>
 #include <string.h>
 #include <stdlib.h>
-#include <new.h>
+#ifdef __AVR__
+	#include <new.h>
+#endif
 
 namespace cz
 {

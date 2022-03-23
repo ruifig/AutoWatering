@@ -1,3 +1,5 @@
+#if PORTING_TO_RP2040
+
 #include "Button.h"
 #include "../Config.h"
 
@@ -228,3 +230,5 @@ void TextButton::drawButton(boolean inverted)
 #pragma endregion
 
 } // namespace cz::gfx
+
+#endif

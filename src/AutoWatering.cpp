@@ -1,15 +1,16 @@
 #include <Arduino.h>
 
-#ifdef AVR8_BREAKPOINT_MODE
-#include "avr8-stub.h"
+#if __MBED__
+	#include "PluggableUSBDevice_fix.h"
 #endif
+
+#if PORTING_TO_RP2040
 
 #include "Config.h"
 #include "Context.h"
 #include "SoilMoistureSensor.h"
 #include "GroupMonitor.h"
 #include "DisplayTFT.h"
-#include "Utils.h"
 #include "crazygaze/micromuc/Ticker.h"
 #include "crazygaze/micromuc/Logging.h"
 #include <algorithm>
@@ -297,4 +298,15 @@ void loop()
 
 	gPreviousMicros = nowMicros;
 }
+
+#else // PORTING_TO_RP2040
+
+void setup()
+{
+}
+
+void loop()
+{
+}
+#endif
 

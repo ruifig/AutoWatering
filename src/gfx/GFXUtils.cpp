@@ -1,3 +1,5 @@
+#if PORTING_TO_RP2040
+
 #include "GFXUtils.h"
 #include "crazygaze/micromuc/Logging.h"
 
@@ -168,10 +170,6 @@ void printAligned(const Rect& area, HAlign halign, VAlign valign, const __FlashS
 	printAlignedImpl(area, halign, valign, txt);
 }
 
-
-
-
-
-
 } // namespace cz
 
+#endif

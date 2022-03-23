@@ -1,3 +1,5 @@
+#if PORTING_TO_RP2040
+
 #include "Mux16Channels.h"
 
 namespace cz
@@ -59,3 +61,5 @@ int Mux16Channels::read(MultiplexerPin channel) const
 }
 
 }  // namespace cz
+
+#endif

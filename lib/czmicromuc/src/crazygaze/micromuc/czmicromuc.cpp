@@ -8,12 +8,6 @@
 namespace cz
 {
 
-namespace
-{
-	#define TEMP_STRING_SIZE 180
-	char tempString[TEMP_STRING_SIZE];
-}
-
 #if defined(ARDUINO)
 const __FlashStringHelper* getFilename(const __FlashStringHelper* file_)
 {

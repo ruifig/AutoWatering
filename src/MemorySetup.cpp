@@ -1,3 +1,5 @@
+#if PORTING_TO_RP2040
+
 #include "MemorySetup.h"
 #include "crazygaze/micromuc/Logging.h"
 #include "memdebug/memdebug.h"
@@ -71,3 +73,4 @@ void logMemory()
 
 }
 
+#endif

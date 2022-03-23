@@ -14,7 +14,32 @@
 #include "crazygaze/micromuc/Array.h"
 #include <Arduino.h>
 
-#include <mutex>
+#if _GLIBCXX_HAS_GTHREADS
+	#include <mutex>
+#else
+	namespace std
+	{
+		/*
+		* Mock mutex.
+		* I'll implement it at some later point if it's needed
+		*/
+		class mutex
+		{
+		};
+
+		/*
+		* Mock unique_lock.
+		* I'll implement it at some later point if it's needed
+		*/
+		template<typename T>
+		class unique_lock
+		{
+		public:
+			unique_lock(T mtx) {}
+		};
+	} // namespace std
+#endif
+
 
 namespace cz
 {

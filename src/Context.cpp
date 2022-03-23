@@ -1,5 +1,6 @@
+#if PORTING_TO_RP2040
+
 #include "Context.h"
-#include "Utils.h"
 #include "crazygaze/micromuc/Logging.h"
 #include "crazygaze/micromuc/StringUtils.h"
 #include "Component.h"
@@ -365,3 +366,5 @@ void ProgramData::releaseMoistureSensorMutex()
 }
 
 }  // namespace cz
+
+#endif

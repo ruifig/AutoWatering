@@ -1,3 +1,5 @@
+#if PORTING_TO_RP2040
+
 #include "GroupMonitor.h"
 #include "Context.h"
 
@@ -121,3 +123,5 @@ void GroupMonitor::onEvent(const Event& evt)
 }
 	
 } // namespace cz
+
+#endif

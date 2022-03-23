@@ -29,6 +29,9 @@
 	#define CZ_PROFILER 0
 #endif
 
+#if !defined(CZ_LOG_SD_ENABLED)
+	#define CZ_LOG_SD_ENABLED 0
+#endif
 
 #define __FILENAME__ ::cz::getFilename(F(__FILE__))
 
@@ -37,6 +40,7 @@
 	#define _BREAK() __asm__ __volatile__("break")
 #else
 	#define CZ_AVR 0
+	#define _BREAK() __builtin_trap() 
 #endif
 
 //

@@ -1,3 +1,5 @@
+#if PORTING_TO_RP2040
+
 #include "SoilMoistureSensor.h"
 #include "Utils.h"
 #include "Context.h"
@@ -281,3 +283,5 @@ unsigned MockSoilMoistureSensor::readSensor()
 }
 
 }  // namespace cz
+
+#endif

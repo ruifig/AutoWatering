@@ -1,3 +1,5 @@
+#if PORTING_TO_RP2040
+
 #include "DisplayTFT.h"
 #include "Context.h"
 #include "Utils.h"
@@ -811,3 +813,5 @@ void DisplayTFT::changeToState(DisplayState& newState)
 
 
 } // namespace cz
+
+#endif

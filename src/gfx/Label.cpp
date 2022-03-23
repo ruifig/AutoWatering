@@ -1,3 +1,5 @@
+#if PORTING_TO_RP2040
+
 #include "Label.h"
 
 namespace cz::gfx
@@ -54,6 +56,6 @@ void StaticLabel::draw(bool forceDraw)
 
 #pragma endregion
 
-
 } // namespace cz::gfx
 
+#endif

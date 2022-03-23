@@ -1,3 +1,5 @@
+#if PORTING_TO_RP2040
+
 #include "GroupGraph.h"
 #include "DisplayCommon.h"
 #include "Context.h"
@@ -221,3 +223,5 @@ void GroupGraph::drawOuterBox()
 }
 
 }
+
+#endif

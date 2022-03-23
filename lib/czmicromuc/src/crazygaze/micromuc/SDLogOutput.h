@@ -1,7 +1,16 @@
 #pragma once
 
+#include "crazygaze/micromuc/czmicromuc.h"
+
+#if CZ_LOG_SD_ENABLED
+
 #include "crazygaze/micromuc/Logging.h"
+
+/**
+ * https://github.com/adafruit/SD
+ */
 #include "SdFat.h"
+
 #include <Arduino.h>
 
 namespace cz
@@ -45,3 +54,5 @@ class SDLogOutput : public LogOutput
 };
 	
 }
+
+#endif // CZ_LOG_SD_ENABLED

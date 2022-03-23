@@ -1,5 +1,7 @@
 #include "SDLogOutput.h"
 
+#if CZ_LOG_SD_ENABLED
+
 namespace cz
 {
 
@@ -243,3 +245,6 @@ void setup() {
 void loop(void) {
 }
 #endif
+
+
+#endif // CZ_LOG_SD_ENABLED
