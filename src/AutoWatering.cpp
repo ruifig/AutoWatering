@@ -6,6 +6,7 @@
 #endif
 
 #include "crazygaze/micromuc/Logging.h"
+#include "crazygaze/micromuc/SerialStringReader.h"
 
 //
 // Because I'm using picopro, I can't use Serial0
@@ -318,28 +319,37 @@ void loop()
 namespace
 {
 	cz::SerialLogOutput gSerialLogOutput;
+	cz::SerialStringReader<> gSerialStringReader;
 }
 
 void setup()
 {
 	gSerialLogOutput.begin(Serial1, 115200);
+	gSerialStringReader.begin(Serial1);
+
 	Serial.print("Hello World-1!");
 	Serial1.print("Hello World-2!");
 	CZ_LOG(logDefault, Log, "Hello World-3!");
 	CZ_LOG(logDefault, Log, F("Hello World-4!"));
 }
 
+void tryReadString()
+{
+	if (!gSerialStringReader.tryRead())
+	{
+		return;
+	}
+
+	const char* src = gSerialStringReader.retrieve(); 
+	CZ_LOG(logDefault, Log, "INPUT: %s", src);
+}
+
 void loop()
 {
 	static int count = 0;
 	CZ_LOG(logDefault, Log, F("millis=%u"), millis());
-	count++;
-	if (count>=5)
-	{
-		CZ_LOG(logDefault, Fatal, "Fatal error");
-		//CZ_ASSERT(count<5);
-	}
-	delay(1000);
+	tryReadString();
+	delay(500);
 }
 #endif
 
