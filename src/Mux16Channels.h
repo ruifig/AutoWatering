@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Config.h"
 #include "MCP23017Wrapper.h"
 
 namespace cz

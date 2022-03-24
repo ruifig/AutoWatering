@@ -8,6 +8,7 @@
 #include "MCP23017Wrapper.h"
 #include "crazygaze/micromuc/SerialStringReader.h"
 #include "crazygaze/micromuc/Logging.h"
+#include "MuxNChannels.h"
 
 #if PORTING_TO_RP2040
 
