@@ -227,22 +227,32 @@ void LogOutput::flush()
 
 #if CZ_SERIAL_LOG_ENABLED
 
+void SerialLogOutput::begin(unsigned long speed)
+{
+	m_stream = &Serial;
+	m_stream->begin(speed);
+	while (!(*m_stream)) {
+		; // wait for serial port to connect. Needed for native USB port only
+	}
+}
+
+void SerialLogOutput::begin(arduino::HardwareSerial& stream, unsigned long speed)
+{
+	m_stream = &stream;
+	m_stream->begin(speed);
+}
+
 void SerialLogOutput::logSimple(const char* str)
 {
-	Serial.print(str);
+	m_stream->print(str);
 }
 void SerialLogOutput::logSimple(const __FlashStringHelper* str)
 {
-	Serial.print(str);
+	m_stream->print(str);
 }
 void SerialLogOutput::flushImpl()
 {
-	Serial.flush();
-}
-
-namespace
-{
-	SerialLogOutput gSerialLogOutput;
+	m_stream->flush();
 }
 
 #endif

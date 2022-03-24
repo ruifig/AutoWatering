@@ -140,10 +140,16 @@ private:
 #if CZ_SERIAL_LOG_ENABLED
 class SerialLogOutput : public LogOutput
 {
+public:
+	// Initializes using the default Serial object
+	void begin(unsigned long speed = 115200);
+	// Initializes using any stream
+	void begin(arduino::HardwareSerial& stream, unsigned long speed = 115200);
 private:
 	virtual void logSimple(const char* str) override;
 	virtual void logSimple(const __FlashStringHelper* str) override;
 	virtual void flushImpl() override;
+	arduino::HardwareSerial* m_stream;
 };
 #endif
 

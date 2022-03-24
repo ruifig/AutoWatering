@@ -33,7 +33,11 @@
 	#define CZ_LOG_SD_ENABLED 0
 #endif
 
-#define __FILENAME__ ::cz::getFilename(F(__FILE__))
+#if __AVR__
+	#define __FILENAME__ ::cz::getFilename(F(__FILE__))
+#else
+	#define __FILENAME__ ::cz::getFilename(__FILE__)
+#endif
 
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__)
 	#define CZ_AVR 1
@@ -57,14 +61,12 @@
 namespace cz
 {
 	// Returns just the filename of a given path
-#if defined(ARDUINO)
 	const __FlashStringHelper* getFilename(const __FlashStringHelper* file);
-#else
 	const char* getFilename(const char* file);
-#endif
 
 	//void _doAssert(const char* file, int line, const char* fmt, ...) __attribute__ ((format (printf, 3,4)));
-	//void _doAssert(const char* file, int line, const __FlashStringHelper* fmt, ...);
+	void _doAssert(const char* file, int line, const __FlashStringHelper* fmt, ...);
+	void _doAssert(const char* file, int line, const char* fmt, ...);
 	void _doAssert(const __FlashStringHelper* file, int line, const __FlashStringHelper* fmt, ...);
 }
 

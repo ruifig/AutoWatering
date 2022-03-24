@@ -1,10 +1,22 @@
 #include <Arduino.h>
 
+
 #if __MBED__
 	#include "PluggableUSBDevice_fix.h"
 #endif
 
 #include "crazygaze/micromuc/Logging.h"
+
+//
+// Because I'm using picopro, I can't use Serial0
+//
+#if 0
+#define MySerial Serial1
+#ifdef Serial
+	#undef Serial
+	#define Serial MySerial
+#endif
+#endif
 
 #if PORTING_TO_RP2040
 
@@ -303,18 +315,30 @@ void loop()
 
 #else // PORTING_TO_RP2040
 
+namespace
+{
+	cz::SerialLogOutput gSerialLogOutput;
+}
+
 void setup()
 {
-	// If using avr-stub, we can't use Serial
-	Serial.begin(115200);
-	while (!Serial) {
-		; // wait for serial port to connect. Needed for native USB port only
-	}
+	gSerialLogOutput.begin(Serial1, 115200);
+	Serial.print("Hello World-1!");
+	Serial1.print("Hello World-2!");
+	CZ_LOG(logDefault, Log, "Hello World-3!");
+	CZ_LOG(logDefault, Log, F("Hello World-4!"));
 }
 
 void loop()
 {
-	CZ_LOG(logDefault, Log, F("millis=%lld"), millis());
+	static int count = 0;
+	CZ_LOG(logDefault, Log, F("millis=%u"), millis());
+	count++;
+	if (count>=5)
+	{
+		CZ_LOG(logDefault, Fatal, "Fatal error");
+		//CZ_ASSERT(count<5);
+	}
 	delay(1000);
 }
 #endif
