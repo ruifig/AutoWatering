@@ -1,23 +1,13 @@
-#include <Arduino.h>
-
+#include "Config.h"
 
 #if __MBED__
 	#include "PluggableUSBDevice_fix.h"
 #endif
 
-#include "crazygaze/micromuc/Logging.h"
+#include "Adafruit_MCP23017.h"
+#include "MCP23017Wrapper.h"
 #include "crazygaze/micromuc/SerialStringReader.h"
-
-//
-// Because I'm using picopro, I can't use Serial0
-//
-#if 0
-#define MySerial Serial1
-#ifdef Serial
-	#undef Serial
-	#define Serial MySerial
-#endif
-#endif
+#include "crazygaze/micromuc/Logging.h"
 
 #if PORTING_TO_RP2040
 
@@ -314,8 +304,9 @@ void loop()
 	gPreviousMicros = nowMicros;
 }
 
-#else // PORTING_TO_RP2040
+#endif
 
+#if 1
 namespace
 {
 	cz::SerialLogOutput gSerialLogOutput;
@@ -346,7 +337,6 @@ void tryReadString()
 
 void loop()
 {
-	static int count = 0;
 	CZ_LOG(logDefault, Log, F("millis=%u"), millis());
 	tryReadString();
 	delay(500);

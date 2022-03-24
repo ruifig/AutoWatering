@@ -2,7 +2,6 @@
 
 #include <Arduino.h>
 #include "crazygaze/micromuc/czmicromuc.h"
-#include <MCUFRIEND_kbv.h>
 
 namespace cz
 {

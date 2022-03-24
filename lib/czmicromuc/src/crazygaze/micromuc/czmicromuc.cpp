@@ -4,7 +4,6 @@
 #include "algorithm"
 #include <stdarg.h>
 
-
 namespace cz
 {
 

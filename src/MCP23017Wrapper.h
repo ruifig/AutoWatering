@@ -1,8 +1,7 @@
 #pragma once
 
-#include <Arduino.h>
-#include <utility/Adafruit_MCP23017.h>
 #include "Config.h"
+#include "Adafruit_MCP23017.h"
 
 namespace cz
 {
@@ -10,26 +9,25 @@ namespace cz
 class MCP23017WrapperInterface
 {
 public:
+	/**
+	 * @param addr 0..7
+	 * 0x20 is added to this internally
+	 */
 	virtual void begin(uint8_t addr) = 0;
 	virtual void begin() = 0;
-	virtual void pinMode(IOExpanderPin p, uint8_t d) = 0;
-	virtual void digitalWrite(IOExpanderPin p, uint8_t d) = 0;
-	virtual void pullUp(IOExpanderPin p, uint8_t d) = 0;
-	virtual uint8_t digitalRead(IOExpanderPin p) = 0;
+	virtual void pinMode(IOExpanderPin pin, uint8_t mode) = 0;
+	virtual void digitalWrite(IOExpanderPin pin, uint8_t value) = 0;
+	virtual void pullUp(IOExpanderPin pin, uint8_t value) = 0;
+	virtual uint8_t digitalRead(IOExpanderPin pin) = 0;
 };
 
 class MCP23017Wrapper : public MCP23017WrapperInterface
 {
   public:
 
-	/**
-	 * @param addr 0..7
-	 * 0x20 is added to this internally
-	 */
 	virtual void begin(uint8_t addr) override
 	{
-		// The library accepts a 0..7 (it adds 0x20 internally), so we need to convert to 0..7
-		m_inner.begin(addr - 0x20);
+		m_inner.begin(addr);
 	}
 
 	virtual void begin(void) override
@@ -37,24 +35,24 @@ class MCP23017Wrapper : public MCP23017WrapperInterface
 		m_inner.begin();
 	}
 
-	virtual void pinMode(IOExpanderPin p, uint8_t d) override
+	virtual void pinMode(IOExpanderPin pin, uint8_t mode) override
 	{
-		m_inner.pinMode(p.raw, d);
+		m_inner.pinMode(pin.raw, mode);
 	}
 
-	virtual void digitalWrite(IOExpanderPin p, uint8_t d) override
+	virtual void digitalWrite(IOExpanderPin pin, uint8_t value) override
 	{
-		m_inner.digitalWrite(p.raw, d);
+		m_inner.digitalWrite(pin.raw, value);
 	}
 
-	virtual void pullUp(IOExpanderPin p, uint8_t d) override
+	virtual void pullUp(IOExpanderPin pin, uint8_t value) override
 	{
-		m_inner.pullUp(p.raw, d);
+		m_inner.pullUp(pin.raw, value);
 	}
 
-	virtual uint8_t digitalRead(IOExpanderPin p) override
+	virtual uint8_t digitalRead(IOExpanderPin pin) override
 	{
-		return m_inner.digitalRead(p.raw);
+		return m_inner.digitalRead(pin.raw);
 	}
 
 	void writeGPIOAB(uint16_t d) { m_inner.writeGPIOAB(d); }
