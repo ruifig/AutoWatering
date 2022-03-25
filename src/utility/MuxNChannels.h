@@ -1,4 +1,4 @@
-#include "Config.h"
+#include "PinTypes.h"
 #include "MCP23017Wrapper.h"
 
 namespace cz
@@ -7,7 +7,7 @@ namespace cz
 namespace detail
 {
 	extern const uint8_t muxChannel[16][4];
-	// Base class for 74HC4051 8-Channel-Mux  or 74HC4067 16-Channel-Mux 
+	// Base class for a 74HC4051 8-Channel-Mux  or 74HC4067 16-Channel-Mux that is connected to an MCP23017
 	template<int NUM_SPINS>
 	class BaseMux
 	{

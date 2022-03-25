@@ -1,17 +1,24 @@
-#if PORTING_TO_RP2040
-
 #include "Context.h"
 #include "crazygaze/micromuc/Logging.h"
 #include "crazygaze/micromuc/StringUtils.h"
 #include "Component.h"
 #include <Arduino.h>
+#include <type_traits>
 
+
+auto test()
+{
+	std::chrono::seconds secs;
+	return secs;
+}
+
+#if 0
 namespace cz
 {
 
 Context gCtx;
 
-void updateEEPROM(EEPtr& dst, const uint8_t* src, unsigned int size)
+void updateEEPROM(AT24C::Ptr& dst, const uint8_t* src, unsigned int size)
 {
 	while(size--)
 	{
@@ -21,7 +28,7 @@ void updateEEPROM(EEPtr& dst, const uint8_t* src, unsigned int size)
 	}
 }
 
-void readEEPROM(EEPtr& src, uint8_t* dst, unsigned int size)
+void readEEPROM(AT24C::Ptr& src, uint8_t* dst, unsigned int size)
 {
 	while(size--)
 	{
@@ -35,7 +42,7 @@ template<typename T, typename = std::enable_if_t<
 	std::is_arithmetic_v<T> ||
 	std::is_same_v<T, GraphPoint>
 	> >
-void save(EEPtr& dst, const T& v)
+void save(AT24C::Ptr& dst, const T& v)
 {
 	updateEEPROM(dst, reinterpret_cast<const uint8_t*>(&v), sizeof(v));
 }
@@ -44,13 +51,13 @@ template<typename T, typename = std::enable_if_t<
 	std::is_arithmetic_v<T> ||
 	std::is_same_v<T, GraphPoint>
 	> >
-void load(EEPtr& src, T& v)
+void load(AT24C::Ptr& src, T& v)
 {
 	readEEPROM(src, reinterpret_cast<uint8_t*>(&v), sizeof(v));
 }
 
 template<typename T>
-void save(EEPtr& src, const TFixedCapacityQueue<T>& v)
+void save(AT24C::Ptr& src, const TFixedCapacityQueue<T>& v)
 {
 	int size = v.size();
 	save(src, size);
@@ -62,7 +69,7 @@ void save(EEPtr& src, const TFixedCapacityQueue<T>& v)
 }
 
 template<typename T>
-void load(EEPtr& src, TFixedCapacityQueue<T>& v)
+void load(AT24C::Ptr& src, TFixedCapacityQueue<T>& v)
 {
 	v.clear();
 	int size;
@@ -210,7 +217,7 @@ void GroupData::resetHistory()
 	m_history.clear();
 }
 
-void GroupData::save(EEPtr& dst, bool saveConfig, bool saveHistory) const
+void GroupData::save(AT24C::Ptr& dst, bool saveConfig, bool saveHistory) const
 {
 
 	if (saveConfig)
@@ -226,7 +233,7 @@ void GroupData::save(EEPtr& dst, bool saveConfig, bool saveHistory) const
 	}
 }
 
-void GroupData::load(EEPtr& src, bool loadConfig, bool loadHistory)
+void GroupData::load(AT24C::Ptr& src, bool loadConfig, bool loadHistory)
 {
 	if (loadConfig)
 	{
@@ -291,7 +298,7 @@ GroupData& ProgramData::getGroupData(uint8_t index)
 void ProgramData::save() const
 {
 	unsigned long startTime = micros();
-	EEPtr ptr = EEPROM.begin();
+	AT24C::Ptr ptr = EEPROM.at(0);
 
 	// We save the configs first because they are fixed size, and so we can load/save groups individually when coming
 	// out of the configuration menu
@@ -313,7 +320,7 @@ void ProgramData::save() const
 void ProgramData::saveGroupConfig(uint8_t index)
 {
 	unsigned long startTime = micros();
-	EEPtr ptr = EEPROM.begin();
+	AT24C::Ptr ptr = EEPROM.at(0);
 
 	for(uint8_t idx = 0; idx<index; ++idx)
 	{
@@ -329,7 +336,7 @@ void ProgramData::saveGroupConfig(uint8_t index)
 void ProgramData::load()
 {
 	unsigned long startTime = micros();
-	EEPtr ptr = EEPROM.begin();
+	AT24C::Ptr ptr = EEPROM.at(a);
 
 	for(GroupData& g : m_group)
 	{
@@ -365,6 +372,7 @@ void ProgramData::releaseMoistureSensorMutex()
 	m_moistureSensorMutex = false;
 }
 
-}  // namespace cz
+} // namespace cz
+
 
 #endif

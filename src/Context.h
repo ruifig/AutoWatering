@@ -1,11 +1,10 @@
 #pragma once
 
 #include "Config.h"
-#include "MCP23017Wrapper.h"
-#include "Mux16Channels.h"
-#include "Utils.h"
+#include "utility/MCP23017Wrapper.h"
+#include "utility/MuxNChannels.h"
 #include <crazygaze/micromuc/Queue.h>
-#include <EEPROM.h>
+#include "utility/AT24C.h"
 
 namespace cz
 {
@@ -15,7 +14,7 @@ namespace cz
 		unsigned int val : GRAPH_POINT_NUM_BITS;
 		// Tells if the motor was on at this point
 		bool on : 1;
-	};
+	} __attribute((packed));
 
 	static_assert(sizeof(GraphPoint)==1, "GraphPoint size must be 1");
 
@@ -161,8 +160,8 @@ namespace cz
 
 	protected:
 		friend class ProgramData;
-		void save(EEPtr& dst, bool saveConfig, bool saveHistory) const;
-		void load(EEPtr& src, bool loadConfig, bool loadHistory);
+		void save(AT24C::Ptr& dst, bool saveConfig, bool saveHistory) const;
+		void load(AT24C::Ptr& src, bool loadConfig, bool loadHistory);
 		int getConfigSize() const
 		{
 			return sizeof(m_cfg);
@@ -228,7 +227,7 @@ public:
 	}
 	
   private:
-	GroupData m_group[NUM_MOISTURESENSORS];
+	GroupData m_group[NUM_PAIRS];
 	bool m_moistureSensorMutex = false;
 	bool m_inGroupConfigMenu = false;
 	int8_t m_selectedGroup = -1;
@@ -239,11 +238,10 @@ struct Context
 	Context()
 		: mux(
 			ioExpander,
-			IO_EXPANDER_TO_MULTIPLEXER_S0,
-			IO_EXPANDER_TO_MULTIPLEXER_S1,
-			IO_EXPANDER_TO_MULTIPLEXER_S2,
-			IO_EXPANDER_TO_MULTIPLEXER_S3,
-			ARDUINO_MULTIPLEXER_ZPIN)
+			IO_EXPANDER_TO_MUX_S0,
+			IO_EXPANDER_TO_MUX_S1,
+			IO_EXPANDER_TO_MUX_S2,
+			MCU_TO_MUX_ZPIN)
 	{
 	}
 
@@ -254,7 +252,7 @@ struct Context
 #else
 	MCP23017Wrapper ioExpander;
 #endif
-	Mux16Channels mux;
+	Mux8Channels mux;
 	ProgramData data;
 
 	// Used as a temporary config data when configuring a group
@@ -264,4 +262,3 @@ struct Context
 extern Context gCtx;
 
 } // namespace cz
-

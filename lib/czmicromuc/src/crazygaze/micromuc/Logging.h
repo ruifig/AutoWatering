@@ -35,7 +35,17 @@
 		class unique_lock
 		{
 		public:
-			unique_lock(T mtx) {}
+			unique_lock(T mtx)
+			{
+				ms_dummy++;
+			}
+
+			~unique_lock()
+			{
+				ms_dummy--;
+			}
+		private:
+			static inline int ms_dummy;
 		};
 	} // namespace std
 #endif

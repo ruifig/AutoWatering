@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Config.h"
+#include "PinTypes.h"
 #include "Adafruit_MCP23017.h"
 
 namespace cz

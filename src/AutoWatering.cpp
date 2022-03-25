@@ -1,14 +1,14 @@
 #include "Config.h"
 
 #if __MBED__
-	#include "PluggableUSBDevice_fix.h"
+	#include "utility/PluggableUSBDevice_fix.h"
 #endif
 
 #include "Adafruit_MCP23017.h"
-#include "MCP23017Wrapper.h"
+#include "utility/MCP23017Wrapper.h"
 #include "crazygaze/micromuc/SerialStringReader.h"
 #include "crazygaze/micromuc/Logging.h"
-#include "MuxNChannels.h"
+#include "utility/MuxNChannels.h"
 
 #if PORTING_TO_RP2040
 

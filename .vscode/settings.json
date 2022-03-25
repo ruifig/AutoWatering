@@ -19,7 +19,10 @@
         "unordered_set": "cpp",
         "string_view": "cpp",
         "initializer_list": "cpp",
-        "ranges": "cpp"
+        "ranges": "cpp",
+        "chrono": "cpp",
+        "mstd_mutex": "cpp",
+        "limits": "cpp"
     },
     "gitlens.advanced.blame.customArguments": [],
 
