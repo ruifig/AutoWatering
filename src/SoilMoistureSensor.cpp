@@ -1,7 +1,4 @@
-#if PORTING_TO_RP2040
-
 #include "SoilMoistureSensor.h"
-#include "Utils.h"
 #include "Context.h"
 #include "crazygaze/micromuc/Logging.h"
 #include "crazygaze/micromuc/Profiler.h"
@@ -103,7 +100,7 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 
 unsigned int SoilMoistureSensor::readSensor()
 {
-	unsigned int currentValue = gCtx.mux.read(m_dataPin);
+	unsigned int currentValue = gCtx.mux.analogRead(m_dataPin);
 	CZ_LOG(logDefault, Log, F("SoilMoistureSensor(%d) : %u"), m_index, currentValue);
 	return currentValue;
 }
@@ -282,6 +279,4 @@ unsigned MockSoilMoistureSensor::readSensor()
 	return static_cast<int>(m_mock.currentValue);
 }
 
-}  // namespace cz
-
-#endif
+} // namespace cz

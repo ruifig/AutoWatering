@@ -22,7 +22,9 @@
         "ranges": "cpp",
         "chrono": "cpp",
         "mstd_mutex": "cpp",
-        "limits": "cpp"
+        "limits": "cpp",
+        "*.tcc": "cpp",
+        "*.impl": "cpp"
     },
     "gitlens.advanced.blame.customArguments": [],
 
