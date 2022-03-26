@@ -97,7 +97,7 @@
 /**
  * How many sensor/motor pairs to support
  */
-#define NUM_PAIRS 6
+#define NUM_PAIRS 4
 
 /**
  * When we want to take a moisture reading, we enable power to the the sensor and need to wait a bit before doing the
