@@ -129,6 +129,13 @@ class AT24C
 		Ptr operator++ (int) { return Ptr(m_outer, m_address++); }
 		Ptr operator-- (int) { return Ptr(m_outer, m_address--); }
 
+		Ptr& operator += (int val) { m_address += val; return *this; }
+
+		uint16_t getAddress() const
+		{
+			return m_address;
+		}
+
 	  protected:
 	  	friend class AT24C;
 		Ptr(AT24C& outer, uint16_t address)

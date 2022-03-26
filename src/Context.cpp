@@ -12,7 +12,6 @@ auto test()
 	return secs;
 }
 
-#if 0
 namespace cz
 {
 
@@ -85,14 +84,15 @@ void load(AT24C::Ptr& src, TFixedCapacityQueue<T>& v)
 
 void Context::begin()
 {
-	static_assert(IO_EXPANDER_ADDR>=0x21 && IO_EXPANDER_ADDR<=0x27, "Wrong macro value");
+	static_assert(IO_EXPANDER_ADDR>=0x0 && IO_EXPANDER_ADDR<=0x7, "Wrong macro value");
 	ioExpander.begin(IO_EXPANDER_ADDR);
 	mux.begin();
-
 	data.begin();
-
 }
 
+///////////////////////////////////////////////////////////////////////
+// GroupData
+///////////////////////////////////////////////////////////////////////
 
 void GroupData::begin(uint8_t index)
 {
@@ -222,13 +222,13 @@ void GroupData::save(AT24C::Ptr& dst, bool saveConfig, bool saveHistory) const
 
 	if (saveConfig)
 	{
-		CZ_LOG(logDefault, Log, F("Saving group %d config at address %d"), m_index, dst.index);
+		CZ_LOG(logDefault, Log, F("Saving group %d config at address %u"), m_index, dst.getAddress());
 		updateEEPROM(dst, reinterpret_cast<const uint8_t*>(&m_cfg), sizeof(m_cfg));
 	}
 
 	if (saveHistory)
 	{
-		CZ_LOG(logDefault, Log, F("Saving group %d history at address %d"), m_index, dst.index);
+		CZ_LOG(logDefault, Log, F("Saving group %d history at address %u"), m_index, dst.getAddress());
 		cz::save(dst, m_history);
 	}
 }
@@ -237,15 +237,24 @@ void GroupData::load(AT24C::Ptr& src, bool loadConfig, bool loadHistory)
 {
 	if (loadConfig)
 	{
-		CZ_LOG(logDefault, Log, F("Loading group %d config from address %d"), m_index, src.index);
+		CZ_LOG(logDefault, Log, F("Loading group %d config from address %u"), m_index, src.getAddress());
 		readEEPROM(src, reinterpret_cast<uint8_t*>(&m_cfg), sizeof(m_cfg));
 	}
 
 	if (loadHistory)
 	{
-		CZ_LOG(logDefault, Log, F("Loading group %d history from address %d"), m_index, src.index);
+		CZ_LOG(logDefault, Log, F("Loading group %d history from address %u"), m_index, src.getAddress());
 		cz::load(src, m_history);
 	}
+}
+
+///////////////////////////////////////////////////////////////////////
+// ProgramData
+///////////////////////////////////////////////////////////////////////
+
+ProgramData::ProgramData(Context& outer)
+	: m_outer(outer)
+{
 }
 
 void ProgramData::begin()
@@ -291,14 +300,14 @@ void ProgramData::setInGroupConfigMenu(bool inMenu)
 
 GroupData& ProgramData::getGroupData(uint8_t index)
 {
-	CZ_ASSERT(index < NUM_MOISTURESENSORS);
+	CZ_ASSERT(index < NUM_PAIRS);
 	return m_group[index];
 }
 
 void ProgramData::save() const
 {
 	unsigned long startTime = micros();
-	AT24C::Ptr ptr = EEPROM.at(0);
+	AT24C::Ptr ptr = m_outer.eeprom.at(0);
 
 	// We save the configs first because they are fixed size, and so we can load/save groups individually when coming
 	// out of the configuration menu
@@ -313,30 +322,30 @@ void ProgramData::save() const
 	}
 	
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
-	CZ_LOG(logDefault, Log, F("Saving %u bytes to EEPROM took %u ms"), ptr.index, elapsedMs);
+	CZ_LOG(logDefault, Log, F("Saving %u bytes to EEPROM took %u ms"), ptr.getAddress(), elapsedMs);
 	Component::raiseEvent(ConfigSaveEvent());
 }
 
 void ProgramData::saveGroupConfig(uint8_t index)
 {
 	unsigned long startTime = micros();
-	AT24C::Ptr ptr = EEPROM.at(0);
+	AT24C::Ptr ptr = m_outer.eeprom.at(0);
 
 	for(uint8_t idx = 0; idx<index; ++idx)
 	{
-		ptr.index += m_group[idx].getConfigSize();
+		ptr += m_group[idx].getConfigSize();
 	}
 
 	m_group[index].save(ptr, true, false);
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
-	CZ_LOG(logDefault, Log, F("Saving %u bytes to EEPROM took %u ms"), ptr.index, elapsedMs);
+	CZ_LOG(logDefault, Log, F("Saving %u bytes to EEPROM took %u ms"), ptr.getAddress(), elapsedMs);
 	Component::raiseEvent(ConfigLoadEvent());
 }
 
 void ProgramData::load()
 {
 	unsigned long startTime = micros();
-	AT24C::Ptr ptr = EEPROM.at(a);
+	AT24C::Ptr ptr = m_outer.eeprom.at(0);
 
 	for(GroupData& g : m_group)
 	{
@@ -349,7 +358,7 @@ void ProgramData::load()
 	}
 	
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
-	CZ_LOG(logDefault, Log, F("Loading %u bytes from EEPROM took %u ms"), ptr.index, elapsedMs);
+	CZ_LOG(logDefault, Log, F("Loading %u bytes from EEPROM took %u ms"), ptr.getAddress(), elapsedMs);
 	Component::raiseEvent(ConfigLoadEvent());
 }
 
@@ -373,6 +382,3 @@ void ProgramData::releaseMoistureSensorMutex()
 }
 
 } // namespace cz
-
-
-#endif

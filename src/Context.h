@@ -185,9 +185,13 @@ namespace cz
 		bool m_calibrating = false;
 	};
 
+struct Context;
+
 class ProgramData
 {
 public:
+	ProgramData(Context& outer);
+
 	GroupData& getGroupData(uint8_t index);
 
 	// We only allow 1 sensor to be active at one give time, so we use this as a kind of mutex
@@ -227,6 +231,7 @@ public:
 	}
 	
   private:
+	Context& m_outer;
 	GroupData m_group[NUM_PAIRS];
 	bool m_moistureSensorMutex = false;
 	bool m_inGroupConfigMenu = false;
@@ -242,6 +247,8 @@ struct Context
 			IO_EXPANDER_TO_MUX_S1,
 			IO_EXPANDER_TO_MUX_S2,
 			MCU_TO_MUX_ZPIN)
+		, data(*this)
+		, eeprom(0)
 	{
 	}
 
@@ -254,6 +261,7 @@ struct Context
 #endif
 	Mux8Channels mux;
 	ProgramData data;
+	AT24C256 eeprom;
 
 	// Used as a temporary config data when configuring a group
 	GroupConfig settingsDummy;
