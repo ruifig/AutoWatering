@@ -24,7 +24,12 @@
         "mstd_mutex": "cpp",
         "limits": "cpp",
         "*.tcc": "cpp",
-        "*.impl": "cpp"
+        "*.impl": "cpp",
+        "memory": "cpp",
+        "random": "cpp",
+        "future": "cpp",
+        "optional": "cpp",
+        "mstd_iterator": "cpp"
     },
     "gitlens.advanced.blame.customArguments": [],
 

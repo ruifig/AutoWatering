@@ -4,13 +4,10 @@
 #include "crazygaze/micromuc/StringUtils.h"
 #include "Colour.h"
 
-#include <Adafruit_GFX.h>
-#include <MCUFRIEND_kbv.h>
-
-#include <FreeDefaultFonts.h>
 #include <Fonts/FreeSans9pt7b.h>
 #include <Fonts/FreeSans12pt7b.h>
 #include <Fonts/Org_01.h>
+#include "FreeDefaultFonts.h"
 
 #define TINY_FONT &Org_01
 #define SMALL_FONT &FreeSmallFont
@@ -21,8 +18,6 @@
 
 namespace cz
 {
-
-extern MCUFRIEND_kbv gScreen;
 
 struct Image
 {

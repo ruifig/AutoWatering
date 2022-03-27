@@ -16,7 +16,7 @@
 /**
  * What pin to as CS/SS for the SD card reader
  */
-#define SD_CARD_SS_PIN 53
+//#define SD_CARD_SS_PIN 53
 
 /**
  * If 1, it will log to a file in the sd card
@@ -34,6 +34,20 @@
 		#define CONSOLE_COMMANDS 0
 	#endif
 #endif
+
+
+/**
+ * Display pins
+ */
+#define TFT_PIN_DC cz::MCUPin(9)
+#define TFT_PIN_CS cz::MCUPin(10)
+#define TFT_PIN_BACKLIGHT cz::MCUPin(4)
+
+/**
+ * Touch controller pins
+ */
+#define TOUCH_PIN_CS cz::MCUPin(2)
+#define TOUCH_PIN_IRQ cz::MCUPin(3)
 
 /**
  * Note. Internally it adds 0x20, which is the base address

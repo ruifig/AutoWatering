@@ -1,4 +1,4 @@
-#if PORTING_TO_RP2040
+#if PORTING_RP2040
 
 #include "GFXUtils.h"
 #include "crazygaze/micromuc/Logging.h"
@@ -6,35 +6,14 @@
 namespace cz
 {
 
-MCUFRIEND_kbv gScreen;
-
 void initializeScreen()
 {
-	gScreen.reset();
-	uint16_t identifier = gScreen.readID();
-	if(identifier == 0x9325)
-	{
-		CZ_LOG(logDefault, Log, F("Found ILI9325 LCD driver"));
-	} else if(identifier == 0x9328) {
-		CZ_LOG(logDefault, Log, F("Found ILI9328 LCD driver"));
-	} else if(identifier == 0x7575) {
-		CZ_LOG(logDefault, Log, F("Found HX8347G LCD driver"));
-	} else if(identifier == 0x9341) {
-		CZ_LOG(logDefault, Log, F("Found ILI9341 LCD driver"));
-	} else if(identifier == 0x8357) {
-		CZ_LOG(logDefault, Log, F("Found HX8357D LCD driver"));
-	} else {
-		CZ_LOG(logDefault, Log, F("Unknown LCD driver chip: 0x%x"), identifier);
-		CZ_LOG(logDefault, Log, F("If using the Adafruit 2.8\" TFT Arduino shield, the line:"));
-		CZ_LOG(logDefault, Log, F("  #define USE_ADAFRUIT_SHIELD_PINOUT"));
-		CZ_LOG(logDefault, Log, F("should appear in the library header (Adafruit_TFT.h)."));
-		CZ_LOG(logDefault, Log, F("If using the breakout board, it should NOT be #defined!"));
-		CZ_LOG(logDefault, Log, F("Also if using the breakout, double-check that all wiring"));
-		CZ_LOG(logDefault, Log, F("matches the tutorial."));
-		return;
-	}
 
-	gScreen.begin(identifier);
+	// Which begin to use?
+	gScreen.begin(42000000);
+	//gScreen.begin(30000000); // Stayed running for a very long time
+	
+	logDisplayProperties();
 	gScreen.fillScreen(Colour_Black);
 	gScreen.setRotation(1); // LANDSCAPE
 }
@@ -171,5 +150,6 @@ void printAligned(const Rect& area, HAlign halign, VAlign valign, const __FlashS
 }
 
 } // namespace cz
+
 
 #endif

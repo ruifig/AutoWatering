@@ -32,3 +32,18 @@ using IOExpanderPin = TPinType<uint8_t, PinLocation::IOExpander>;
 using MultiplexerPin = TPinType<uint8_t, PinLocation::Multiplexer>;
 
 }
+
+inline void pinMode(cz::MCUPin pin, PinMode mode)
+{
+	::pinMode(pin.raw, mode);
+}
+
+inline void digitalWrite(cz::MCUPin pin, PinStatus status)
+{
+	::digitalWrite(pin.raw, status);
+}
+
+inline void analogWrite(cz::MCUPin pin, int val)
+{
+	::analogWrite(pin.raw, val);
+}
