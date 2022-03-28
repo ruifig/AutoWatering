@@ -43,6 +43,16 @@ class MyDisplay1 : public GraphicsInterface
 	{
 		m_tft.fillRect(x, y, w, h, color);
 	}
+
+	void fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, Colour color) override
+	{
+		m_tft.fillRoundRect(x, y, w, h, r, color);
+	}
+
+	virtual void drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, Colour color) override
+	{
+		m_tft.drawRoundRect(x, y, w, h, r, color);
+	}
 	virtual void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, Colour color) override
 	{
 		m_tft.drawRect(x, y, w, h, color);
@@ -61,6 +71,11 @@ class MyDisplay1 : public GraphicsInterface
 	virtual void setFont(const GFXfont* font) override
 	{
 		m_tft.setFont(font);
+	}
+
+	virtual GFXfont* getGfxFont() override
+	{
+		return m_tft.getGfxFont();
 	}
 
 	virtual void setTextColor(Colour c) override
@@ -114,7 +129,14 @@ class MyDisplay1 : public GraphicsInterface
 
 	void logProperties();
 	MCUPin m_bkpin;
-	Adafruit_ILI9341 m_tft;
+
+	// Wrapping, so I can access protected members
+	class MyAdafruit_ILI9341 : public Adafruit_ILI9341
+	{
+	  public:
+		using Adafruit_ILI9341::Adafruit_ILI9341;
+		GFXfont* getGfxFont() { return gfxFont; }
+	} m_tft;
 };
 
 } // namespace cz

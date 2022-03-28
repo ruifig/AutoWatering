@@ -22,13 +22,36 @@ class GraphicsInterface
 	virtual void endWrite() = 0;
 	virtual void fillScreen(Colour colour) = 0;
 	virtual void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, Colour color) = 0;
+
 	/**
-	 * @brief   Draw a rectangle with no fill color
-	 * 	@param    x   Top left corner x coordinate
-	 * 	@param    y   Top left corner y coordinate
-	 * 	@param    w   Width in pixels
-	 * 	@param    h   Height in pixels
-	 * 	@param    color 16-bit 5-6-5 Color to draw with
+	 * \brief   Draw a rounded rectangle with fill color
+	 * \param    x   Top left corner x coordinate
+	 * \param    y   Top left corner y coordinate
+	 * \param    w   Width in pixels
+	 * \param    h   Height in pixels
+	 * \param    r   Radius of corner rounding
+	 * \param    color 16-bit 5-6-5 Color to draw/fill with
+	 */
+	virtual void fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, Colour color) = 0;
+
+	/**
+	 * \brief   Draw a rounded rectangle with no fill color
+	 * \param    x   Top left corner x coordinate
+	 * \param    y   Top left corner y coordinate
+	 * \param    w   Width in pixels
+	 * \param    h   Height in pixels
+	 * \param    r   Radius of corner rounding
+	 * \param    color 16-bit 5-6-5 Color to draw with
+	 */
+	virtual void drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, Colour color) = 0;
+
+	/**
+	 * \brief   Draw a rectangle with no fill color
+	 * \param    x   Top left corner x coordinate
+	 * \param    y   Top left corner y coordinate
+	 * \param    w   Width in pixels
+	 * \param    h   Height in pixels
+	 * \param    color 16-bit 5-6-5 Color to draw with
 	 */
 	virtual void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, Colour color) = 0;
 	virtual void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, Colour color) = 0;
@@ -54,6 +77,8 @@ class GraphicsInterface
 	 * \param font Font to use, or NULL to use built in font
 	 */
 	virtual void setFont(const GFXfont* font) = 0;
+
+	virtual GFXfont* getGfxFont() = 0;
 
 	/**
 	 * Set text colour with transparent background

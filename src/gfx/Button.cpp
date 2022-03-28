@@ -1,17 +1,17 @@
-#if PORTING_RP2040
-
 #include "Button.h"
 #include "../Config.h"
+#include "MyDisplay1.h"
 
 namespace cz::gfx
 {
 
-#pragma region BaseButton
+extern MyDisplay1 gScreen;
+
 //////////////////////////////////////////////////////////////////////////
 // BaseButton
 //////////////////////////////////////////////////////////////////////////
 
-void BaseButton::initHelper(uint8_t id, const Rect& pos, uint16_t bkgColour)
+void BaseButton::initHelper(uint8_t id, const Rect& pos, Colour bkgColour)
 {
 	m_id = id;
 	m_pos = pos;
@@ -74,10 +74,6 @@ void BaseButton::setClearWhenHidden(bool doClear)
 	m_needsRedraw = true;
 }
 
-#pragma endregion
-
-
-#pragma region ImageButton
 //////////////////////////////////////////////////////////////////////////
 // ImageButton
 //////////////////////////////////////////////////////////////////////////
@@ -86,7 +82,7 @@ ImageButton::ImageButton()
 {
 }
 
-void ImageButton::init(uint8_t id, const Pos& pos, uint16_t bkgColour, const Image& img)
+void ImageButton::init(uint8_t id, const Pos& pos, Colour bkgColour, const Image& img)
 {
 	initHelper(id, {pos.x, pos.y, img.width, img.height}, bkgColour);
 	m_img = img;
@@ -118,15 +114,11 @@ void ImageButton::draw(bool forceDraw)
 	m_needsRedraw = false;
 }
 
-#pragma endregion
-
-
-#pragma region TextButton
 //////////////////////////////////////////////////////////////////////////
 // TextButton
 //////////////////////////////////////////////////////////////////////////
 
-void TextButton::init(uint8_t id, const GFXfont* font, const Rect& pos, uint16_t bkgColour, uint16_t outlineColour, uint16_t textColour, const char* text, uint8_t textMagnification)
+void TextButton::init(uint8_t id, const GFXfont* font, const Rect& pos, Colour bkgColour, Colour outlineColour, Colour textColour, const char* text, uint8_t textMagnification)
 {
 	BaseButton::initHelper(id, pos, bkgColour);
 	m_outlineColour = outlineColour;
@@ -142,7 +134,7 @@ void TextButton::draw(bool forceDraw)
 {
 	// #RVF : Make use of forceDraw
 	
-	uint16_t fillColour, textColour;
+	Colour fillColour, textColour;
 	int16_t  text_x, text_y;  // position of the text outline
 	uint16_t text_w, text_h;  // size of the text outline
 
@@ -226,9 +218,5 @@ void TextButton::drawButton(boolean inverted)
 }
 #endif
 
-
-#pragma endregion
-
 } // namespace cz::gfx
 
-#endif
