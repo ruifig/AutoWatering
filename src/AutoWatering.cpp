@@ -312,16 +312,20 @@ void loop()
 
 #if 1
 
-using namespace cz;
 namespace
 {
 	cz::SerialLogOutput gSerialLogOutput;
 	cz::SerialStringReader<> gSerialStringReader;
 }
 
-MyDisplay1 gTft(TFT_PIN_CS, TFT_PIN_DC, TFT_PIN_BACKLIGHT);
-const TouchCalibrationData gTsCalibrationData = {211, 3412, 334, 3449, 4};
-MyXPT2046 gTs(gTft, TOUCH_PIN_CS, TOUCH_PIN_IRQ, &gTsCalibrationData);
+namespace cz
+{
+	MyDisplay1 gScreen(TFT_PIN_CS, TFT_PIN_DC, TFT_PIN_BACKLIGHT);
+	const TouchCalibrationData gTsCalibrationData = {211, 3412, 334, 3449, 4};
+	MyXPT2046 gTs(gScreen, TOUCH_PIN_CS, TOUCH_PIN_IRQ, &gTsCalibrationData);
+}
+
+using namespace cz;
 
 void setup()
 {
@@ -333,7 +337,7 @@ void setup()
 	CZ_LOG(logDefault, Log, "Hello World-3!");
 	CZ_LOG(logDefault, Log, F("Hello World-4!"));
 
-	gTft.begin();
+	gScreen.begin();
 	gTs.begin();
 	//gTs.calibrate();
 }
@@ -355,10 +359,10 @@ void loop()
 	tryReadString();
 	delay(500);
 
-	gTft.setFont(NULL);
-	gTft.setCursor(0,0);
-	gTft.setTextColor(Colour_White, Colour_Black);
-	gTft.print(cz::formatString("Millis: %u", millis()));
+	gScreen.setFont(NULL);
+	gScreen.setCursor(0,0);
+	gScreen.setTextColor(Colour_White, Colour_Black);
+	gScreen.print(cz::formatString("Millis: %u", millis()));
 
 	if (gTs.isTouched())
 	{
@@ -366,10 +370,10 @@ void loop()
 		CZ_LOG(logDefault, Log, "Raw Data = (%u, %u, %u)", raw.x, raw.y, raw.z);
 
 		TouchPoint p = gTs.getPoint();
-		gTft.setCursor(150, 150);
-		gTft.print(cz::formatString(" P=(%d, %d, %d) ", p.x, p.y, p.z));
+		gScreen.setCursor(150, 150);
+		gScreen.print(cz::formatString(" P=(%d, %d, %d) ", p.x, p.y, p.z));
 		CZ_LOG(logDefault, Log, " P=(%d, %d, %d) ", p.x, p.y, p.z);
-		gTft.setBacklightBrightness(map(p.x, 0, 319, 0, 255));
+		gScreen.setBacklightBrightness(map(p.x, 0, 319, 0, 255));
 	}
 }
 #endif

@@ -4,6 +4,7 @@
 #include "crazygaze/micromuc/StringUtils.h"
 #include "Colour.h"
 
+#include "GraphicsInterface.h"
 #include <Fonts/FreeSans9pt7b.h>
 #include <Fonts/FreeSans12pt7b.h>
 #include <Fonts/Org_01.h>
@@ -82,7 +83,12 @@ struct Rect
 	// Returns a Rect expanded the number of specified pixels in all 4 directions (top/bottom/left/right)
 	Rect expand(int16_t pixels) const
 	{
-		return { x - pixels, y - pixels, width + pixels*2, height + pixels*2};
+		return {
+			static_cast<int16_t>(x - pixels),
+			static_cast<int16_t>(y - pixels),
+			static_cast<uint16_t>(width + pixels*2),
+			static_cast<uint16_t>(height + pixels*2)
+			};
 	}
 };
 
@@ -110,10 +116,10 @@ void drawRect(const Rect& box, uint16_t color);
  * Draws a filled rectangle with the specified colour, followed by a 565 RGB bitmap from PROGMEM using a bitmask
  * (set bits = opaque, unset bits = clear).
  **/
-void drawRGBBitmap_P(int16_t x, int16_t y, const uint16_t *bitmap_P, const uint8_t* mask_P, int16_t w, int16_t h, uint16_t bkgColour);
-void drawRGBBitmapDisabled_P(int16_t x, int16_t y, const uint16_t *bitmap_P, const uint8_t* mask_P, int16_t w, int16_t h, uint16_t bkgColour);
-void drawRGBBitmap_P(const Rect& area, const uint16_t *bitmap_P, const uint8_t* mask_P, uint16_t bkgColour);
-void drawRGBBitmapDisabled_P(const Rect& area, const uint16_t *bitmap_P, const uint8_t* mask_P, uint16_t bkgColour);
+void drawRGBBitmap_P(int16_t x, int16_t y, const uint16_t *bitmap_P, const uint8_t* mask_P, int16_t w, int16_t h, Colour bkgColour);
+void drawRGBBitmapDisabled_P(int16_t x, int16_t y, const uint16_t *bitmap_P, const uint8_t* mask_P, int16_t w, int16_t h, Colour bkgColour);
+void drawRGBBitmap_P(const Rect& area, const uint16_t *bitmap_P, const uint8_t* mask_P, Colour bkgColour);
+void drawRGBBitmapDisabled_P(const Rect& area, const uint16_t *bitmap_P, const uint8_t* mask_P, Colour bkgColour);
 
 /**
  * Prints a string aligned in a box area
