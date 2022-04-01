@@ -1,12 +1,13 @@
-#if PORTING_TO_RP2040
-
 #include "GroupGraph.h"
 #include "DisplayCommon.h"
 #include "Context.h"
 #include "crazygaze/micromuc/Profiler.h"
+#include "gfx/MyDisplay1.h"
 
 namespace cz
 {
+
+extern MyDisplay1 gScreen;
 	
 GroupGraph::GroupGraph()
 {
@@ -18,7 +19,7 @@ GroupGraph::~GroupGraph()
 
 void GroupGraph::init(int8_t index)
 {
-	CZ_ASSERT(index>=0 && index<NUM_MOISTURESENSORS);
+	CZ_ASSERT(index>=0 && index<NUM_PAIRS);
 	m_index = index;
 	m_forceRedraw = true;
 	m_selected = false;
@@ -224,4 +225,3 @@ void GroupGraph::drawOuterBox()
 
 }
 
-#endif

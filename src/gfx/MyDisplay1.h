@@ -38,7 +38,11 @@ class MyDisplay1 : public GraphicsInterface
 	virtual void writePixel(int16_t x, int16_t y, Colour color) override { m_tft.writePixel(x, y, color); }
 	virtual void startWrite() override { m_tft.startWrite(); }
 	virtual void endWrite() override { m_tft.endWrite(); }
+
+	virtual void drawPixel(int16_t x, int16_t y, Colour color) override { m_tft.writePixel(x, y, color); }
+
 	virtual void fillScreen(Colour colour) override { m_tft.fillScreen(colour); }
+
 	virtual void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, Colour color) override
 	{
 		m_tft.fillRect(x, y, w, h, color);
@@ -60,6 +64,14 @@ class MyDisplay1 : public GraphicsInterface
 	virtual void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, Colour color) override
 	{
 		m_tft.drawLine(x0, y0, x1, y1, color);
+	}
+	virtual void drawFastVLine(int16_t x, int16_t y, int16_t h, Colour color) override
+	{
+		m_tft.drawFastVLine(x, y, h, color);
+	}
+	virtual void drawFastHLine(int16_t x, int16_t y, int16_t w, Colour color) override
+	{
+		m_tft.drawFastHLine(x, y, w, color);
 	}
 
 	//

@@ -108,9 +108,9 @@ enum class VAlign : uint8_t
 
 void initializeScreen();
 
-void fillRect(const Rect& box, uint16_t color);
+void fillRect(const Rect& box, Colour color);
 
-void drawRect(const Rect& box, uint16_t color);
+void drawRect(const Rect& box, Colour color);
 
 /**
  * Draws a filled rectangle with the specified colour, followed by a 565 RGB bitmap from PROGMEM using a bitmask

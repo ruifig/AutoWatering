@@ -1,12 +1,10 @@
-#if PORTING_TO_RP2040
-
 #include "DisplayTFT.h"
 #include "Context.h"
-#include "Utils.h"
 #include "crazygaze/micromuc/Logging.h"
 #include "crazygaze/micromuc/StringUtils.h"
 #include <crazygaze/micromuc/Profiler.h>
 #include "Icons.h"
+#include "gfx/MyDisplay1.h"
 #include "DisplayCommon.h"
 
 void doGroupShot(uint8_t index);
@@ -28,6 +26,7 @@ void doGroupShot(uint8_t index);
 namespace cz
 {
 
+extern MyDisplay1 gScreen;
 
 using namespace gfx;
 
@@ -165,14 +164,14 @@ DEFINE_SENSOR_LABELS(1)
 DEFINE_SENSOR_LABELS(2)
 DEFINE_SENSOR_LABELS(3)
 
-NumLabel<true> sensorLabels[NUM_MOISTURESENSORS][3] =
+NumLabel<true> sensorLabels[NUM_PAIRS][3] =
 {
 	{
 		{ sensor0line0 },
 		{ sensor0line1 },
 		{ sensor0line2 }
 	}
-#if NUM_MOISTURESENSORS>1
+#if NUM_PAIRS>1
 	,
 	{
 		{ sensor1line0 },
@@ -180,7 +179,7 @@ NumLabel<true> sensorLabels[NUM_MOISTURESENSORS][3] =
 		{ sensor1line2 }
 	}
 #endif
-#if NUM_MOISTURESENSORS>2
+#if NUM_PAIRS>2
 	,
 	{
 		{ sensor2line0 },
@@ -188,7 +187,7 @@ NumLabel<true> sensorLabels[NUM_MOISTURESENSORS][3] =
 		{ sensor2line2 }
 	}
 #endif
-#if NUM_MOISTURESENSORS>3
+#if NUM_PAIRS>3
 	,
 	{
 		{ sensor3line0 },
@@ -207,7 +206,7 @@ DisplayTFT::OverviewState::OverviewState(DisplayTFT& outer)
 
 void DisplayTFT::OverviewState::init()
 {
-	for(int idx = 0; idx<NUM_MOISTURESENSORS; idx++)
+	for(int idx = 0; idx<NUM_PAIRS; idx++)
 	{
 		m_groupGraphs[idx].init(idx);
 	}
@@ -225,7 +224,7 @@ void DisplayTFT::OverviewState::tick(float deltaSeconds)
 	{
 		bool consumed = false;
 
-		for(int8_t idx = 0; idx<NUM_MOISTURESENSORS; idx++)
+		for(int8_t idx = 0; idx<NUM_PAIRS; idx++)
 		{
 			if (m_groupGraphs[idx].contains(m_outer.m_touch.pos))
 			{
@@ -351,7 +350,7 @@ void DisplayTFT::OverviewState::draw()
 {
 	PROFILE_SCOPE(F("OverviewState::drawOverview"));
 
-	for(int i=0; i<NUM_MOISTURESENSORS; i++)
+	for(int i=0; i<NUM_PAIRS; i++)
 	{
 		PROFILE_SCOPE(F("groupDrawing"));
 
@@ -811,7 +810,4 @@ void DisplayTFT::changeToState(DisplayState& newState)
 	m_state->onEnter();
 }
 
-
 } // namespace cz
-
-#endif

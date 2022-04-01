@@ -1,10 +1,13 @@
 #include "Label.h"
 #include "MyDisplay1.h"
 
+namespace cz
+{
+	extern MyDisplay1 gScreen;
+}
+
 namespace cz::gfx
 {
-
-extern MyDisplay1 gScreen;
 
 //////////////////////////////////////////////////////////////////////////
 // BaseLabel

@@ -20,7 +20,11 @@ class GraphicsInterface
 	virtual void writePixel(int16_t x, int16_t y, Colour color) = 0;
 	virtual void startWrite() = 0;
 	virtual void endWrite() = 0;
+
+	virtual void drawPixel(int16_t x, int16_t y, Colour color) = 0;
+
 	virtual void fillScreen(Colour colour) = 0;
+
 	virtual void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, Colour color) = 0;
 
 	/**
@@ -55,6 +59,8 @@ class GraphicsInterface
 	 */
 	virtual void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, Colour color) = 0;
 	virtual void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, Colour color) = 0;
+	virtual void drawFastVLine(int16_t x, int16_t y, int16_t h, Colour color) = 0;
+	virtual void drawFastHLine(int16_t x, int16_t y, int16_t w, Colour color) = 0;
 
 	//
 	// Text rendering

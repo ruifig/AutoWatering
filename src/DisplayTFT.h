@@ -5,7 +5,6 @@
 #include "gfx/Button.h"
 #include "GroupGraph.h"
 #include <Adafruit_GFX.h>
-#include <MCUFRIEND_kbv.h>
 #include <TouchScreen.h>
 
 namespace cz
@@ -206,8 +205,8 @@ class DisplayTFT : public Component
 
 		void draw();
 
-		GroupGraph m_groupGraphs[NUM_MOISTURESENSORS];
-		uint8_t m_sensorUpdates[NUM_MOISTURESENSORS];
+		GroupGraph m_groupGraphs[NUM_PAIRS];
+		uint8_t m_sensorUpdates[NUM_PAIRS];
 		SensorMainMenu m_sensorMainMenu;
 		SettingsMenu m_settingsMenu;
 		bool m_forceRedraw : 1;
