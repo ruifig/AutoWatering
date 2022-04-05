@@ -55,7 +55,8 @@ void Adafruit_MCP23017::begin(uint8_t addr) {
   }
   i2caddr = addr;
 
-  WIRE.begin();
+  // #RVF : Disabling automatic initialization of I2C, so the caller has some more flexibility
+  // WIRE.begin();
 
   // set defaults!
   WIRE.beginTransmission(MCP23017_ADDRESS | i2caddr);

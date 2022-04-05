@@ -111,6 +111,17 @@ void setup()
 	gSerialLogOutput.begin(Serial1, 115200);
 	gSerialStringReader.begin(Serial1);
 
+	//
+	// Initialize I2C
+	// NOTE: The original Adafruit_MCP23017.cpp code automatically initialized IC2, but that causes some problems
+	// because I also need to set the clock before I2C is used, and also because eeprom is also using I2C.
+	// So, Adafruit_MCP23017 has a change to disable I2C initialization, and initialization is done here.
+	Wire.begin();
+	// MCP23017 : 400kHz at 3.3v
+	// AT24C256 : 400kHz at 2.7v, 2.5v
+	Wire.setClock(400000);
+
+
 #if SD_CARD_LOGGING
 	if (gSDCard.betin(SD_CARD_SS_PIN))
 	{
