@@ -6,7 +6,7 @@
 
 // FASTER_ITERATION
 #ifndef FASTER_ITERATION
-	#define FASTER_ITERATION 0
+	#define FASTER_ITERATION 1
 #endif
 
 #ifndef MOCK_COMPONENTS
@@ -86,12 +86,12 @@
 /**
  * Pins of the IO Expander used to turn on/off the motors
  */
-#define IO_EXPANDER_MOTOR_0 cz::IOExpanderPin(8+7)
-#define IO_EXPANDER_MOTOR_1 cz::IOExpanderPin(0+0)
-#define IO_EXPANDER_MOTOR_2 cz::IOExpanderPin(0+1)
-#define IO_EXPANDER_MOTOR_3 cz::IOExpanderPin(0+2)
-#define IO_EXPANDER_MOTOR_4 cz::IOExpanderPin(0+3)
-#define IO_EXPANDER_MOTOR_5 cz::IOExpanderPin(0+4)
+#define IO_EXPANDER_MOTOR0 cz::IOExpanderPin(8+7)
+#define IO_EXPANDER_MOTOR1 cz::IOExpanderPin(0+0)
+#define IO_EXPANDER_MOTOR2 cz::IOExpanderPin(0+1)
+#define IO_EXPANDER_MOTOR3 cz::IOExpanderPin(0+2)
+#define IO_EXPANDER_MOTOR4 cz::IOExpanderPin(0+3)
+#define IO_EXPANDER_MOTOR5 cz::IOExpanderPin(0+4)
 
 /**
  * Multiplexer pin used to read temperature/humidity
@@ -128,8 +128,8 @@
  * Default sensor sampling interval in seconds
  */
 #if FASTER_ITERATION
-	#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 5.0f
-	//#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 1.0f
+	//#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 5.0f
+	#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 1.0f
 #else
 	#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 60.0f
 #endif
@@ -162,6 +162,12 @@
 	#define INTRO_DURATION 1.0f
 #endif
 
+/**
+ * Default screen: 0..100.
+ * Actual screen classes scale this accordingly to whatever range they use 
+ */
+#define SCREEN_DEFAULT_BRIGHTNESS 100
+
 #define SCREEN_BKG_COLOUR Colour_Black
 
 #define INTRO_TEXT_COLOUR Colour_Green
@@ -169,7 +175,7 @@
 #define GRAPH_NUMPOINTS (320-32-2)
 #define GRAPH_VALUES_TEXT_COLOUR Colour_DarkGrey
 #define GRAPH_VALUES_BKG_COLOUR Colour_Black
-#define GRAPH_BORDER_COLOUR Colour_VeryDarkGrey
+#define GRAPH_BORDER_COLOUR Colour_DarkGrey
 #define GRAPH_SELECTED_BORDER_COLOUR Colour_Green
 #define GRAPH_NOTSELECTED_BORDER_COLOUR Colour_Black
 #define GRAPH_BKG_COLOUR Colour_Black

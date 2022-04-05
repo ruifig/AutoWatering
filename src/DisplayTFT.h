@@ -4,8 +4,8 @@
 #include "gfx/Label.h"
 #include "gfx/Button.h"
 #include "GroupGraph.h"
-#include <Adafruit_GFX.h>
-#include <TouchScreen.h>
+#include "gfx/MyDisplay1.h"
+#include "gfx/MyXPT2046.h"
 
 namespace cz
 {
@@ -213,8 +213,6 @@ class DisplayTFT : public Component
 		bool m_inSettingsMenu : 1;
 	};
 
-	TouchScreen m_ts;
-
 	struct States
 	{
 		States(DisplayTFT& outer)
@@ -238,11 +236,10 @@ class DisplayTFT : public Component
 		Pos pos;
 		// A "press" condition requires us to touch and untouch the screen, so we need to hold the previous value
 		// to compare against in the next tick
-		TSPoint tmp;
+		TouchPoint tmp;
 	} m_touch;
 
 	void updateTouch();
-
 };
 	
 	

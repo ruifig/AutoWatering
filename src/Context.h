@@ -5,6 +5,7 @@
 #include "utility/MuxNChannels.h"
 #include <crazygaze/micromuc/Queue.h>
 #include "utility/AT24C.h"
+#include "crazygaze/micromuc/MathUtils.h"
 
 namespace cz
 {
@@ -40,8 +41,8 @@ namespace cz
 		// to set the air value, and then submerse the sensor to set the water value.
 		// Having air and water properly is not a requirement for things to work, since what matter is that the system know what 
 		// sensor value is the threshold to turn on/off the motor
-		#define START_AIR_VALUE 400
-		#define START_WATER_VALUE 300
+		#define START_AIR_VALUE 420
+		#define START_WATER_VALUE 280
 		unsigned int airValue = START_AIR_VALUE;
 		unsigned int waterValue = START_WATER_VALUE;
 		// Current sensor value
@@ -49,21 +50,29 @@ namespace cz
 
 		// Value above which irrigation should be turned on
 		// NOTE: ABOVE because higher values means drier.
-		// Using 0 as initial value, which means it will not turn on the motor until things are setup properly
-		unsigned int thresholdValue = 0;
+		// Using a big value as initial value, which means it will not turn on the motor until things are setup properly
+		unsigned int thresholdValue = 65535;
 
-		void setSensorValue(unsigned int currentValue_)
+		void setSensorValue(unsigned int currentValue_, bool isCalibrating)
 		{
 			numReadings++;
-			currentValue = currentValue_;
 
-			if (currentValue > airValue)
+			// If we are calibrating, we accept any value, and then adjust the air/water values accordingly
+			if (isCalibrating)
 			{
-				airValue = currentValue;
+				currentValue = currentValue_;
+				if (currentValue > airValue)
+				{
+					airValue = currentValue;
+				}
+				else if (currentValue < waterValue)
+				{
+					waterValue = currentValue;
+				}
 			}
-			else if (currentValue < waterValue)
+			else
 			{
-				waterValue = currentValue;
+				currentValue = cz::clamp(currentValue_, waterValue, airValue);
 			}
 		}
 
@@ -118,6 +127,11 @@ namespace cz
 			m_cfg.thresholdValue = value;
 		}
 
+		void setThresholdValueAsPercentage(unsigned int value)
+		{
+			m_cfg.thresholdValue = map(cz::clamp<unsigned int>(value, 0, 100), 0, 100, m_cfg.airValue, m_cfg.waterValue);
+		}
+
 		unsigned int getThresholdValue() const
 		{
 			return m_cfg.thresholdValue;
@@ -125,7 +139,8 @@ namespace cz
 
 		unsigned int getPercentageThreshold() const
 		{
-			return map(m_cfg.thresholdValue, m_cfg.airValue, m_cfg.waterValue, 0, 100);
+			unsigned int tmp = cz::clamp(m_cfg.thresholdValue, m_cfg.waterValue, m_cfg.airValue);
+			return map(tmp, m_cfg.airValue, m_cfg.waterValue, 0, 100);
 		}
 
 		float getSamplingInterval() const

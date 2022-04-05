@@ -39,7 +39,7 @@ class MyDisplay1 : public GraphicsInterface
 	virtual void startWrite() override { m_tft.startWrite(); }
 	virtual void endWrite() override { m_tft.endWrite(); }
 
-	virtual void drawPixel(int16_t x, int16_t y, Colour color) override { m_tft.writePixel(x, y, color); }
+	virtual void drawPixel(int16_t x, int16_t y, Colour color) override { m_tft.drawPixel(x, y, color); }
 
 	virtual void fillScreen(Colour colour) override { m_tft.fillScreen(colour); }
 

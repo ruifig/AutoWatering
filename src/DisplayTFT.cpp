@@ -4,7 +4,6 @@
 #include "crazygaze/micromuc/StringUtils.h"
 #include <crazygaze/micromuc/Profiler.h>
 #include "Icons.h"
-#include "gfx/MyDisplay1.h"
 #include "DisplayCommon.h"
 
 void doGroupShot(uint8_t index);
@@ -14,12 +13,7 @@ void doGroupShot(uint8_t index);
 #define YM 9   // can be a digital pin
 #define XP 8   // can be a digital pin
 
-#define TS_MINX 108
-#define TS_MINY 84
-#define TS_MAXX 910
-#define TS_MAXY 888
-
-#define TS_MIN_PRESSURE 100
+#define TS_MIN_PRESSURE 50
 #define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 240
 
@@ -27,6 +21,7 @@ namespace cz
 {
 
 extern MyDisplay1 gScreen;
+extern MyXPT2046 gTs;
 
 using namespace gfx;
 
@@ -41,7 +36,7 @@ void DisplayTFT::InitializeState::tick(float deltaSeconds)
 
 void DisplayTFT::InitializeState::onEnter()
 {
-	initializeScreen();
+	gScreen.fillScreen(Colour_Black);
 }
 
 void DisplayTFT::InitializeState::onLeave()
@@ -728,11 +723,7 @@ bool SettingsMenu::checkClose(bool& doSave)
 
 
 DisplayTFT::DisplayTFT()
-	// For better pressure precision, we need to know the resistance
-	// between X+ and X- Use any multimeter to read it
-	// For the one we're using, its 300 ohms across the X plate
-	: m_ts(XP, YP, XM, YM, 300)
-	, m_states(*this)
+	: m_states(*this)
 {
 }
 
@@ -760,9 +751,7 @@ float DisplayTFT::tick(float deltaSeconds)
 
 void DisplayTFT::updateTouch()
 {
-	TSPoint p = m_ts.getPoint();
-	pinMode(YP, OUTPUT); //restore shared pins
-	pinMode(XM, OUTPUT);
+	TouchPoint p = gTs.getPoint();
 
 	if (p.z > TS_MIN_PRESSURE)
 	{
@@ -773,9 +762,7 @@ void DisplayTFT::updateTouch()
 	// If we are not touching right now, but were in the previous call, that means we have a press event
 	if (p.z < TS_MIN_PRESSURE && m_touch.tmp.z >= TS_MIN_PRESSURE)
 	{
-		// Map to screen coordinates
-		m_touch.pos.x = map(m_touch.tmp.y, TS_MINY, TS_MAXY, 0, gScreen.width());
-		m_touch.pos.y = map(m_touch.tmp.x, TS_MAXX, TS_MINX, 0, gScreen.height());
+		m_touch.pos = {p.x, p.y};
 		m_touch.pressed = true;
 		CZ_LOG(logDefault, Verbose, F("Press=(%3d,%3d)"), m_touch.pos.x, m_touch.pos.y);
 	}

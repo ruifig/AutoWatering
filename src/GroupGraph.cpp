@@ -101,7 +101,11 @@ void GroupGraph::draw(bool forceDraw)
 	if (m_forceRedraw)
 	{
 		drawOuterBox();
+		//drawThresholdMarker();
 	}
+
+	// #TODO Remove this and draw only when necessary
+	drawThresholdMarker();
 
 	if (m_forceRedraw || m_sensorUpdates)
 	{
@@ -130,6 +134,7 @@ void GroupGraph::draw(bool forceDraw)
 		drawRect(rect.expand(2), m_selected ? GRAPH_SELECTED_BORDER_COLOUR : GRAPH_NOTSELECTED_BORDER_COLOUR);
 		m_redrawSelectedBox = false;
 	}
+
 	
 	m_forceRedraw = false;	
 }
@@ -214,13 +219,47 @@ void GroupGraph::drawOuterBox()
 	drawRect(rect.expand(1), GRAPH_BORDER_COLOUR);
 
 	constexpr int16_t h = GRAPH_HEIGHT;
-	int bottomY = rect.y + rect.height - 1;
+	int bottomY = rect.bottom();
 	gScreen.drawFastHLine(0, bottomY - map(0, 0, 100, 0, h - 1),   2, GRAPH_BORDER_COLOUR);
 	gScreen.drawFastHLine(0, bottomY - map(20, 0, 100, 0, h - 1),  2, GRAPH_BORDER_COLOUR);
 	gScreen.drawFastHLine(0, bottomY - map(40, 0, 100, 0, h - 1),  2, GRAPH_BORDER_COLOUR);
 	gScreen.drawFastHLine(0, bottomY - map(60, 0, 100, 0, h - 1),  2, GRAPH_BORDER_COLOUR);
 	gScreen.drawFastHLine(0, bottomY - map(80, 0, 100, 0, h - 1),  2, GRAPH_BORDER_COLOUR);
 	gScreen.drawFastHLine(0, bottomY - map(100, 0, 100, 0, h - 1), 2, GRAPH_BORDER_COLOUR);
+
+}
+
+void GroupGraph::drawThresholdMarker()
+{
+	PROFILE_SCOPE(F("GroupGraph::drawThresholdMarker"));
+	
+	VLine line = getHistoryPlotRect(m_index).rightLine();
+	// getHistoryPlotRect gives us the inner area, where we draw the history, but we want to draw the marker
+	// on the border line
+	line.p.x++;
+	gScreen.drawVLine(line, Colour_VeryDarkGrey);
+
+	// Draw a pixel for the threshold level on the right side of the graph box
+	// This allows the user to have an idea of the threshold value without having to go to the group settings
+	GroupData& data = gCtx.data.getGroupData(m_index);
+	unsigned int percentageThreshold = data.getPercentageThreshold();
+	//CZ_LOG(logDefault, Log, F("Val=%u"), percentageThreshold);
+#if 0
+	gScreen.drawPixel(rect.x + rect.width -1, bottomY - map(percentageThreshold, 0, 100, 0, rect.height), GRAPH_MOTOR_ON_COLOUR);
+#endif
+	gScreen.drawPixel(line.p.x, line.bottom() - map(percentageThreshold, 0, 100, 0, GRAPH_POINT_MAXVAL), GRAPH_MOTOR_ON_COLOUR);
+
+#if 0
+	CZ_LOG(logDefault, Log, F("Markers=%d, %d, %d"),
+		map(percentageThreshold, 0, 100, 0, line.height),
+		map(0, 0, 100, 0, line.height),
+		map(100, 0, 100, 0, line.height)
+		);
+
+	gScreen.drawPixel(line.p.x, line.bottom() - map(0, 0, 100, 0, GRAPH_POINT_MAXVAL) -1, Colour_Pink);
+	gScreen.drawPixel(line.p.x, line.bottom() - map(100, 0, 100, 0, GRAPH_POINT_MAXVAL), Colour_Yellow);
+	gScreen.drawPixel(line.p.x, line.bottom() - map(50, 0, 100, 0, GRAPH_POINT_MAXVAL), Colour_Green);
+#endif
 }
 
 }

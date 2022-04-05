@@ -84,7 +84,7 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 			{
 				// Using a function to read the sensor, so we can provide a mock value when using the mock version
 				unsigned int currentValue = readSensor();
-				data.setMoistureSensorValues(currentValue, data.isRunning() ? true : false);
+				data.setMoistureSensorValues(currentValue, data.isRunning() ? false : true);
 				m_timeSinceLastRead = 0;
 				changeToState(State::PoweredDown);
 			}
@@ -122,14 +122,12 @@ void SoilMoistureSensor::onEvent(const Event& evt)
 
 void SoilMoistureSensor::changeToState(State newState)
 {
-	#if 1
-	CZ_LOG(logDefault, Log, F("SoilMoistureSensor(%d)::%s: %ssec %s->%s")
+	CZ_LOG(logDefault, Verbose, F("SoilMoistureSensor(%d)::%s: %ssec %s->%s")
 		, (int)m_index
 		, __FUNCTION__
 		, *FloatToString(m_timeInState)
 		, ms_stateNames[(int)m_state]
 		, ms_stateNames[(int)newState]);
-	#endif
 
 	onLeaveState();
 	m_state = newState;
@@ -269,12 +267,10 @@ void MockSoilMoistureSensor::onEvent(const Event& evt)
 
 unsigned MockSoilMoistureSensor::readSensor()
 {
-#if 0
-	CZ_LOG(logDefault, Log, F("MockSoilMoistureSensor(%d) : %s, target=%s")
+	CZ_LOG(logDefault, Verbose, F("MockSoilMoistureSensor(%d) : %s, target=%s")
 		, m_index
 		, *FloatToString(m_mock.currentValue)
 		, *FloatToString(m_mock.targetValue))
-#endif
 
 	return static_cast<int>(m_mock.currentValue);
 }

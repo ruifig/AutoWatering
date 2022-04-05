@@ -1,5 +1,6 @@
 #include "MyDisplay1.h"
 #include "crazygaze/micromuc/Logging.h"
+#include "../Config.h"
 
 namespace cz
 {
@@ -17,8 +18,8 @@ void MyDisplay1::begin()
 	//gTft.begin(30000000); // Stayed running for a very long time
 
 	pinMode(m_bkpin, OUTPUT);
-	// Set backlight to low brightness to save power by default
-	setBacklightBrightness(40);
+
+	setBacklightBrightness(SCREEN_DEFAULT_BRIGHTNESS);
 
 	fillScreen(Colour_Green);
 	m_tft.setRotation(1);
@@ -28,7 +29,7 @@ void MyDisplay1::begin()
 
 void MyDisplay1::setBacklightBrightness(uint8_t brightness)
 {
-	analogWrite(m_bkpin, brightness);
+	analogWrite(m_bkpin, map(brightness, 0, 100, 0, 255));
 }
 
 /**

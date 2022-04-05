@@ -9,9 +9,12 @@ TODO
 * Copy over Mux8Channels - DONE
 * Copy over AT24C code - DONE
 
-* Copy over TouchScreen.h/cpp
+* Replace graphics library - DONE
+* Copy over TouchScreen.h/cpp - DONE
 * Fork DHT library and add it to the project
-* Replace graphics library
+
+* Porting memory logging
+	* Possibly refactor the memory utility code so it works with Mega and RP2040
 
 Tests once ported:
 	* Test AT24C save and load

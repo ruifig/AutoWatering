@@ -1,10 +1,14 @@
 #pragma once
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
+	#include "Adafruit_GFX.h"
+#pragma GCC diagnostic pop
+
 #include "crazygaze/micromuc/czmicromuc.h"
 #include "crazygaze/micromuc/StringUtils.h"
 #include "Colour.h"
 
-#include "GraphicsInterface.h"
 #include <Fonts/FreeSans9pt7b.h>
 #include <Fonts/FreeSans12pt7b.h>
 #include <Fonts/Org_01.h>
@@ -32,6 +36,29 @@ struct Pos
 {
 	int16_t x;
 	int16_t y;
+};
+
+struct VLine
+{
+	Pos p;
+	uint16_t height;
+
+	constexpr int16_t top() const { return p.y; }
+	constexpr int16_t bottom() const
+	{
+		return static_cast<int16_t>(p.y+height-1);
+	}
+};
+
+struct HLine
+{
+	Pos p;
+	uint16_t width;
+	constexpr int16_t left() const { return p.x; }
+	constexpr int16_t right() const
+	{
+		return static_cast<int16_t>(p.x+width-1);
+	}
 };
 
 struct Rect
@@ -69,19 +96,19 @@ struct Rect
 	{
 	}
 
-	bool contains(int16_t x, int16_t y) const
+	constexpr bool contains(int16_t x, int16_t y) const
 	{
 	  return ((x >= this->x) && (x < (int16_t)(this->x + this->width)) &&
 	          (y >= this->y) && (y < (int16_t)(this->y + this->height)));
 	}
 
-	bool contains(const Pos& pos) const
+	constexpr bool contains(const Pos& pos) const
 	{
 		return contains(pos.x, pos.y);
 	}
 
 	// Returns a Rect expanded the number of specified pixels in all 4 directions (top/bottom/left/right)
-	Rect expand(int16_t pixels) const
+	constexpr Rect expand(int16_t pixels) const
 	{
 		return {
 			static_cast<int16_t>(x - pixels),
@@ -89,6 +116,64 @@ struct Rect
 			static_cast<uint16_t>(width + pixels*2),
 			static_cast<uint16_t>(height + pixels*2)
 			};
+	}
+
+	const int16_t left() const
+	{
+		return x;
+	}
+	constexpr int16_t right() const
+	{
+		return static_cast<int16_t>(x + width -1);
+	}
+
+	constexpr int16_t top() const
+	{
+		return y;
+	}
+	constexpr int16_t bottom() const
+	{
+		return static_cast<int16_t>(y + height -1);
+	}
+
+	constexpr Pos topLeft() const
+	{
+		return {x, y};
+	}
+
+	constexpr Pos topRight() const
+	{
+		return {right(), y};
+	}
+
+	constexpr Pos bottomLeft() const
+	{
+		return {x, bottom()};
+	}
+
+	constexpr Pos bottomRight() const
+	{
+		return { right(), bottom() };
+	}
+
+	constexpr VLine leftLine() const
+	{
+		return {topLeft(), height};
+	}
+
+	constexpr VLine rightLine() const
+	{
+		return {topRight(), height};
+	}
+
+	constexpr HLine topLine() const
+	{
+		return {topLeft(), width};
+	}
+
+	constexpr HLine bottomLine() const
+	{
+		return {bottomLeft(), width};
 	}
 };
 
@@ -105,8 +190,6 @@ enum class VAlign : uint8_t
 	Center,
 	Bottom
 };
-
-void initializeScreen();
 
 void fillRect(const Rect& box, Colour color);
 

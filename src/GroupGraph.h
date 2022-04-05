@@ -20,6 +20,7 @@ private:
 
 	void plotHistory();
 	void drawOuterBox();
+	void drawThresholdMarker();
 
 	int8_t m_index = -1;
 	uint8_t m_sensorUpdates = 0;

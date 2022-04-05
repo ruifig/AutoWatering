@@ -6,6 +6,7 @@
 #pragma GCC diagnostic pop
 
 #include "Colour.h"
+#include "GFXUtils.h"
 
 namespace cz
 {
@@ -61,6 +62,14 @@ class GraphicsInterface
 	virtual void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, Colour color) = 0;
 	virtual void drawFastVLine(int16_t x, int16_t y, int16_t h, Colour color) = 0;
 	virtual void drawFastHLine(int16_t x, int16_t y, int16_t w, Colour color) = 0;
+	void drawVLine(const VLine& line, Colour color)
+	{
+		drawFastVLine(line.p.x, line.p.y, line.height, color);
+	}
+	void drawHLine(const HLine& line, Colour color)
+	{
+		drawFastHLine(line.p.x, line.p.y, line.width, color);
+	}
 
 	//
 	// Text rendering

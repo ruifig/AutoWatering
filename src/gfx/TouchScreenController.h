@@ -7,6 +7,7 @@ namespace cz
 
 struct RawTouchPoint
 {
+	RawTouchPoint() = default;
 	RawTouchPoint(uint16_t x, uint16_t y, uint16_t z) : x(x), y(y), z(z) {}
 	bool operator==(RawTouchPoint p) { return ((p.x == x) && (p.y == y) && (p.z == z)); }
 	bool operator!=(RawTouchPoint p) { return ((p.x != x) || (p.y != y) || (p.z != z)); }
@@ -17,6 +18,7 @@ struct RawTouchPoint
 
 struct TouchPoint
 {
+	TouchPoint() = default;
 	TouchPoint(int16_t x, int16_t y, int16_t z) : x(x), y(y), z(z) {}
 	bool operator==(TouchPoint p) { return ((p.x == x) && (p.y == y) && (p.z == z)); }
 	bool operator!=(TouchPoint p) { return ((p.x != x) || (p.y != y) || (p.z != z)); }

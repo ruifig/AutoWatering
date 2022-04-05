@@ -140,14 +140,14 @@ void GroupData::begin(uint8_t index)
 		m_history.push({GRAPH_POINT_MAXVAL/3, false});
 	}
 
-	m_cfg.running = (index==0 || index==1) ? false : true;
+	m_cfg.running = index==2;
 
 #endif
 }
 
 void GroupData::setMoistureSensorValues(unsigned int currentValue, bool isCalibrating)
 {
-	m_cfg.setSensorValue(currentValue);
+	m_cfg.setSensorValue(currentValue, isCalibrating);
 
 	// Add to history if this his a real value (as in, we are not calibrating this sensor)
 	if (!isCalibrating)
