@@ -13,8 +13,10 @@ namespace cz
 	{
 		enum Status : uint8_t
 		{
+			First,
+
 			// Reading is to be considered valid
-			Valid,
+			Valid = First,
 
 			// Samples were too random (aka: Standard Deviation too high), which means that
 			// probably there no sensor attached and the data pin is floating
@@ -22,8 +24,13 @@ namespace cz
 
 			// When a sensor is attached but for some reason is not getting power, it will consistently
 			// return really low values. In those cases
-			NoPower
+			NoPower,
+
+			Last = NoPower
 		};
+
+
+		SensorReading() = default;
 
 		explicit SensorReading(unsigned int meanValue, float standardDeviation)
 			: meanValue(meanValue)
@@ -53,16 +60,16 @@ namespace cz
 			static const char* strs[3] =
 			{
 				"Valid",
-				"No Sensor Detected"
+				"No Sensor Detected",
 				"Sensor has no power"
 			};
 
 			return strs[status];
 		}
 
-		Status status;
-		unsigned int meanValue;
-		float standardDeviation;
+		Status status = Status::Valid;
+		unsigned int meanValue = 0;
+		float standardDeviation = 0;
 	};
 
 	struct GraphPoint
