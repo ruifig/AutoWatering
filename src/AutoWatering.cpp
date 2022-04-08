@@ -112,6 +112,10 @@ unsigned long gPreviousMicros = 0;
 
 void setup()
 {
+	#if MOCK_COMPONENTS
+		randomSeed(micros());
+	#endif
+
 	gSerialLogOutput.begin(Serial1, 115200);
 	gSerialStringReader.begin(Serial1);
 
@@ -188,7 +192,7 @@ void loop()
 	// We use this so that we can just put a breakpoint in here and force the code to run when we want to check the profiler data
 	#if CONSOLE_COMMANDS
 	{
-		if (gSerialStringReader.tryRead())
+		while (gSerialStringReader.tryRead())
 		{
 			char cmd[30];
 			const char* src = gSerialStringReader.retrieve(); 
@@ -269,6 +273,21 @@ void loop()
 				if (parseCommand(idx) && idx < NUM_PAIRS)
 				{
 					gCtx.data.trySetSelectedGroup(idx);
+				}
+			}
+			else if (strcmp_P(cmd, (const char*)F("setmocksensorerrorstatus"))==0)
+			{
+				int idx, status;
+				if (parseCommand(idx, status))
+				{
+					if (status>=SensorReading::Status::First && status<=SensorReading::Status::Last)
+					{
+						Component::raiseEvent(SetMockSensorErrorStatusEvent(idx, static_cast<SensorReading::Status>(status)));
+					}
+					else
+					{
+						CZ_LOG(logDefault, Error, F("Invalid status value"));
+					}
 				}
 			}
 			else if (strcmp_P(cmd, (const char*)F("setmocksensor"))==0)
