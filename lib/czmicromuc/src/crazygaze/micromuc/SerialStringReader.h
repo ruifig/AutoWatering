@@ -32,7 +32,10 @@ public:
 		int ch = m_serial->read();
 		while(ch != -1)
 		{
-			if (ch == '\n')
+			if (
+				ch == '\n' ||
+				ch == ';'  // ';' Allows is a command seperator, so we can type multiple commands to be processed on the same tick
+				)
 			{
 				m_buf[m_index] = 0;
 				return true;

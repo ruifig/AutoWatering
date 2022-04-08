@@ -10,7 +10,7 @@
 #endif
 
 #ifndef MOCK_COMPONENTS
-	#define MOCK_COMPONENTS 0
+	#define MOCK_COMPONENTS 1
 #endif
 
 /**
