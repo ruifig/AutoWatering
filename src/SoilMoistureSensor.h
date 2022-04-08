@@ -89,6 +89,9 @@ protected:
 		int dryValue;
 		int waterValue;
 
+		// To simulate error conditions
+		SensorReading::Status status = SensorReading::Status::Valid;
+
 		// reported value lags behind target value a bits, so we can simulate response time.
 		// The sensor won't report moisture as soon as the motor turns on
 		float currentValue;

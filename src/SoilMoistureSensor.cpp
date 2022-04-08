@@ -275,17 +275,42 @@ void MockSoilMoistureSensor::onEvent(const Event& evt)
 			m_mock.currentValueChaseDelay = 0;
 		}
 	}
-
+	else if (evt.type == Event::SetMockSensorErrorStatus)
+	{
+		const SetMockSensorErrorStatusEvent& e = static_cast<const SetMockSensorErrorStatusEvent&>(evt);
+		if (e.index == m_index)
+		{
+			m_mock.status = e.status;
+		}
+	}
 }
 
 SensorReading MockSoilMoistureSensor::readSensor()
 {
-	CZ_LOG(logDefault, Verbose, F("MockSoilMoistureSensor(%d) : %s, target=%s")
-		, m_index
-		, *FloatToString(m_mock.currentValue)
-		, *FloatToString(m_mock.targetValue))
+	if (m_mock.status == SensorReading::Status::Valid)
+	{
+		CZ_LOG(logDefault, Verbose, F("MockSoilMoistureSensor(%d) : %s, target=%s")
+			, m_index
+			, *FloatToString(m_mock.currentValue)
+			, *FloatToString(m_mock.targetValue))
 
-	return SensorReading(m_mock.currentValue, 3.0f);
+		return SensorReading(m_mock.currentValue, 3.0f);
+	}
+	else
+	{
+		SensorReading res;
+		if (m_mock.status == SensorReading::Status::NoSensor)
+		{
+			res = SensorReading(random(260, 530), MOISTURESENSOR_ACCEPTABLE_STANDARD_DEVIATION + 1);
+		}
+		else
+		{
+			res = SensorReading(random(10,MOISTURESENSOR_ACCEPTABLE_MIN_VALUE-1), 5);
+		}
+
+		CZ_LOG(logDefault, Verbose, F("MockSoilMoistureSensor(%d) : ERROR-%s"), m_index, res.getStatusText());
+		return res;
+	}
 }
 
 } // namespace cz
