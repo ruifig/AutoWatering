@@ -14,8 +14,6 @@ void doGroupShot(uint8_t index);
 #define XP 8   // can be a digital pin
 
 #define TS_MIN_PRESSURE 50
-#define SCREEN_WIDTH 320
-#define SCREEN_HEIGHT 240
 
 namespace cz
 {
@@ -130,6 +128,21 @@ constexpr Pos getMenuButtonPos(uint8_t col, uint8_t row)
 	return pos;
 }
 
+#define STATUS_BAR_DIVISIONS 10
+constexpr Rect getStatusBarPos()
+{
+	Rect rect { getMenuButtonPos(0,2), {SCREEN_WIDTH, SCREEN_HEIGHT} };
+	return rect;
+}
+
+constexpr Rect getStatusBarCells(int startCell, int numCells)
+{
+	Rect statusBar = getStatusBarPos();
+	return Rect(
+		statusBar.x + startCell * (statusBar.width / STATUS_BAR_DIVISIONS), statusBar.y,
+		numCells * (statusBar.width / STATUS_BAR_DIVISIONS), statusBar.height
+	);
+}
 
 //
 // Sensor data (left to the history plot)
@@ -191,6 +204,28 @@ NumLabel<true> sensorLabels[NUM_PAIRS][3] =
 	}
 #endif
 };
+
+const LabelData temperatureLabelData PROGMEM = \
+{ \
+	getStatusBarCells(STATUS_BAR_DIVISIONS-4, 2), \
+	HAlign::Center, VAlign::Center, \
+	SMALL_FONT, \
+	TEMPERATURE_LABEL_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
+	WidgetFlag::EraseBkg | WidgetFlag::DrawBorder\
+};
+
+FixedLabel<> temperatureLabel(&temperatureLabelData, F("---.-C"));
+
+const LabelData humidityLabelData PROGMEM = \
+{ \
+	getStatusBarCells(STATUS_BAR_DIVISIONS-2, 2), \
+	HAlign::Center, VAlign::Center, \
+	SMALL_FONT, \
+	HUMIDITY_LABEL_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
+	WidgetFlag::EraseBkg | WidgetFlag::DrawBorder\
+};
+
+FixedLabel<> humidityLabel(&humidityLabelData, F("---.-%"));
 
 } } // namespace Overview
 
@@ -335,6 +370,16 @@ void DisplayTFT::OverviewState::onEvent(const Event& evt)
 		}
 		break;
 
+		case Event::TemperatureSensorReading:
+			//Overview::temperatureLabel.setText(formatString(F("%2.1fC"), -99.9f));
+			Overview::temperatureLabel.setText(formatString(F("%2.1fC"), gCtx.data.getTemperatureReading()));
+		break;
+
+		case Event::HumiditySensorReading:
+			//Overview::humidityLabel.setText(formatString(F("%3.1f%%"), 100.0f));
+			Overview::humidityLabel.setText(formatString(F("%3.1f%%"), gCtx.data.getHumidityReading()));
+		break;
+
 		default:
 		break;
 	}
@@ -375,6 +420,9 @@ void DisplayTFT::OverviewState::draw()
 			m_sensorUpdates[i] = 0;
 		}
 	}
+
+	Overview::temperatureLabel.draw(m_forceRedraw);
+	Overview::humidityLabel.draw(m_forceRedraw);
 
 	m_forceRedraw = false;
 }

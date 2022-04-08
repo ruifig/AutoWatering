@@ -9,12 +9,70 @@
 
 namespace cz
 {
+	struct SensorReading
+	{
+		enum Status : uint8_t
+		{
+			// Reading is to be considered valid
+			Valid,
+
+			// Samples were too random (aka: Standard Deviation too high), which means that
+			// probably there no sensor attached and the data pin is floating
+			NoSensor,
+
+			// When a sensor is attached but for some reason is not getting power, it will consistently
+			// return really low values. In those cases
+			NoPower
+		};
+
+		explicit SensorReading(unsigned int meanValue, float standardDeviation)
+			: meanValue(meanValue)
+			, standardDeviation(standardDeviation)
+		{
+			if (meanValue < MOISTURESENSOR_ACCEPTABLE_MIN_VALUE)
+			{
+				status = Status::NoPower;
+			}
+			else if (standardDeviation > MOISTURESENSOR_ACCEPTABLE_STANDARD_DEVIATION)
+			{
+				status = Status::NoSensor;
+			}
+			else
+			{
+				status = Status::Valid;
+			}
+		}
+
+		bool isValid() const
+		{
+			return status==Status::Valid;
+		}
+
+		const char* getStatusText() const
+		{
+			static const char* strs[3] =
+			{
+				"Valid",
+				"No Sensor Detected"
+				"Sensor has no power"
+			};
+
+			return strs[status];
+		}
+
+		Status status;
+		unsigned int meanValue;
+		float standardDeviation;
+	};
+
 	struct GraphPoint
 	{
 		// 0..100 moisture level
 		unsigned int val : GRAPH_POINT_NUM_BITS;
 		// Tells if the motor was on at this point
-		bool on : 1;
+		bool motorOn : 1;
+
+		SensorReading::Status status : 2;
 	} __attribute((packed));
 
 	static_assert(sizeof(GraphPoint)==1, "GraphPoint size must be 1");
@@ -23,6 +81,7 @@ namespace cz
 	// Considering there was just 1 update to the queue since the last draw, we can do the following:
 	// The first point to draw is index 1, and to draw index 1, we erase the pixel in that pixel with the info from index 0
 	using HistoryQueue = TStaticFixedCapacityQueue<GraphPoint, GRAPH_NUMPOINTS + 1>;
+
 
 	// Data that should be saved/loaded
 	struct GroupConfig
@@ -58,7 +117,8 @@ namespace cz
 			numReadings++;
 
 			// If we are calibrating, we accept any value, and then adjust the air/water values accordingly
-			if (isCalibrating)
+			// #TODO : Revise this
+			if (true || isCalibrating)
 			{
 				currentValue = currentValue_;
 				if (currentValue > airValue)
@@ -87,7 +147,7 @@ namespace cz
 		
 		void begin(uint8_t index);
 
-		void setMoistureSensorValues(unsigned int currentValue, bool isCalibrating);
+		void setMoistureSensorValues(const SensorReading& sample, bool isCalibrating);
 
 		void setMotorState(bool state);
 		bool isMotorOn() const;
@@ -173,6 +233,11 @@ namespace cz
 			return m_calibrating;
 		}
 
+		uint32_t getSensorErrorCount() const
+		{
+			return m_sensorErrors;
+		}
+
 	protected:
 		friend class ProgramData;
 		void save(AT24C::Ptr& dst, bool saveConfig, bool saveHistory) const;
@@ -191,6 +256,8 @@ namespace cz
 		GroupConfig m_cfg;
 
 		HistoryQueue m_history;
+		
+		uint32_t m_sensorErrors = 0;
 
 		bool m_motorIsOn = false;
 		// Used so we can detect when the motor was turned on and off before a sensor data point is inserted, so we can
@@ -210,8 +277,8 @@ public:
 	GroupData& getGroupData(uint8_t index);
 
 	// We only allow 1 sensor to be active at one give time, so we use this as a kind of mutex
-	bool tryAcquireMoistureSensorMutex();
-	void releaseMoistureSensorMutex();
+	bool tryAcquireMuxMutex();
+	void releaseMuxMutex();
 
 	void save() const;
 	
@@ -244,13 +311,27 @@ public:
 	{
 		return m_inGroupConfigMenu;
 	}
+
+	// Sets the temperarture reading in Celcius
+	void setTemperatureReading(float temperatureC);
+	// Set the humidity reading (0..100)
+	void setHumidityReading(float humidity);
+
+	float getTemperatureReading() const { return m_temperature; }
+	float getHumidityReading() const { return m_humidity; }
 	
   private:
 	Context& m_outer;
 	GroupData m_group[NUM_PAIRS];
-	bool m_moistureSensorMutex = false;
+	bool m_muxMutex = false;
 	bool m_inGroupConfigMenu = false;
 	int8_t m_selectedGroup = -1;
+
+	// Temperature in Celcius
+	float m_temperature;
+	// Relative humiditity
+	float m_humidity;
+
 };
 
 struct Context

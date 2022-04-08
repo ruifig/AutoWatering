@@ -19,6 +19,7 @@
 
 #include "Config.h"
 #include "Context.h"
+#include "TemperatureAndHumiditySensor.h"
 #include "SoilMoistureSensor.h"
 #include "GroupMonitor.h"
 #include "DisplayTFT.h"
@@ -52,6 +53,9 @@ using namespace cz;
 #else
 	using SoilMoistureSensorTicker = TTicker<SoilMoistureSensor, float, TickingMethod>;
 #endif
+
+using TemperatureAndHumiditySensorTicker = TTicker<TemperatureAndHumiditySensor, float, TickingMethod>;
+TemperatureAndHumiditySensorTicker gTempAndHumiditySensor(true, IO_EXPANDER_VPIN_TEMPSENSOR, MUX_TEMP_SENSOR);
 
 SoilMoistureSensorTicker gSoilMoistureSensors[NUM_PAIRS] =
 {
@@ -137,6 +141,8 @@ void setup()
 	gCtx.begin();
 	gDisplay.getObj().begin();
 
+	gTempAndHumiditySensor.getObj().begin();
+
 	for(auto&& ticker : gSoilMoistureSensors)
 	{
 		ticker.getObj().begin();
@@ -165,6 +171,8 @@ void loop()
 	{
 		PROFILE_SCOPE(F("TickAll"));
 		countdown = std::min(gDisplay.tick(deltaSeconds), countdown);
+
+		countdown = std::min(gTempAndHumiditySensor.tick(deltaSeconds), countdown);
 
 		for (auto&& ticker : gSoilMoistureSensors)
 		{

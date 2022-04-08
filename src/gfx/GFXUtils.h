@@ -118,7 +118,7 @@ struct Rect
 			};
 	}
 
-	const int16_t left() const
+	constexpr int16_t left() const
 	{
 		return x;
 	}

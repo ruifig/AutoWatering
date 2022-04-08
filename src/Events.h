@@ -2,6 +2,7 @@
 
 #include "crazygaze/micromuc/czmicromuc.h"
 #include "crazygaze/micromuc/Logging.h"
+#include "Context.h"
 
 namespace cz
 {
@@ -14,6 +15,8 @@ struct Event
 		ConfigSave,
 		SensorCalibration,
 		SoilMoistureSensorReading,
+		TemperatureSensorReading,
+		HumiditySensorReading,
 		GroupOnOff,
 		GroupSelected,
 		Motor,
@@ -38,7 +41,7 @@ struct ConfigLoadEvent : public Event
 	
 	virtual void log() const override
 	{
-		CZ_LOG(logDefault, Log, F("ConfigLoadEvent"));
+		CZ_LOG(logDefault, Verbose, F("ConfigLoadEvent"));
 	}
 
 	// if -1, then its loading the entire config.
@@ -55,7 +58,7 @@ struct ConfigSaveEvent : public Event
 	
 	virtual void log() const override
 	{
-		CZ_LOG(logDefault, Log, F("ConfigSaveEvent"));
+		CZ_LOG(logDefault, Verbose, F("ConfigSaveEvent"));
 	}
 
 	// if -1, then its saving the entire config.
@@ -75,7 +78,7 @@ struct SensorCalibrationEvent : public Event
 
 	virtual void log() const override
 	{
-		CZ_LOG(logDefault, Log, F("SensorCalibrationEvent(%s)"), start ? "true" : "false");
+		CZ_LOG(logDefault, Verbose, F("SensorCalibrationEvent(%s)"), start ? "true" : "false");
 	}
 
 	int8_t group;
@@ -85,21 +88,62 @@ struct SensorCalibrationEvent : public Event
 
 struct SoilMoistureSensorReadingEvent : public Event
 {
-	SoilMoistureSensorReadingEvent(uint8_t index, bool calibrating)
+	SoilMoistureSensorReadingEvent(uint8_t index, bool calibrating, SensorReading::Status status)
 		: Event(Event::SoilMoistureSensorReading)
 		, index(index)
 		, calibrating(calibrating)
-		{}
+		, status(status)
+	{
+	}
 
 	virtual void log() const override
 	{
-		return;
-		CZ_LOG(logDefault, Log, F("SoilMoistureSensorReadingEvent(%d)"), (int)index);
+		CZ_LOG(logDefault, Verbose, F("SoilMoistureSensorReadingEvent(%d)"), (int)index);
+	}
+
+	bool isValidReading() const
+	{
+		return status == SensorReading::Status::Valid;
 	}
 
 	uint8_t index;
 	// If this is true, this was a reading done while calibrating, and some components might want to ignore it
 	bool calibrating;
+	SensorReading::Status status;
+};
+
+struct TemperatureSensorReadingEvent : public Event
+{
+	TemperatureSensorReadingEvent(float temperatureC)
+		: Event(Event::TemperatureSensorReading)
+		, temperatureC(temperatureC)
+	{
+	}
+
+	virtual void log() const override
+	{
+		CZ_LOG(logDefault, Verbose, F("TemperatureSensorReadingEvent(%2.1fC)"), temperatureC);
+	}
+
+	// temperature in Celcius
+	float temperatureC;
+};
+
+struct HumiditySensorReadingEvent : public Event
+{
+	HumiditySensorReadingEvent(float humidity)
+		: Event(Event::HumiditySensorReading)
+		, humidity(humidity)
+	{
+	}
+
+	virtual void log() const override
+	{
+		CZ_LOG(logDefault, Verbose, F("HumiditySensorReadingEvent(%2.1f%%)"), humidity);
+	}
+
+	// Humidity - 0..100%
+	float humidity;
 };
 
 struct GroupOnOffEvent : public Event
@@ -112,7 +156,7 @@ struct GroupOnOffEvent : public Event
 
 	virtual void log() const override
 	{
-		CZ_LOG(logDefault, Log, F("GroupOnOffEvent(%d, %s)"), (int)index, started ? "started" : "stopped");
+		CZ_LOG(logDefault, Verbose, F("GroupOnOffEvent(%d, %s)"), (int)index, started ? "started" : "stopped");
 	}
 	
 	uint8_t index;
@@ -129,7 +173,7 @@ struct GroupSelectedEvent : public Event
 
 	virtual void log() const override
 	{
-		CZ_LOG(logDefault, Log, F("GroupSelectedEvent(%d, %d)"), (int)index, (int)previousIndex);
+		CZ_LOG(logDefault, Verbose, F("GroupSelectedEvent(%d, %d)"), (int)index, (int)previousIndex);
 	}
 	
 	// What group was selected
@@ -150,7 +194,7 @@ struct MotorEvent : public Event
 
 	virtual void log() const override
 	{
-		CZ_LOG(logDefault, Log, F("MotorEvent(%d, %s)"), (int)index, started ? "started" : "stopped");
+		CZ_LOG(logDefault, Verbose, F("MotorEvent(%d, %s)"), (int)index, started ? "started" : "stopped");
 	}
 	
 	uint8_t index;

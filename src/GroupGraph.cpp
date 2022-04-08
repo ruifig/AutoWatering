@@ -181,7 +181,7 @@ void GroupGraph::plotHistory()
 		{
 			// Since the motor on/off info is an horizontal line, we don't need to erase the previous. We just paint the pixel
 			// at the right color if it changed
-			if (oldp.on != p.on)
+			if (oldp.motorOn != p.motorOn)
 			{
 				drawMotor = true;
 			}
@@ -197,14 +197,20 @@ void GroupGraph::plotHistory()
 		if (drawMotor)
 		{
 			// draw new motor on/off
-			gScreen.drawPixel(xx, rect.y, p.on ? GRAPH_MOTOR_ON_COLOUR : GRAPH_MOTOR_OFF_COLOUR);
+			gScreen.drawPixel(xx, rect.y, p.motorOn ? GRAPH_MOTOR_ON_COLOUR : GRAPH_MOTOR_OFF_COLOUR);
 		}
 
 		if (drawLevel)
 		{
 			// Draw new moisture level
-			gScreen.drawPixel(xx, bottomY - p.val, GRAPH_MOISTURELEVEL_COLOUR);
+			gScreen.drawPixel(xx, bottomY - p.val, p.status==SensorReading::Status::Valid ? GRAPH_MOISTURELEVEL_COLOUR : GRAPH_MOISTURELEVEL_ERROR_COLOUR);
 		}
+	}
+
+	if (data.getSensorErrorCount() !=0)
+	{
+		uint16_t size = rect.height/3;
+		gScreen.fillRoundRect(rect.left(), rect.bottom() - size, size, size, 3, Colour_Red);
 	}
 
 	m_sensorUpdates = 0;

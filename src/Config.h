@@ -10,7 +10,7 @@
 #endif
 
 #ifndef MOCK_COMPONENTS
-	#define MOCK_COMPONENTS 1
+	#define MOCK_COMPONENTS 0
 #endif
 
 /**
@@ -119,7 +119,7 @@
  * This specifies how many seconds to wait before doing the reading
  */
 #if FASTER_ITERATION
-	#define MOISTURESENSOR_POWERUP_WAIT 0.10f
+	#define MOISTURESENSOR_POWERUP_WAIT 0.20f
 #else
 	#define MOISTURESENSOR_POWERUP_WAIT 0.20f
 #endif
@@ -137,6 +137,12 @@
 #define MOISTURESENSOR_CALIBRATION_SAMPLINGINTERVAL 1.0f
 
 #define DEFAULT_SHOT_DURATION 5.0f
+
+#if FASTER_ITERATION
+	#define TEMPSENSOR_DEFAULT_SAMPLINGINTERVAL 5.0f
+#else
+	#define TEMPSENSOR_DEFAULT_SAMPLINGINTERVAL 60.0f
+#endif
 
 /**
  * Minimum time required to pass (in seconds) before a group turns the motor ON again.
@@ -172,8 +178,11 @@
 
 #define INTRO_TEXT_COLOUR Colour_Green
 
-#define GRAPH_NUMPOINTS (320-32-2)
-#define GRAPH_VALUES_TEXT_COLOUR Colour_DarkGrey
+#define SCREEN_WIDTH 320
+#define SCREEN_HEIGHT 240
+
+#define GRAPH_NUMPOINTS (SCREEN_WIDTH-32-2)
+#define GRAPH_VALUES_TEXT_COLOUR Colour_LightGrey
 #define GRAPH_VALUES_BKG_COLOUR Colour_Black
 #define GRAPH_BORDER_COLOUR Colour_DarkGrey
 #define GRAPH_SELECTED_BORDER_COLOUR Colour_Green
@@ -182,7 +191,10 @@
 #define GRAPH_NOTRUNNING_TEXT_COLOUR Colour_Red
 #define GRAPH_MOTOR_ON_COLOUR Colour_Yellow
 #define GRAPH_MOTOR_OFF_COLOUR Colour_Black
-#define GRAPH_MOISTURELEVEL_COLOUR Colour_Red
+#define GRAPH_MOISTURELEVEL_COLOUR Colour_Cyan
+#define GRAPH_MOISTURELEVEL_ERROR_COLOUR Colour_Red
+#define TEMPERATURE_LABEL_TEXT_COLOUR Colour_Yellow
+#define HUMIDITY_LABEL_TEXT_COLOUR Colour_Cyan
 
 
 //
@@ -193,4 +205,11 @@
 static_assert(1<<GRAPH_POINT_NUM_BITS < GRAPH_HEIGHT, "Reduce number of bits, or increase graph height");
 #define GRAPH_POINT_MAXVAL ((1<<GRAPH_POINT_NUM_BITS) - 1)
 
+// Maximum acceptable value for standard deviation.
+// Anything above is considered too random and means the sensor is probably not connected
+#define MOISTURESENSOR_ACCEPTABLE_STANDARD_DEVIATION 20
+
+// When a sensor is connected, but not getting power, it will consistently report very low values
+// Any value below this, and we consider that the sensor is not getting power
+#define MOISTURESENSOR_ACCEPTABLE_MIN_VALUE 100
 

@@ -145,20 +145,20 @@ void GroupData::begin(uint8_t index)
 #endif
 }
 
-void GroupData::setMoistureSensorValues(unsigned int currentValue, bool isCalibrating)
+void GroupData::setMoistureSensorValues(const SensorReading& sample, bool isCalibrating)
 {
-	m_cfg.setSensorValue(currentValue, isCalibrating);
+	m_cfg.setSensorValue(sample.meanValue, isCalibrating);
 
 	// Add to history if this his a real value (as in, we are not calibrating this sensor)
 	if (!isCalibrating)
 	{
-		GraphPoint point = {0, 0};
+		GraphPoint point = {0, 0, sample.status};
 		point.val = map(m_cfg.currentValue, m_cfg.airValue, m_cfg.waterValue, 0, GRAPH_POINT_MAXVAL);
 
 		// Since a motor can be turned on then off without a sensor reading in between, we use
 		// m_pendingMotorPoint as a reminder there was a motor event, and so we'll draw that motor plot
 		// on the next sensor reading
-		point.on = m_motorIsOn || m_pendingMotorPoint;
+		point.motorOn = m_motorIsOn || m_pendingMotorPoint;
 		m_pendingMotorPoint = false;
 		if (m_history.isFull())
 		{
@@ -167,7 +167,12 @@ void GroupData::setMoistureSensorValues(unsigned int currentValue, bool isCalibr
 		m_history.push(point);
 	}
 
-	Component::raiseEvent(SoilMoistureSensorReadingEvent(m_index, isCalibrating));
+	if (!sample.isValid())
+	{
+		m_sensorErrors++;
+	}
+
+	Component::raiseEvent(SoilMoistureSensorReadingEvent(m_index, isCalibrating, sample.status));
 }
 
 void GroupData::setMotorState(bool state)
@@ -195,6 +200,10 @@ void GroupData::setRunning(bool state)
 	{
 		return;
 	}
+
+	// When we start or stop the group, we reset the error count
+	// This allows the user to fix whatever is wrong and restart the group to get rid of the error
+	m_sensorErrors = 0;
 
 	m_cfg.running = state;
 	Component::raiseEvent(GroupOnOffEvent(m_index, state));
@@ -246,6 +255,8 @@ void GroupData::load(AT24C::Ptr& src, bool loadConfig, bool loadHistory)
 		CZ_LOG(logDefault, Log, F("Loading group %d history from address %u"), m_index, src.getAddress());
 		cz::load(src, m_history);
 	}
+
+	m_sensorErrors = 0;
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -302,6 +313,18 @@ GroupData& ProgramData::getGroupData(uint8_t index)
 {
 	CZ_ASSERT(index < NUM_PAIRS);
 	return m_group[index];
+}
+
+void ProgramData::setTemperatureReading(float temperatureC)
+{
+	m_temperature = temperatureC;
+	Component::raiseEvent(TemperatureSensorReadingEvent(m_temperature));
+}
+
+void ProgramData::setHumidityReading(float humidity)
+{
+	m_humidity = humidity;
+	Component::raiseEvent(HumiditySensorReadingEvent(m_humidity));
 }
 
 void ProgramData::save() const
@@ -362,23 +385,23 @@ void ProgramData::load()
 	Component::raiseEvent(ConfigLoadEvent());
 }
 
-bool ProgramData::tryAcquireMoistureSensorMutex()
+bool ProgramData::tryAcquireMuxMutex()
 {
-	if (m_moistureSensorMutex)
+	if (m_muxMutex)
 	{
 		return false;
 	}
 	else
 	{
-		m_moistureSensorMutex = true;
+		m_muxMutex = true;
 		return true;
 	}
 }
 
-void ProgramData::releaseMoistureSensorMutex()
+void ProgramData::releaseMuxMutex()
 {
-	CZ_ASSERT(m_moistureSensorMutex==true);
-	m_moistureSensorMutex = false;
+	CZ_ASSERT(m_muxMutex==true);
+	m_muxMutex = false;
 }
 
 } // namespace cz

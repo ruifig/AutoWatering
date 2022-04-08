@@ -91,7 +91,7 @@ void GroupMonitor::onEvent(const Event& evt)
 			if (data.isRunning())
 			{
 				const auto& e = static_cast<const SoilMoistureSensorReadingEvent&>(evt);
-				if (e.index == m_index && !e.calibrating)
+				if (e.index == m_index && !e.calibrating && e.isValidReading())
 				{
 					m_sensorReadingSinceLastShot = true;
 				}

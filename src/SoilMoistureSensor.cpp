@@ -11,7 +11,7 @@ namespace cz
 {
 
 #if CZ_LOG_ENABLED
-const char* const SoilMoistureSensor::ms_stateNames[5] =
+const char* const SoilMoistureSensor::ms_stateNames[3] =
 {
 	"Initializing",
 	"PoweredDown",
@@ -34,7 +34,7 @@ void SoilMoistureSensor::begin()
 bool SoilMoistureSensor::tryEnterReadingState()
 {
 	// From Initializing, we jump straight to a first reading
-	if (gCtx.data.tryAcquireMoistureSensorMutex())
+	if (gCtx.data.tryAcquireMuxMutex())
 	{
 		changeToState(State::Reading);
 		return true;
@@ -83,8 +83,8 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 			if (m_timeInState >= MOISTURESENSOR_POWERUP_WAIT)
 			{
 				// Using a function to read the sensor, so we can provide a mock value when using the mock version
-				unsigned int currentValue = readSensor();
-				data.setMoistureSensorValues(currentValue, data.isRunning() ? false : true);
+				SensorReading sample = readSensor();
+				data.setMoistureSensorValues(sample, data.isRunning() ? false : true);
 				m_timeSinceLastRead = 0;
 				changeToState(State::PoweredDown);
 			}
@@ -98,11 +98,24 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 	return m_nextTickWait;
 }
 
-unsigned int SoilMoistureSensor::readSensor()
+SensorReading SoilMoistureSensor::readSensor()
 {
-	unsigned int currentValue = gCtx.mux.analogRead(m_dataPin);
-	CZ_LOG(logDefault, Log, F("SoilMoistureSensor(%d) : %u"), m_index, currentValue);
-	return currentValue;
+	constexpr int numSamples = 20;
+	int samples[numSamples];
+	for(auto&& s : samples)
+	{
+		s = gCtx.mux.analogRead(m_dataPin);
+	}
+
+	StandardDeviation res = calcStandardDeviation(samples, numSamples);
+	SensorReading sample(static_cast<unsigned int>(res.mean), res.stdDeviation);
+
+	CZ_LOG(logDefault, Log, F("SoilMoistureSensor(%d) : Mean=%u, stdDeviation=%4.2f")
+		, m_index
+		, sample.meanValue
+		, sample.standardDeviation);
+
+	return sample;
 }
 
 void SoilMoistureSensor::onEvent(const Event& evt)
@@ -149,7 +162,7 @@ void SoilMoistureSensor::onLeaveState()
 		//  Turn power off
 		gCtx.ioExpander.digitalWrite(m_vinPin, LOW);
 		// release the mutex so other sensors can read
-		gCtx.data.releaseMoistureSensorMutex();
+		gCtx.data.releaseMuxMutex();
 		break;
 
 	default:
@@ -265,14 +278,14 @@ void MockSoilMoistureSensor::onEvent(const Event& evt)
 
 }
 
-unsigned MockSoilMoistureSensor::readSensor()
+SensorReading MockSoilMoistureSensor::readSensor()
 {
 	CZ_LOG(logDefault, Verbose, F("MockSoilMoistureSensor(%d) : %s, target=%s")
 		, m_index
 		, *FloatToString(m_mock.currentValue)
 		, *FloatToString(m_mock.targetValue))
 
-	return static_cast<int>(m_mock.currentValue);
+	return SensorReading(m_mock.currentValue, 3.0f);
 }
 
 } // namespace cz
