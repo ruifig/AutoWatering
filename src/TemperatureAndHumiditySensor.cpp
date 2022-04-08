@@ -92,6 +92,12 @@ float TemperatureAndHumiditySensor::tick(float deltaSeconds)
 
 void TemperatureAndHumiditySensor::readSensor(float& temperature, float& humidity)
 {
+#if MOCK_COMPONENTS
+	static int counter = 0;
+	counter = (counter+1) % 10;
+	temperature = 20.0f + counter / 10.0f;
+	humidity = 50.0f + counter / 10.0f;
+#else
 	//CZ_LOG(logDefault, Log, F("TemperatureAndHumiditySensor: 1"));
 	gCtx.mux.setChannel(m_dataPin);
 	//CZ_LOG(logDefault, Log, F("TemperatureAndHumiditySensor: 2"));
@@ -111,6 +117,7 @@ void TemperatureAndHumiditySensor::readSensor(float& temperature, float& humidit
 	pinMode(gCtx.mux.getMCUZPin(), INPUT);
 
 	//CZ_LOG(logDefault, Log, F("TemperatureAndHumiditySensor: Finished reading DHT22 sensor"));
+#endif
 }
 
 void TemperatureAndHumiditySensor::changeToState(State newState)
