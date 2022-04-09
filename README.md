@@ -4,6 +4,7 @@ Arduino automatic plant watering
 # Useful links
 
 https://thecavepearlproject.org/2020/10/27/hacking-a-capacitive-soil-moisture-sensor-for-frequency-output/
+https://www.youtube.com/watch?v=IGP38bz-K48&t=306s
 
 
 # Problems and solutions
