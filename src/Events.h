@@ -91,11 +91,11 @@ struct SensorCalibrationEvent : public Event
 
 struct SoilMoistureSensorReadingEvent : public Event
 {
-	SoilMoistureSensorReadingEvent(uint8_t index, bool calibrating, SensorReading::Status status)
+	SoilMoistureSensorReadingEvent(uint8_t index, bool calibrating, const SensorReading& reading)
 		: Event(Event::SoilMoistureSensorReading)
 		, index(index)
 		, calibrating(calibrating)
-		, status(status)
+		, reading(reading)
 	{
 	}
 
@@ -104,15 +104,10 @@ struct SoilMoistureSensorReadingEvent : public Event
 		CZ_LOG(logEvents, Verbose, F("SoilMoistureSensorReadingEvent(%d)"), (int)index);
 	}
 
-	bool isValidReading() const
-	{
-		return status == SensorReading::Status::Valid;
-	}
-
 	uint8_t index;
 	// If this is true, this was a reading done while calibrating, and some components might want to ignore it
 	bool calibrating;
-	SensorReading::Status status;
+	SensorReading reading;
 };
 
 struct TemperatureSensorReadingEvent : public Event

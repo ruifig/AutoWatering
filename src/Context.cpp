@@ -172,7 +172,7 @@ void GroupData::setMoistureSensorValues(const SensorReading& sample, bool isCali
 		m_sensorErrors++;
 	}
 
-	Component::raiseEvent(SoilMoistureSensorReadingEvent(m_index, isCalibrating, sample.status));
+	Component::raiseEvent(SoilMoistureSensorReadingEvent(m_index, isCalibrating, sample));
 }
 
 void GroupData::setMotorState(bool state)

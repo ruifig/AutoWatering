@@ -11,10 +11,10 @@ TODO
 
 * Replace graphics library - DONE
 * Copy over TouchScreen.h/cpp - DONE
-* Fork DHT library and add it to the project
+* Fork DHT library and add it to the project - DONE
 
 * Porting memory logging
 	* Possibly refactor the memory utility code so it works with Mega and RP2040
 
-Tests once ported:
+* Tests once ported:
 	* Test AT24C save and load

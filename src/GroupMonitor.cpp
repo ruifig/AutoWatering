@@ -7,7 +7,7 @@ namespace cz
 GroupMonitor::GroupMonitor(uint8_t index, IOExpanderPin motorPin)
 	: m_index(index)
 	, m_motorPin(motorPin)
-	, m_sensorReadingSinceLastShot(0)
+	, m_sensorValidReadingSinceLastShot(0)
 {
 }
 
@@ -35,7 +35,7 @@ void GroupMonitor::turnMotorOn()
 	gCtx.ioExpander.digitalWrite(m_motorPin, HIGH);
 	data.setMotorState(true);
 	m_motorOffCountdown = data.getShotDuration();
-	m_sensorReadingSinceLastShot = false;
+	m_sensorValidReadingSinceLastShot = false;
 }
 
 void GroupMonitor::turnMotorOff()
@@ -64,7 +64,7 @@ float GroupMonitor::tick(float deltaSeconds)
 	}
 	else if (m_motorOffCountdown <= -MINIMUM_TIME_BETWEEN_MOTOR_ON)
 	{
-		if (data.isRunning() && m_sensorReadingSinceLastShot && data.getCurrentValue() > data.getThresholdValue())
+		if (data.isRunning() && m_sensorValidReadingSinceLastShot && m_lastValidReading.meanValue > data.getThresholdValue())
 		{
 			turnMotorOn();
 		}
@@ -91,9 +91,10 @@ void GroupMonitor::onEvent(const Event& evt)
 			if (data.isRunning())
 			{
 				const auto& e = static_cast<const SoilMoistureSensorReadingEvent&>(evt);
-				if (e.index == m_index && !e.calibrating && e.isValidReading())
+				if (e.index == m_index && !e.calibrating && e.reading.isValid())
 				{
-					m_sensorReadingSinceLastShot = true;
+					m_sensorValidReadingSinceLastShot = true;
+					m_lastValidReading = e.reading;
 				}
 			}
 		}
