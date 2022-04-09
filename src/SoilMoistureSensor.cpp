@@ -1,5 +1,4 @@
 #include "SoilMoistureSensor.h"
-#include "Utils.h"
 #include "Context.h"
 #include "crazygaze/micromuc/Logging.h"
 #include "crazygaze/micromuc/Profiler.h"
@@ -12,7 +11,7 @@ namespace cz
 {
 
 #if CZ_LOG_ENABLED
-const char* const SoilMoistureSensor::ms_stateNames[5] =
+const char* const SoilMoistureSensor::ms_stateNames[3] =
 {
 	"Initializing",
 	"PoweredDown",
@@ -35,7 +34,7 @@ void SoilMoistureSensor::begin()
 bool SoilMoistureSensor::tryEnterReadingState()
 {
 	// From Initializing, we jump straight to a first reading
-	if (gCtx.data.tryAcquireMoistureSensorMutex())
+	if (gCtx.data.tryAcquireMuxMutex())
 	{
 		changeToState(State::Reading);
 		return true;
@@ -84,8 +83,8 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 			if (m_timeInState >= MOISTURESENSOR_POWERUP_WAIT)
 			{
 				// Using a function to read the sensor, so we can provide a mock value when using the mock version
-				unsigned int currentValue = readSensor();
-				data.setMoistureSensorValues(currentValue, data.isRunning() ? true : false);
+				SensorReading sample = readSensor();
+				data.setMoistureSensorValues(sample, data.isRunning() ? false : true);
 				m_timeSinceLastRead = 0;
 				changeToState(State::PoweredDown);
 			}
@@ -99,11 +98,24 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 	return m_nextTickWait;
 }
 
-unsigned int SoilMoistureSensor::readSensor()
+SensorReading SoilMoistureSensor::readSensor()
 {
-	unsigned int currentValue = gCtx.mux.read(m_dataPin);
-	CZ_LOG(logDefault, Log, F("SoilMoistureSensor(%d) : %u"), m_index, currentValue);
-	return currentValue;
+	constexpr int numSamples = 20;
+	int samples[numSamples];
+	for(auto&& s : samples)
+	{
+		s = gCtx.mux.analogRead(m_dataPin);
+	}
+
+	StandardDeviation res = calcStandardDeviation(samples, numSamples);
+	SensorReading sample(static_cast<unsigned int>(res.mean), res.stdDeviation);
+
+	CZ_LOG(logDefault, Log, F("SoilMoistureSensor(%d) : Mean=%u, stdDeviation=%4.2f")
+		, m_index
+		, sample.meanValue
+		, sample.standardDeviation);
+
+	return sample;
 }
 
 void SoilMoistureSensor::onEvent(const Event& evt)
@@ -123,14 +135,12 @@ void SoilMoistureSensor::onEvent(const Event& evt)
 
 void SoilMoistureSensor::changeToState(State newState)
 {
-	#if 1
-	CZ_LOG(logDefault, Log, F("SoilMoistureSensor(%d)::%s: %ssec %s->%s")
+	CZ_LOG(logDefault, Verbose, F("SoilMoistureSensor(%d)::%s: %ssec %s->%s")
 		, (int)m_index
 		, __FUNCTION__
 		, *FloatToString(m_timeInState)
 		, ms_stateNames[(int)m_state]
 		, ms_stateNames[(int)newState]);
-	#endif
 
 	onLeaveState();
 	m_state = newState;
@@ -152,7 +162,7 @@ void SoilMoistureSensor::onLeaveState()
 		//  Turn power off
 		gCtx.ioExpander.digitalWrite(m_vinPin, LOW);
 		// release the mutex so other sensors can read
-		gCtx.data.releaseMoistureSensorMutex();
+		gCtx.data.releaseMuxMutex();
 		break;
 
 	default:
@@ -265,19 +275,42 @@ void MockSoilMoistureSensor::onEvent(const Event& evt)
 			m_mock.currentValueChaseDelay = 0;
 		}
 	}
-
+	else if (evt.type == Event::SetMockSensorErrorStatus)
+	{
+		const SetMockSensorErrorStatusEvent& e = static_cast<const SetMockSensorErrorStatusEvent&>(evt);
+		if (e.index == m_index)
+		{
+			m_mock.status = e.status;
+		}
+	}
 }
 
-unsigned MockSoilMoistureSensor::readSensor()
+SensorReading MockSoilMoistureSensor::readSensor()
 {
-#if 0
-	CZ_LOG(logDefault, Log, F("MockSoilMoistureSensor(%d) : %s, target=%s")
-		, m_index
-		, *FloatToString(m_mock.currentValue)
-		, *FloatToString(m_mock.targetValue))
-#endif
+	if (m_mock.status == SensorReading::Status::Valid)
+	{
+		CZ_LOG(logDefault, Verbose, F("MockSoilMoistureSensor(%d) : %s, target=%s")
+			, m_index
+			, *FloatToString(m_mock.currentValue)
+			, *FloatToString(m_mock.targetValue))
 
-	return static_cast<int>(m_mock.currentValue);
+		return SensorReading(m_mock.currentValue, 3.0f);
+	}
+	else
+	{
+		SensorReading res;
+		if (m_mock.status == SensorReading::Status::NoSensor)
+		{
+			res = SensorReading(random(260, 530), MOISTURESENSOR_ACCEPTABLE_STANDARD_DEVIATION + 1);
+		}
+		else
+		{
+			res = SensorReading(random(10,MOISTURESENSOR_ACCEPTABLE_MIN_VALUE-1), 5);
+		}
+
+		CZ_LOG(logDefault, Verbose, F("MockSoilMoistureSensor(%d) : ERROR-%s"), m_index, res.getStatusText());
+		return res;
+	}
 }
 
-}  // namespace cz
+} // namespace cz

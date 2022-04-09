@@ -1,21 +1,86 @@
 #pragma once
 
 #include "Config.h"
-#include "MCP23017Wrapper.h"
-#include "Mux16Channels.h"
-#include "Utils.h"
+#include "utility/MCP23017Wrapper.h"
+#include "utility/MuxNChannels.h"
 #include <crazygaze/micromuc/Queue.h>
-#include <EEPROM.h>
+#include "utility/AT24C.h"
+#include "crazygaze/micromuc/MathUtils.h"
 
 namespace cz
 {
+	struct SensorReading
+	{
+		enum Status : uint8_t
+		{
+			First,
+
+			// Reading is to be considered valid
+			Valid = First,
+
+			// Samples were too random (aka: Standard Deviation too high), which means that
+			// probably there no sensor attached and the data pin is floating
+			NoSensor,
+
+			// When a sensor is attached but for some reason is not getting power, it will consistently
+			// return really low values. In those cases
+			NoPower,
+
+			Last = NoPower
+		};
+
+
+		SensorReading() = default;
+
+		explicit SensorReading(unsigned int meanValue, float standardDeviation)
+			: meanValue(meanValue)
+			, standardDeviation(standardDeviation)
+		{
+			if (meanValue < MOISTURESENSOR_ACCEPTABLE_MIN_VALUE)
+			{
+				status = Status::NoPower;
+			}
+			else if (standardDeviation > MOISTURESENSOR_ACCEPTABLE_STANDARD_DEVIATION)
+			{
+				status = Status::NoSensor;
+			}
+			else
+			{
+				status = Status::Valid;
+			}
+		}
+
+		bool isValid() const
+		{
+			return status==Status::Valid;
+		}
+
+		const char* getStatusText() const
+		{
+			static const char* strs[3] =
+			{
+				"Valid",
+				"No Sensor Detected",
+				"Sensor has no power"
+			};
+
+			return strs[status];
+		}
+
+		Status status = Status::Valid;
+		unsigned int meanValue = 0;
+		float standardDeviation = 0;
+	};
+
 	struct GraphPoint
 	{
 		// 0..100 moisture level
 		unsigned int val : GRAPH_POINT_NUM_BITS;
 		// Tells if the motor was on at this point
-		bool on : 1;
-	};
+		bool motorOn : 1;
+
+		SensorReading::Status status : 2;
+	} __attribute((packed));
 
 	static_assert(sizeof(GraphPoint)==1, "GraphPoint size must be 1");
 
@@ -23,6 +88,7 @@ namespace cz
 	// Considering there was just 1 update to the queue since the last draw, we can do the following:
 	// The first point to draw is index 1, and to draw index 1, we erase the pixel in that pixel with the info from index 0
 	using HistoryQueue = TStaticFixedCapacityQueue<GraphPoint, GRAPH_NUMPOINTS + 1>;
+
 
 	// Data that should be saved/loaded
 	struct GroupConfig
@@ -41,8 +107,8 @@ namespace cz
 		// to set the air value, and then submerse the sensor to set the water value.
 		// Having air and water properly is not a requirement for things to work, since what matter is that the system know what 
 		// sensor value is the threshold to turn on/off the motor
-		#define START_AIR_VALUE 400
-		#define START_WATER_VALUE 300
+		#define START_AIR_VALUE 420
+		#define START_WATER_VALUE 280
 		unsigned int airValue = START_AIR_VALUE;
 		unsigned int waterValue = START_WATER_VALUE;
 		// Current sensor value
@@ -50,21 +116,30 @@ namespace cz
 
 		// Value above which irrigation should be turned on
 		// NOTE: ABOVE because higher values means drier.
-		// Using 0 as initial value, which means it will not turn on the motor until things are setup properly
-		unsigned int thresholdValue = 0;
+		// Using a big value as initial value, which means it will not turn on the motor until things are setup properly
+		unsigned int thresholdValue = 65535;
 
-		void setSensorValue(unsigned int currentValue_)
+		void setSensorValue(unsigned int currentValue_, bool isCalibrating)
 		{
 			numReadings++;
-			currentValue = currentValue_;
 
-			if (currentValue > airValue)
+			// If we are calibrating, we accept any value, and then adjust the air/water values accordingly
+			// #TODO : Revise this
+			if (true || isCalibrating)
 			{
-				airValue = currentValue;
+				currentValue = currentValue_;
+				if (currentValue > airValue)
+				{
+					airValue = currentValue;
+				}
+				else if (currentValue < waterValue)
+				{
+					waterValue = currentValue;
+				}
 			}
-			else if (currentValue < waterValue)
+			else
 			{
-				waterValue = currentValue;
+				currentValue = cz::clamp(currentValue_, waterValue, airValue);
 			}
 		}
 
@@ -79,7 +154,7 @@ namespace cz
 		
 		void begin(uint8_t index);
 
-		void setMoistureSensorValues(unsigned int currentValue, bool isCalibrating);
+		void setMoistureSensorValues(const SensorReading& sample, bool isCalibrating);
 
 		void setMotorState(bool state);
 		bool isMotorOn() const;
@@ -119,6 +194,11 @@ namespace cz
 			m_cfg.thresholdValue = value;
 		}
 
+		void setThresholdValueAsPercentage(unsigned int value)
+		{
+			m_cfg.thresholdValue = map(cz::clamp<unsigned int>(value, 0, 100), 0, 100, m_cfg.airValue, m_cfg.waterValue);
+		}
+
 		unsigned int getThresholdValue() const
 		{
 			return m_cfg.thresholdValue;
@@ -126,7 +206,8 @@ namespace cz
 
 		unsigned int getPercentageThreshold() const
 		{
-			return map(m_cfg.thresholdValue, m_cfg.airValue, m_cfg.waterValue, 0, 100);
+			unsigned int tmp = cz::clamp(m_cfg.thresholdValue, m_cfg.waterValue, m_cfg.airValue);
+			return map(tmp, m_cfg.airValue, m_cfg.waterValue, 0, 100);
 		}
 
 		float getSamplingInterval() const
@@ -159,10 +240,15 @@ namespace cz
 			return m_calibrating;
 		}
 
+		uint32_t getSensorErrorCount() const
+		{
+			return m_sensorErrors;
+		}
+
 	protected:
 		friend class ProgramData;
-		void save(EEPtr& dst, bool saveConfig, bool saveHistory) const;
-		void load(EEPtr& src, bool loadConfig, bool loadHistory);
+		void save(AT24C::Ptr& dst, bool saveConfig, bool saveHistory) const;
+		void load(AT24C::Ptr& src, bool loadConfig, bool loadHistory);
 		int getConfigSize() const
 		{
 			return sizeof(m_cfg);
@@ -177,6 +263,8 @@ namespace cz
 		GroupConfig m_cfg;
 
 		HistoryQueue m_history;
+		
+		uint32_t m_sensorErrors = 0;
 
 		bool m_motorIsOn = false;
 		// Used so we can detect when the motor was turned on and off before a sensor data point is inserted, so we can
@@ -186,14 +274,18 @@ namespace cz
 		bool m_calibrating = false;
 	};
 
+struct Context;
+
 class ProgramData
 {
 public:
+	ProgramData(Context& outer);
+
 	GroupData& getGroupData(uint8_t index);
 
 	// We only allow 1 sensor to be active at one give time, so we use this as a kind of mutex
-	bool tryAcquireMoistureSensorMutex();
-	void releaseMoistureSensorMutex();
+	bool tryAcquireMuxMutex();
+	void releaseMuxMutex();
 
 	void save() const;
 	
@@ -226,12 +318,27 @@ public:
 	{
 		return m_inGroupConfigMenu;
 	}
+
+	// Sets the temperarture reading in Celcius
+	void setTemperatureReading(float temperatureC);
+	// Set the humidity reading (0..100)
+	void setHumidityReading(float humidity);
+
+	float getTemperatureReading() const { return m_temperature; }
+	float getHumidityReading() const { return m_humidity; }
 	
   private:
-	GroupData m_group[NUM_MOISTURESENSORS];
-	bool m_moistureSensorMutex = false;
+	Context& m_outer;
+	GroupData m_group[NUM_PAIRS];
+	bool m_muxMutex = false;
 	bool m_inGroupConfigMenu = false;
 	int8_t m_selectedGroup = -1;
+
+	// Temperature in Celcius
+	float m_temperature;
+	// Relative humiditity
+	float m_humidity;
+
 };
 
 struct Context
@@ -239,11 +346,12 @@ struct Context
 	Context()
 		: mux(
 			ioExpander,
-			IO_EXPANDER_TO_MULTIPLEXER_S0,
-			IO_EXPANDER_TO_MULTIPLEXER_S1,
-			IO_EXPANDER_TO_MULTIPLEXER_S2,
-			IO_EXPANDER_TO_MULTIPLEXER_S3,
-			ARDUINO_MULTIPLEXER_ZPIN)
+			IO_EXPANDER_TO_MUX_S0,
+			IO_EXPANDER_TO_MUX_S1,
+			IO_EXPANDER_TO_MUX_S2,
+			MCU_TO_MUX_ZPIN)
+		, data(*this)
+		, eeprom(0)
 	{
 	}
 
@@ -254,8 +362,9 @@ struct Context
 #else
 	MCP23017Wrapper ioExpander;
 #endif
-	Mux16Channels mux;
+	Mux8Channels mux;
 	ProgramData data;
+	AT24C256 eeprom;
 
 	// Used as a temporary config data when configuring a group
 	GroupConfig settingsDummy;
@@ -264,4 +373,3 @@ struct Context
 extern Context gCtx;
 
 } // namespace cz
-

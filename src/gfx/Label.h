@@ -75,9 +75,26 @@ class FixedLabel : public BaseLabel
 		}
 	}
 
+	void setText(const char* text)
+	{
+		// If the text is the same, nothing to do
+		if (strncmp(text, m_value, m_bufSize)==0)
+		{
+			return;
+		}
+
+		strncpy(m_value, text, m_bufSize);
+		m_value[m_bufSize-1] = 0;
+		m_needsRedraw = true;
+	}
+
 	virtual void draw(bool forceDraw = false) override
 	{
-		drawImpl(getFixedData(), m_value);
+		if (forceDraw || m_needsRedraw)
+		{
+			drawImpl(getFixedData(), m_value);
+			m_needsRedraw = false;
+		}
 	}
 
 	Rect getRect() const
@@ -95,6 +112,7 @@ class FixedLabel : public BaseLabel
 	}
 	const LabelData* m_data_P;
 	char m_value[m_bufSize];
+	bool m_needsRedraw;
 };
 
 

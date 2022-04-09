@@ -1,26 +1,37 @@
-#include <Arduino.h>
+#include "Config.h"
 
-#ifdef AVR8_BREAKPOINT_MODE
-#include "avr8-stub.h"
+#if __MBED__
+	#include "utility/PluggableUSBDevice_fix.h"
 #endif
+
+#if 0
+#include "Adafruit_MCP23017.h"
+#include "utility/MCP23017Wrapper.h"
+#include "crazygaze/micromuc/SerialStringReader.h"
+#include "crazygaze/micromuc/Logging.h"
+#include "crazygaze/micromuc/StringUtils.h"
+#include "utility/MuxNChannels.h"
+#include "gfx/MyDisplay1.h"
+#include "gfx/MyXPT2046.h"
+#endif
+
+#if 1 || PORTING_TO_RP2040
 
 #include "Config.h"
 #include "Context.h"
+#include "TemperatureAndHumiditySensor.h"
 #include "SoilMoistureSensor.h"
 #include "GroupMonitor.h"
 #include "DisplayTFT.h"
-#include "Utils.h"
 #include "crazygaze/micromuc/Ticker.h"
 #include "crazygaze/micromuc/Logging.h"
 #include <algorithm>
 #include <utility>
 #include <memory>
 
-#include "AT24C.h"
 #include "crazygaze/micromuc/SDLogOutput.h"
 #include "crazygaze/micromuc/Profiler.h"
 #include "crazygaze/micromuc/SerialStringReader.h"
-#include "MemorySetup.h"
 
 using namespace cz;
 
@@ -43,36 +54,52 @@ using namespace cz;
 	using SoilMoistureSensorTicker = TTicker<SoilMoistureSensor, float, TickingMethod>;
 #endif
 
-SoilMoistureSensorTicker gSoilMoistureSensors[NUM_MOISTURESENSORS] =
+using TemperatureAndHumiditySensorTicker = TTicker<TemperatureAndHumiditySensor, float, TickingMethod>;
+TemperatureAndHumiditySensorTicker gTempAndHumiditySensor(true, IO_EXPANDER_VPIN_TEMPSENSOR, MUX_TEMP_SENSOR);
+
+SoilMoistureSensorTicker gSoilMoistureSensors[NUM_PAIRS] =
 {
-	{true, 0, IO_EXPANDER_VPIN_SENSOR_0, MULTIPLEXER_MOISTURE_SENSOR_0}
-#if NUM_MOISTURESENSORS>1
-	,{true, 1, IO_EXPANDER_VPIN_SENSOR_1, MULTIPLEXER_MOISTURE_SENSOR_1}
+	 {true, 0, IO_EXPANDER_VPIN_SENSOR0, MUX_MOISTURE_SENSOR0}
+#if NUM_PAIRS>1
+	,{true, 1, IO_EXPANDER_VPIN_SENSOR1, MUX_MOISTURE_SENSOR1}
 #endif
-#if NUM_MOISTURESENSORS>2
-	,{true, 2, IO_EXPANDER_VPIN_SENSOR_2, MULTIPLEXER_MOISTURE_SENSOR_2}
+#if NUM_PAIRS>2
+	,{true, 2, IO_EXPANDER_VPIN_SENSOR2, MUX_MOISTURE_SENSOR2}
 #endif
-#if NUM_MOISTURESENSORS>3
-	,{true, 3, IO_EXPANDER_VPIN_SENSOR_3, MULTIPLEXER_MOISTURE_SENSOR_3}
+#if NUM_PAIRS>3
+	,{true, 3, IO_EXPANDER_VPIN_SENSOR3, MUX_MOISTURE_SENSOR3}
 #endif
 };
 
 using GroupMonitorTicker = TTicker<GroupMonitor, float, TickingMethod>;
 
-GroupMonitorTicker gGroupMonitors[NUM_MOISTURESENSORS] =
+GroupMonitorTicker gGroupMonitors[NUM_PAIRS] =
 {
-	{ true, 0, IO_EXPANDER_MOTOR_0_INPUT1, IO_EXPANDER_MOTOR_0_INPUT2}
-#if NUM_MOISTURESENSORS>1
-	,{ true, 1, IO_EXPANDER_MOTOR_1_INPUT1, IO_EXPANDER_MOTOR_1_INPUT2}
+	 { true, 0, IO_EXPANDER_MOTOR0}
+#if NUM_PAIRS>1
+	,{ true, 1, IO_EXPANDER_MOTOR1}
 #endif
-#if NUM_MOISTURESENSORS>2
-	,{ true, 2, IO_EXPANDER_MOTOR_2_INPUT1, IO_EXPANDER_MOTOR_2_INPUT2}
+#if NUM_PAIRS>2
+	,{ true, 2, IO_EXPANDER_MOTOR2}
 #endif
-#if NUM_MOISTURESENSORS>3
-	,{ true, 3, IO_EXPANDER_MOTOR_3_INPUT1, IO_EXPANDER_MOTOR_3_INPUT2}
+#if NUM_PAIRS>3
+	,{ true, 3, IO_EXPANDER_MOTOR3}
 #endif
 };
 
+
+namespace cz
+{
+	MyDisplay1 gScreen(TFT_PIN_CS, TFT_PIN_DC, TFT_PIN_BACKLIGHT);
+	const TouchCalibrationData gTsCalibrationData = {211, 3412, 334, 3449, 4};
+	MyXPT2046 gTs(gScreen, TOUCH_PIN_CS, TOUCH_PIN_IRQ, &gTsCalibrationData);
+}
+
+namespace
+{
+	cz::SerialLogOutput gSerialLogOutput;
+	cz::SerialStringReader<> gSerialStringReader;
+}
 
 TTicker<DisplayTFT, float, TickingMethod> gDisplay(true);
 
@@ -83,38 +110,25 @@ void doGroupShot(uint8_t index)
 
 unsigned long gPreviousMicros = 0;
 
-struct Foo
-{
-	Foo(int a, int b, int c)
-	: a(a), b(b), c(c)
-	{
-	}
-
-	void log()
-	{
-		CZ_LOG(logDefault, Log, F("Foo(%d,%d,%d)"), a, b ,c);
-	}
-
-	int a,b,c;
-};
-
-FunctionTicker gMemLoggerFunc([]()
-{
-	logMemory();
-}, 10.0f);
-
 void setup()
 {
-#ifdef AVR8_BREAKPOINT_MODE
-	debug_init();
-	breakpoint();
-#else
-	// If using avr-stub, we can't use Serial
-	Serial.begin(115200);
-	while (!Serial) {
-		; // wait for serial port to connect. Needed for native USB port only
-	}
-#endif
+	#if MOCK_COMPONENTS
+		randomSeed(micros());
+	#endif
+
+	gSerialLogOutput.begin(Serial1, 115200);
+	gSerialStringReader.begin(Serial1);
+
+	//
+	// Initialize I2C
+	// NOTE: The original Adafruit_MCP23017.cpp code automatically initialized IC2, but that causes some problems
+	// because I also need to set the clock before I2C is used, and also because eeprom is also using I2C.
+	// So, Adafruit_MCP23017 has a change to disable I2C initialization, and initialization is done here.
+	Wire.begin();
+	// MCP23017 : 400kHz at 3.3v
+	// AT24C256 : 400kHz at 2.7v, 2.5v
+	Wire.setClock(400000);
+
 
 #if SD_CARD_LOGGING
 	if (gSDCard.betin(SD_CARD_SS_PIN))
@@ -124,11 +138,14 @@ void setup()
 	}
 #endif
 
-	setupMemoryAreas(2048);
-	logMemory();
+	gScreen.begin();
+	gTs.begin();
+	//gTs.calibrate();
 
 	gCtx.begin();
 	gDisplay.getObj().begin();
+
+	gTempAndHumiditySensor.getObj().begin();
 
 	for(auto&& ticker : gSoilMoistureSensors)
 	{
@@ -145,8 +162,6 @@ void setup()
 
 PROFILER_CREATE(30);
 
-cz::SerialStringReader<64> gSerialStringReader;
-
 void loop()
 {
 	PROFILER_STARTRUN();
@@ -160,6 +175,8 @@ void loop()
 	{
 		PROFILE_SCOPE(F("TickAll"));
 		countdown = std::min(gDisplay.tick(deltaSeconds), countdown);
+
+		countdown = std::min(gTempAndHumiditySensor.tick(deltaSeconds), countdown);
 
 		for (auto&& ticker : gSoilMoistureSensors)
 		{
@@ -175,7 +192,7 @@ void loop()
 	// We use this so that we can just put a breakpoint in here and force the code to run when we want to check the profiler data
 	#if CONSOLE_COMMANDS
 	{
-		if (gSerialStringReader.tryRead())
+		while (gSerialStringReader.tryRead())
 		{
 			char cmd[30];
 			const char* src = gSerialStringReader.retrieve(); 
@@ -205,7 +222,7 @@ void loop()
 			else if (strcmp_P(cmd, (const char*)F("motoroff"))==0)
 			{
 				int idx;
-				if (parseCommand(idx) && idx < NUM_MOISTURESENSORS)
+				if (parseCommand(idx) && idx < NUM_PAIRS)
 				{
 					gGroupMonitors[idx].getObj().turnMotorOff();
 				}
@@ -213,7 +230,7 @@ void loop()
 			else if (strcmp_P(cmd, (const char*)F("motoron"))==0)
 			{
 				int idx;
-				if (parseCommand(idx) && idx < NUM_MOISTURESENSORS)
+				if (parseCommand(idx) && idx < NUM_PAIRS)
 				{
 					gGroupMonitors[idx].getObj().doShot();
 				}
@@ -221,15 +238,23 @@ void loop()
 			else if (strcmp_P(cmd, (const char*)F("setgroupthreshold"))==0)
 			{
 				int idx, value;
-				if (parseCommand(idx, value) && idx < NUM_MOISTURESENSORS)
+				if (parseCommand(idx, value) && idx < NUM_PAIRS)
 				{
 					gCtx.data.getGroupData(idx).setThresholdValue(value);
+				}
+			}
+			else if (strcmp_P(cmd, (const char*)F("setgroupthresholdaspercentage"))==0)
+			{
+				int idx, value;
+				if (parseCommand(idx, value) && idx < NUM_PAIRS)
+				{
+					gCtx.data.getGroupData(idx).setThresholdValueAsPercentage(value);
 				}
 			}
 			else if (strcmp_P(cmd, (const char*)F("startgroup"))==0)
 			{
 				int idx;
-				if (parseCommand(idx) && idx < NUM_MOISTURESENSORS)
+				if (parseCommand(idx) && idx < NUM_PAIRS)
 				{
 					gCtx.data.getGroupData(idx).setRunning(true);
 				}
@@ -237,7 +262,7 @@ void loop()
 			else if (strcmp_P(cmd, (const char*)F("stopgroup"))==0)
 			{
 				int idx;
-				if (parseCommand(idx) && idx < NUM_MOISTURESENSORS)
+				if (parseCommand(idx) && idx < NUM_PAIRS)
 				{
 					gCtx.data.getGroupData(idx).setRunning(false);
 				}
@@ -245,15 +270,30 @@ void loop()
 			else if (strcmp_P(cmd, (const char*)F("selectgroup"))==0)
 			{
 				int8_t idx;
-				if (parseCommand(idx) && idx < NUM_MOISTURESENSORS)
+				if (parseCommand(idx) && idx < NUM_PAIRS)
 				{
 					gCtx.data.trySetSelectedGroup(idx);
+				}
+			}
+			else if (strcmp_P(cmd, (const char*)F("setmocksensorerrorstatus"))==0)
+			{
+				int idx, status;
+				if (parseCommand(idx, status))
+				{
+					if (status>=SensorReading::Status::First && status<=SensorReading::Status::Last)
+					{
+						Component::raiseEvent(SetMockSensorErrorStatusEvent(idx, static_cast<SensorReading::Status>(status)));
+					}
+					else
+					{
+						CZ_LOG(logDefault, Error, F("Invalid status value"));
+					}
 				}
 			}
 			else if (strcmp_P(cmd, (const char*)F("setmocksensor"))==0)
 			{
 				int idx, value;
-				if (parseCommand(idx, value) && idx < NUM_MOISTURESENSORS)
+				if (parseCommand(idx, value) && idx < NUM_PAIRS)
 				{
 					Component::raiseEvent(SetMockSensorValueEvent(idx, value));
 				}
@@ -263,7 +303,7 @@ void loop()
 				int value;
 				if (parseCommand(value))
 				{
-					for(int idx=0; idx<NUM_MOISTURESENSORS; idx++)
+					for(int idx=0; idx<NUM_PAIRS; idx++)
 					{
 						Component::raiseEvent(SetMockSensorValueEvent(idx, value));
 					}
@@ -276,7 +316,7 @@ void loop()
 			else if (strcmp_P(cmd, (const char*)F("savegroup"))==0)
 			{
 				uint8_t idx;
-				if (parseCommand(idx) && idx < NUM_MOISTURESENSORS)
+				if (parseCommand(idx) && idx < NUM_PAIRS)
 				{
 					gCtx.data.saveGroupConfig(idx);
 				}
@@ -284,6 +324,33 @@ void loop()
 			else if (strcmp_P(cmd, (const char*)F("load"))==0)
 			{
 				gCtx.data.load();
+			}
+			else if (strcmp_P(cmd, (const char*)F("setverbosity"))==0)
+			{
+				char name[30];
+				int verbosity;
+				constexpr int minVerbosity = static_cast<int>(LogVerbosity::Fatal);
+				constexpr int maxVerbosity = static_cast<int>(LogVerbosity::Verbose);
+				if (parseCommand(name, verbosity))
+				{
+					if(LogCategoryBase* category = LogCategoryBase::find(name))
+					{
+						if (verbosity>=minVerbosity && verbosity<=maxVerbosity)
+						{
+							LogVerbosity v = static_cast<LogVerbosity>(verbosity);
+							category->setVerbosity(v);
+							CZ_LOG(logDefault, Log, F("\"%s\" verbosity set to %s"), name, logVerbosityToString(v));
+						}
+						else
+						{
+							CZ_LOG(logDefault, Error, F("Log verbosity needs to be from %d to %d"), minVerbosity, maxVerbosity);
+						}
+					}
+					else
+					{
+						CZ_LOG(logDefault, Error, F("Log category \"%s\" doesn't exist"), name);
+					}
+				}
 			}
 			else
 			{
@@ -293,8 +360,76 @@ void loop()
 	}
 	#endif // CONSOLE_COMMANDS
 
-	gMemLoggerFunc.tick(deltaSeconds);
-
 	gPreviousMicros = nowMicros;
 }
+
+#endif
+
+#if 0
+
+namespace
+{
+	cz::SerialLogOutput gSerialLogOutput;
+	cz::SerialStringReader<> gSerialStringReader;
+}
+
+namespace cz
+{
+	MyDisplay1 gScreen(TFT_PIN_CS, TFT_PIN_DC, TFT_PIN_BACKLIGHT);
+	const TouchCalibrationData gTsCalibrationData = {211, 3412, 334, 3449, 4};
+	MyXPT2046 gTs(gScreen, TOUCH_PIN_CS, TOUCH_PIN_IRQ, &gTsCalibrationData);
+}
+
+using namespace cz;
+
+void setup()
+{
+	gSerialLogOutput.begin(Serial1, 115200);
+	gSerialStringReader.begin(Serial1);
+
+	Serial.print("Hello World-1!");
+	Serial1.print("Hello World-2!");
+	CZ_LOG(logDefault, Log, "Hello World-3!");
+	CZ_LOG(logDefault, Log, F("Hello World-4!"));
+
+	gScreen.begin();
+	gTs.begin();
+	//gTs.calibrate();
+}
+
+void tryReadString()
+{
+	if (!gSerialStringReader.tryRead())
+	{
+		return;
+	}
+
+	const char* src = gSerialStringReader.retrieve(); 
+	CZ_LOG(logDefault, Log, "INPUT: %s", src);
+}
+
+void loop()
+{
+	CZ_LOG(logDefault, Log, F("millis=%u"), millis());
+	tryReadString();
+	delay(500);
+
+	gScreen.setFont(NULL);
+	gScreen.setCursor(0,0);
+	gScreen.setTextColor(Colour_White, Colour_Black);
+	gScreen.print(cz::formatString("Millis: %u", millis()));
+
+	if (gTs.isTouched())
+	{
+		RawTouchPoint raw = gTs.getRawPoint();
+		CZ_LOG(logDefault, Log, "Raw Data = (%u, %u, %u)", raw.x, raw.y, raw.z);
+
+		TouchPoint p = gTs.getPoint();
+		gScreen.setCursor(150, 150);
+		gScreen.print(cz::formatString(" P=(%d, %d, %d) ", p.x, p.y, p.z));
+		CZ_LOG(logDefault, Log, " P=(%d, %d, %d) ", p.x, p.y, p.z);
+		gScreen.setBacklightBrightness(map(p.x, 0, 319, 0, 255));
+	}
+}
+#endif
 

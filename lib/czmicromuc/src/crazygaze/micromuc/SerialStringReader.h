@@ -13,6 +13,15 @@ template<int MaxSize=64>
 class SerialStringReader
 {
 public:
+	SerialStringReader()
+	{
+	}
+
+	void begin(arduino::HardwareSerial& serial)
+	{
+		m_serial = &serial;
+	}
+
 	/**
 	 * Tries to read a string without blocking
 	 * A string is considered full when a \r\n is detected
@@ -20,10 +29,13 @@ public:
 	 */
 	bool tryRead()
 	{
-		int ch = Serial.read();
+		int ch = m_serial->read();
 		while(ch != -1)
 		{
-			if (ch == '\n')
+			if (
+				ch == '\n' ||
+				ch == ';'  // ';' Allows is a command seperator, so we can type multiple commands to be processed on the same tick
+				)
 			{
 				m_buf[m_index] = 0;
 				return true;
@@ -42,7 +54,7 @@ public:
 				}
 			}
 
-			ch = Serial.read();
+			ch = m_serial->read();
 		}
 
 		return false;
@@ -55,10 +67,9 @@ public:
 	}
 
 private:
+	arduino::HardwareSerial* m_serial = nullptr;
 	char m_buf[MaxSize];
 	int m_index = 0;
 };
 
-
 } // namespace cz
-

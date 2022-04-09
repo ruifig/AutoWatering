@@ -2,9 +2,12 @@
 #include "DisplayCommon.h"
 #include "Context.h"
 #include "crazygaze/micromuc/Profiler.h"
+#include "gfx/MyDisplay1.h"
 
 namespace cz
 {
+
+extern MyDisplay1 gScreen;
 	
 GroupGraph::GroupGraph()
 {
@@ -16,7 +19,7 @@ GroupGraph::~GroupGraph()
 
 void GroupGraph::init(int8_t index)
 {
-	CZ_ASSERT(index>=0 && index<NUM_MOISTURESENSORS);
+	CZ_ASSERT(index>=0 && index<NUM_PAIRS);
 	m_index = index;
 	m_forceRedraw = true;
 	m_selected = false;
@@ -98,7 +101,11 @@ void GroupGraph::draw(bool forceDraw)
 	if (m_forceRedraw)
 	{
 		drawOuterBox();
+		//drawThresholdMarker();
 	}
+
+	// #TODO Remove this and draw only when necessary
+	drawThresholdMarker();
 
 	if (m_forceRedraw || m_sensorUpdates)
 	{
@@ -127,6 +134,7 @@ void GroupGraph::draw(bool forceDraw)
 		drawRect(rect.expand(2), m_selected ? GRAPH_SELECTED_BORDER_COLOUR : GRAPH_NOTSELECTED_BORDER_COLOUR);
 		m_redrawSelectedBox = false;
 	}
+
 	
 	m_forceRedraw = false;	
 }
@@ -173,7 +181,7 @@ void GroupGraph::plotHistory()
 		{
 			// Since the motor on/off info is an horizontal line, we don't need to erase the previous. We just paint the pixel
 			// at the right color if it changed
-			if (oldp.on != p.on)
+			if (oldp.motorOn != p.motorOn)
 			{
 				drawMotor = true;
 			}
@@ -189,14 +197,20 @@ void GroupGraph::plotHistory()
 		if (drawMotor)
 		{
 			// draw new motor on/off
-			gScreen.drawPixel(xx, rect.y, p.on ? GRAPH_MOTOR_ON_COLOUR : GRAPH_MOTOR_OFF_COLOUR);
+			gScreen.drawPixel(xx, rect.y, p.motorOn ? GRAPH_MOTOR_ON_COLOUR : GRAPH_MOTOR_OFF_COLOUR);
 		}
 
 		if (drawLevel)
 		{
 			// Draw new moisture level
-			gScreen.drawPixel(xx, bottomY - p.val, GRAPH_MOISTURELEVEL_COLOUR);
+			gScreen.drawPixel(xx, bottomY - p.val, p.status==SensorReading::Status::Valid ? GRAPH_MOISTURELEVEL_COLOUR : GRAPH_MOISTURELEVEL_ERROR_COLOUR);
 		}
+	}
+
+	if (data.getSensorErrorCount() !=0)
+	{
+		uint16_t size = rect.height/3;
+		gScreen.fillRoundRect(rect.left(), rect.bottom() - size, size, size, 3, Colour_Red);
 	}
 
 	m_sensorUpdates = 0;
@@ -211,13 +225,48 @@ void GroupGraph::drawOuterBox()
 	drawRect(rect.expand(1), GRAPH_BORDER_COLOUR);
 
 	constexpr int16_t h = GRAPH_HEIGHT;
-	int bottomY = rect.y + rect.height - 1;
+	int bottomY = rect.bottom();
 	gScreen.drawFastHLine(0, bottomY - map(0, 0, 100, 0, h - 1),   2, GRAPH_BORDER_COLOUR);
 	gScreen.drawFastHLine(0, bottomY - map(20, 0, 100, 0, h - 1),  2, GRAPH_BORDER_COLOUR);
 	gScreen.drawFastHLine(0, bottomY - map(40, 0, 100, 0, h - 1),  2, GRAPH_BORDER_COLOUR);
 	gScreen.drawFastHLine(0, bottomY - map(60, 0, 100, 0, h - 1),  2, GRAPH_BORDER_COLOUR);
 	gScreen.drawFastHLine(0, bottomY - map(80, 0, 100, 0, h - 1),  2, GRAPH_BORDER_COLOUR);
 	gScreen.drawFastHLine(0, bottomY - map(100, 0, 100, 0, h - 1), 2, GRAPH_BORDER_COLOUR);
+
+}
+
+void GroupGraph::drawThresholdMarker()
+{
+	PROFILE_SCOPE(F("GroupGraph::drawThresholdMarker"));
+	
+	VLine line = getHistoryPlotRect(m_index).rightLine();
+	// getHistoryPlotRect gives us the inner area, where we draw the history, but we want to draw the marker
+	// on the border line
+	line.p.x++;
+	gScreen.drawVLine(line, Colour_VeryDarkGrey);
+
+	// Draw a pixel for the threshold level on the right side of the graph box
+	// This allows the user to have an idea of the threshold value without having to go to the group settings
+	GroupData& data = gCtx.data.getGroupData(m_index);
+	unsigned int percentageThreshold = data.getPercentageThreshold();
+	//CZ_LOG(logDefault, Log, F("Val=%u"), percentageThreshold);
+#if 0
+	gScreen.drawPixel(rect.x + rect.width -1, bottomY - map(percentageThreshold, 0, 100, 0, rect.height), GRAPH_MOTOR_ON_COLOUR);
+#endif
+	gScreen.drawPixel(line.p.x, line.bottom() - map(percentageThreshold, 0, 100, 0, GRAPH_POINT_MAXVAL), GRAPH_MOTOR_ON_COLOUR);
+
+#if 0
+	CZ_LOG(logDefault, Log, F("Markers=%d, %d, %d"),
+		map(percentageThreshold, 0, 100, 0, line.height),
+		map(0, 0, 100, 0, line.height),
+		map(100, 0, 100, 0, line.height)
+		);
+
+	gScreen.drawPixel(line.p.x, line.bottom() - map(0, 0, 100, 0, GRAPH_POINT_MAXVAL) -1, Colour_Pink);
+	gScreen.drawPixel(line.p.x, line.bottom() - map(100, 0, 100, 0, GRAPH_POINT_MAXVAL), Colour_Yellow);
+	gScreen.drawPixel(line.p.x, line.bottom() - map(50, 0, 100, 0, GRAPH_POINT_MAXVAL), Colour_Green);
+#endif
 }
 
 }
+

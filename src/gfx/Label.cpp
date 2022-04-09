@@ -1,9 +1,14 @@
 #include "Label.h"
+#include "MyDisplay1.h"
+
+namespace cz
+{
+	extern MyDisplay1 gScreen;
+}
 
 namespace cz::gfx
 {
 
-#pragma region BaseLabel
 //////////////////////////////////////////////////////////////////////////
 // BaseLabel
 //////////////////////////////////////////////////////////////////////////
@@ -11,16 +16,16 @@ void BaseLabel::drawImplHelper(const LabelData& data)
 {
 	if (enumHasAnyFlags(data.flags,WidgetFlag::EraseBkg))
 	{
-		fillRect(data.pos, (uint16_t)data.bkgColour);
+		fillRect(data.pos, data.bkgColour);
 	}
 
 	if (enumHasAnyFlags(data.flags, WidgetFlag::DrawBorder))
 	{
-		drawRect(data.pos, (uint16_t)data.textColour);
+		drawRect(data.pos, data.textColour);
 	}
 
 	gScreen.setFont(data.font);
-	gScreen.setTextColor((uint16_t)data.textColour);
+	gScreen.setTextColor(data.textColour);
 }
 
 void BaseLabel::drawImpl(const LabelData& data, const char* value)
@@ -34,9 +39,7 @@ void BaseLabel::drawImpl(const StaticLabelData& data)
 	drawImplHelper(data.fixed);
 	printAligned(data.fixed.pos, data.fixed.halign, data.fixed.valign, data.value);
 }
-#pragma endregion
 
-#pragma region StaticLabel
 //////////////////////////////////////////////////////////////////////////
 // StaticLabel
 //////////////////////////////////////////////////////////////////////////
@@ -52,8 +55,4 @@ void StaticLabel::draw(bool forceDraw)
 	drawImpl(data);
 }
 
-#pragma endregion
-
-
 } // namespace cz::gfx
-

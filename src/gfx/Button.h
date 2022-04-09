@@ -34,11 +34,11 @@ class BaseButton : public Widget
 	void setClearWhenHidden(bool doClear);
   protected:	
 
-	void initHelper(uint8_t id, const Rect& pos, uint16_t bkgColour);
+	void initHelper(uint8_t id, const Rect& pos, Colour bkgColour);
 	
 	uint8_t m_id;
 	Rect m_pos;
-	uint16_t m_bkgColour;
+	Colour m_bkgColour;
 
 	bool m_needsRedraw : 1;
 	bool m_visible : 1;
@@ -56,7 +56,7 @@ class ImageButton : public BaseButton
 {
   public:
 	ImageButton();
-	void init(uint8_t id, const Pos& pos, uint16_t bkgColour, const Image& img);
+	void init(uint8_t id, const Pos& pos, Colour bkgColour, const Image& img);
 	// Widget
 	virtual void draw(bool forceDraw = false) override;
 	//
@@ -72,7 +72,7 @@ class ImageButton : public BaseButton
 class TextButton : public BaseButton
 {
   public:
-	void init(uint8_t id, const GFXfont* font, const Rect& pos, uint16_t bkgColour, uint16_t outlineColour, uint16_t textColour, const char* text, uint8_t textMagnification = 1);
+	void init(uint8_t id, const GFXfont* font, const Rect& pos, Colour bkgColour, Colour outlineColour, Colour textColour, const char* text, uint8_t textMagnification = 1);
 
 	void setInverted(bool inverted)
 	{
@@ -82,8 +82,8 @@ class TextButton : public BaseButton
 
   private:
 	bool m_inverted = false;
-	uint16_t m_outlineColour;
-	uint16_t m_textColour;
+	Colour m_outlineColour;
+	Colour m_textColour;
 
 	// Text magnification
 	uint8_t m_textMagX;

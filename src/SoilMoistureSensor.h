@@ -42,11 +42,11 @@ class SoilMoistureSensor : public Component
 	{
 		Initializing,
 		PoweredDown,
-		Reading // Sensor is powering up to performe a read
+		Reading // Sensor is powering up to perform a read
 	};
 
 #if CZ_LOG_ENABLED
-	static const char* const ms_stateNames[5];
+	static const char* const ms_stateNames[3];
 #endif
 
 	// Seconds since last sensor read.
@@ -61,7 +61,7 @@ class SoilMoistureSensor : public Component
 	IOExpanderPin m_vinPin;
 	MultiplexerPin m_dataPin;
 
-	virtual unsigned int readSensor();
+	virtual SensorReading readSensor();
 
 	void changeToState(State newState);
 	void onLeaveState();
@@ -80,7 +80,7 @@ public:
 
 protected:
 
-	virtual unsigned int readSensor() override;
+	virtual SensorReading readSensor() override;
 
 	static constexpr int ms_delayChaseValue = 5;
 
@@ -88,6 +88,9 @@ protected:
 	{
 		int dryValue;
 		int waterValue;
+
+		// To simulate error conditions
+		SensorReading::Status status = SensorReading::Status::Valid;
 
 		// reported value lags behind target value a bits, so we can simulate response time.
 		// The sensor won't report moisture as soon as the motor turns on

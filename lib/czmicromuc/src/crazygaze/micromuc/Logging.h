@@ -14,7 +14,42 @@
 #include "crazygaze/micromuc/Array.h"
 #include <Arduino.h>
 
-#include <mutex>
+#if _GLIBCXX_HAS_GTHREADS
+	#include <mutex>
+#else
+	namespace std
+	{
+		/*
+		* Mock mutex.
+		* I'll implement it at some later point if it's needed
+		*/
+		class mutex
+		{
+		};
+
+		/*
+		* Mock unique_lock.
+		* I'll implement it at some later point if it's needed
+		*/
+		template<typename T>
+		class unique_lock
+		{
+		public:
+			unique_lock(T mtx)
+			{
+				ms_dummy++;
+			}
+
+			~unique_lock()
+			{
+				ms_dummy--;
+			}
+		private:
+			static inline int ms_dummy;
+		};
+	} // namespace std
+#endif
+
 
 namespace cz
 {
@@ -52,9 +87,9 @@ class LogCategoryBase
 	static LogCategoryBase* find(const char* name);
 
   protected:
+	const char* m_name;
 	LogVerbosity m_verbosity;
 	LogVerbosity m_compileTimeVerbosity;
-	const char* m_name;
 	LogCategoryBase* m_next = nullptr;
 	static LogCategoryBase* ms_first;
 };
@@ -115,10 +150,16 @@ private:
 #if CZ_SERIAL_LOG_ENABLED
 class SerialLogOutput : public LogOutput
 {
+public:
+	// Initializes using the default Serial object
+	void begin(unsigned long speed = 115200);
+	// Initializes using any stream
+	void begin(arduino::HardwareSerial& stream, unsigned long speed = 115200);
 private:
 	virtual void logSimple(const char* str) override;
 	virtual void logSimple(const __FlashStringHelper* str) override;
 	virtual void flushImpl() override;
+	arduino::HardwareSerial* m_stream;
 };
 #endif
 

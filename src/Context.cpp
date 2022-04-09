@@ -1,16 +1,23 @@
 #include "Context.h"
-#include "Utils.h"
 #include "crazygaze/micromuc/Logging.h"
 #include "crazygaze/micromuc/StringUtils.h"
 #include "Component.h"
 #include <Arduino.h>
+#include <type_traits>
+
+
+auto test()
+{
+	std::chrono::seconds secs;
+	return secs;
+}
 
 namespace cz
 {
 
 Context gCtx;
 
-void updateEEPROM(EEPtr& dst, const uint8_t* src, unsigned int size)
+void updateEEPROM(AT24C::Ptr& dst, const uint8_t* src, unsigned int size)
 {
 	while(size--)
 	{
@@ -20,7 +27,7 @@ void updateEEPROM(EEPtr& dst, const uint8_t* src, unsigned int size)
 	}
 }
 
-void readEEPROM(EEPtr& src, uint8_t* dst, unsigned int size)
+void readEEPROM(AT24C::Ptr& src, uint8_t* dst, unsigned int size)
 {
 	while(size--)
 	{
@@ -34,7 +41,7 @@ template<typename T, typename = std::enable_if_t<
 	std::is_arithmetic_v<T> ||
 	std::is_same_v<T, GraphPoint>
 	> >
-void save(EEPtr& dst, const T& v)
+void save(AT24C::Ptr& dst, const T& v)
 {
 	updateEEPROM(dst, reinterpret_cast<const uint8_t*>(&v), sizeof(v));
 }
@@ -43,13 +50,13 @@ template<typename T, typename = std::enable_if_t<
 	std::is_arithmetic_v<T> ||
 	std::is_same_v<T, GraphPoint>
 	> >
-void load(EEPtr& src, T& v)
+void load(AT24C::Ptr& src, T& v)
 {
 	readEEPROM(src, reinterpret_cast<uint8_t*>(&v), sizeof(v));
 }
 
 template<typename T>
-void save(EEPtr& src, const TFixedCapacityQueue<T>& v)
+void save(AT24C::Ptr& src, const TFixedCapacityQueue<T>& v)
 {
 	int size = v.size();
 	save(src, size);
@@ -61,7 +68,7 @@ void save(EEPtr& src, const TFixedCapacityQueue<T>& v)
 }
 
 template<typename T>
-void load(EEPtr& src, TFixedCapacityQueue<T>& v)
+void load(AT24C::Ptr& src, TFixedCapacityQueue<T>& v)
 {
 	v.clear();
 	int size;
@@ -77,14 +84,15 @@ void load(EEPtr& src, TFixedCapacityQueue<T>& v)
 
 void Context::begin()
 {
-	static_assert(IO_EXPANDER_ADDR>=0x21 && IO_EXPANDER_ADDR<=0x27, "Wrong macro value");
+	static_assert(IO_EXPANDER_ADDR>=0x0 && IO_EXPANDER_ADDR<=0x7, "Wrong macro value");
 	ioExpander.begin(IO_EXPANDER_ADDR);
 	mux.begin();
-
 	data.begin();
-
 }
 
+///////////////////////////////////////////////////////////////////////
+// GroupData
+///////////////////////////////////////////////////////////////////////
 
 void GroupData::begin(uint8_t index)
 {
@@ -132,25 +140,25 @@ void GroupData::begin(uint8_t index)
 		m_history.push({GRAPH_POINT_MAXVAL/3, false});
 	}
 
-	m_cfg.running = (index==0 || index==1) ? false : true;
+	m_cfg.running = index==2;
 
 #endif
 }
 
-void GroupData::setMoistureSensorValues(unsigned int currentValue, bool isCalibrating)
+void GroupData::setMoistureSensorValues(const SensorReading& sample, bool isCalibrating)
 {
-	m_cfg.setSensorValue(currentValue);
+	m_cfg.setSensorValue(sample.meanValue, isCalibrating);
 
 	// Add to history if this his a real value (as in, we are not calibrating this sensor)
 	if (!isCalibrating)
 	{
-		GraphPoint point = {0, 0};
+		GraphPoint point = {0, 0, sample.status};
 		point.val = map(m_cfg.currentValue, m_cfg.airValue, m_cfg.waterValue, 0, GRAPH_POINT_MAXVAL);
 
 		// Since a motor can be turned on then off without a sensor reading in between, we use
 		// m_pendingMotorPoint as a reminder there was a motor event, and so we'll draw that motor plot
 		// on the next sensor reading
-		point.on = m_motorIsOn || m_pendingMotorPoint;
+		point.motorOn = m_motorIsOn || m_pendingMotorPoint;
 		m_pendingMotorPoint = false;
 		if (m_history.isFull())
 		{
@@ -159,7 +167,12 @@ void GroupData::setMoistureSensorValues(unsigned int currentValue, bool isCalibr
 		m_history.push(point);
 	}
 
-	Component::raiseEvent(SoilMoistureSensorReadingEvent(m_index, isCalibrating));
+	if (!sample.isValid())
+	{
+		m_sensorErrors++;
+	}
+
+	Component::raiseEvent(SoilMoistureSensorReadingEvent(m_index, isCalibrating, sample));
 }
 
 void GroupData::setMotorState(bool state)
@@ -188,6 +201,10 @@ void GroupData::setRunning(bool state)
 		return;
 	}
 
+	// When we start or stop the group, we reset the error count
+	// This allows the user to fix whatever is wrong and restart the group to get rid of the error
+	m_sensorErrors = 0;
+
 	m_cfg.running = state;
 	Component::raiseEvent(GroupOnOffEvent(m_index, state));
 }
@@ -209,35 +226,46 @@ void GroupData::resetHistory()
 	m_history.clear();
 }
 
-void GroupData::save(EEPtr& dst, bool saveConfig, bool saveHistory) const
+void GroupData::save(AT24C::Ptr& dst, bool saveConfig, bool saveHistory) const
 {
 
 	if (saveConfig)
 	{
-		CZ_LOG(logDefault, Log, F("Saving group %d config at address %d"), m_index, dst.index);
+		CZ_LOG(logDefault, Log, F("Saving group %d config at address %u"), m_index, dst.getAddress());
 		updateEEPROM(dst, reinterpret_cast<const uint8_t*>(&m_cfg), sizeof(m_cfg));
 	}
 
 	if (saveHistory)
 	{
-		CZ_LOG(logDefault, Log, F("Saving group %d history at address %d"), m_index, dst.index);
+		CZ_LOG(logDefault, Log, F("Saving group %d history at address %u"), m_index, dst.getAddress());
 		cz::save(dst, m_history);
 	}
 }
 
-void GroupData::load(EEPtr& src, bool loadConfig, bool loadHistory)
+void GroupData::load(AT24C::Ptr& src, bool loadConfig, bool loadHistory)
 {
 	if (loadConfig)
 	{
-		CZ_LOG(logDefault, Log, F("Loading group %d config from address %d"), m_index, src.index);
+		CZ_LOG(logDefault, Log, F("Loading group %d config from address %u"), m_index, src.getAddress());
 		readEEPROM(src, reinterpret_cast<uint8_t*>(&m_cfg), sizeof(m_cfg));
 	}
 
 	if (loadHistory)
 	{
-		CZ_LOG(logDefault, Log, F("Loading group %d history from address %d"), m_index, src.index);
+		CZ_LOG(logDefault, Log, F("Loading group %d history from address %u"), m_index, src.getAddress());
 		cz::load(src, m_history);
 	}
+
+	m_sensorErrors = 0;
+}
+
+///////////////////////////////////////////////////////////////////////
+// ProgramData
+///////////////////////////////////////////////////////////////////////
+
+ProgramData::ProgramData(Context& outer)
+	: m_outer(outer)
+{
 }
 
 void ProgramData::begin()
@@ -283,14 +311,26 @@ void ProgramData::setInGroupConfigMenu(bool inMenu)
 
 GroupData& ProgramData::getGroupData(uint8_t index)
 {
-	CZ_ASSERT(index < NUM_MOISTURESENSORS);
+	CZ_ASSERT(index < NUM_PAIRS);
 	return m_group[index];
+}
+
+void ProgramData::setTemperatureReading(float temperatureC)
+{
+	m_temperature = temperatureC;
+	Component::raiseEvent(TemperatureSensorReadingEvent(m_temperature));
+}
+
+void ProgramData::setHumidityReading(float humidity)
+{
+	m_humidity = humidity;
+	Component::raiseEvent(HumiditySensorReadingEvent(m_humidity));
 }
 
 void ProgramData::save() const
 {
 	unsigned long startTime = micros();
-	EEPtr ptr = EEPROM.begin();
+	AT24C::Ptr ptr = m_outer.eeprom.at(0);
 
 	// We save the configs first because they are fixed size, and so we can load/save groups individually when coming
 	// out of the configuration menu
@@ -305,30 +345,30 @@ void ProgramData::save() const
 	}
 	
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
-	CZ_LOG(logDefault, Log, F("Saving %u bytes to EEPROM took %u ms"), ptr.index, elapsedMs);
+	CZ_LOG(logDefault, Log, F("Saving %u bytes to EEPROM took %u ms"), ptr.getAddress(), elapsedMs);
 	Component::raiseEvent(ConfigSaveEvent());
 }
 
 void ProgramData::saveGroupConfig(uint8_t index)
 {
 	unsigned long startTime = micros();
-	EEPtr ptr = EEPROM.begin();
+	AT24C::Ptr ptr = m_outer.eeprom.at(0);
 
 	for(uint8_t idx = 0; idx<index; ++idx)
 	{
-		ptr.index += m_group[idx].getConfigSize();
+		ptr += m_group[idx].getConfigSize();
 	}
 
 	m_group[index].save(ptr, true, false);
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
-	CZ_LOG(logDefault, Log, F("Saving %u bytes to EEPROM took %u ms"), ptr.index, elapsedMs);
+	CZ_LOG(logDefault, Log, F("Saving %u bytes to EEPROM took %u ms"), ptr.getAddress(), elapsedMs);
 	Component::raiseEvent(ConfigLoadEvent());
 }
 
 void ProgramData::load()
 {
 	unsigned long startTime = micros();
-	EEPtr ptr = EEPROM.begin();
+	AT24C::Ptr ptr = m_outer.eeprom.at(0);
 
 	for(GroupData& g : m_group)
 	{
@@ -341,27 +381,27 @@ void ProgramData::load()
 	}
 	
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
-	CZ_LOG(logDefault, Log, F("Loading %u bytes from EEPROM took %u ms"), ptr.index, elapsedMs);
+	CZ_LOG(logDefault, Log, F("Loading %u bytes from EEPROM took %u ms"), ptr.getAddress(), elapsedMs);
 	Component::raiseEvent(ConfigLoadEvent());
 }
 
-bool ProgramData::tryAcquireMoistureSensorMutex()
+bool ProgramData::tryAcquireMuxMutex()
 {
-	if (m_moistureSensorMutex)
+	if (m_muxMutex)
 	{
 		return false;
 	}
 	else
 	{
-		m_moistureSensorMutex = true;
+		m_muxMutex = true;
 		return true;
 	}
 }
 
-void ProgramData::releaseMoistureSensorMutex()
+void ProgramData::releaseMuxMutex()
 {
-	CZ_ASSERT(m_moistureSensorMutex==true);
-	m_moistureSensorMutex = false;
+	CZ_ASSERT(m_muxMutex==true);
+	m_muxMutex = false;
 }
 
-}  // namespace cz
+} // namespace cz

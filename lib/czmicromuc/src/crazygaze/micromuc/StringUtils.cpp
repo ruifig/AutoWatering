@@ -183,16 +183,16 @@ char* formatStringVA(const char* format, va_list argptr)
 
 char* formatStringVA(const __FlashStringHelper* format, va_list argptr)
 {
-	char* buf = getTemporaryString();
 #ifdef __AVR__
+	char* buf = getTemporaryString();
 	if (vsnprintf_P(buf, CZ_TEMPORARY_STRING_MAX_SIZE, (const char*)format, argptr) == CZ_TEMPORARY_STRING_MAX_SIZE) // progmem for AVR
-#else
-	if (vsnprintf(buf, CZ_TEMPORARY_STRING_MAX_SIZE, format, argptr) == CZ_TEMPORARY_STRING_MAX_SIZE) // for the rest of the world
-#endif
 	{
 		buf[CZ_TEMPORARY_STRING_MAX_SIZE-1] = 0;
 	}
 	return buf;
+#else
+	return formatStringVA(reinterpret_cast<const char*>(format), argptr);
+#endif
 }
 
 void strCatPrintf(char* dest, const char* fmt, ...)

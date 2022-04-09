@@ -1,6 +1,5 @@
 #include "DisplayTFT.h"
 #include "Context.h"
-#include "Utils.h"
 #include "crazygaze/micromuc/Logging.h"
 #include "crazygaze/micromuc/StringUtils.h"
 #include <crazygaze/micromuc/Profiler.h>
@@ -14,18 +13,13 @@ void doGroupShot(uint8_t index);
 #define YM 9   // can be a digital pin
 #define XP 8   // can be a digital pin
 
-#define TS_MINX 108
-#define TS_MINY 84
-#define TS_MAXX 910
-#define TS_MAXY 888
-
-#define TS_MIN_PRESSURE 100
-#define SCREEN_WIDTH 320
-#define SCREEN_HEIGHT 240
+#define TS_MIN_PRESSURE 50
 
 namespace cz
 {
 
+extern MyDisplay1 gScreen;
+extern MyXPT2046 gTs;
 
 using namespace gfx;
 
@@ -40,7 +34,7 @@ void DisplayTFT::InitializeState::tick(float deltaSeconds)
 
 void DisplayTFT::InitializeState::onEnter()
 {
-	initializeScreen();
+	gScreen.fillScreen(Colour_Black);
 }
 
 void DisplayTFT::InitializeState::onLeave()
@@ -134,6 +128,21 @@ constexpr Pos getMenuButtonPos(uint8_t col, uint8_t row)
 	return pos;
 }
 
+#define STATUS_BAR_DIVISIONS 10
+constexpr Rect getStatusBarPos()
+{
+	Rect rect { getMenuButtonPos(0,2), {SCREEN_WIDTH, SCREEN_HEIGHT} };
+	return rect;
+}
+
+constexpr Rect getStatusBarCells(int startCell, int numCells)
+{
+	Rect statusBar = getStatusBarPos();
+	return Rect(
+		statusBar.x + startCell * (statusBar.width / STATUS_BAR_DIVISIONS), statusBar.y,
+		numCells * (statusBar.width / STATUS_BAR_DIVISIONS), statusBar.height
+	);
+}
 
 //
 // Sensor data (left to the history plot)
@@ -163,14 +172,14 @@ DEFINE_SENSOR_LABELS(1)
 DEFINE_SENSOR_LABELS(2)
 DEFINE_SENSOR_LABELS(3)
 
-NumLabel<true> sensorLabels[NUM_MOISTURESENSORS][3] =
+NumLabel<true> sensorLabels[NUM_PAIRS][3] =
 {
 	{
 		{ sensor0line0 },
 		{ sensor0line1 },
 		{ sensor0line2 }
 	}
-#if NUM_MOISTURESENSORS>1
+#if NUM_PAIRS>1
 	,
 	{
 		{ sensor1line0 },
@@ -178,7 +187,7 @@ NumLabel<true> sensorLabels[NUM_MOISTURESENSORS][3] =
 		{ sensor1line2 }
 	}
 #endif
-#if NUM_MOISTURESENSORS>2
+#if NUM_PAIRS>2
 	,
 	{
 		{ sensor2line0 },
@@ -186,7 +195,7 @@ NumLabel<true> sensorLabels[NUM_MOISTURESENSORS][3] =
 		{ sensor2line2 }
 	}
 #endif
-#if NUM_MOISTURESENSORS>3
+#if NUM_PAIRS>3
 	,
 	{
 		{ sensor3line0 },
@@ -195,6 +204,28 @@ NumLabel<true> sensorLabels[NUM_MOISTURESENSORS][3] =
 	}
 #endif
 };
+
+const LabelData temperatureLabelData PROGMEM = \
+{ \
+	getStatusBarCells(STATUS_BAR_DIVISIONS-4, 2), \
+	HAlign::Center, VAlign::Center, \
+	SMALL_FONT, \
+	TEMPERATURE_LABEL_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
+	WidgetFlag::EraseBkg | WidgetFlag::DrawBorder\
+};
+
+FixedLabel<> temperatureLabel(&temperatureLabelData, F("---.-C"));
+
+const LabelData humidityLabelData PROGMEM = \
+{ \
+	getStatusBarCells(STATUS_BAR_DIVISIONS-2, 2), \
+	HAlign::Center, VAlign::Center, \
+	SMALL_FONT, \
+	HUMIDITY_LABEL_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
+	WidgetFlag::EraseBkg | WidgetFlag::DrawBorder\
+};
+
+FixedLabel<> humidityLabel(&humidityLabelData, F("---.-%"));
 
 } } // namespace Overview
 
@@ -205,7 +236,7 @@ DisplayTFT::OverviewState::OverviewState(DisplayTFT& outer)
 
 void DisplayTFT::OverviewState::init()
 {
-	for(int idx = 0; idx<NUM_MOISTURESENSORS; idx++)
+	for(int idx = 0; idx<NUM_PAIRS; idx++)
 	{
 		m_groupGraphs[idx].init(idx);
 	}
@@ -223,7 +254,7 @@ void DisplayTFT::OverviewState::tick(float deltaSeconds)
 	{
 		bool consumed = false;
 
-		for(int8_t idx = 0; idx<NUM_MOISTURESENSORS; idx++)
+		for(int8_t idx = 0; idx<NUM_PAIRS; idx++)
 		{
 			if (m_groupGraphs[idx].contains(m_outer.m_touch.pos))
 			{
@@ -339,6 +370,16 @@ void DisplayTFT::OverviewState::onEvent(const Event& evt)
 		}
 		break;
 
+		case Event::TemperatureSensorReading:
+			//Overview::temperatureLabel.setText(formatString(F("%2.1fC"), -99.9f));
+			Overview::temperatureLabel.setText(formatString(F("%2.1fC"), gCtx.data.getTemperatureReading()));
+		break;
+
+		case Event::HumiditySensorReading:
+			//Overview::humidityLabel.setText(formatString(F("%3.1f%%"), 100.0f));
+			Overview::humidityLabel.setText(formatString(F("%3.1f%%"), gCtx.data.getHumidityReading()));
+		break;
+
 		default:
 		break;
 	}
@@ -349,7 +390,7 @@ void DisplayTFT::OverviewState::draw()
 {
 	PROFILE_SCOPE(F("OverviewState::drawOverview"));
 
-	for(int i=0; i<NUM_MOISTURESENSORS; i++)
+	for(int i=0; i<NUM_PAIRS; i++)
 	{
 		PROFILE_SCOPE(F("groupDrawing"));
 
@@ -379,6 +420,9 @@ void DisplayTFT::OverviewState::draw()
 			m_sensorUpdates[i] = 0;
 		}
 	}
+
+	Overview::temperatureLabel.draw(m_forceRedraw);
+	Overview::humidityLabel.draw(m_forceRedraw);
 
 	m_forceRedraw = false;
 }
@@ -727,11 +771,7 @@ bool SettingsMenu::checkClose(bool& doSave)
 
 
 DisplayTFT::DisplayTFT()
-	// For better pressure precision, we need to know the resistance
-	// between X+ and X- Use any multimeter to read it
-	// For the one we're using, its 300 ohms across the X plate
-	: m_ts(XP, YP, XM, YM, 300)
-	, m_states(*this)
+	: m_states(*this)
 {
 }
 
@@ -759,9 +799,7 @@ float DisplayTFT::tick(float deltaSeconds)
 
 void DisplayTFT::updateTouch()
 {
-	TSPoint p = m_ts.getPoint();
-	pinMode(YP, OUTPUT); //restore shared pins
-	pinMode(XM, OUTPUT);
+	TouchPoint p = gTs.getPoint();
 
 	if (p.z > TS_MIN_PRESSURE)
 	{
@@ -772,9 +810,7 @@ void DisplayTFT::updateTouch()
 	// If we are not touching right now, but were in the previous call, that means we have a press event
 	if (p.z < TS_MIN_PRESSURE && m_touch.tmp.z >= TS_MIN_PRESSURE)
 	{
-		// Map to screen coordinates
-		m_touch.pos.x = map(m_touch.tmp.y, TS_MINY, TS_MAXY, 0, gScreen.width());
-		m_touch.pos.y = map(m_touch.tmp.x, TS_MAXX, TS_MINX, 0, gScreen.height());
+		m_touch.pos = {p.x, p.y};
 		m_touch.pressed = true;
 		CZ_LOG(logDefault, Verbose, F("Press=(%3d,%3d)"), m_touch.pos.x, m_touch.pos.y);
 	}
@@ -808,6 +844,5 @@ void DisplayTFT::changeToState(DisplayState& newState)
     m_timeInState = 0.0f;
 	m_state->onEnter();
 }
-
 
 } // namespace cz

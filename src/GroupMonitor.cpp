@@ -4,30 +4,26 @@
 namespace cz
 {
 
-GroupMonitor::GroupMonitor(uint8_t index, IOExpanderPin motorPin1, IOExpanderPin motorPin2)
+GroupMonitor::GroupMonitor(uint8_t index, IOExpanderPin motorPin)
 	: m_index(index)
-	, m_motorPin1(motorPin1)
-	, m_motorPin2(motorPin2)
-	, m_sensorReadingSinceLastShot(0)
+	, m_motorPin(motorPin)
+	, m_sensorValidReadingSinceLastShot(0)
 {
 }
 
 void GroupMonitor::begin()
 {
-	gCtx.ioExpander.pinMode(m_motorPin1, OUTPUT);
-	gCtx.ioExpander.pinMode(m_motorPin2, OUTPUT);
-
-	gCtx.ioExpander.digitalWrite(m_motorPin1, LOW);
-	gCtx.ioExpander.digitalWrite(m_motorPin2, LOW);
+	gCtx.ioExpander.pinMode(m_motorPin, OUTPUT);
+	gCtx.ioExpander.digitalWrite(m_motorPin, LOW);
 }
 
 void GroupMonitor::doShot()
 {
 	CZ_LOG(logDefault, Log, F("Initiating user requested shot for group %d"), m_index);
-	turnMotorOn(true);
+	turnMotorOn();
 }
 
-void GroupMonitor::turnMotorOn(bool direction)
+void GroupMonitor::turnMotorOn()
 {
 	GroupData& data = gCtx.data.getGroupData(m_index);
 	if (data.isMotorOn())
@@ -36,17 +32,15 @@ void GroupMonitor::turnMotorOn(bool direction)
 		return;
 	}
 
-	gCtx.ioExpander.digitalWrite(m_motorPin1, direction ? LOW : HIGH);
-	gCtx.ioExpander.digitalWrite(m_motorPin2, direction ? HIGH : LOW);
+	gCtx.ioExpander.digitalWrite(m_motorPin, HIGH);
 	data.setMotorState(true);
 	m_motorOffCountdown = data.getShotDuration();
-	m_sensorReadingSinceLastShot = false;
+	m_sensorValidReadingSinceLastShot = false;
 }
 
 void GroupMonitor::turnMotorOff()
 {
-	gCtx.ioExpander.digitalWrite(m_motorPin1, LOW);
-	gCtx.ioExpander.digitalWrite(m_motorPin2, LOW);
+	gCtx.ioExpander.digitalWrite(m_motorPin, LOW);
 	GroupData& data = gCtx.data.getGroupData(m_index);
 	data.setMotorState(false);
 }
@@ -70,9 +64,9 @@ float GroupMonitor::tick(float deltaSeconds)
 	}
 	else if (m_motorOffCountdown <= -MINIMUM_TIME_BETWEEN_MOTOR_ON)
 	{
-		if (data.isRunning() && m_sensorReadingSinceLastShot && data.getCurrentValue() > data.getThresholdValue())
+		if (data.isRunning() && m_sensorValidReadingSinceLastShot && m_lastValidReading.meanValue > data.getThresholdValue())
 		{
-			turnMotorOn(true);
+			turnMotorOn();
 		}
 	}
 	else // m_motorOffCountdown is in the ]-MINIMUM_TIME_BETWEEN_MOTOR_ON, 0] range
@@ -97,9 +91,10 @@ void GroupMonitor::onEvent(const Event& evt)
 			if (data.isRunning())
 			{
 				const auto& e = static_cast<const SoilMoistureSensorReadingEvent&>(evt);
-				if (e.index == m_index && !e.calibrating)
+				if (e.index == m_index && !e.calibrating && e.reading.isValid())
 				{
-					m_sensorReadingSinceLastShot = true;
+					m_sensorValidReadingSinceLastShot = true;
+					m_lastValidReading = e.reading;
 				}
 			}
 		}
@@ -121,3 +116,4 @@ void GroupMonitor::onEvent(const Event& evt)
 }
 	
 } // namespace cz
+

@@ -1,16 +1,18 @@
 #pragma once
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
+	#include "Adafruit_GFX.h"
+#pragma GCC diagnostic pop
+
 #include "crazygaze/micromuc/czmicromuc.h"
 #include "crazygaze/micromuc/StringUtils.h"
 #include "Colour.h"
 
-#include <Adafruit_GFX.h>
-#include <MCUFRIEND_kbv.h>
-
-#include <FreeDefaultFonts.h>
 #include <Fonts/FreeSans9pt7b.h>
 #include <Fonts/FreeSans12pt7b.h>
 #include <Fonts/Org_01.h>
+#include "FreeDefaultFonts.h"
 
 #define TINY_FONT &Org_01
 #define SMALL_FONT &FreeSmallFont
@@ -21,8 +23,6 @@
 
 namespace cz
 {
-
-extern MCUFRIEND_kbv gScreen;
 
 struct Image
 {
@@ -36,6 +36,29 @@ struct Pos
 {
 	int16_t x;
 	int16_t y;
+};
+
+struct VLine
+{
+	Pos p;
+	uint16_t height;
+
+	constexpr int16_t top() const { return p.y; }
+	constexpr int16_t bottom() const
+	{
+		return static_cast<int16_t>(p.y+height-1);
+	}
+};
+
+struct HLine
+{
+	Pos p;
+	uint16_t width;
+	constexpr int16_t left() const { return p.x; }
+	constexpr int16_t right() const
+	{
+		return static_cast<int16_t>(p.x+width-1);
+	}
 };
 
 struct Rect
@@ -73,21 +96,84 @@ struct Rect
 	{
 	}
 
-	bool contains(int16_t x, int16_t y) const
+	constexpr bool contains(int16_t x, int16_t y) const
 	{
 	  return ((x >= this->x) && (x < (int16_t)(this->x + this->width)) &&
 	          (y >= this->y) && (y < (int16_t)(this->y + this->height)));
 	}
 
-	bool contains(const Pos& pos) const
+	constexpr bool contains(const Pos& pos) const
 	{
 		return contains(pos.x, pos.y);
 	}
 
 	// Returns a Rect expanded the number of specified pixels in all 4 directions (top/bottom/left/right)
-	Rect expand(int16_t pixels) const
+	constexpr Rect expand(int16_t pixels) const
 	{
-		return { x - pixels, y - pixels, width + pixels*2, height + pixels*2};
+		return {
+			static_cast<int16_t>(x - pixels),
+			static_cast<int16_t>(y - pixels),
+			static_cast<uint16_t>(width + pixels*2),
+			static_cast<uint16_t>(height + pixels*2)
+			};
+	}
+
+	constexpr int16_t left() const
+	{
+		return x;
+	}
+	constexpr int16_t right() const
+	{
+		return static_cast<int16_t>(x + width -1);
+	}
+
+	constexpr int16_t top() const
+	{
+		return y;
+	}
+	constexpr int16_t bottom() const
+	{
+		return static_cast<int16_t>(y + height -1);
+	}
+
+	constexpr Pos topLeft() const
+	{
+		return {x, y};
+	}
+
+	constexpr Pos topRight() const
+	{
+		return {right(), y};
+	}
+
+	constexpr Pos bottomLeft() const
+	{
+		return {x, bottom()};
+	}
+
+	constexpr Pos bottomRight() const
+	{
+		return { right(), bottom() };
+	}
+
+	constexpr VLine leftLine() const
+	{
+		return {topLeft(), height};
+	}
+
+	constexpr VLine rightLine() const
+	{
+		return {topRight(), height};
+	}
+
+	constexpr HLine topLine() const
+	{
+		return {topLeft(), width};
+	}
+
+	constexpr HLine bottomLine() const
+	{
+		return {bottomLeft(), width};
 	}
 };
 
@@ -105,20 +191,18 @@ enum class VAlign : uint8_t
 	Bottom
 };
 
-void initializeScreen();
+void fillRect(const Rect& box, Colour color);
 
-void fillRect(const Rect& box, uint16_t color);
-
-void drawRect(const Rect& box, uint16_t color);
+void drawRect(const Rect& box, Colour color);
 
 /**
  * Draws a filled rectangle with the specified colour, followed by a 565 RGB bitmap from PROGMEM using a bitmask
  * (set bits = opaque, unset bits = clear).
  **/
-void drawRGBBitmap_P(int16_t x, int16_t y, const uint16_t *bitmap_P, const uint8_t* mask_P, int16_t w, int16_t h, uint16_t bkgColour);
-void drawRGBBitmapDisabled_P(int16_t x, int16_t y, const uint16_t *bitmap_P, const uint8_t* mask_P, int16_t w, int16_t h, uint16_t bkgColour);
-void drawRGBBitmap_P(const Rect& area, const uint16_t *bitmap_P, const uint8_t* mask_P, uint16_t bkgColour);
-void drawRGBBitmapDisabled_P(const Rect& area, const uint16_t *bitmap_P, const uint8_t* mask_P, uint16_t bkgColour);
+void drawRGBBitmap_P(int16_t x, int16_t y, const uint16_t *bitmap_P, const uint8_t* mask_P, int16_t w, int16_t h, Colour bkgColour);
+void drawRGBBitmapDisabled_P(int16_t x, int16_t y, const uint16_t *bitmap_P, const uint8_t* mask_P, int16_t w, int16_t h, Colour bkgColour);
+void drawRGBBitmap_P(const Rect& area, const uint16_t *bitmap_P, const uint8_t* mask_P, Colour bkgColour);
+void drawRGBBitmapDisabled_P(const Rect& area, const uint16_t *bitmap_P, const uint8_t* mask_P, Colour bkgColour);
 
 /**
  * Prints a string aligned in a box area

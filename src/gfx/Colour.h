@@ -67,23 +67,23 @@ class Colour
 };
 
 	static constexpr Colour Colour_Black(0x0000);
-	static constexpr Colour Colour_Blue(0x001F);
-	static constexpr Colour Colour_Cyan(0x07FF);
+	static constexpr Colour Colour_Navy(0x000F);
 	static constexpr Colour Colour_DarkGreen(0x03E0);
 	static constexpr Colour Colour_DarkCyan(0x03EF);
-	static constexpr Colour Colour_DarkGrey(0x7BEF);
-	static constexpr Colour Colour_Green(0x07E0);
-	static constexpr Colour Colour_GreenYellow(0xB7E0);
-	static constexpr Colour Colour_LightGrey(0xC618);
-	static constexpr Colour Colour_Magenta(0xF81F);
 	static constexpr Colour Colour_Maroon(0x7800);
-	static constexpr Colour Colour_Navy(0x000F);
-	static constexpr Colour Colour_Olive(0x7BE0);
-	static constexpr Colour Colour_Orange(0xFDA0);
-	static constexpr Colour Colour_Pink(0xFC9F);
 	static constexpr Colour Colour_Purple(0x780F);
+	static constexpr Colour Colour_Olive(0x7BE0);
+	static constexpr Colour Colour_LightGrey(0xC618);
+	static constexpr Colour Colour_DarkGrey(0x7BEF);
+	static constexpr Colour Colour_Blue(0x001F);
+	static constexpr Colour Colour_Green(0x07E0);
+	static constexpr Colour Colour_Cyan(0x07FF);
 	static constexpr Colour Colour_Red(0xF800);
-	static constexpr Colour Colour_White(0xFFFF);
+	static constexpr Colour Colour_Magenta(0xF81F);
 	static constexpr Colour Colour_Yellow(0xFFE0);
+	static constexpr Colour Colour_White(0xFFFF);
+	static constexpr Colour Colour_Orange(0xFD20);
+	static constexpr Colour Colour_GreenYellow(0xAFE5);
+	static constexpr Colour Colour_Pink(0xFC18);
 	static constexpr Colour Colour_VeryDarkGrey(0x2945);
 }
