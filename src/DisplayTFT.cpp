@@ -5,6 +5,7 @@
 #include <crazygaze/micromuc/Profiler.h>
 #include "Icons.h"
 #include "DisplayCommon.h"
+#include "Timer.h"
 
 void doGroupShot(uint8_t index);
 
@@ -20,6 +21,7 @@ namespace cz
 
 extern MyDisplay1 gScreen;
 extern MyXPT2046 gTs;
+extern Timer gTimer;
 
 using namespace gfx;
 
@@ -237,7 +239,7 @@ constexpr Pos getMenuButtonPos(uint8_t col, uint8_t row)
 	return pos;
 }
 
-#define STATUS_BAR_DIVISIONS 10
+#define STATUS_BAR_DIVISIONS 20
 constexpr Rect getStatusBarPos()
 {
 	Rect rect { getMenuButtonPos(0,2), {SCREEN_WIDTH, SCREEN_HEIGHT} };
@@ -314,9 +316,21 @@ NumLabel<true> sensorLabels[NUM_PAIRS][3] =
 #endif
 };
 
+const LabelData humidityLabelData PROGMEM = \
+{ \
+	getStatusBarCells(STATUS_BAR_DIVISIONS-4, 4), \
+	HAlign::Center, VAlign::Center, \
+	SMALL_FONT, \
+	HUMIDITY_LABEL_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
+	WidgetFlag::EraseBkg | WidgetFlag::DrawBorder\
+};
+
+FixedLabel<> humidityLabel(&humidityLabelData, F("---.-%"));
+
+
 const LabelData temperatureLabelData PROGMEM = \
 { \
-	getStatusBarCells(STATUS_BAR_DIVISIONS-4, 2), \
+	getStatusBarCells(STATUS_BAR_DIVISIONS-8, 4), \
 	HAlign::Center, VAlign::Center, \
 	SMALL_FONT, \
 	TEMPERATURE_LABEL_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
@@ -325,16 +339,16 @@ const LabelData temperatureLabelData PROGMEM = \
 
 FixedLabel<> temperatureLabel(&temperatureLabelData, F("---.-C"));
 
-const LabelData humidityLabelData PROGMEM = \
+const LabelData runningTimeLabelData PROGMEM = \
 { \
-	getStatusBarCells(STATUS_BAR_DIVISIONS-2, 2), \
+	getStatusBarCells(STATUS_BAR_DIVISIONS-16, 8), \
 	HAlign::Center, VAlign::Center, \
 	SMALL_FONT, \
-	HUMIDITY_LABEL_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
+	RUNNINGTIME_LABEL_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
 	WidgetFlag::EraseBkg | WidgetFlag::DrawBorder\
 };
 
-FixedLabel<> humidityLabel(&humidityLabelData, F("---.-%"));
+FixedLabel<14> runningTimeLabel(&runningTimeLabelData, F("---d--h--m--s"));
 
 } } // namespace Overview
 
@@ -357,7 +371,6 @@ void DisplayTFT::OverviewState::init()
 
 void DisplayTFT::OverviewState::tick(float deltaSeconds)
 {
-
 	// process touch
 	if (m_outer.m_touch.pressed)
 	{
@@ -413,6 +426,19 @@ void DisplayTFT::OverviewState::tick(float deltaSeconds)
 		}
 
 		m_settingsMenu.tick(deltaSeconds);
+	}
+
+	{
+		Timer::RunningTime runningTime = gTimer.getRunningTime();
+		if (runningTime.seconds != m_previousRunningTimeSeconds)
+		{
+			m_previousRunningTimeSeconds = runningTime.seconds;
+			Overview::runningTimeLabel.setText(formatString(F("%dd%dh%dm%ds"), 
+				runningTime.days+222,
+				runningTime.hours+22,
+				runningTime.minutes+22,
+				runningTime.seconds+22));
+		}
 	}
 	
 	draw();
@@ -480,12 +506,10 @@ void DisplayTFT::OverviewState::onEvent(const Event& evt)
 		break;
 
 		case Event::TemperatureSensorReading:
-			//Overview::temperatureLabel.setText(formatString(F("%2.1fC"), -99.9f));
 			Overview::temperatureLabel.setText(formatString(F("%2.1fC"), gCtx.data.getTemperatureReading()));
 		break;
 
 		case Event::HumiditySensorReading:
-			//Overview::humidityLabel.setText(formatString(F("%3.1f%%"), 100.0f));
 			Overview::humidityLabel.setText(formatString(F("%3.1f%%"), gCtx.data.getHumidityReading()));
 		break;
 
@@ -497,7 +521,7 @@ void DisplayTFT::OverviewState::onEvent(const Event& evt)
 
 void DisplayTFT::OverviewState::draw()
 {
-	PROFILE_SCOPE(F("OverviewState::drawOverview"));
+	PROFILE_SCOPE(F("OverviewState::draw"));
 
 	for(int i=0; i<NUM_PAIRS; i++)
 	{
@@ -530,8 +554,12 @@ void DisplayTFT::OverviewState::draw()
 		}
 	}
 
-	Overview::temperatureLabel.draw(m_forceRedraw);
-	Overview::humidityLabel.draw(m_forceRedraw);
+	{
+		PROFILE_SCOPE(F("statusbar"));
+		Overview::temperatureLabel.draw(m_forceRedraw);
+		Overview::humidityLabel.draw(m_forceRedraw);
+		Overview::runningTimeLabel.draw(m_forceRedraw);
+	}
 
 	m_forceRedraw = false;
 }

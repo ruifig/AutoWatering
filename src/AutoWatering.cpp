@@ -81,6 +81,7 @@ namespace cz
 	MyDisplay1 gScreen(TFT_PIN_CS, TFT_PIN_DC, TFT_PIN_BACKLIGHT);
 	const TouchCalibrationData gTsCalibrationData = {211, 3412, 334, 3449, 4};
 	MyXPT2046 gTs(gScreen, TOUCH_PIN_CS, TOUCH_PIN_IRQ, &gTsCalibrationData);
+	Timer gTimer;
 }
 
 namespace
@@ -100,8 +101,6 @@ void doGroupShot(uint8_t index)
 {
 	gGroupMonitors[index].getObj().doShot();
 }
-
-Timer gTimer;
 
 void setup()
 {

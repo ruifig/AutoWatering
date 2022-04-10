@@ -230,6 +230,9 @@ class DisplayTFT : public Component
 		uint8_t m_sensorUpdates[NUM_PAIRS];
 		SensorMainMenu m_sensorMainMenu;
 		SettingsMenu m_settingsMenu;
+		// Instead of keepin track of time passed to update the running time label every second
+		// we just look for a change in the seconds part.
+		uint8_t m_previousRunningTimeSeconds=255;
 		bool m_forceRedraw : 1;
 		bool m_inSettingsMenu : 1;
 	};
