@@ -28,6 +28,8 @@ struct Profiler
 		unsigned long totalMicros;
 		float totalSeconds;
 		unsigned long count;
+		unsigned long longestDurationMicros;
+		unsigned long shortestDurationMicros;
 		Section* next;
 		Section(const __FlashStringHelper* name);
 	};

@@ -33,9 +33,7 @@ class TemperatureAndHumiditySensor : public Component
 		Reading
 	};
 
-#if CZ_LOG_ENABLED
 	static const char* const ms_stateNames[3];
-#endif
 
 	virtual void readSensor(float& temperature, float& humidity);
 

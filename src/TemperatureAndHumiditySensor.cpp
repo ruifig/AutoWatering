@@ -13,14 +13,12 @@ namespace cz
 
 #define DHT22_POWERUP_TIME 2.0f
 
-#if CZ_LOG_ENABLED
 const char* const TemperatureAndHumiditySensor::ms_stateNames[3] =
 {
 	"Initializing",
 	"PoweredDown",
 	"Reading"
 };
-#endif
 
 TemperatureAndHumiditySensor::TemperatureAndHumiditySensor(IOExpanderPin vinPin, MultiplexerPin dataPin)
 	: m_vinPin(vinPin)

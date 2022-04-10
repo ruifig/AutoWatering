@@ -45,9 +45,7 @@ class SoilMoistureSensor : public Component
 		Reading // Sensor is powering up to perform a read
 	};
 
-#if CZ_LOG_ENABLED
 	static const char* const ms_stateNames[3];
-#endif
 
 	// Seconds since last sensor read.
 	// Keeping this separate from m_timeInState, so pausing the group or entering a menu doesn't cause the sensor reading timer

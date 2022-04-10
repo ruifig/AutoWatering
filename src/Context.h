@@ -350,6 +350,7 @@ struct Context
 	ProgramData data;
 	AT24C256 eeprom;
 
+	// #TODO : Revise this
 	// Used as a temporary config data when configuring a group
 	GroupConfig settingsDummy;
 };

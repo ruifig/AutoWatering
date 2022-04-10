@@ -47,6 +47,16 @@ Profiler::Scope::~Scope()
 		point->duration = micros() - point->duration;
 		point->section->totalMicros += point->duration;
 		point->section->count++;
+		if (point->duration > point->section->longestDurationMicros)
+		{
+			point->section->longestDurationMicros = point->duration;
+		}
+
+		if (point->duration < point->section->shortestDurationMicros)
+		{
+			point->section->shortestDurationMicros = point->duration;
+		}
+
 		gProfiler.level--;
 	}
 }
@@ -76,11 +86,13 @@ void Profiler::log()
 			LogOutput::logToAllSimple(F("    "));
 			LogOutput::logToAllSimple(section->name);
 			LogOutput::logToAllSimple(
-				formatString(F(": calls=%lu, time %lu microseconds (%lu milliseconds, %lu seconds)\n"),
+				formatString(F(": calls=%lu, time %lu microseconds (%lu milliseconds, %lu seconds). Min=%lu micros. Max=%lu micros\n"),
 					section->count,
 					section->totalMicros,
 					section->totalMicros / 1000,
-					section->totalMicros / 1000000
+					section->totalMicros / 1000000,
+					section->shortestDurationMicros,
+					section->longestDurationMicros
 					));
 			
 			section = section->next;
@@ -119,6 +131,8 @@ void Profiler::reset()
 		section->totalMicros = 0;
 		section->totalSeconds = 0;
 		section->count = 0;
+		section->longestDurationMicros = 0;
+		section->shortestDurationMicros = 0xFFFFFFFF;
 		section = section->next;
 	}
 }

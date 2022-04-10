@@ -10,14 +10,12 @@
 namespace cz
 {
 
-#if CZ_LOG_ENABLED
 const char* const SoilMoistureSensor::ms_stateNames[3] =
 {
 	"Initializing",
 	"PoweredDown",
 	"Reading"
 };
-#endif
 
 SoilMoistureSensor::SoilMoistureSensor(uint8_t index, IOExpanderPin vinPin, MultiplexerPin dataPin)
 	: m_index(index)
