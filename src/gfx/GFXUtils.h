@@ -207,20 +207,8 @@ void drawRGBBitmapDisabled_P(const Rect& area, const uint16_t *bitmap_P, const u
 /**
  * Prints a string aligned in a box area
  */
-void printAligned(const Rect& area, HAlign halign, VAlign valign, const char* txt);
-void printAligned(const Rect& area, HAlign halign, VAlign valign, const __FlashStringHelper* txt);
-
-
-/**
- * 
- */
-class TextButton : public Adafruit_GFX_Button
-{
-public:
-
-	void drawButton(boolean inverted = false );
-};
-
+void printAligned(const Rect& area, HAlign halign, VAlign valign, const char* txt, bool eraseBackground = false);
+void printAligned(const Rect& area, HAlign halign, VAlign valign, const __FlashStringHelper* txt, bool eraseBackground = false);
 
 } // namespace cz
 

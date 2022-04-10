@@ -92,12 +92,26 @@ class MyDisplay1 : public GraphicsInterface
 
 	virtual void setTextColor(Colour c) override
 	{
+		m_textColour = c;
+		m_textBkgColour = c;
 		m_tft.setTextColor(c);
 	}
 
 	virtual void setTextColor(Colour c, Colour bg) override
 	{
+		m_textColour = c;
+		m_textBkgColour = bg;
 		m_tft.setTextColor(c, bg);
+	}
+
+	virtual Colour getTextColor() const override
+	{
+		return m_textColour;
+	}
+
+	virtual Colour getTextBkgColor() const
+	{
+		return m_textBkgColour;
 	}
 
 	virtual void setCursor(int16_t x, int16_t y) override
@@ -141,6 +155,9 @@ class MyDisplay1 : public GraphicsInterface
 
 	void logProperties();
 	MCUPin m_bkpin;
+
+	Colour m_textColour;
+	Colour m_textBkgColour;
 
 	// Wrapping, so I can access protected members
 	class MyAdafruit_ILI9341 : public Adafruit_ILI9341

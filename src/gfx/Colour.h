@@ -75,6 +75,7 @@ class Colour
 	static constexpr Colour Colour_Olive(0x7BE0);
 	static constexpr Colour Colour_LightGrey(0xC618);
 	static constexpr Colour Colour_DarkGrey(0x7BEF);
+	static constexpr Colour Colour_VeryDarkGrey(0x2945);
 	static constexpr Colour Colour_Blue(0x001F);
 	static constexpr Colour Colour_Green(0x07E0);
 	static constexpr Colour Colour_Cyan(0x07FF);
@@ -85,5 +86,4 @@ class Colour
 	static constexpr Colour Colour_Orange(0xFD20);
 	static constexpr Colour Colour_GreenYellow(0xAFE5);
 	static constexpr Colour Colour_Pink(0xFC18);
-	static constexpr Colour Colour_VeryDarkGrey(0x2945);
 }

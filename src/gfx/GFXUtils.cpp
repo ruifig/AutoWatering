@@ -88,12 +88,16 @@ void drawRGBBitmapDisabled_P(const Rect& area, const uint16_t *bitmap_P, const u
 }
 
 template<typename T>
-void printAlignedImpl(const Rect& area, HAlign halign, VAlign valign, const T* txt)
+void printAlignedImpl(const Rect& area, HAlign halign, VAlign valign, const T* txt, bool eraseBackground)
 {
 	gScreen.setTextSize(0,0);
 	Rect bounds;
 	gScreen.getTextBounds(txt, 0,0, &bounds.x, &bounds.y, &bounds.width, &bounds.height);
 
+	if (eraseBackground)
+	{
+		fillRect(area, gScreen.getTextBkgColor());
+	}
 
 	int x = area.x;
 	int y = area.y;
@@ -128,14 +132,14 @@ void printAlignedImpl(const Rect& area, HAlign halign, VAlign valign, const T* t
 	gScreen.print(txt);
 }
 
-void printAligned(const Rect& area, HAlign halign, VAlign valign, const char* txt)
+void printAligned(const Rect& area, HAlign halign, VAlign valign, const char* txt, bool eraseBackground)
 {
-	printAlignedImpl(area, halign, valign, txt);
+	printAlignedImpl(area, halign, valign, txt, eraseBackground);
 }
 
-void printAligned(const Rect& area, HAlign halign, VAlign valign, const __FlashStringHelper* txt)
+void printAligned(const Rect& area, HAlign halign, VAlign valign, const __FlashStringHelper* txt, bool eraseBackground)
 {
-	printAlignedImpl(area, halign, valign, txt);
+	printAlignedImpl(area, halign, valign, txt, eraseBackground);
 }
 
 } // namespace cz

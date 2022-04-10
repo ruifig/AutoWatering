@@ -96,7 +96,7 @@ void DisplayTFT::IntroState::tick(float deltaSeconds)
 {
 	if (m_outer.m_timeInState >= INTRO_DURATION)
 	{
-		m_outer.changeToState(m_outer.m_states.overview);
+		m_outer.changeToState(m_outer.m_states.bootMenu);
 	}
 }
 
@@ -108,6 +108,115 @@ void DisplayTFT::IntroState::onEnter()
 }
 
 void DisplayTFT::IntroState::onLeave()
+{
+}
+
+//////////////////////////////////////////////////////////////////////////
+// BootMenuState
+//////////////////////////////////////////////////////////////////////////
+
+namespace { namespace BootMenu {
+	constexpr Rect getResetButtonPos()
+	{
+		constexpr int width = 80;
+		constexpr int height = 60;
+		return { {(SCREEN_WIDTH-width)/2, (SCREEN_HEIGHT-height)/2}, width, height};
+	}
+	constexpr Rect getConfirmButtonPos()
+	{
+		constexpr int width = 200;
+		constexpr int height = 40;
+		return { {(SCREEN_WIDTH-width)/2, 10}, width, height};
+	}
+
+} }
+
+void DisplayTFT::BootMenuState::init()
+{
+}
+
+void DisplayTFT::BootMenuState::tick(float deltaSeconds)
+{
+	m_defaultConfigCountdown -= deltaSeconds;
+
+	if (m_waitingResetConfirmation == false)
+	{
+		gScreen.setTextColor(Colour_Yellow, Colour_Black);
+		printAligned(
+			{{0, BootMenu::getResetButtonPos().bottom() + 10}, SCREEN_WIDTH, 40},
+			HAlign::Center, VAlign::Center,
+			F(" Loading saved config in... ")
+		);
+		printAligned(
+			{{0, BootMenu::getResetButtonPos().bottom() + 40}, SCREEN_WIDTH, 40},
+			HAlign::Center, VAlign::Center,
+			formatString(F("%d"), static_cast<int>(m_defaultConfigCountdown)),
+			true
+		);
+
+		if (m_defaultConfigCountdown<=0)
+		{
+			gCtx.data.load();
+			m_outer.changeToState(m_outer.m_states.overview);
+		}
+		else if (m_outer.m_touch.pressed && BootMenu::getResetButtonPos().contains(m_outer.m_touch.pos))
+		{
+			m_waitingResetConfirmation = true;
+			gScreen.fillScreen(Colour_Black);
+
+			// We don't need anything fancy for the BootMenu, so we can draw the button once and be done with it.
+			// NOTE: We are intentionally drawing the confirm button in a different position to avoid clicking confirm by accident.
+			// As-in, the user really needs to be sure.
+			TextButton btn;
+			btn.init(
+				0, MEDIUM_FONT, BootMenu::getConfirmButtonPos(),
+				Colour_Red, Colour_LightGrey, Colour_Black,
+				"Confirm Reset");
+			btn.draw();
+
+			gScreen.setTextColor(Colour_Yellow, Colour_Black);
+			printAligned(
+				{{0, BootMenu::getConfirmButtonPos().bottom() + 5}, SCREEN_WIDTH, 40},
+				HAlign::Center, VAlign::Center,
+				F("Click confirm if you are really sure.")
+			);
+			printAligned(
+				{{0, BootMenu::getConfirmButtonPos().bottom() + 25}, SCREEN_WIDTH, 40},
+				HAlign::Center, VAlign::Center,
+				F("Reboot the board to go back.")
+			);
+		}
+	}
+	else // We are 
+	{
+		if (m_outer.m_touch.pressed && BootMenu::getConfirmButtonPos().contains(m_outer.m_touch.pos))
+		{
+			m_outer.changeToState(m_outer.m_states.overview);
+		}
+	}
+
+}
+
+void DisplayTFT::BootMenuState::onEnter()
+{
+	gScreen.setTextColor(Colour_Yellow, Colour_Black);
+	printAligned(
+		{{0, BootMenu::getResetButtonPos().top() - 40}, SCREEN_WIDTH, 40},
+		HAlign::Center, VAlign::Center,
+		F("Click to reset config")
+		);
+
+	// We don't need anything fancy for the BootMenu, so we can draw the button once and be done with it.
+	TextButton btn;
+	btn.init(
+		0, MEDIUM_FONT, BootMenu::getResetButtonPos(),
+		Colour_White, Colour_LightGrey, Colour_Black,
+		"Reset");
+	btn.draw();
+
+}
+
+void DisplayTFT::BootMenuState::onLeave()
 {
 }
 
@@ -779,6 +888,7 @@ void DisplayTFT::begin()
 {
 	m_states.initialize.init();
 	m_states.intro.init();
+	m_states.bootMenu.init();
 	m_states.overview.init();
 	changeToState(m_states.initialize);
 }

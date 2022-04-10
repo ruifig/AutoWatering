@@ -99,7 +99,7 @@ void GroupData::begin(uint8_t index)
 	m_index = index;
 
 // Fill the history with some values, for testing purposes
-#if FASTER_ITERATION
+#if FASTER_ITERATION && 0
 	for(int i=0; i<20; i++)
 	{
 		m_history.push({GRAPH_POINT_MAXVAL, false});
@@ -141,13 +141,18 @@ void GroupData::begin(uint8_t index)
 	}
 
 	m_cfg.running = index==2;
-
+#else
+	while(!m_history.isFull())
+	{
+		m_history.push({0, false});
+	}
 #endif
+
 }
 
 void GroupData::setMoistureSensorValues(const SensorReading& sample, bool isCalibrating)
 {
-	m_cfg.setSensorValue(sample.meanValue, isCalibrating);
+	bool raiseThresholdChangeEvent = m_cfg.setSensorValue(sample.meanValue, isCalibrating);
 
 	// Add to history if this his a real value (as in, we are not calibrating this sensor)
 	if (!isCalibrating)
@@ -173,6 +178,10 @@ void GroupData::setMoistureSensorValues(const SensorReading& sample, bool isCali
 	}
 
 	Component::raiseEvent(SoilMoistureSensorReadingEvent(m_index, isCalibrating, sample));
+	if (raiseThresholdChangeEvent)
+	{
+		setThresholdValueImpl(m_cfg.thresholdValue);
+	}
 }
 
 void GroupData::setMotorState(bool state)
@@ -257,6 +266,52 @@ void GroupData::load(AT24C::Ptr& src, bool loadConfig, bool loadHistory)
 	}
 
 	m_sensorErrors = 0;
+}
+
+void GroupData::setThresholdValueImpl(unsigned int value)
+{
+	m_cfg.thresholdValue = value;
+
+	// Always raising the event even if if the value didn't change, so this can be used
+	// for the case where the sensor's air/water value changed and thus the threshold as percentage changes without the actual
+	// threshold raw value changing. 
+	// This is needed because the UI deals with the threshold as percentage instead of the real sensor value
+	Component::raiseEvent(SoilMoistureSensorThresholdUpdateEvent(m_index));
+}	
+
+
+
+///////////////////////////////////////////////////////////////////////
+// GroupConfig
+///////////////////////////////////////////////////////////////////////
+
+bool GroupConfig::setSensorValue(unsigned int currentValue_, bool isCalibrating)
+{
+	numReadings++;
+	bool potentialThresholdChange = false;
+
+	// If we are calibrating, we accept any value, and then adjust the air/water values accordingly
+	// #TODO : Revise this
+	if (isCalibrating)
+	{
+		currentValue = currentValue_;
+		if (currentValue > airValue)
+		{
+			airValue = currentValue;
+			potentialThresholdChange = true;
+		}
+		else if (currentValue < waterValue)
+		{
+			waterValue = currentValue;
+			potentialThresholdChange = true;
+		}
+	}
+	else
+	{
+		currentValue = cz::clamp(currentValue_, waterValue, airValue);
+	}
+
+	return potentialThresholdChange;
 }
 
 ///////////////////////////////////////////////////////////////////////

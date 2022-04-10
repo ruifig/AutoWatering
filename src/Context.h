@@ -119,30 +119,11 @@ namespace cz
 		// Using a big value as initial value, which means it will not turn on the motor until things are setup properly
 		unsigned int thresholdValue = 65535;
 
-		void setSensorValue(unsigned int currentValue_, bool isCalibrating)
-		{
-			numReadings++;
-
-			// If we are calibrating, we accept any value, and then adjust the air/water values accordingly
-			// #TODO : Revise this
-			if (true || isCalibrating)
-			{
-				currentValue = currentValue_;
-				if (currentValue > airValue)
-				{
-					airValue = currentValue;
-				}
-				else if (currentValue < waterValue)
-				{
-					waterValue = currentValue;
-				}
-			}
-			else
-			{
-				currentValue = cz::clamp(currentValue_, waterValue, airValue);
-			}
-		}
-
+		/**
+		 * Changes the sensor value.
+		 * Returns true if the sensor threshold potentially changed, either as raw value or percentage
+		 */
+		bool setSensorValue(unsigned int currentValue_, bool isCalibrating);
 	};
 
 	class GroupData
@@ -191,12 +172,13 @@ namespace cz
 
 		void setThresholdValue(unsigned int value)
 		{
-			m_cfg.thresholdValue = value;
+			setThresholdValueImpl(value);
 		}
 
-		void setThresholdValueAsPercentage(unsigned int value)
+		void setThresholdValueAsPercentage(unsigned int percentageValue)
 		{
-			m_cfg.thresholdValue = map(cz::clamp<unsigned int>(value, 0, 100), 0, 100, m_cfg.airValue, m_cfg.waterValue);
+			unsigned int value = map(cz::clamp<unsigned int>(percentageValue, 0, 100), 0, 100, m_cfg.airValue, m_cfg.waterValue);
+			setThresholdValueImpl(value);
 		}
 
 		unsigned int getThresholdValue() const
@@ -204,7 +186,7 @@ namespace cz
 			return m_cfg.thresholdValue;
 		}
 
-		unsigned int getPercentageThreshold() const
+		unsigned int getThresholdAsPercentage() const
 		{
 			unsigned int tmp = cz::clamp(m_cfg.thresholdValue, m_cfg.waterValue, m_cfg.airValue);
 			return map(tmp, m_cfg.airValue, m_cfg.waterValue, 0, 100);
@@ -253,6 +235,8 @@ namespace cz
 		{
 			return sizeof(m_cfg);
 		}
+
+		void setThresholdValueImpl(unsigned int value);
 
 	  private:
 

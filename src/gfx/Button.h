@@ -90,7 +90,7 @@ class TextButton : public BaseButton
 	uint8_t m_textMagY;
 
 	const GFXfont* m_font = nullptr;
-	char m_text[10];
+	char m_text[20];
 };
 
 } // namespace cz::gfx

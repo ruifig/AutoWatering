@@ -103,6 +103,10 @@ class GraphicsInterface
 	 * Set text colour with custom background colour
 	 */
 	virtual void setTextColor(Colour c, Colour bg) = 0;
+
+	virtual Colour getTextColor() const = 0;
+	virtual Colour getTextBkgColor() const = 0;
+
 	virtual void setCursor(int16_t x, int16_t y) = 0;
 	virtual void print(const char* str) = 0;
 	virtual void print(const __FlashStringHelper* str) = 0;

@@ -186,6 +186,27 @@ class DisplayTFT : public Component
 	};
 
 	//
+	// BootMenu
+	//
+	class BootMenuState : public DisplayState
+	{
+	  public:
+		using DisplayState::DisplayState;
+	#if CZ_LOG_ENABLED
+		virtual const char* getName() const { return "BootMenu"; }
+	#endif
+		virtual void init() override;
+		virtual void tick(float deltaSeconds) override;
+		virtual void onEnter() override;
+		virtual void onLeave() override;
+	  protected:
+
+		float m_defaultConfigCountdown = BOOTMENU_COUNTDOWN;
+		bool m_waitingResetConfirmation = false;
+	};
+
+
+	//
 	// OverviewState
 	//
 	class OverviewState : public DisplayState
@@ -218,16 +239,19 @@ class DisplayTFT : public Component
 		States(DisplayTFT& outer)
 			: initialize(outer)
 			, intro(outer)
+			, bootMenu(outer)
 			, overview(outer)
 		{
 		}
 		InitializeState initialize;
 		IntroState intro;
+		BootMenuState bootMenu;
 		OverviewState overview;
 	} m_states;
 
 	DisplayState* m_state = nullptr;
 	float m_timeInState = 0;
+
 	void changeToState(DisplayState& newState);
 
 	struct

@@ -162,11 +162,18 @@
 /**
  * How long to show the intro for when powering up
  */
- #if FASTER_ITERATION
+#if FASTER_ITERATION
 	#define INTRO_DURATION 0.1f
 #else
 	#define INTRO_DURATION 1.0f
 #endif
+
+
+/**
+ * How long the boot menu should stay up before defaulting to "Load"
+ */
+#define BOOTMENU_COUNTDOWN 3.0f
+
 
 /**
  * Default screen: 0..100.
@@ -184,7 +191,7 @@
 #define GRAPH_NUMPOINTS (SCREEN_WIDTH-32-2)
 #define GRAPH_VALUES_TEXT_COLOUR Colour_LightGrey
 #define GRAPH_VALUES_BKG_COLOUR Colour_Black
-#define GRAPH_BORDER_COLOUR Colour_DarkGrey
+#define GRAPH_BORDER_COLOUR Colour_LightGrey
 #define GRAPH_SELECTED_BORDER_COLOUR Colour_Green
 #define GRAPH_NOTSELECTED_BORDER_COLOUR Colour_Black
 #define GRAPH_BKG_COLOUR Colour_Black
@@ -193,6 +200,7 @@
 #define GRAPH_MOTOR_OFF_COLOUR Colour_Black
 #define GRAPH_MOISTURELEVEL_COLOUR Colour_Cyan
 #define GRAPH_MOISTURELEVEL_ERROR_COLOUR Colour_Red
+#define GRAPH_THRESHOLDMARKER_COLOUR Colour(0x52ab)
 #define TEMPERATURE_LABEL_TEXT_COLOUR Colour_Yellow
 #define HUMIDITY_LABEL_TEXT_COLOUR Colour_Cyan
 

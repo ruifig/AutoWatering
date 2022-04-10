@@ -87,6 +87,16 @@ void GroupGraph::onEvent(const Event& evt)
 		}
 		break;
 
+		case Event::SoilMoistureSensorThresholdUpdate:
+		{
+			auto idx = static_cast<const SoilMoistureSensorThresholdUpdateEvent&>(evt).index;
+			if (idx == m_index)
+			{
+				m_thresholdUpdates++;
+			}
+		}
+		break;
+
 		default:
 		break;
 	}
@@ -101,13 +111,9 @@ void GroupGraph::draw(bool forceDraw)
 	if (m_forceRedraw)
 	{
 		drawOuterBox();
-		//drawThresholdMarker();
 	}
 
-	// #TODO Remove this and draw only when necessary
-	drawThresholdMarker();
-
-	if (m_forceRedraw || m_sensorUpdates)
+	if (m_forceRedraw || m_sensorUpdates || m_thresholdUpdates)
 	{
 		plotHistory();
 	}
@@ -130,8 +136,10 @@ void GroupGraph::draw(bool forceDraw)
 
 	if (m_redrawSelectedBox)
 	{
-		Rect rect = getHistoryPlotRect(m_index);
-		drawRect(rect.expand(2), m_selected ? GRAPH_SELECTED_BORDER_COLOUR : GRAPH_NOTSELECTED_BORDER_COLOUR);
+		Rect rect = getHistoryPlotRect(m_index).expand(2);
+		// Expand width to cover entire screen width
+		rect.width = SCREEN_WIDTH - rect.left();
+		drawRect(rect, m_selected ? GRAPH_SELECTED_BORDER_COLOUR : GRAPH_NOTSELECTED_BORDER_COLOUR);
 		m_redrawSelectedBox = false;
 	}
 
@@ -145,10 +153,12 @@ void GroupGraph::plotHistory()
 
 	constexpr int h = GRAPH_HEIGHT;
 	Rect rect = getHistoryPlotRect(m_index);
+	int bottomY = rect.bottom();
 	GroupData& data = gCtx.data.getGroupData(m_index);
 	const HistoryQueue& history = data.getHistory();
 
-	int bottomY = rect.y + h - 1;
+	unsigned int thresholdPercentage = data.getThresholdAsPercentage();
+	int16_t thresholdMarkerY = bottomY - map(thresholdPercentage, 0, 100, 0, GRAPH_POINT_MAXVAL);
 
 	const int count = history.size();
 	
@@ -159,7 +169,7 @@ void GroupGraph::plotHistory()
 		CZ_LOG(logDefault, Warning, F("Too many sensor udpates (%u)"), (unsigned int)m_sensorUpdates);
 	}
 	
-	redraw |= m_forceRedraw;
+	redraw |= m_forceRedraw | (m_thresholdUpdates>0);
 
 	for(int i=1; i<count; i++)
 	{
@@ -169,6 +179,7 @@ void GroupGraph::plotHistory()
 
 		bool drawMotor = false;
 		bool drawLevel = false;
+		bool drawThresholdMarker = true;
 
 		if (redraw)
 		{
@@ -202,6 +213,14 @@ void GroupGraph::plotHistory()
 
 		if (drawLevel)
 		{
+			// 0 means it's not set yet
+			if (m_previousThresholdMarkerY!=0)
+			{
+				gScreen.drawPixel(xx, m_previousThresholdMarkerY, GRAPH_BKG_COLOUR);
+			}
+
+			gScreen.drawPixel(xx, thresholdMarkerY, GRAPH_THRESHOLDMARKER_COLOUR);
+
 			// Draw new moisture level
 			gScreen.drawPixel(xx, bottomY - p.val, p.status==SensorReading::Status::Valid ? GRAPH_MOISTURELEVEL_COLOUR : GRAPH_MOISTURELEVEL_ERROR_COLOUR);
 		}
@@ -213,7 +232,9 @@ void GroupGraph::plotHistory()
 		gScreen.fillRoundRect(rect.left(), rect.bottom() - size, size, size, 3, Colour_Red);
 	}
 
+	m_previousThresholdMarkerY = thresholdMarkerY;
 	m_sensorUpdates = 0;
+	m_thresholdUpdates = 0;
 }
 
 
@@ -232,40 +253,6 @@ void GroupGraph::drawOuterBox()
 	gScreen.drawFastHLine(0, bottomY - map(60, 0, 100, 0, h - 1),  2, GRAPH_BORDER_COLOUR);
 	gScreen.drawFastHLine(0, bottomY - map(80, 0, 100, 0, h - 1),  2, GRAPH_BORDER_COLOUR);
 	gScreen.drawFastHLine(0, bottomY - map(100, 0, 100, 0, h - 1), 2, GRAPH_BORDER_COLOUR);
-
-}
-
-void GroupGraph::drawThresholdMarker()
-{
-	PROFILE_SCOPE(F("GroupGraph::drawThresholdMarker"));
-	
-	VLine line = getHistoryPlotRect(m_index).rightLine();
-	// getHistoryPlotRect gives us the inner area, where we draw the history, but we want to draw the marker
-	// on the border line
-	line.p.x++;
-	gScreen.drawVLine(line, Colour_VeryDarkGrey);
-
-	// Draw a pixel for the threshold level on the right side of the graph box
-	// This allows the user to have an idea of the threshold value without having to go to the group settings
-	GroupData& data = gCtx.data.getGroupData(m_index);
-	unsigned int percentageThreshold = data.getPercentageThreshold();
-	//CZ_LOG(logDefault, Log, F("Val=%u"), percentageThreshold);
-#if 0
-	gScreen.drawPixel(rect.x + rect.width -1, bottomY - map(percentageThreshold, 0, 100, 0, rect.height), GRAPH_MOTOR_ON_COLOUR);
-#endif
-	gScreen.drawPixel(line.p.x, line.bottom() - map(percentageThreshold, 0, 100, 0, GRAPH_POINT_MAXVAL), GRAPH_MOTOR_ON_COLOUR);
-
-#if 0
-	CZ_LOG(logDefault, Log, F("Markers=%d, %d, %d"),
-		map(percentageThreshold, 0, 100, 0, line.height),
-		map(0, 0, 100, 0, line.height),
-		map(100, 0, 100, 0, line.height)
-		);
-
-	gScreen.drawPixel(line.p.x, line.bottom() - map(0, 0, 100, 0, GRAPH_POINT_MAXVAL) -1, Colour_Pink);
-	gScreen.drawPixel(line.p.x, line.bottom() - map(100, 0, 100, 0, GRAPH_POINT_MAXVAL), Colour_Yellow);
-	gScreen.drawPixel(line.p.x, line.bottom() - map(50, 0, 100, 0, GRAPH_POINT_MAXVAL), Colour_Green);
-#endif
 }
 
 }

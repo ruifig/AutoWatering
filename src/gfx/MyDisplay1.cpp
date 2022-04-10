@@ -24,6 +24,8 @@ void MyDisplay1::begin()
 	fillScreen(Colour_Green);
 	m_tft.setRotation(1);
 
+	setTextColor(Colour_White);
+
 	logProperties();
 }
 

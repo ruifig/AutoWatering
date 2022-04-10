@@ -17,6 +17,7 @@ struct Event
 		ConfigSave,
 		SensorCalibration,
 		SoilMoistureSensorReading,
+		SoilMoistureSensorThresholdUpdate,
 		TemperatureSensorReading,
 		HumiditySensorReading,
 		GroupOnOff,
@@ -110,6 +111,22 @@ struct SoilMoistureSensorReadingEvent : public Event
 	SensorReading reading;
 };
 
+struct SoilMoistureSensorThresholdUpdateEvent : public Event
+{
+	SoilMoistureSensorThresholdUpdateEvent(uint8_t index)
+		: Event(Event::SoilMoistureSensorThresholdUpdate)
+		, index(index)
+	{
+	}
+
+	virtual void log() const override
+	{
+		CZ_LOG(logEvents, Verbose, F("SoilMoistureSensorThresholdUpdateEvent(%d)"), (int)index);
+	}
+
+	uint8_t index;
+};
+
 struct TemperatureSensorReadingEvent : public Event
 {
 	TemperatureSensorReadingEvent(float temperatureC)
@@ -143,6 +160,8 @@ struct HumiditySensorReadingEvent : public Event
 	// Humidity - 0..100%
 	float humidity;
 };
+
+
 
 struct GroupOnOffEvent : public Event
 {

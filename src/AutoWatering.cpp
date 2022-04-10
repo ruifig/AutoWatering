@@ -4,25 +4,13 @@
 	#include "utility/PluggableUSBDevice_fix.h"
 #endif
 
-#if 0
-#include "Adafruit_MCP23017.h"
-#include "utility/MCP23017Wrapper.h"
-#include "crazygaze/micromuc/SerialStringReader.h"
-#include "crazygaze/micromuc/Logging.h"
-#include "crazygaze/micromuc/StringUtils.h"
-#include "utility/MuxNChannels.h"
-#include "gfx/MyDisplay1.h"
-#include "gfx/MyXPT2046.h"
-#endif
-
-#if 1 || PORTING_TO_RP2040
-
 #include "Config.h"
 #include "Context.h"
 #include "TemperatureAndHumiditySensor.h"
 #include "SoilMoistureSensor.h"
 #include "GroupMonitor.h"
 #include "DisplayTFT.h"
+#include "Timer.h"
 #include "crazygaze/micromuc/Ticker.h"
 #include "crazygaze/micromuc/Logging.h"
 #include <algorithm>
@@ -108,7 +96,7 @@ void doGroupShot(uint8_t index)
 	gGroupMonitors[index].getObj().doShot();
 }
 
-unsigned long gPreviousMicros = 0;
+Timer gTimer;
 
 void setup()
 {
@@ -157,7 +145,7 @@ void setup()
 		ticker.getObj().begin();
 	}
 
-	gPreviousMicros = micros();
+	gTimer.begin();
 }
 
 PROFILER_CREATE(30);
@@ -166,12 +154,10 @@ void loop()
 {
 	PROFILER_STARTRUN();
 
-	unsigned long nowMicros = micros();
-	// NOTE: If using subtraction, there is no need to handle wrap around
-	// See: https://arduino.stackexchange.com/questions/33572/arduino-countdown-without-using-delay/33577#33577
-	float deltaSeconds = (nowMicros - gPreviousMicros) / 1000000.0f;
+	gTimer.update();
+	const float deltaSeconds = gTimer.getDeltaSeconds();
+
 	float countdown = 60*60;
-	
 	{
 		PROFILE_SCOPE(F("TickAll"));
 		countdown = std::min(gDisplay.tick(deltaSeconds), countdown);
@@ -360,76 +346,4 @@ void loop()
 	}
 	#endif // CONSOLE_COMMANDS
 
-	gPreviousMicros = nowMicros;
 }
-
-#endif
-
-#if 0
-
-namespace
-{
-	cz::SerialLogOutput gSerialLogOutput;
-	cz::SerialStringReader<> gSerialStringReader;
-}
-
-namespace cz
-{
-	MyDisplay1 gScreen(TFT_PIN_CS, TFT_PIN_DC, TFT_PIN_BACKLIGHT);
-	const TouchCalibrationData gTsCalibrationData = {211, 3412, 334, 3449, 4};
-	MyXPT2046 gTs(gScreen, TOUCH_PIN_CS, TOUCH_PIN_IRQ, &gTsCalibrationData);
-}
-
-using namespace cz;
-
-void setup()
-{
-	gSerialLogOutput.begin(Serial1, 115200);
-	gSerialStringReader.begin(Serial1);
-
-	Serial.print("Hello World-1!");
-	Serial1.print("Hello World-2!");
-	CZ_LOG(logDefault, Log, "Hello World-3!");
-	CZ_LOG(logDefault, Log, F("Hello World-4!"));
-
-	gScreen.begin();
-	gTs.begin();
-	//gTs.calibrate();
-}
-
-void tryReadString()
-{
-	if (!gSerialStringReader.tryRead())
-	{
-		return;
-	}
-
-	const char* src = gSerialStringReader.retrieve(); 
-	CZ_LOG(logDefault, Log, "INPUT: %s", src);
-}
-
-void loop()
-{
-	CZ_LOG(logDefault, Log, F("millis=%u"), millis());
-	tryReadString();
-	delay(500);
-
-	gScreen.setFont(NULL);
-	gScreen.setCursor(0,0);
-	gScreen.setTextColor(Colour_White, Colour_Black);
-	gScreen.print(cz::formatString("Millis: %u", millis()));
-
-	if (gTs.isTouched())
-	{
-		RawTouchPoint raw = gTs.getRawPoint();
-		CZ_LOG(logDefault, Log, "Raw Data = (%u, %u, %u)", raw.x, raw.y, raw.z);
-
-		TouchPoint p = gTs.getPoint();
-		gScreen.setCursor(150, 150);
-		gScreen.print(cz::formatString(" P=(%d, %d, %d) ", p.x, p.y, p.z));
-		CZ_LOG(logDefault, Log, " P=(%d, %d, %d) ", p.x, p.y, p.z);
-		gScreen.setBacklightBrightness(map(p.x, 0, 319, 0, 255));
-	}
-}
-#endif
-
