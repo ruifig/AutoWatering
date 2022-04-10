@@ -85,8 +85,13 @@ namespace cz
 
 namespace
 {
+#if CZ_SERIAL_LOG_ENABLED
 	cz::SerialLogOutput gSerialLogOutput;
+#endif
+
+#if CONSOLE_COMMANDS
 	cz::SerialStringReader<> gSerialStringReader;
+#endif
 }
 
 TTicker<DisplayTFT, float, TickingMethod> gDisplay(true);
@@ -104,8 +109,13 @@ void setup()
 		randomSeed(micros());
 	#endif
 
+#if CZ_SERIAL_LOG_ENABLED
 	gSerialLogOutput.begin(Serial1, 115200);
+#endif
+
+#if CONSOLE_COMMANDS
 	gSerialStringReader.begin(Serial1);
+#endif
 
 	//
 	// Initialize I2C
