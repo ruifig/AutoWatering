@@ -10,7 +10,7 @@
 #endif
 
 #ifndef MOCK_COMPONENTS
-	#define MOCK_COMPONENTS 1
+	#define MOCK_COMPONENTS 0
 #endif
 
 /**
@@ -188,7 +188,8 @@
 #define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 240
 
-#define GRAPH_NUMPOINTS (SCREEN_WIDTH-32-2)
+#define GROUP_NUM_WIDTH 16
+#define GRAPH_NUMPOINTS (SCREEN_WIDTH-GROUP_NUM_WIDTH-32-2)
 #define GRAPH_VALUES_TEXT_COLOUR Colour_LightGrey
 #define GRAPH_VALUES_BKG_COLOUR Colour_Black
 #define GRAPH_BORDER_COLOUR Colour_LightGrey

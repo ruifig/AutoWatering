@@ -51,6 +51,8 @@ class Timer
 	float m_deltaSeconds = 0.0f;
 	float m_totalSeconds = 0.0f;
 
+	uint64_t m_totalMicros = 0;
+
 	RunningTime m_runningTime;
 };
 

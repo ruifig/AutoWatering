@@ -193,6 +193,7 @@ void DisplayTFT::BootMenuState::tick(float deltaSeconds)
 	{
 		if (m_outer.m_touch.pressed && BootMenu::getConfirmButtonPos().contains(m_outer.m_touch.pos))
 		{
+			gCtx.data.save();
 			m_outer.changeToState(m_outer.m_states.overview);
 		}
 	}
@@ -434,10 +435,10 @@ void DisplayTFT::OverviewState::tick(float deltaSeconds)
 		{
 			m_previousRunningTimeSeconds = runningTime.seconds;
 			Overview::runningTimeLabel.setText(formatString(F("%dd%dh%dm%ds"), 
-				runningTime.days+222,
-				runningTime.hours+22,
-				runningTime.minutes+22,
-				runningTime.seconds+22));
+				runningTime.days,
+				runningTime.hours,
+				runningTime.minutes,
+				runningTime.seconds));
 		}
 	}
 	
@@ -451,6 +452,18 @@ void DisplayTFT::OverviewState::onEnter()
 	memset(m_sensorUpdates, 0, sizeof(m_sensorUpdates));
 	m_sensorMainMenu.setForceDraw();
 	m_settingsMenu.setForceDraw();
+
+	gScreen.setTextColor(GRAPH_VALUES_TEXT_COLOUR, Colour_VeryDarkGrey);
+	gScreen.setFont(TINY_FONT);
+	for(int i=0; i<NUM_PAIRS; i++)
+	{
+		printAligned(
+			{{0, getHistoryPlotRect(i).top()}, GROUP_NUM_WIDTH, getHistoryPlotRect(i).height},
+			HAlign::Center, VAlign::Center,
+			formatString(F("%d"), i+1),
+			true
+		);
+	}
 }
 
 void DisplayTFT::OverviewState::onLeave()

@@ -27,7 +27,7 @@ private:
 
 	bool m_forceRedraw : 1;
 	bool m_selected : 1;
-	bool m_redrawSelectedBox : 1;
+	bool m_redrawOuterBox : 1;
 	int16_t m_previousThresholdMarkerY = 0;
 };
 	

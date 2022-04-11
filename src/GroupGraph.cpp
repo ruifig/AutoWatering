@@ -23,7 +23,7 @@ void GroupGraph::init(int8_t index)
 	m_index = index;
 	m_forceRedraw = true;
 	m_selected = false;
-	m_redrawSelectedBox = false; 
+	m_redrawOuterBox = true; 
 }
 
 bool GroupGraph::contains(const Pos& pos) const
@@ -63,7 +63,7 @@ void GroupGraph::onEvent(const Event& evt)
 				if (!m_selected)
 				{
 					m_selected = true;
-					m_redrawSelectedBox = true;
+					m_redrawOuterBox = true;
 				}
 			}
 			else
@@ -71,7 +71,7 @@ void GroupGraph::onEvent(const Event& evt)
 				if (m_selected)
 				{
 					m_selected = false;
-					m_redrawSelectedBox = true;
+					m_redrawOuterBox = true;
 				}
 			}
 		}
@@ -108,7 +108,7 @@ void GroupGraph::draw(bool forceDraw)
 
 	 m_forceRedraw |= forceDraw;
 
-	if (m_forceRedraw)
+	if (m_forceRedraw || m_redrawOuterBox)
 	{
 		drawOuterBox();
 	}
@@ -134,16 +134,6 @@ void GroupGraph::draw(bool forceDraw)
 		}
 	}
 
-	if (m_redrawSelectedBox)
-	{
-		Rect rect = getHistoryPlotRect(m_index).expand(2);
-		// Expand width to cover entire screen width
-		rect.width = SCREEN_WIDTH - rect.left();
-		drawRect(rect, m_selected ? GRAPH_SELECTED_BORDER_COLOUR : GRAPH_NOTSELECTED_BORDER_COLOUR);
-		m_redrawSelectedBox = false;
-	}
-
-	
 	m_forceRedraw = false;	
 }
 
@@ -179,7 +169,6 @@ void GroupGraph::plotHistory()
 
 		bool drawMotor = false;
 		bool drawLevel = false;
-		bool drawThresholdMarker = true;
 
 		if (redraw)
 		{
@@ -242,17 +231,32 @@ void GroupGraph::drawOuterBox()
 {
 	PROFILE_SCOPE(F("GroupGraph::drawOuterBox"));
 	
-	Rect rect = getHistoryPlotRect(m_index);
-	drawRect(rect.expand(1), GRAPH_BORDER_COLOUR);
+	Rect historyRect = getHistoryPlotRect(m_index);
+	Rect historyOuterBox = historyRect.expand(1);
+	Rect groupOuterBox = {0, historyOuterBox.top(), SCREEN_WIDTH, historyOuterBox.height};
+
+	if (m_selected)
+	{
+		drawRect(groupOuterBox, GRAPH_SELECTED_BORDER_COLOUR);
+	}
+	else
+	{
+		// If the group is not selected, we need to erase the selection box
+		drawRect(groupOuterBox, GRAPH_BKG_COLOUR);
+		// Draw the outer box around the history plot
+		drawRect(historyOuterBox, GRAPH_BORDER_COLOUR);
+	}
 
 	constexpr int16_t h = GRAPH_HEIGHT;
-	int bottomY = rect.bottom();
-	gScreen.drawFastHLine(0, bottomY - map(0, 0, 100, 0, h - 1),   2, GRAPH_BORDER_COLOUR);
-	gScreen.drawFastHLine(0, bottomY - map(20, 0, 100, 0, h - 1),  2, GRAPH_BORDER_COLOUR);
-	gScreen.drawFastHLine(0, bottomY - map(40, 0, 100, 0, h - 1),  2, GRAPH_BORDER_COLOUR);
-	gScreen.drawFastHLine(0, bottomY - map(60, 0, 100, 0, h - 1),  2, GRAPH_BORDER_COLOUR);
-	gScreen.drawFastHLine(0, bottomY - map(80, 0, 100, 0, h - 1),  2, GRAPH_BORDER_COLOUR);
-	gScreen.drawFastHLine(0, bottomY - map(100, 0, 100, 0, h - 1), 2, GRAPH_BORDER_COLOUR);
+	int bottomY = historyRect.bottom();
+	gScreen.drawFastHLine(GROUP_NUM_WIDTH+0, bottomY - map(0, 0, 100, 0, h - 1),   2, GRAPH_BORDER_COLOUR);
+	gScreen.drawFastHLine(GROUP_NUM_WIDTH+0, bottomY - map(20, 0, 100, 0, h - 1),  2, GRAPH_BORDER_COLOUR);
+	gScreen.drawFastHLine(GROUP_NUM_WIDTH+0, bottomY - map(40, 0, 100, 0, h - 1),  2, GRAPH_BORDER_COLOUR);
+	gScreen.drawFastHLine(GROUP_NUM_WIDTH+0, bottomY - map(60, 0, 100, 0, h - 1),  2, GRAPH_BORDER_COLOUR);
+	gScreen.drawFastHLine(GROUP_NUM_WIDTH+0, bottomY - map(80, 0, 100, 0, h - 1),  2, GRAPH_BORDER_COLOUR);
+	gScreen.drawFastHLine(GROUP_NUM_WIDTH+0, bottomY - map(100, 0, 100, 0, h - 1), 2, GRAPH_BORDER_COLOUR);
+
+	m_redrawOuterBox = false;
 }
 
 }
