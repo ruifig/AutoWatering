@@ -125,19 +125,40 @@
 #endif
 
 /**
- * Default sensor sampling interval in seconds
+ * Default sensor sampling interval in seconds. Needs to be integer number.
+ * Note that internally the sampling interval is tracked in seconds, but the UI shows it in minutes. This is because
+ * allowing it in seconds is easier for development since we can have the sensor reacting fast, BUT showing the settings UI in seconds
+ * would be cumbersome since the user will probably want big intervals between samplings (intervals in minutes probably)
  */
 #if FASTER_ITERATION
-	//#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 5.0f
-	#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 1.0f
+	#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 1
 #else
-	#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 60.0f
+	#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 60
 #endif
 
-#define MOISTURESENSOR_CALIBRATION_SAMPLINGINTERVAL 1.0f
+/**
+ * Maximum sampling interval allowed in seconds (integer number)
+ * This also limits the the maximum value the UI will allow and show.
+ * Please note that the UI shows sampling intervals in minutes, but the internal code uses
+ */
+#define MOISTURESENSOR_MAX_SAMPLINGINTERVAL (99*60)
 
-#define DEFAULT_SHOT_DURATION 5.0f
+/**
+ * Sensor sampling interval while in the calibration menu. Needs to be an integer number
+ */
+#define MOISTURESENSOR_CALIBRATION_SAMPLINGINTERVAL 1
 
+/**
+ * Water shot duration in seconds. Need to be an integer number
+ */
+#define SHOT_DEFAULT_DURATION 5
+
+/**
+ * Maximum allowed value for water shots (in seconds). Needs to be an integer number
+ */
+#define SHOT_MAX_DURATION 99
+
+// Temperature/humidity sensor sampling interval in seconds.
 #if FASTER_ITERATION
 	#define TEMPSENSOR_DEFAULT_SAMPLINGINTERVAL 5.0f
 #else
@@ -150,7 +171,7 @@
  * before automated shots.
  * This does NOT affect manual shots.
  */
-#define MINIMUM_TIME_BETWEEN_MOTOR_ON (DEFAULT_SHOT_DURATION*2.0f)
+#define MINIMUM_TIME_BETWEEN_MOTOR_ON (SHOT_DEFAULT_DURATION*2.0f)
 
 /**
  * Time in seconds for the program to revert to normal operating mode if no buttons are press

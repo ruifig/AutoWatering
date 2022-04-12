@@ -279,41 +279,6 @@ void GroupData::setThresholdValueImpl(unsigned int value)
 	Component::raiseEvent(SoilMoistureSensorThresholdUpdateEvent(m_index));
 }	
 
-
-
-///////////////////////////////////////////////////////////////////////
-// GroupConfig
-///////////////////////////////////////////////////////////////////////
-
-bool GroupConfig::setSensorValue(unsigned int currentValue_, bool isCalibrating)
-{
-	numReadings++;
-	bool potentialThresholdChange = false;
-
-	// If we are calibrating, we accept any value, and then adjust the air/water values accordingly
-	// #TODO : Revise this
-	if (isCalibrating)
-	{
-		currentValue = currentValue_;
-		if (currentValue > airValue)
-		{
-			airValue = currentValue;
-			potentialThresholdChange = true;
-		}
-		else if (currentValue < waterValue)
-		{
-			waterValue = currentValue;
-			potentialThresholdChange = true;
-		}
-	}
-	else
-	{
-		currentValue = cz::clamp(currentValue_, waterValue, airValue);
-	}
-
-	return potentialThresholdChange;
-}
-
 ///////////////////////////////////////////////////////////////////////
 // ProgramData
 ///////////////////////////////////////////////////////////////////////

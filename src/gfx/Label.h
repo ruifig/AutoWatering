@@ -88,6 +88,14 @@ class FixedLabel : public BaseLabel
 		m_needsRedraw = true;
 	}
 
+	/**
+	 * Forcibly marks the label as needing redrawing or not on the next call to draw()
+	 */
+	void setDirty(bool value)
+	{
+		m_needsRedraw = value;
+	}
+
 	virtual void draw(bool forceDraw = false) override
 	{
 		if (forceDraw || m_needsRedraw)

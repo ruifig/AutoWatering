@@ -91,6 +91,8 @@ void GroupMonitor::onEvent(const Event& evt)
 			if (data.isRunning())
 			{
 				const auto& e = static_cast<const SoilMoistureSensorReadingEvent&>(evt);
+				// NOTE: If we are in the calibration menu, we don't want to act on those readings. 
+				// Same with invalid readings
 				if (e.index == m_index && !e.calibrating && e.reading.isValid())
 				{
 					m_sensorValidReadingSinceLastShot = true;

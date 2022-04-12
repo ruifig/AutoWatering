@@ -736,30 +736,39 @@ DEFINE_SENSOR_CALIBRATION_LABEL_LINE(0, WidgetFlag::None)
 DEFINE_SENSOR_CALIBRATION_LABEL_LINE(1, WidgetFlag::NumAsPercentage)
 DEFINE_SENSOR_CALIBRATION_LABEL_LINE(2, WidgetFlag::None)
 
-#if 0
-#define DEFINE_SENSOR_LABEL_LINE(SENSOR_INDEX, LINE_INDEX, FLAGS) \
-const LabelData sensor##SENSOR_INDEX##line##LINE_INDEX PROGMEM = \
+// Defines the label data for menus, where a single cell can take 2 lines
+#define DEFINE_LABEL_LINE2(COL, name, CELL_LINE, FLAGS) \
+const LabelData labelData_##name##_##CELL_LINE PROGMEM = \
 { \
-	{ \
-		getHistoryPlotRect(SENSOR_INDEX).x + getHistoryPlotRect(SENSOR_INDEX).width + 2, \
-		getHistoryPlotRect(SENSOR_INDEX).y + (LINE_INDEX * (GRAPH_HEIGHT/3)),  \
-		SCREEN_WIDTH - (getHistoryPlotRect(SENSOR_INDEX).x + getHistoryPlotRect(SENSOR_INDEX).width + 2), \
-		GRAPH_HEIGHT/3, \
-	}, \
+	{Overview::getMenuButtonPos(1+COL, 1).x, Overview::getMenuButtonPos(1+COL,1).y + (CELL_LINE * (GRAPH_HEIGHT/2)), 32, GRAPH_HEIGHT/2}, \
 	HAlign::Center, VAlign::Center, \
 	TINY_FONT, \
 	GRAPH_VALUES_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
 	WidgetFlag::EraseBkg | FLAGS \
 };
-#endif
 
-SettingsMenu::SettingsMenu() :
-	m_sensorLabels
-	{
-		{ sensorCalibrationSettings0},
-		{ sensorCalibrationSettings1},
-		{ sensorCalibrationSettings2},
-	}
+DEFINE_LABEL_LINE2(1, samplingInterval, 0, WidgetFlag::None)
+DEFINE_LABEL_LINE2(1, samplingInterval, 1, WidgetFlag::None)
+DEFINE_LABEL_LINE2(2, shotDuration, 0, WidgetFlag::None)
+DEFINE_LABEL_LINE2(2, shotDuration, 1, WidgetFlag::None)
+
+SettingsMenu::SettingsMenu()
+	: m_sensorLabels
+		{
+			{ sensorCalibrationSettings0},
+			{ sensorCalibrationSettings1},
+			{ sensorCalibrationSettings2},
+		}
+	, m_samplingIntervalLabels
+		{
+			{ &labelData_samplingInterval_0 },
+			{ &labelData_samplingInterval_1 },
+		}
+	, m_shotDurationLabels
+		{
+			{ &labelData_shotDuration_0 },
+			{ &labelData_shotDuration_1 },
+		}
 {
 }
 
@@ -836,6 +845,27 @@ void SettingsMenu::updateButtons()
 
 void SettingsMenu::onEvent(const Event& evt)
 {
+	switch(evt.type)
+	{
+		case Event::SoilMoistureSensorReading:
+		{
+			const SoilMoistureSensorReadingEvent& e = static_cast<const SoilMoistureSensorReadingEvent&>(evt);
+			if (e.index==gCtx.data.getSelectedGroupIndex() && (m_state==State::Main || m_state==State::CalibratingSensor) && e.reading.isValid())
+			{
+				if (e.index == gCtx.data.getSelectedGroupIndex())
+				{
+					m_dummyCfg.setSensorValue(e.reading.meanValue, true);
+					m_sensorLabels[0].setValue(m_dummyCfg.waterValue);
+					m_sensorLabels[1].setValue(m_dummyCfg.getPercentageValue());
+					m_sensorLabels[2].setValue(m_dummyCfg.airValue);
+				}
+			}
+		}
+		break;
+
+		default:
+		break;
+	}
 }
 
 void SettingsMenu::draw()
@@ -851,10 +881,22 @@ void SettingsMenu::draw()
 	{
 		if (m_state==State::Main || m_state==State::CalibratingSensor)
 		{
-			m_sensorLabels[0].setValueAndDraw(data->getWaterValue(), m_forceDraw);
-			m_sensorLabels[1].setValueAndDraw(data->getPercentageValue(), m_forceDraw);
-			m_sensorLabels[2].setValueAndDraw(data->getAirValue(), m_forceDraw);
+			for(auto&& l : m_sensorLabels)
+				l.draw();
 		}
+
+		if (m_state==State::Main || m_state==State::SettingSensorInterval)
+		{
+			for(auto&& l : m_samplingIntervalLabels)
+				l.draw();
+		}
+
+		if (m_state==State::Main || m_state==State::SettingShotDuration)
+		{
+			for(auto&& l : m_shotDurationLabels)
+				l.draw();
+		}
+
 	}
 
 	m_forceDraw = false;
@@ -877,6 +919,9 @@ void SettingsMenu::setButtonRange(ButtonId first, ButtonId last, bool enabled, b
 
 void SettingsMenu::show()
 {
+	GroupData* data = gCtx.data.getSelectedGroup();
+	m_dummyCfg = data->copyConfig();
+
 	// CloseAndSave is hidden until we actually enter a proper settings changing menu
 	setButton(ButtonId::CloseAndSave, false, false);
 	setButtonRange(ButtonId::Calibrate, ButtonId::CloseAndIgnore, true, true);
@@ -888,7 +933,31 @@ void SettingsMenu::show()
 		label.clearValue();
 	}
 
+	changeSamplingInterval(0);
+	m_samplingIntervalLabels[1].setText("min");
+	// Forcibly mark it for redraw, otherwise it won't show up if we close and reopen the settings menu
+	for(auto&& l : m_samplingIntervalLabels)
+		l.setDirty(true);
+
+	changeShotDuration(0);
+	m_shotDurationLabels[1].setText("sec");
+	// Forcibly mark it for redraw, otherwise it won't show up if we close and reopen the settings menu
+	for(auto&& l : m_shotDurationLabels)
+		l.setDirty(true);
+
 	gCtx.data.setInGroupConfigMenu(true);
+}
+
+void SettingsMenu::changeSamplingInterval(int direction)
+{
+	m_dummyCfg.setSamplingInterval(m_dummyCfg.samplingInterval + direction*60);
+	m_samplingIntervalLabels[0].setText(*IntToString(static_cast<int>(m_dummyCfg.getSamplingIntervalInMinutes())));
+}
+
+void SettingsMenu::changeShotDuration(int direction)
+{
+	m_dummyCfg.setShotDuration(m_dummyCfg.shotDuration + direction);
+	m_shotDurationLabels[0].setText(*IntToString(static_cast<int>(m_dummyCfg.shotDuration)));
 }
 
 void SettingsMenu::hide()

@@ -217,5 +217,5 @@ char* duplicateChar(char* dest, int n, char ch)
 	dest[n] = 0;
 	return dest;
 }
-	
+
 } // namespace cz

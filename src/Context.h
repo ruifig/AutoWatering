@@ -91,14 +91,16 @@ namespace cz
 
 
 	// Data that should be saved/loaded
+	// NOTE: No memberse in this struct should raise any events, because this is also used in the UI to hold
+	// temporary configs while in the settings menu.
 	struct GroupConfig
 	{
 		// Tells if this group is currently running
 		bool running = false;
 		// Sensor sampling interval in seconds
-		float samplingInterval = MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL;
+		unsigned int samplingInterval = MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL;
 		// Motor shot duration in seconds
-		float shotDuration = DEFAULT_SHOT_DURATION;
+		unsigned int shotDuration = SHOT_DEFAULT_DURATION;
 		// Number of sensor readings done
 		uint32_t numReadings = 0;
 
@@ -119,11 +121,68 @@ namespace cz
 		// Using a big value as initial value, which means it will not turn on the motor until things are setup properly
 		unsigned int thresholdValue = 65535;
 
+		unsigned int getPercentageValue() const
+		{
+			return map(currentValue, airValue, waterValue, 0, 100);
+		}
+
+		/**
+		 * The UI needs the sampling interval in minutes
+		 * When the sampling interval is < 1 min, it will return 0. THIS IS INTENTIONAL, so
+		 * we let the UI specify minutes, but treat 0 as shortest possible (1 second)
+		 */
+		unsigned int getSamplingIntervalInMinutes() const
+		{
+			return samplingInterval / 60;
+		}
+
+		/**
+		 * Sets the sampling interval (in seconds)
+		 * Since the UI deals with this in minutes, we can allow the UI to also allow a value of 0, which
+		 * internally gets clamped to 1 second. This is intentional
+		 */
+		void setSamplingInterval(unsigned int value)
+		{
+			samplingInterval = cz::clamp<unsigned int>(value, 1, MOISTURESENSOR_MAX_SAMPLINGINTERVAL);
+		}
+
+		void setShotDuration(unsigned int value)
+		{
+			shotDuration = cz::clamp<unsigned int>(value, 1, SHOT_MAX_DURATION);
+		}
+
 		/**
 		 * Changes the sensor value.
 		 * Returns true if the sensor threshold potentially changed, either as raw value or percentage
 		 */
-		bool setSensorValue(unsigned int currentValue_, bool isCalibrating);
+		bool setSensorValue(unsigned int currentValue_, bool isCalibrating)
+		{
+			numReadings++;
+			bool potentialThresholdChange = false;
+
+			// If we are calibrating, we accept any value, and then adjust the air/water values accordingly
+			// #TODO : Revise this
+			if (isCalibrating)
+			{
+				currentValue = currentValue_;
+				if (currentValue > airValue)
+				{
+					airValue = currentValue;
+					potentialThresholdChange = true;
+				}
+				else if (currentValue < waterValue)
+				{
+					waterValue = currentValue;
+					potentialThresholdChange = true;
+				}
+			}
+			else
+			{
+				currentValue = cz::clamp(currentValue_, waterValue, airValue);
+			}
+
+			return potentialThresholdChange;
+		}
 	};
 
 	class GroupData
@@ -167,7 +226,7 @@ namespace cz
 
 		unsigned int getPercentageValue() const
 		{
-			return map(m_cfg.currentValue, m_cfg.airValue, m_cfg.waterValue, 0, 100);
+			return m_cfg.getPercentageValue();
 		}
 
 		void setThresholdValue(unsigned int value)
@@ -192,12 +251,12 @@ namespace cz
 			return map(tmp, m_cfg.airValue, m_cfg.waterValue, 0, 100);
 		}
 
-		float getSamplingInterval() const
+		unsigned int getSamplingInterval() const
 		{
 			return m_cfg.samplingInterval;
 		}
 
-		float getShotDuration() const
+		unsigned int getShotDuration() const
 		{
 			return m_cfg.shotDuration;	
 		}
@@ -225,6 +284,15 @@ namespace cz
 		uint32_t getSensorErrorCount() const
 		{
 			return m_sensorErrors;
+		}
+
+		/**
+		 * Returns a copy of the group config.
+		 * This can be used by the UI for the settings menu, so it can change values without triggering events
+		 */
+		GroupConfig copyConfig() const
+		{
+			return m_cfg;
 		}
 
 	protected:
@@ -288,6 +356,13 @@ public:
 	// nullptr if no group is selected
 	GroupData* getSelectedGroup();
 
+	//
+	// Returns the selected group index or -1 if no group selected
+	int getSelectedGroupIndex()
+	{
+		return m_selectedGroup;
+	}
+
 	// Tries to sets the selected group
 	// Depending on the state of the program, it might fail, such as if we are in menus
 	// -1 means no group selected
@@ -349,10 +424,6 @@ struct Context
 	Mux8Channels mux;
 	ProgramData data;
 	AT24C256 eeprom;
-
-	// #TODO : Revise this
-	// Used as a temporary config data when configuring a group
-	GroupConfig settingsDummy;
 };
 
 extern Context gCtx;

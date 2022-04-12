@@ -92,6 +92,24 @@ struct FloatToString
 	char str[BufSize];
 };
 
+struct IntToString
+{
+	inline explicit IntToString(int32_t value)
+	{
+		itoa(value, str, 10);
+	}
+
+	inline const char* operator*() const
+	{
+		return str;
+	}
+
+	// 12 characters is enough to represent a 32bits number [-2147483648 to 2147483647]
+	char str[12];
+};
+
+
+
 
 	
 } // namespace cz
