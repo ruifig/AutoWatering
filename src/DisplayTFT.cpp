@@ -847,18 +847,15 @@ void SettingsMenu::onEvent(const Event& evt)
 {
 	switch(evt.type)
 	{
-		case Event::SoilMoistureSensorReading:
+		case Event::SoilMoistureSensorCalibrationReading:
 		{
-			const SoilMoistureSensorReadingEvent& e = static_cast<const SoilMoistureSensorReadingEvent&>(evt);
+			const SoilMoistureSensorCalibrationReadingEvent& e = static_cast<const SoilMoistureSensorCalibrationReadingEvent&>(evt);
 			if (e.index==gCtx.data.getSelectedGroupIndex() && (m_state==State::Main || m_state==State::CalibratingSensor) && e.reading.isValid())
 			{
-				if (e.index == gCtx.data.getSelectedGroupIndex())
-				{
-					m_dummyCfg.setSensorValue(e.reading.meanValue, true);
-					m_sensorLabels[0].setValue(m_dummyCfg.waterValue);
-					m_sensorLabels[1].setValue(m_dummyCfg.getPercentageValue());
-					m_sensorLabels[2].setValue(m_dummyCfg.airValue);
-				}
+				m_dummyCfg.setSensorValue(e.reading.meanValue, true);
+				m_sensorLabels[0].setValue(m_dummyCfg.waterValue);
+				m_sensorLabels[1].setValue(m_dummyCfg.getPercentageValue());
+				m_sensorLabels[2].setValue(m_dummyCfg.airValue);
 			}
 		}
 		break;
@@ -945,7 +942,7 @@ void SettingsMenu::show()
 	for(auto&& l : m_shotDurationLabels)
 		l.setDirty(true);
 
-	gCtx.data.setInGroupConfigMenu(true);
+	data->setInConfigMenu(true);
 }
 
 void SettingsMenu::changeSamplingInterval(int direction)
@@ -963,7 +960,8 @@ void SettingsMenu::changeShotDuration(int direction)
 void SettingsMenu::hide()
 {
 	setButtonRange(ButtonId::CloseAndSave, ButtonId::Plus, false, false);
-	gCtx.data.setInGroupConfigMenu(false);
+	GroupData* data = gCtx.data.getSelectedGroup();
+	data->setInConfigMenu(false);
 }
 
 bool SettingsMenu::checkClose(bool& doSave)

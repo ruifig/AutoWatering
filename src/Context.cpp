@@ -147,16 +147,24 @@ void GroupData::begin(uint8_t index)
 		m_history.push({0, false});
 	}
 #endif
-
 }
 
-void GroupData::setMoistureSensorValues(const SensorReading& sample, bool isCalibrating)
+void GroupData::setMoistureSensorValues(const SensorReading& sample)
 {
-	bool raiseThresholdChangeEvent = m_cfg.setSensorValue(sample.meanValue, isCalibrating);
-
-	// Add to history if this his a real value (as in, we are not calibrating this sensor)
-	if (!isCalibrating)
+	if (!m_cfg.running)
 	{
+		return;
+	}
+
+	if (m_inConfigMenu)
+	{
+		// If we are configuring this group, then we want to ignore the readings and just raise calibration events
+		Component::raiseEvent(SoilMoistureSensorCalibrationReadingEvent(m_index, sample));
+	}
+	else
+	{
+		m_cfg.setSensorValue(sample.meanValue, false);
+
 		GraphPoint point = {0, 0, sample.status};
 		point.val = map(m_cfg.currentValue, m_cfg.airValue, m_cfg.waterValue, 0, GRAPH_POINT_MAXVAL);
 
@@ -170,17 +178,13 @@ void GroupData::setMoistureSensorValues(const SensorReading& sample, bool isCali
 			m_history.pop();
 		}
 		m_history.push(point);
-	}
 
-	if (!sample.isValid())
-	{
-		m_sensorErrors++;
-	}
+		if (!sample.isValid())
+		{
+			m_sensorErrors++;
+		}
 
-	Component::raiseEvent(SoilMoistureSensorReadingEvent(m_index, isCalibrating, sample));
-	if (raiseThresholdChangeEvent)
-	{
-		setThresholdValueImpl(m_cfg.thresholdValue);
+		Component::raiseEvent(SoilMoistureSensorReadingEvent(m_index, sample));
 	}
 }
 
@@ -216,18 +220,6 @@ void GroupData::setRunning(bool state)
 
 	m_cfg.running = state;
 	Component::raiseEvent(GroupOnOffEvent(m_index, state));
-}
-
-void GroupData::startCalibration()
-{
-	m_calibrating = true;
-	Component::raiseEvent(SensorCalibrationEvent(m_index, true));
-}
-
-void GroupData::stopCalibration()
-{
-	m_calibrating = false;
-	Component::raiseEvent(SensorCalibrationEvent(m_index, false));
 }
 
 void GroupData::resetHistory()
@@ -268,17 +260,6 @@ void GroupData::load(AT24C::Ptr& src, bool loadConfig, bool loadHistory)
 	m_sensorErrors = 0;
 }
 
-void GroupData::setThresholdValueImpl(unsigned int value)
-{
-	m_cfg.thresholdValue = value;
-
-	// Always raising the event even if if the value didn't change, so this can be used
-	// for the case where the sensor's air/water value changed and thus the threshold as percentage changes without the actual
-	// threshold raw value changing. 
-	// This is needed because the UI deals with the threshold as percentage instead of the real sensor value
-	Component::raiseEvent(SoilMoistureSensorThresholdUpdateEvent(m_index));
-}	
-
 ///////////////////////////////////////////////////////////////////////
 // ProgramData
 ///////////////////////////////////////////////////////////////////////
@@ -310,11 +291,6 @@ bool ProgramData::hasGroupSelected() const
 
 bool ProgramData::trySetSelectedGroup(int8_t index)
 {
-	if (m_inGroupConfigMenu)
-	{
-		return false;
-	}
-
 	if (index != m_selectedGroup)
 	{
 		int8_t previousIndex = m_selectedGroup;
@@ -322,11 +298,6 @@ bool ProgramData::trySetSelectedGroup(int8_t index)
 		Component::raiseEvent(GroupSelectedEvent(index, previousIndex));
 	}
 	return true;
-}
-
-void ProgramData::setInGroupConfigMenu(bool inMenu)
-{
-	m_inGroupConfigMenu = inMenu;
 }
 
 GroupData& ProgramData::getGroupData(uint8_t index)

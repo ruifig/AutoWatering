@@ -87,16 +87,6 @@ void GroupGraph::onEvent(const Event& evt)
 		}
 		break;
 
-		case Event::SoilMoistureSensorThresholdUpdate:
-		{
-			auto idx = static_cast<const SoilMoistureSensorThresholdUpdateEvent&>(evt).index;
-			if (idx == m_index)
-			{
-				m_thresholdUpdates++;
-			}
-		}
-		break;
-
 		default:
 		break;
 	}
@@ -113,7 +103,7 @@ void GroupGraph::draw(bool forceDraw)
 		drawOuterBox();
 	}
 
-	if (m_forceRedraw || m_sensorUpdates || m_thresholdUpdates)
+	if (m_forceRedraw || m_sensorUpdates)
 	{
 		plotHistory();
 	}
@@ -159,7 +149,7 @@ void GroupGraph::plotHistory()
 		CZ_LOG(logDefault, Warning, F("Too many sensor udpates (%u)"), (unsigned int)m_sensorUpdates);
 	}
 	
-	redraw |= m_forceRedraw | (m_thresholdUpdates>0);
+	redraw |= m_forceRedraw;
 
 	for(int i=1; i<count; i++)
 	{
@@ -223,7 +213,6 @@ void GroupGraph::plotHistory()
 
 	m_previousThresholdMarkerY = thresholdMarkerY;
 	m_sensorUpdates = 0;
-	m_thresholdUpdates = 0;
 }
 
 

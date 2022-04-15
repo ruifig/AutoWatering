@@ -88,16 +88,13 @@ void GroupMonitor::onEvent(const Event& evt)
 		case Event::SoilMoistureSensorReading:
 		{
 			GroupData& data = gCtx.data.getGroupData(m_index);
-			if (data.isRunning())
+			const auto& e = static_cast<const SoilMoistureSensorReadingEvent&>(evt);
+			// The system will still raise events for invalid readings, but we don't want to act. As-in, we don't want bad sensor readings
+			// to end up turning the water on.
+			if (e.index == m_index && e.reading.isValid())
 			{
-				const auto& e = static_cast<const SoilMoistureSensorReadingEvent&>(evt);
-				// NOTE: If we are in the calibration menu, we don't want to act on those readings. 
-				// Same with invalid readings
-				if (e.index == m_index && !e.calibrating && e.reading.isValid())
-				{
-					m_sensorValidReadingSinceLastShot = true;
-					m_lastValidReading = e.reading;
-				}
+				m_sensorValidReadingSinceLastShot = true;
+				m_lastValidReading = e.reading;
 			}
 		}
 		break;

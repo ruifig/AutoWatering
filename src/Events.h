@@ -15,9 +15,8 @@ struct Event
 	{
 		ConfigLoad,
 		ConfigSave,
-		SensorCalibration,
 		SoilMoistureSensorReading,
-		SoilMoistureSensorThresholdUpdate,
+		SoilMoistureSensorCalibrationReading,
 		TemperatureSensorReading,
 		HumiditySensorReading,
 		GroupOnOff,
@@ -70,61 +69,40 @@ struct ConfigSaveEvent : public Event
 	int8_t group;
 };
 
-// #RVF : Remove this is not used
-struct SensorCalibrationEvent : public Event
-{
-	SensorCalibrationEvent(int8_t group, bool start)
-		: Event(Event::SensorCalibration)
-		, group(group)
-		, start(start)
-	{
-	}
-
-	virtual void log() const override
-	{
-		CZ_LOG(logEvents, Log, F("SensorCalibrationEvent(%s)"), start ? "true" : "false");
-	}
-
-	int8_t group;
-	// Calibration started or stopped
-	bool start;
-};
-
 struct SoilMoistureSensorReadingEvent : public Event
 {
-	SoilMoistureSensorReadingEvent(uint8_t index, bool calibrating, const SensorReading& reading)
+	SoilMoistureSensorReadingEvent(uint8_t index, const SensorReading& reading)
 		: Event(Event::SoilMoistureSensorReading)
 		, index(index)
-		, calibrating(calibrating)
 		, reading(reading)
 	{
 	}
 
 	virtual void log() const override
 	{
-		CZ_LOG(logEvents, Verbose, F("SoilMoistureSensorReadingEvent(%d)"), (int)index);
+		CZ_LOG(logEvents, Log, F("SoilMoistureSensorReadingEvent(%d)"), (int)index);
 	}
 
 	uint8_t index;
-	// If this is true, this was a reading done while calibrating, and some components might want to ignore it
-	bool calibrating;
 	SensorReading reading;
 };
 
-struct SoilMoistureSensorThresholdUpdateEvent : public Event
+struct SoilMoistureSensorCalibrationReadingEvent : public Event
 {
-	SoilMoistureSensorThresholdUpdateEvent(uint8_t index)
-		: Event(Event::SoilMoistureSensorThresholdUpdate)
+	SoilMoistureSensorCalibrationReadingEvent(uint8_t index, const SensorReading& reading)
+		: Event(Event::SoilMoistureSensorCalibrationReading)
 		, index(index)
+		, reading(reading)
 	{
 	}
 
 	virtual void log() const override
 	{
-		CZ_LOG(logEvents, Verbose, F("SoilMoistureSensorThresholdUpdateEvent(%d)"), (int)index);
+		CZ_LOG(logEvents, Log, F("SoilMoistureSensorCalibrationReadingEvent(%d)"), (int)index);
 	}
 
 	uint8_t index;
+	SensorReading reading;
 };
 
 struct TemperatureSensorReadingEvent : public Event
@@ -137,7 +115,7 @@ struct TemperatureSensorReadingEvent : public Event
 
 	virtual void log() const override
 	{
-		CZ_LOG(logEvents, Verbose, F("TemperatureSensorReadingEvent(%2.1fC)"), temperatureC);
+		CZ_LOG(logEvents, Log, F("TemperatureSensorReadingEvent(%2.1fC)"), temperatureC);
 	}
 
 	// temperature in Celcius
@@ -154,7 +132,7 @@ struct HumiditySensorReadingEvent : public Event
 
 	virtual void log() const override
 	{
-		CZ_LOG(logEvents, Verbose, F("HumiditySensorReadingEvent(%2.1f%%)"), humidity);
+		CZ_LOG(logEvents, Log, F("HumiditySensorReadingEvent(%2.1f%%)"), humidity);
 	}
 
 	// Humidity - 0..100%

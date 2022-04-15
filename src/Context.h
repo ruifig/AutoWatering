@@ -153,35 +153,30 @@ namespace cz
 
 		/**
 		 * Changes the sensor value.
-		 * Returns true if the sensor threshold potentially changed, either as raw value or percentage
+		 * \param currentValue The sensor value to save
+		 * \param adjustRange If true, then air and water values are ajusted to accomodate for the "currentValue" parameter
 		 */
-		bool setSensorValue(unsigned int currentValue_, bool isCalibrating)
+		void setSensorValue(unsigned int currentValue_, bool adjustRange)
 		{
 			numReadings++;
-			bool potentialThresholdChange = false;
 
 			// If we are calibrating, we accept any value, and then adjust the air/water values accordingly
-			// #TODO : Revise this
-			if (isCalibrating)
+			if (adjustRange)
 			{
 				currentValue = currentValue_;
 				if (currentValue > airValue)
 				{
 					airValue = currentValue;
-					potentialThresholdChange = true;
 				}
 				else if (currentValue < waterValue)
 				{
 					waterValue = currentValue;
-					potentialThresholdChange = true;
 				}
 			}
 			else
 			{
 				currentValue = cz::clamp(currentValue_, waterValue, airValue);
 			}
-
-			return potentialThresholdChange;
 		}
 	};
 
@@ -194,7 +189,7 @@ namespace cz
 		
 		void begin(uint8_t index);
 
-		void setMoistureSensorValues(const SensorReading& sample, bool isCalibrating);
+		void setMoistureSensorValues(const SensorReading& sample);
 
 		void setMotorState(bool state);
 		bool isMotorOn() const;
@@ -231,13 +226,13 @@ namespace cz
 
 		void setThresholdValue(unsigned int value)
 		{
-			setThresholdValueImpl(value);
+			m_cfg.thresholdValue = value;
 		}
 
 		void setThresholdValueAsPercentage(unsigned int percentageValue)
 		{
 			unsigned int value = map(cz::clamp<unsigned int>(percentageValue, 0, 100), 0, 100, m_cfg.airValue, m_cfg.waterValue);
-			setThresholdValueImpl(value);
+			m_cfg.thresholdValue = value;
 		}
 
 		unsigned int getThresholdValue() const
@@ -273,14 +268,6 @@ namespace cz
 
 		void resetHistory();
 
-		void startCalibration();
-		void stopCalibration();
-
-		bool isCalibrating() const
-		{
-			return m_calibrating;
-		}
-
 		uint32_t getSensorErrorCount() const
 		{
 			return m_sensorErrors;
@@ -295,6 +282,20 @@ namespace cz
 			return m_cfg;
 		}
 
+		// Sets this group as being configured or not at the moment.
+		// When set to being configured, the following happens:
+		//		* Sampling interval is temporarily set to MOISTURESENSOR_CALIBRATION_SAMPLINGINTERVAL
+		//		* Temporarily switches to raising SoilMoistureSensorCalibration_XXX events, instead of SoilMoistureSensor_XXX events
+		void setInConfigMenu(bool inMenu)
+		{
+			m_inConfigMenu = inMenu;
+		}
+
+		bool isInConfigMenu() const
+		{
+			return m_inConfigMenu;
+		}
+
 	protected:
 		friend class ProgramData;
 		void save(AT24C::Ptr& dst, bool saveConfig, bool saveHistory) const;
@@ -303,8 +304,6 @@ namespace cz
 		{
 			return sizeof(m_cfg);
 		}
-
-		void setThresholdValueImpl(unsigned int value);
 
 	  private:
 
@@ -322,8 +321,8 @@ namespace cz
 		// Used so we can detect when the motor was turned on and off before a sensor data point is inserted, so we can
 		// add the motor flag to the next sensor data point when that happens.
 		bool m_pendingMotorPoint = false;
-		// Set to true we start calibrating this group's sensor, and false when finishing
-		bool m_calibrating = false;
+
+		bool m_inConfigMenu = false;
 	};
 
 struct Context;
@@ -368,16 +367,6 @@ public:
 	// -1 means no group selected
 	bool trySetSelectedGroup(int8_t index);
 
-	// #RVF : Remove or rename this, if needed
-	// This should be called when entering and exiting the group configuring menu
-	// It will cause the necessary things to pause while we are configuring a group
-	void setInGroupConfigMenu(bool inMenu);
-
-	bool isInGroupConfigMenu() const
-	{
-		return m_inGroupConfigMenu;
-	}
-
 	// Sets the temperarture reading in Celcius
 	void setTemperatureReading(float temperatureC);
 	// Set the humidity reading (0..100)
@@ -390,7 +379,6 @@ public:
 	Context& m_outer;
 	GroupData m_group[NUM_PAIRS];
 	bool m_muxMutex = false;
-	bool m_inGroupConfigMenu = false;
 	int8_t m_selectedGroup = -1;
 
 	// Temperature in Celcius

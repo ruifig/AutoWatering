@@ -65,9 +65,9 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 		break;
 
 	case State::PoweredDown:
-		if (data.isRunning() || (isSelectedGroup && gCtx.data.isInGroupConfigMenu()))
+		if (data.isRunning() || data.isInConfigMenu())
 		{
-			float samplingInterval = data.isCalibrating() ? MOISTURESENSOR_CALIBRATION_SAMPLINGINTERVAL : data.getSamplingInterval();
+			float samplingInterval = data.isInConfigMenu() ? MOISTURESENSOR_CALIBRATION_SAMPLINGINTERVAL : data.getSamplingInterval();
 			if (m_timeSinceLastRead >= samplingInterval)
 			{
 				tryEnterReadingState();
@@ -82,7 +82,7 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 			{
 				// Using a function to read the sensor, so we can provide a mock value when using the mock version
 				SensorReading sample = readSensor();
-				data.setMoistureSensorValues(sample, data.isRunning() ? false : true);
+				data.setMoistureSensorValues(sample);
 				m_timeSinceLastRead = 0;
 				changeToState(State::PoweredDown);
 			}
