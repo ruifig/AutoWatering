@@ -28,7 +28,7 @@ void GroupGraph::init(int8_t index)
 
 bool GroupGraph::contains(const Pos& pos) const
 {
-	return getHistoryPlotRect(m_index).contains(pos);
+	return LayoutHelper::getHistoryPlotRect(m_index).contains(pos);
 }
 
 void GroupGraph::onEvent(const Event& evt)
@@ -120,7 +120,7 @@ void GroupGraph::draw(bool forceDraw)
 
 			gScreen.setFont(MEDIUM_FONT);
 			gScreen.setTextColor(GRAPH_NOTRUNNING_TEXT_COLOUR);
-			printAligned(getHistoryPlotRect(m_index), HAlign::Center, VAlign::Center, F("Not Running"));
+			printAligned(LayoutHelper::getHistoryPlotRect(m_index), HAlign::Center, VAlign::Center, F("Not Running"));
 		}
 	}
 
@@ -132,7 +132,7 @@ void GroupGraph::plotHistory()
 	PROFILE_SCOPE(F("GroupGraph::plotHistory"));
 
 	constexpr int h = GRAPH_HEIGHT;
-	Rect rect = getHistoryPlotRect(m_index);
+	Rect rect = LayoutHelper::getHistoryPlotRect(m_index);
 	int bottomY = rect.bottom();
 	GroupData& data = gCtx.data.getGroupData(m_index);
 	const HistoryQueue& history = data.getHistory();
@@ -220,7 +220,7 @@ void GroupGraph::drawOuterBox()
 {
 	PROFILE_SCOPE(F("GroupGraph::drawOuterBox"));
 	
-	Rect historyRect = getHistoryPlotRect(m_index);
+	Rect historyRect = LayoutHelper::getHistoryPlotRect(m_index);
 	Rect historyOuterBox = historyRect.expand(1);
 	Rect groupOuterBox = {0, historyOuterBox.top(), SCREEN_WIDTH, historyOuterBox.height};
 

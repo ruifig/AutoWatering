@@ -1,35 +1,15 @@
 #pragma once
+
 #include "Component.h"
 #include "Config.h"
-#include "gfx/Label.h"
-#include "gfx/Button.h"
 #include "GroupGraph.h"
 #include "gfx/MyDisplay1.h"
 #include "gfx/MyXPT2046.h"
 
+#include "SettingsMenu.h"
+
 namespace cz
 {
-
-class Menu
-{
-  public:
-	Menu() {}
-	virtual ~Menu() {}
-
-	virtual void init() = 0;
-	virtual void tick(float deltaSeconds) = 0;
-	virtual void onEvent(const Event& evt) = 0;
-	virtual bool processTouch(const Pos& pos) = 0;
-		
-	void setForceDraw()
-	{
-		m_forceDraw = true;
-	}
-	
-  protected:
-	virtual void draw() = 0;
-	bool m_forceDraw = false;
-};
 
 class SensorMainMenu : public Menu
 {
@@ -60,82 +40,6 @@ class SensorMainMenu : public Menu
 	};
 	gfx::ImageButton m_buttons[(int)ButtonId::Max];
 	bool m_showSettings : 1;
-};
-
-class SettingsMenu : public Menu
-{
-  public:
-	SettingsMenu();
-	virtual ~SettingsMenu() {}
-	virtual void init() override;
-	virtual void tick(float deltaSeconds) override;
-	virtual void onEvent(const Event& evt) override;
-	virtual bool processTouch(const Pos& pos) override;
-
-	void show();
-	void hide();
-	bool checkClose(bool& doSave);
-
-  protected:
-	virtual void draw() override;
-
-	void changeSamplingInterval(int direction);
-	void changeShotDuration(int direction);
-
-	enum class State : uint8_t
-	{
-		Main,
-		CalibratingSensor,
-		SettingSensorInterval,
-		SettingShotDuration
-	};
-
-	State m_state = State::Main;
-
-	enum class ButtonId : uint8_t
-	{
-		// First line
-		CloseAndSave,
-		Calibrate,
-		SensorInterval,
-		ShotDuration,
-		CloseAndIgnore,
-
-		// Second line
-		SetGroupThreshold,
-		Minus,
-		Plus,
-		
-		Max
-	};
-
-	void setButton(ButtonId idx, bool enabled, bool visible);
-	// Sets a button range (inclusive
-	void setButtonRange(ButtonId first, ButtonId last, bool enabled, bool visible);
-
-	// Dummy config we act on while in the settings.
-	// When getting out of the settings menu, we apply this to the real data
-	GroupConfig m_dummyCfg;
-
-	gfx::ImageButton m_buttons[(int)ButtonId::Max];
-
-	ButtonId m_pressedId = ButtonId::Max;	
-
-	// Labels shown when in the Sensor calibration menu
-	// 1: water sensor reading
-	// 2: current sensor reading in %
-	// 3: dry sensor reading 
-	gfx::NumLabel<true> m_sensorLabels[3];
-
-	// Soil sensor sampling interval labels
-	// 1: number of minutes
-	// 2: Text "min"
-	gfx::FixedLabel<> m_samplingIntervalLabels[2];
-
-	// Water shot duration
-	// 1: number of seconds
-	// 2: Text "sec"
-	gfx::FixedLabel<> m_shotDurationLabels[2];
 };
 
 class DisplayTFT : public Component
