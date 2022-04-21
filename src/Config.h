@@ -193,7 +193,7 @@
 /**
  * How long the boot menu should stay up before defaulting to "Load"
  */
-#define BOOTMENU_COUNTDOWN 3.0f
+#define BOOTMENU_COUNTDOWN 2.0f
 
 
 /**
