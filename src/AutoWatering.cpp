@@ -159,9 +159,12 @@ void setup()
 
 PROFILER_CREATE(30);
 
+uint32_t gTickCount = 0;
+
 void loop()
 {
 	PROFILER_STARTRUN();
+	 gTickCount++;
 
 	gTimer.update();
 	const float deltaSeconds = gTimer.getDeltaSeconds();

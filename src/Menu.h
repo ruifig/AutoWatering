@@ -23,7 +23,11 @@ class Menu
 	}
 	
   protected:
+	void clearEntireArea();
+
 	virtual void draw() = 0;
+	virtual void show();
+	virtual void hide();
 	bool m_forceDraw = false;
 };
 

@@ -137,7 +137,7 @@ void GroupGraph::plotHistory()
 	GroupData& data = gCtx.data.getGroupData(m_index);
 	const HistoryQueue& history = data.getHistory();
 
-	unsigned int thresholdPercentage = data.getThresholdAsPercentage();
+	unsigned int thresholdPercentage = data.getThresholdValueAsPercentage();
 	int16_t thresholdMarkerY = bottomY - map(thresholdPercentage, 0, 100, 0, GRAPH_POINT_MAXVAL);
 
 	const int count = history.size();

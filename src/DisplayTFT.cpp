@@ -551,9 +551,9 @@ void DisplayTFT::OverviewState::draw()
 }
 
 //
-// SensorMainMenu
+// MainMenu
 //
-void SensorMainMenu::init()
+void MainMenu::init()
 {
 	m_showSettings = false;
 	
@@ -571,12 +571,12 @@ void SensorMainMenu::init()
 	show();
 }
 
-void SensorMainMenu::tick(float deltaSeconds)
+void MainMenu::tick(float deltaSeconds)
 {
 	draw();
 }
 
-bool SensorMainMenu::processTouch(const Pos& pos)
+bool MainMenu::processTouch(const Pos& pos)
 {
 	{
 		ImageButton& btn = m_buttons[(int)ButtonId::StartGroup];
@@ -622,7 +622,7 @@ bool SensorMainMenu::processTouch(const Pos& pos)
 	return false;
 }
 
-void SensorMainMenu::updateButtons()
+void MainMenu::updateButtons()
 {
 	bool isGroupSelected = gCtx.data.hasGroupSelected();
 	bool groupIsRunning = isGroupSelected ? gCtx.data.getSelectedGroup()->isRunning() : false;
@@ -637,7 +637,7 @@ void SensorMainMenu::updateButtons()
 	m_buttons[(int)ButtonId::Settings].setEnabled(isGroupSelected);
 }
 
-void SensorMainMenu::onEvent(const Event& evt)
+void MainMenu::onEvent(const Event& evt)
 {
 	switch (evt.type)
 	{
@@ -651,7 +651,7 @@ void SensorMainMenu::onEvent(const Event& evt)
 	}
 }
 
-void SensorMainMenu::draw()
+void MainMenu::draw()
 {
 	for(gfx::ImageButton& btn : m_buttons)
 	{
@@ -660,8 +660,10 @@ void SensorMainMenu::draw()
 	m_forceDraw = false;
 }
 
-void SensorMainMenu::show()
+void MainMenu::show()
 {
+	Menu::show();
+
 	for(gfx::ImageButton& btn : m_buttons)
 	{
 		btn.setVisible(true);
@@ -670,15 +672,17 @@ void SensorMainMenu::show()
 	updateButtons();
 }
 
-void SensorMainMenu::hide()
+void MainMenu::hide()
 {
 	for(gfx::ImageButton& btn : m_buttons)
 	{
 		btn.setVisible(false);
 	}
+
+	Menu::hide();
 }
 
-bool SensorMainMenu::checkShowSettings()
+bool MainMenu::checkShowSettings()
 {
 	if (m_showSettings)
 	{

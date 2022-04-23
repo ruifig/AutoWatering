@@ -209,6 +209,7 @@
 #define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 240
 
+// Width in pixels for the group number label (shown left of the group history plot)
 #define GROUP_NUM_WIDTH 16
 #define GRAPH_NUMPOINTS (SCREEN_WIDTH-GROUP_NUM_WIDTH-32-2)
 #define GRAPH_VALUES_TEXT_COLOUR Colour_LightGrey

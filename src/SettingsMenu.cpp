@@ -2,6 +2,8 @@
 #include "Icons.h"
 #include "DisplayCommon.h"
 
+extern uint32_t gTickCount;
+
 namespace cz
 {
 
@@ -41,7 +43,7 @@ namespace
 }
 
 SettingsMenu::SettingsMenu()
-	: m_sensorLabels
+	: m_calibrationLabels
 		{
 			{ sensorCalibrationSettings0},
 			{ sensorCalibrationSettings1},
@@ -60,6 +62,10 @@ SettingsMenu::SettingsMenu()
 {
 }
 
+#define CALIBRATE_BTN_COL 1
+#define SENSORINTERVAL_BTN_COL 2
+#define SHOTDURATION_BTN_COL 3
+
 void SettingsMenu::init()
 {
 	auto initButton = [this](ButtonId id, auto&&... params)
@@ -70,16 +76,16 @@ void SettingsMenu::init()
 
 	// First line
 	initButton(ButtonId::CloseAndSave, LayoutHelper::getMenuButtonPos(0,0), SCREEN_BKG_COLOUR, img_Save);
-	initButton(ButtonId::Calibrate, LayoutHelper::getMenuButtonPos(1,0), SCREEN_BKG_COLOUR, img_Ruler);
-	initButton(ButtonId::SensorInterval, LayoutHelper::getMenuButtonPos(2,0), SCREEN_BKG_COLOUR, img_SetSensorInterval);
-	initButton(ButtonId::ShotDuration, LayoutHelper::getMenuButtonPos(3,0), SCREEN_BKG_COLOUR, img_SetWateringDuration);
+	initButton(ButtonId::Calibrate, LayoutHelper::getMenuButtonPos(CALIBRATE_BTN_COL,0), SCREEN_BKG_COLOUR, img_Ruler);
+	initButton(ButtonId::SensorInterval, LayoutHelper::getMenuButtonPos(SENSORINTERVAL_BTN_COL,0), SCREEN_BKG_COLOUR, img_SetSensorInterval);
+	initButton(ButtonId::ShotDuration, LayoutHelper::getMenuButtonPos(SHOTDURATION_BTN_COL,0), SCREEN_BKG_COLOUR, img_SetWateringDuration);
 	// Leaving one empty grid space intentionally, so the CloseAndIgnore button is spaced away from the others
 	initButton(ButtonId::CloseAndIgnore, LayoutHelper::getMenuButtonPos(5,0), SCREEN_BKG_COLOUR, img_Close);
 
 	// Second line
-	initButton(ButtonId::SetGroupThreshold, LayoutHelper::getMenuButtonPos(2,1), SCREEN_BKG_COLOUR, img_SetThreshold);
-	initButton(ButtonId::Minus, LayoutHelper::getMenuButtonPos(1,1), SCREEN_BKG_COLOUR, img_Remove);
-	initButton(ButtonId::Plus, LayoutHelper::getMenuButtonPos(3,1), SCREEN_BKG_COLOUR, img_Add);
+	initButton(ButtonId::SetGroupThreshold, LayoutHelper::getMenuButtonPos(CALIBRATE_BTN_COL+1,1), SCREEN_BKG_COLOUR, img_SetThreshold);
+	initButton(ButtonId::Minus, LayoutHelper::getMenuButtonPos(0,1), SCREEN_BKG_COLOUR, img_Remove);
+	initButton(ButtonId::Plus, LayoutHelper::getMenuButtonPos(0,1), SCREEN_BKG_COLOUR, img_Add);
 
 	//hide();
 }
@@ -89,47 +95,142 @@ void SettingsMenu::tick(float deltaSeconds)
 	draw();
 }
 
+void SettingsMenu::setState(State state)
+{
+	m_state = state;
+	clearEntireArea();
+
+	// These are always enabled regardless of the state
+	setButtonRange(ButtonId::Calibrate, ButtonId::CloseAndIgnore, true, true);
+
+	bool showMinusPlus = (m_state==State::SettingSensorInterval || m_state==State::SettingShotDuration);
+	setButton(ButtonId::SetGroupThreshold, state==State::CalibratingSensor, state==State::CalibratingSensor);
+	setButton(ButtonId::Minus, showMinusPlus, showMinusPlus);
+	setButton(ButtonId::Plus, showMinusPlus, showMinusPlus);
+
+	CZ_LOG(logDefault, Log, F("%s(%d):TickCount=%u"), __FUNCTION__, (int)state, gTickCount);
+
+	if (state==State::Main || state==State::CalibratingSensor)
+	{
+		setSensorLabels(true);
+	}
+	else
+	{
+		for(auto&& l : m_calibrationLabels)
+		{
+			l.clearValueAndDraw();
+			l.setDirty(true);
+		}
+
+	}
+
+	// #TODO : Remove this block
+#if 0
+	// Labels that are not supposed to be drawn are cleared, so they don't get drawn over buttons during draw()
+	for(auto&& l : m_calibrationLabels)
+	{
+		if (state==State::Main || state==State::CalibratingSensor)
+		{
+			l.setDirty(true);
+		}
+		else
+		{
+			l.clearValueAndDraw();
+		}
+	}
+#endif
+
+	//
+	// Sampling interval labels
+	//
+	if (state==State::Main || state==State::SettingSensorInterval)
+	{
+		changeSamplingInterval(0);
+		m_samplingIntervalLabels[1].setText("min");
+	}
+	else
+	{
+		m_samplingIntervalLabels[0].clearValueAndDraw();
+		m_samplingIntervalLabels[1].clearValueAndDraw();
+	}
+
+	//
+	// Shot duration labels
+	//
+	if (state==State::Main || state==State::SettingShotDuration)
+	{
+		changeShotDuration(0);
+		m_shotDurationLabels[1].setText("sec");
+	}
+	else
+	{
+		m_shotDurationLabels[0].clearValueAndDraw();
+		m_shotDurationLabels[1].clearValueAndDraw();
+	}
+
+	m_buttons[(int)ButtonId::Calibrate].setEnabled(state==State::Main || state==State::CalibratingSensor);
+	m_buttons[(int)ButtonId::SensorInterval].setEnabled(state==State::Main || state==State::SettingSensorInterval);
+	m_buttons[(int)ButtonId::ShotDuration].setEnabled(state==State::Main || state==State::SettingShotDuration);
+
+	if (m_state==State::CalibratingSensor)
+	{
+	}
+	else if (state==State::SettingSensorInterval)
+	{
+		m_buttons[(int)ButtonId::Minus].move(LayoutHelper::getMenuButtonPos(SENSORINTERVAL_BTN_COL-1, 1), true);
+		m_buttons[(int)ButtonId::Plus ].move(LayoutHelper::getMenuButtonPos(SENSORINTERVAL_BTN_COL+1, 1), true);
+	}
+	else if (state==State::SettingShotDuration)
+	{
+		m_buttons[(int)ButtonId::Minus].move(LayoutHelper::getMenuButtonPos(SHOTDURATION_BTN_COL-1, 1), true);
+		m_buttons[(int)ButtonId::Plus ].move(LayoutHelper::getMenuButtonPos(SHOTDURATION_BTN_COL+1, 1), true);
+	}
+}
+
 bool SettingsMenu::processTouch(const Pos& pos)
 {
 	CZ_ASSERT(gCtx.data.hasGroupSelected());
 
+	auto checkButtonPressed = [&](ButtonId id) -> bool
 	{
-		ImageButton& btn = m_buttons[(int)ButtonId::CloseAndSave];
+		ImageButton& btn = m_buttons[(int)id];
 		if (btn.canAcceptInput() && btn.contains(pos))
 		{
-			m_pressedId = ButtonId::CloseAndSave;
+			m_pressedId = id;
 			return true;
 		}
+		else
+		{
+			return false;
+		}
+	};
+
+	if (
+		checkButtonPressed(ButtonId::CloseAndSave) ||
+		checkButtonPressed(ButtonId::CloseAndIgnore))
+	{
+		return true;
 	}
 	
+	if (checkButtonPressed(ButtonId::Calibrate))
 	{
-		ImageButton& btn = m_buttons[(int)ButtonId::CloseAndIgnore];
-		if (btn.canAcceptInput() && btn.contains(pos))
-		{
-			m_pressedId = ButtonId::CloseAndIgnore;
-			return true;
-		}
+		// If we are already in the sensor calibration menu, then close that one and go back to the Main
+		setState(m_state==State::CalibratingSensor ? State::Main : State::CalibratingSensor);
+		return true;
+	}
+	else if(checkButtonPressed(ButtonId::SensorInterval))
+	{
+		setState(m_state==State::SettingSensorInterval ? State::Main : State::SettingSensorInterval);
+		return true;
+	}
+	else if(checkButtonPressed(ButtonId::ShotDuration))
+	{
+		setState(m_state==State::SettingShotDuration ? State::Main : State::SettingShotDuration);
+		return true;
 	}
 
 	return false;
 }
-
-#if 0
-void SettingsMenu::updateButtons()
-{
-	bool isGroupSelected = gCtx.data.hasGroupSelected();
-	bool groupIsRunning = isGroupSelected ? gCtx.data.getSelectedGroup()->isRunning() : false;
-
-	m_buttons[(int)ButtonId::StartGroup].setVisible(!(isGroupSelected && groupIsRunning));
-	m_buttons[(int)ButtonId::StartGroup].setEnabled(isGroupSelected && !groupIsRunning);
-
-	m_buttons[(int)ButtonId::StopGroup].setVisible(isGroupSelected && groupIsRunning);
-
-	// Shot and Settings stay enabled even if the group is not running. This is intentional
-	m_buttons[(int)ButtonId::Shot].setEnabled(isGroupSelected);
-	m_buttons[(int)ButtonId::Settings].setEnabled(isGroupSelected);
-}
-#endif
 
 void SettingsMenu::onEvent(const Event& evt)
 {
@@ -140,10 +241,9 @@ void SettingsMenu::onEvent(const Event& evt)
 			const SoilMoistureSensorCalibrationReadingEvent& e = static_cast<const SoilMoistureSensorCalibrationReadingEvent&>(evt);
 			if (e.index==gCtx.data.getSelectedGroupIndex() && (m_state==State::Main || m_state==State::CalibratingSensor) && e.reading.isValid())
 			{
-				m_dummyCfg.setSensorValue(e.reading.meanValue, true);
-				m_sensorLabels[0].setValue(m_dummyCfg.waterValue);
-				m_sensorLabels[1].setValue(m_dummyCfg.getPercentageValue());
-				m_sensorLabels[2].setValue(m_dummyCfg.airValue);
+				// We only adjust the sensor range (air/water values) if we are in the sensor calibration menu
+				m_dummyCfg.setSensorValue(e.reading.meanValue, m_state==State::CalibratingSensor ? true : false);
+				setSensorLabels();
 			}
 		}
 		break;
@@ -166,7 +266,7 @@ void SettingsMenu::draw()
 	{
 		if (m_state==State::Main || m_state==State::CalibratingSensor)
 		{
-			for(auto&& l : m_sensorLabels)
+			for(auto&& l : m_calibrationLabels)
 				l.draw();
 		}
 
@@ -181,7 +281,6 @@ void SettingsMenu::draw()
 			for(auto&& l : m_shotDurationLabels)
 				l.draw();
 		}
-
 	}
 
 	m_forceDraw = false;
@@ -204,35 +303,43 @@ void SettingsMenu::setButtonRange(ButtonId first, ButtonId last, bool enabled, b
 
 void SettingsMenu::show()
 {
+	Menu::show();
+
 	GroupData* data = gCtx.data.getSelectedGroup();
 	m_dummyCfg = data->copyConfig();
 
+	// First set all to hiden/disabled
+	//setButtonRange(ButtonId::First, ButtonId::Max, false, false);
+
 	// CloseAndSave is hidden until we actually enter a proper settings changing menu
 	setButton(ButtonId::CloseAndSave, false, false);
-	setButtonRange(ButtonId::Calibrate, ButtonId::CloseAndIgnore, true, true);
 
+	// 1st line
+	setButtonRange(ButtonId::Calibrate, ButtonId::CloseAndIgnore, true, true);
+	// 2nd line
 	setButtonRange(ButtonId::SetGroupThreshold, ButtonId::Plus, false, false);
 
-	for(gfx::NumLabel<true>& label : m_sensorLabels)
-	{
-		label.clearValue();
-	}
-
-	changeSamplingInterval(0);
-	m_samplingIntervalLabels[1].setText("min");
-	// Forcibly mark it for redraw, otherwise it won't show up if we close and reopen the settings menu
-	for(auto&& l : m_samplingIntervalLabels)
-		l.setDirty(true);
-
-	changeShotDuration(0);
-	m_shotDurationLabels[1].setText("sec");
-	// Forcibly mark it for redraw, otherwise it won't show up if we close and reopen the settings menu
-	for(auto&& l : m_shotDurationLabels)
-		l.setDirty(true);
+	CZ_LOG(logDefault, Log, F("%s:TickCount=%u"), __FUNCTION__, gTickCount);
 
 	data->setInConfigMenu(true);
+	setState(State::Main);
 }
 
+void SettingsMenu::setSensorLabels(bool forceDirty)
+{
+	CZ_LOG(logDefault, Log, F("%s:TickCount=%u"), __FUNCTION__, gTickCount);
+	m_calibrationLabels[0].setValue(m_dummyCfg.waterValue);
+	m_calibrationLabels[1].setValue(m_dummyCfg.getThresholdValueAsPercentage());
+	m_calibrationLabels[2].setValue(m_dummyCfg.airValue);
+
+	if (forceDirty)
+	{
+		for(auto&& l : m_calibrationLabels)
+		{
+			l.setDirty(true);
+		}
+	}
+}
 void SettingsMenu::changeSamplingInterval(int direction)
 {
 	m_dummyCfg.setSamplingInterval(m_dummyCfg.samplingInterval + direction*60);
@@ -247,9 +354,11 @@ void SettingsMenu::changeShotDuration(int direction)
 
 void SettingsMenu::hide()
 {
-	setButtonRange(ButtonId::CloseAndSave, ButtonId::Plus, false, false);
+	setButtonRange(ButtonId::First, ButtonId::Max, false, false);
 	GroupData* data = gCtx.data.getSelectedGroup();
 	data->setInConfigMenu(false);
+
+	Menu::hide();
 }
 
 bool SettingsMenu::checkClose(bool& doSave)

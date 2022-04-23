@@ -32,6 +32,12 @@ class BaseButton : public Widget
 	bool justReleased() const;
 
 	void setClearWhenHidden(bool doClear);
+
+	//
+	// Moves the button to the new position, optionally erase the current position
+	void move(const Pos& pos, bool eraseCurrentPosition = true) { move(pos.x, pos.y, eraseCurrentPosition); }
+	void move(int16_t x, int16_t y, bool eraseCurrentPosition = true);
+
   protected:	
 
 	void initHelper(uint8_t id, const Rect& pos, Colour bkgColour);

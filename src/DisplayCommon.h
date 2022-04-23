@@ -30,6 +30,22 @@ struct LayoutHelper
 		return pos;
 	}
 
+	static constexpr Pos getMenuTopLeft()
+	{
+		return getMenuButtonPos(0,0);
+	}
+
+	static constexpr Pos getMenuBottomRight()
+	{
+		return getMenuButtonPos(8,1) + Pos{32, 32};
+	}
+
+	static constexpr Rect getMenuArea()
+	{
+		Rect rect{getMenuTopLeft(), getMenuBottomRight()};
+		return rect;
+	}
+
 	#define STATUS_BAR_DIVISIONS 20
 	static constexpr Rect getStatusBarPos()
 	{

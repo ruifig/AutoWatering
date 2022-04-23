@@ -96,6 +96,12 @@ class FixedLabel : public BaseLabel
 		m_needsRedraw = value;
 	}
 
+	void clearValueAndDraw(bool forceDraw = false)
+	{
+		setText("");
+		draw(forceDraw);
+	}
+
 	virtual void draw(bool forceDraw = false) override
 	{
 		if (forceDraw || m_needsRedraw)
@@ -251,6 +257,14 @@ class NumLabel : public BaseLabel, public LabelDataStorage<StorageLocation>
 			m_hasValue = false;
 			m_needsRedraw = true;
 		}
+	}
+
+	/**
+	 * Forcibly marks the label as needing redrawing or not on the next call to draw()
+	 */
+	void setDirty(bool value)
+	{
+		m_needsRedraw = value;
 	}
 
 	void setValueAndDraw(int value, bool forceDraw)

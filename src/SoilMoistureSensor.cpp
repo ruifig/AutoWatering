@@ -108,10 +108,13 @@ SensorReading SoilMoistureSensor::readSensor()
 	StandardDeviation res = calcStandardDeviation(samples, numSamples);
 	SensorReading sample(static_cast<unsigned int>(res.mean), res.stdDeviation);
 
+	// #TODO : Enable this
+	#if 0
 	CZ_LOG(logDefault, Log, F("SoilMoistureSensor(%d) : Mean=%u, stdDeviation=%4.2f")
 		, m_index
 		, sample.meanValue
 		, sample.standardDeviation);
+	#endif
 
 	return sample;
 }

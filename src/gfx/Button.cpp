@@ -77,6 +77,21 @@ void BaseButton::setClearWhenHidden(bool doClear)
 	m_needsRedraw = true;
 }
 
+void BaseButton::move(int16_t x, int16_t y, bool eraseCurrentPosition)
+{
+	if (eraseCurrentPosition)
+	{
+		if (m_enabled)
+		{
+			fillRect(m_pos, SCREEN_BKG_COLOUR );
+		}
+	}
+
+	m_pos.x = x;
+	m_pos.y = y;
+	m_needsRedraw = true;
+}
+
 //////////////////////////////////////////////////////////////////////////
 // ImageButton
 //////////////////////////////////////////////////////////////////////////

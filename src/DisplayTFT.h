@@ -11,19 +11,19 @@
 namespace cz
 {
 
-class SensorMainMenu : public Menu
+class MainMenu : public Menu
 {
   public:
-	SensorMainMenu() {}
-	virtual ~SensorMainMenu() {}
+	MainMenu() {}
+	virtual ~MainMenu() {}
 
 	virtual void init() override;
 	virtual void tick(float deltaSeconds) override;
 	virtual void onEvent(const Event& evt) override;
 	virtual bool processTouch(const Pos& pos) override;
 
-	void show();
-	void hide();
+	virtual void show() override;
+	virtual void hide() override;
 	bool checkShowSettings();
 
   protected:
@@ -152,7 +152,7 @@ class DisplayTFT : public Component
 
 		GroupGraph m_groupGraphs[NUM_PAIRS];
 		uint8_t m_sensorUpdates[NUM_PAIRS];
-		SensorMainMenu m_sensorMainMenu;
+		MainMenu m_sensorMainMenu;
 		SettingsMenu m_settingsMenu;
 		// Instead of keepin track of time passed to update the running time label every second
 		// we just look for a change in the seconds part.

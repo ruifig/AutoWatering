@@ -38,6 +38,16 @@ struct Pos
 	int16_t y;
 };
 
+inline constexpr Pos operator+(const Pos& a, const Pos& b)
+{
+	return {static_cast<int16_t>(a.x + b.x), static_cast<int16_t>(a.y + b.y)};
+}
+
+inline constexpr Pos operator-(const Pos& a, const Pos& b)
+{
+	return {static_cast<int16_t>(a.x - b.x), static_cast<int16_t>(a.y - b.y)};
+}
+
 struct VLine
 {
 	Pos p;

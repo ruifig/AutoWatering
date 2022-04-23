@@ -121,6 +121,18 @@ namespace cz
 		// Using a big value as initial value, which means it will not turn on the motor until things are setup properly
 		unsigned int thresholdValue = 65535;
 
+		void setThresholdValueAsPercentage(unsigned int percentageValue)
+		{
+			unsigned int value = map(cz::clamp<unsigned int>(percentageValue, 0, 100), 0, 100, airValue, waterValue);
+			thresholdValue = value;
+		}
+
+		unsigned int getThresholdValueAsPercentage() const
+		{
+			unsigned int tmp = cz::clamp(thresholdValue, waterValue, airValue);
+			return map(tmp, airValue, waterValue, 0, 100);
+		}
+
 		unsigned int getPercentageValue() const
 		{
 			return map(currentValue, airValue, waterValue, 0, 100);
@@ -231,8 +243,7 @@ namespace cz
 
 		void setThresholdValueAsPercentage(unsigned int percentageValue)
 		{
-			unsigned int value = map(cz::clamp<unsigned int>(percentageValue, 0, 100), 0, 100, m_cfg.airValue, m_cfg.waterValue);
-			m_cfg.thresholdValue = value;
+			m_cfg.setThresholdValueAsPercentage(percentageValue);
 		}
 
 		unsigned int getThresholdValue() const
@@ -240,10 +251,9 @@ namespace cz
 			return m_cfg.thresholdValue;
 		}
 
-		unsigned int getThresholdAsPercentage() const
+		unsigned int getThresholdValueAsPercentage() const
 		{
-			unsigned int tmp = cz::clamp(m_cfg.thresholdValue, m_cfg.waterValue, m_cfg.airValue);
-			return map(tmp, m_cfg.airValue, m_cfg.waterValue, 0, 100);
+			return m_cfg.getThresholdValueAsPercentage();
 		}
 
 		unsigned int getSamplingInterval() const

@@ -17,13 +17,14 @@ class SettingsMenu : public Menu
 	virtual void onEvent(const Event& evt) override;
 	virtual bool processTouch(const Pos& pos) override;
 
-	void show();
-	void hide();
+	virtual void show() override;
+	virtual void hide() override;
 	bool checkClose(bool& doSave);
 
   protected:
 	virtual void draw() override;
 
+	void setSensorLabels(bool forceDirty = false);
 	void changeSamplingInterval(int direction);
 	void changeShotDuration(int direction);
 
@@ -40,7 +41,9 @@ class SettingsMenu : public Menu
 	enum class ButtonId : uint8_t
 	{
 		// First line
-		CloseAndSave,
+		First,
+
+		CloseAndSave=First,
 		Calibrate,
 		SensorInterval,
 		ShotDuration,
@@ -53,6 +56,8 @@ class SettingsMenu : public Menu
 		
 		Max
 	};
+
+	void setState(State state);
 
 	void setButton(ButtonId idx, bool enabled, bool visible);
 	// Sets a button range (inclusive
@@ -68,9 +73,17 @@ class SettingsMenu : public Menu
 
 	// Labels shown when in the Sensor calibration menu
 	// 1: water sensor reading
-	// 2: current sensor reading in %
+	// 2: threshold setting in %
 	// 3: dry sensor reading 
-	gfx::NumLabel<true> m_sensorLabels[3];
+	// When in the main settings menu (without being inthe calibration submenu) the lines behave as:
+	//    Line 1: Water sensor reading as currently saved in the settings
+	//    Line 2: Threshold in %, as currently saved in the settings
+	//    Line 3: Fully dry sensor reading, as currently saved in the settings
+	// When inside the actual calibration sub-menu, the lines are dynamic and change accordingly to what's happening:
+	//    Line 1: Current minimum sensor reading (wettest reading). This will be the new "water value" if saving these settings
+	//    Line 2: Current sensor reading. This will be set as the threshold if the user presses the "Check" button
+	//    Line 3: Current maximum sensor reading (driest reading). This will be the new "air value" if saving these settings
+	gfx::NumLabel<true> m_calibrationLabels[3];
 
 	// Soil sensor sampling interval labels
 	// 1: number of minutes

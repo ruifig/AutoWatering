@@ -291,6 +291,11 @@ bool ProgramData::hasGroupSelected() const
 
 bool ProgramData::trySetSelectedGroup(int8_t index)
 {
+	if (m_selectedGroup != -1 && getSelectedGroup()->isInConfigMenu())
+	{
+		return false;
+	}
+
 	if (index != m_selectedGroup)
 	{
 		int8_t previousIndex = m_selectedGroup;
