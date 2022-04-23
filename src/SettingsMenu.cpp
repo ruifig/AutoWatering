@@ -100,7 +100,10 @@ void SettingsMenu::setState(State state)
 	m_state = state;
 	clearEntireArea();
 
-	// These are always enabled regardless of the state
+	// First set all to hiden/disabled, as we'll be enabling just the ones we need
+	setButtonRange(ButtonId::First, ButtonId::Max, false, false);
+
+	// 1st line - These are always enabled visible regardless of what menu we are in, although they might be in a disabled state
 	setButtonRange(ButtonId::Calibrate, ButtonId::CloseAndIgnore, true, true);
 
 	bool showMinusPlus = (m_state==State::SettingSensorInterval || m_state==State::SettingShotDuration);
@@ -123,22 +126,6 @@ void SettingsMenu::setState(State state)
 		}
 
 	}
-
-	// #TODO : Remove this block
-#if 0
-	// Labels that are not supposed to be drawn are cleared, so they don't get drawn over buttons during draw()
-	for(auto&& l : m_calibrationLabels)
-	{
-		if (state==State::Main || state==State::CalibratingSensor)
-		{
-			l.setDirty(true);
-		}
-		else
-		{
-			l.clearValueAndDraw();
-		}
-	}
-#endif
 
 	//
 	// Sampling interval labels
@@ -168,6 +155,7 @@ void SettingsMenu::setState(State state)
 		m_shotDurationLabels[1].clearValueAndDraw();
 	}
 
+	// Draw buttons on the first line as disabled when required
 	m_buttons[(int)ButtonId::Calibrate].setEnabled(state==State::Main || state==State::CalibratingSensor);
 	m_buttons[(int)ButtonId::SensorInterval].setEnabled(state==State::Main || state==State::SettingSensorInterval);
 	m_buttons[(int)ButtonId::ShotDuration].setEnabled(state==State::Main || state==State::SettingShotDuration);
@@ -307,17 +295,6 @@ void SettingsMenu::show()
 
 	GroupData* data = gCtx.data.getSelectedGroup();
 	m_dummyCfg = data->copyConfig();
-
-	// First set all to hiden/disabled
-	//setButtonRange(ButtonId::First, ButtonId::Max, false, false);
-
-	// CloseAndSave is hidden until we actually enter a proper settings changing menu
-	setButton(ButtonId::CloseAndSave, false, false);
-
-	// 1st line
-	setButtonRange(ButtonId::Calibrate, ButtonId::CloseAndIgnore, true, true);
-	// 2nd line
-	setButtonRange(ButtonId::SetGroupThreshold, ButtonId::Plus, false, false);
 
 	CZ_LOG(logDefault, Log, F("%s:TickCount=%u"), __FUNCTION__, gTickCount);
 
