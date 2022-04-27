@@ -5,3 +5,5 @@
 	* Need to add a SensorTresholdChangedEvent - DONE
 	* Graph then can react to the event, and trigger a full redraw of the plot history - DONE
 
+
+* Implement SettingsMenu::m_configIsDirty

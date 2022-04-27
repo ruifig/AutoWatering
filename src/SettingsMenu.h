@@ -24,7 +24,7 @@ class SettingsMenu : public Menu
   protected:
 	virtual void draw() override;
 
-	void setSensorLabels(bool forceDirty = false);
+	void setSensorLabels();
 	void changeSamplingInterval(int direction);
 	void changeShotDuration(int direction);
 
@@ -66,6 +66,8 @@ class SettingsMenu : public Menu
 	// Dummy config we act on while in the settings.
 	// When getting out of the settings menu, we apply this to the real data
 	GroupConfig m_dummyCfg;
+	// #TODO : Implement this
+	bool m_configIsDirty = false;
 
 	gfx::ImageButton m_buttons[(int)ButtonId::Max];
 
@@ -94,6 +96,13 @@ class SettingsMenu : public Menu
 	// 1: number of seconds
 	// 2: Text "sec"
 	gfx::FixedLabel<> m_shotDurationLabels[2];
+
+	//
+	// If true, then on the next draw call, it will erase the menu second line before drawing the labels/buttons
+	// This is needed because the UI framework needs some more work to support overlapping widgets.
+	// For example, the second line can have labels and buttons using the same space, but hiding and show another is problematic because for example if the one hidden is processed after the visible one, it will clear up that area.
+	// We solve this problem by clearing up the entire second line explicitily, and then draw processing the widgets that are visible.
+	bool m_clearMenuSecondLine = false;
 };
 
 } // namespace cz

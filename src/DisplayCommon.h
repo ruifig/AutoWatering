@@ -40,9 +40,15 @@ struct LayoutHelper
 		return getMenuButtonPos(8,1) + Pos{32, 32};
 	}
 
-	static constexpr Rect getMenuArea()
+	static constexpr Rect getMenuFullArea()
 	{
 		Rect rect{getMenuTopLeft(), getMenuBottomRight()};
+		return rect;
+	}
+
+	static constexpr Rect getMenuLineArea(int index)
+	{
+		Rect rect{ getMenuButtonPos(0, index), getMenuButtonPos(8,index) + Pos{32, 32}};
 		return rect;
 	}
 

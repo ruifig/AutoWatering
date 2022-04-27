@@ -68,10 +68,10 @@ SettingsMenu::SettingsMenu()
 
 void SettingsMenu::init()
 {
-	auto initButton = [this](ButtonId id, auto&&... params)
+	auto initButton = [this](ButtonId id, auto&&... params) -> gfx::ImageButton&
 	{
 		m_buttons[(int)id].init((int)id, std::forward<decltype(params)>(params)...);
-		m_buttons[(int)id].setClearWhenHidden(true);
+		return m_buttons[(int)id];
 	};
 
 	// First line
@@ -83,11 +83,10 @@ void SettingsMenu::init()
 	initButton(ButtonId::CloseAndIgnore, LayoutHelper::getMenuButtonPos(5,0), SCREEN_BKG_COLOUR, img_Close);
 
 	// Second line
-	initButton(ButtonId::SetGroupThreshold, LayoutHelper::getMenuButtonPos(CALIBRATE_BTN_COL+1,1), SCREEN_BKG_COLOUR, img_SetThreshold);
-	initButton(ButtonId::Minus, LayoutHelper::getMenuButtonPos(0,1), SCREEN_BKG_COLOUR, img_Remove);
-	initButton(ButtonId::Plus, LayoutHelper::getMenuButtonPos(0,1), SCREEN_BKG_COLOUR, img_Add);
+	initButton(ButtonId::SetGroupThreshold, LayoutHelper::getMenuButtonPos(CALIBRATE_BTN_COL+1,1), SCREEN_BKG_COLOUR, img_SetThreshold).setClearWhenHidden(false);
+	initButton(ButtonId::Minus, LayoutHelper::getMenuButtonPos(0,1), SCREEN_BKG_COLOUR, img_Remove).setClearWhenHidden(false);
+	initButton(ButtonId::Plus, LayoutHelper::getMenuButtonPos(0,1), SCREEN_BKG_COLOUR, img_Add).setClearWhenHidden(false);
 
-	//hide();
 }
 
 void SettingsMenu::tick(float deltaSeconds)
@@ -97,68 +96,30 @@ void SettingsMenu::tick(float deltaSeconds)
 
 void SettingsMenu::setState(State state)
 {
+	CZ_LOG(logDefault, Log, F("%s(%d):TickCount=%u"), __FUNCTION__, (int)state, gTickCount);
+
+	m_clearMenuSecondLine = true;
 	m_state = state;
-	clearEntireArea();
 
-	// First set all to hiden/disabled, as we'll be enabling just the ones we need
-	setButtonRange(ButtonId::First, ButtonId::Max, false, false);
+	m_buttons[(int)ButtonId::CloseAndSave].setVisible(true);
+	m_buttons[(int)ButtonId::CloseAndSave].setEnabled(m_configIsDirty);
 
-	// 1st line - These are always enabled visible regardless of what menu we are in, although they might be in a disabled state
-	setButtonRange(ButtonId::Calibrate, ButtonId::CloseAndIgnore, true, true);
+	//
+	//	These are always visible regardless of the sub-menu we're in, although they can be in a disabled state
+	m_buttons[(int)ButtonId::Calibrate].setVisible(true);
+	m_buttons[(int)ButtonId::Calibrate].setEnabled(state==State::Main || state==State::CalibratingSensor);
+	m_buttons[(int)ButtonId::SensorInterval].setVisible(true);
+	m_buttons[(int)ButtonId::SensorInterval].setEnabled(state==State::Main || state==State::SettingSensorInterval);
+	m_buttons[(int)ButtonId::ShotDuration].setVisible(true);
+	m_buttons[(int)ButtonId::ShotDuration].setEnabled(state==State::Main || state==State::SettingShotDuration);
+
+	m_buttons[(int)ButtonId::CloseAndIgnore].setVisible(true);
+	m_buttons[(int)ButtonId::CloseAndIgnore].setEnabled(true);
 
 	bool showMinusPlus = (m_state==State::SettingSensorInterval || m_state==State::SettingShotDuration);
 	setButton(ButtonId::SetGroupThreshold, state==State::CalibratingSensor, state==State::CalibratingSensor);
 	setButton(ButtonId::Minus, showMinusPlus, showMinusPlus);
 	setButton(ButtonId::Plus, showMinusPlus, showMinusPlus);
-
-	CZ_LOG(logDefault, Log, F("%s(%d):TickCount=%u"), __FUNCTION__, (int)state, gTickCount);
-
-	if (state==State::Main || state==State::CalibratingSensor)
-	{
-		setSensorLabels(true);
-	}
-	else
-	{
-		for(auto&& l : m_calibrationLabels)
-		{
-			l.clearValueAndDraw();
-			l.setDirty(true);
-		}
-
-	}
-
-	//
-	// Sampling interval labels
-	//
-	if (state==State::Main || state==State::SettingSensorInterval)
-	{
-		changeSamplingInterval(0);
-		m_samplingIntervalLabels[1].setText("min");
-	}
-	else
-	{
-		m_samplingIntervalLabels[0].clearValueAndDraw();
-		m_samplingIntervalLabels[1].clearValueAndDraw();
-	}
-
-	//
-	// Shot duration labels
-	//
-	if (state==State::Main || state==State::SettingShotDuration)
-	{
-		changeShotDuration(0);
-		m_shotDurationLabels[1].setText("sec");
-	}
-	else
-	{
-		m_shotDurationLabels[0].clearValueAndDraw();
-		m_shotDurationLabels[1].clearValueAndDraw();
-	}
-
-	// Draw buttons on the first line as disabled when required
-	m_buttons[(int)ButtonId::Calibrate].setEnabled(state==State::Main || state==State::CalibratingSensor);
-	m_buttons[(int)ButtonId::SensorInterval].setEnabled(state==State::Main || state==State::SettingSensorInterval);
-	m_buttons[(int)ButtonId::ShotDuration].setEnabled(state==State::Main || state==State::SettingShotDuration);
 
 	if (m_state==State::CalibratingSensor)
 	{
@@ -172,6 +133,62 @@ void SettingsMenu::setState(State state)
 	{
 		m_buttons[(int)ButtonId::Minus].move(LayoutHelper::getMenuButtonPos(SHOTDURATION_BTN_COL-1, 1), true);
 		m_buttons[(int)ButtonId::Plus ].move(LayoutHelper::getMenuButtonPos(SHOTDURATION_BTN_COL+1, 1), true);
+	}
+
+	if (state==State::Main || state==State::CalibratingSensor)
+	{
+		setSensorLabels();
+	}
+	else
+	{
+		for(auto&& l : m_calibrationLabels)
+		{
+			l.clearValue();
+		}
+	}
+
+	//
+	// Sampling interval labels
+	//
+	if (state==State::Main || state==State::SettingSensorInterval)
+	{
+		changeSamplingInterval(0);
+		m_samplingIntervalLabels[1].setText("min");
+	}
+	else
+	{
+		m_samplingIntervalLabels[0].clearValue();
+		m_samplingIntervalLabels[1].clearValue();
+	}
+
+	//
+	// Shot duration labels
+	//
+	if (state==State::Main || state==State::SettingShotDuration)
+	{
+		changeShotDuration(0);
+		m_shotDurationLabels[1].setText("sec");
+	}
+	else
+	{
+		m_shotDurationLabels[0].clearValue();
+		m_shotDurationLabels[1].clearValue();
+	}
+
+	//
+	// Set all labels as dirty to force a draw or erase to reflect the state we setup in this function
+	//
+	for(auto&& l : m_calibrationLabels)
+	{
+		l.setDirty(true);
+	}
+	for(auto&& l : m_samplingIntervalLabels)
+	{
+		l.setDirty(true);
+	}
+	for(auto&& l: m_shotDurationLabels)
+	{
+		l.setDirty(true);
 	}
 }
 
@@ -245,9 +262,11 @@ void SettingsMenu::draw()
 {
 	GroupData* data = gCtx.data.getSelectedGroup();
 
-	for(gfx::ImageButton& btn : m_buttons)
+
+	if (m_clearMenuSecondLine)
 	{
-		btn.draw(m_forceDraw);
+		m_clearMenuSecondLine = false;
+		fillRect(LayoutHelper::getMenuLineArea(1), SCREEN_BKG_COLOUR);
 	}
 
 	if (data)
@@ -271,6 +290,13 @@ void SettingsMenu::draw()
 		}
 	}
 
+	//
+	// Buttons need to be drawn AFTER the labels, so the labels don't overwrite the Minus/Plus buttons
+	for(gfx::ImageButton& btn : m_buttons)
+	{
+		btn.draw(m_forceDraw);
+	}
+
 	m_forceDraw = false;
 }
 
@@ -291,32 +317,25 @@ void SettingsMenu::setButtonRange(ButtonId first, ButtonId last, bool enabled, b
 
 void SettingsMenu::show()
 {
+	CZ_LOG(logDefault, Log, F("%s:TickCount=%u"), __FUNCTION__, gTickCount);
+
 	Menu::show();
 
 	GroupData* data = gCtx.data.getSelectedGroup();
 	m_dummyCfg = data->copyConfig();
-
-	CZ_LOG(logDefault, Log, F("%s:TickCount=%u"), __FUNCTION__, gTickCount);
-
 	data->setInConfigMenu(true);
+
 	setState(State::Main);
 }
 
-void SettingsMenu::setSensorLabels(bool forceDirty)
+void SettingsMenu::setSensorLabels()
 {
 	CZ_LOG(logDefault, Log, F("%s:TickCount=%u"), __FUNCTION__, gTickCount);
 	m_calibrationLabels[0].setValue(m_dummyCfg.waterValue);
 	m_calibrationLabels[1].setValue(m_dummyCfg.getThresholdValueAsPercentage());
 	m_calibrationLabels[2].setValue(m_dummyCfg.airValue);
-
-	if (forceDirty)
-	{
-		for(auto&& l : m_calibrationLabels)
-		{
-			l.setDirty(true);
-		}
-	}
 }
+
 void SettingsMenu::changeSamplingInterval(int direction)
 {
 	m_dummyCfg.setSamplingInterval(m_dummyCfg.samplingInterval + direction*60);
@@ -331,7 +350,23 @@ void SettingsMenu::changeShotDuration(int direction)
 
 void SettingsMenu::hide()
 {
+	// Set all buttons and labels as hidden, so they will be marked as dirty when we enter this menu a second time
+	// Even though Menu::hide clears the entire menu area, this is still needed, so the UI elements are marked dirty when we
+	// enter the menu again
 	setButtonRange(ButtonId::First, ButtonId::Max, false, false);
+	for(auto&& l :m_calibrationLabels)
+	{
+		l.clearValue();
+	}
+	for(auto&& l : m_samplingIntervalLabels)
+	{
+		l.clearValue();
+	}
+	for(auto&& l : m_shotDurationLabels)
+	{
+		l.clearValue();
+	}
+
 	GroupData* data = gCtx.data.getSelectedGroup();
 	data->setInConfigMenu(false);
 

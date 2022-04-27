@@ -96,6 +96,11 @@ class FixedLabel : public BaseLabel
 		m_needsRedraw = value;
 	}
 
+	void clearValue()
+	{
+		setText("");
+	}
+
 	void clearValueAndDraw(bool forceDraw = false)
 	{
 		setText("");

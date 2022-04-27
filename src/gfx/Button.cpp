@@ -44,6 +44,11 @@ bool BaseButton::justReleased() const
 
 void BaseButton::setEnabled(bool enabled)
 {
+	if (m_enabled == enabled)
+	{
+		return;
+	}
+
 	m_enabled = enabled;
 	m_needsRedraw = true;
 	if (!enabled)
@@ -54,6 +59,11 @@ void BaseButton::setEnabled(bool enabled)
 
 void BaseButton::setVisible(bool visible)
 {
+	if (m_visible == visible)
+	{
+		return;
+	}
+
 	m_visible = visible;
 	m_needsRedraw = true;
 	if (!visible)
@@ -73,8 +83,14 @@ void BaseButton::setPressed(bool pressed)
 
 void BaseButton::setClearWhenHidden(bool doClear)
 {
-	m_clearWhenHidden = doClear;
-	m_needsRedraw = true;
+	if (m_clearWhenHidden!=doClear)
+	{
+		m_clearWhenHidden = doClear;
+		if (doClear && !m_visible)
+		{
+			m_needsRedraw = true;
+		}
+	}
 }
 
 void BaseButton::move(int16_t x, int16_t y, bool eraseCurrentPosition)

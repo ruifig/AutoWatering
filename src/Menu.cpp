@@ -13,7 +13,7 @@ void Menu::show()
 
 void Menu::clearEntireArea()
 {
-	fillRect(LayoutHelper::getMenuArea(), SCREEN_BKG_COLOUR);
+	fillRect(LayoutHelper::getMenuFullArea(), SCREEN_BKG_COLOUR);
 }
 
 void Menu::hide()
