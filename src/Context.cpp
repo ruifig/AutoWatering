@@ -22,6 +22,7 @@ void updateEEPROM(AT24C::Ptr& dst, const uint8_t* src, unsigned int size)
 	while(size--)
 	{
 		(*dst).update(*src);
+		//(*dst) = *src;
 		++dst;
 		++src;
 	}
@@ -91,6 +92,171 @@ void Context::begin()
 }
 
 ///////////////////////////////////////////////////////////////////////
+// GroupConfig
+///////////////////////////////////////////////////////////////////////
+
+void GroupConfig::log() const
+{
+	CZ_LOG(logDefault, Log, F("    m_data.running=%u"), (unsigned int)m_data.running);
+	CZ_LOG(logDefault, Log, F("    m_data.samplingInterval=%u"), (unsigned int)m_data.samplingInterval);
+	CZ_LOG(logDefault, Log, F("    m_data.shotDuration=%u"), (unsigned int)m_data.shotDuration);
+	CZ_LOG(logDefault, Log, F("    m_data.waterValue=%u"), (unsigned int)m_data.waterValue);
+	CZ_LOG(logDefault, Log, F("    m_data.airValue=%u"), (unsigned int)m_data.airValue);
+	CZ_LOG(logDefault, Log, F("    m_data.thresholdValue=%u, %u%%"), (unsigned int)m_data.thresholdValue, getThresholdValueAsPercentage());
+	CZ_LOG(logDefault, Log, F("    m_isDirty=%u"), (unsigned int)m_isDirty);
+	CZ_LOG(logDefault, Log, F("    m_currentValue=%u"), (unsigned int)m_currentValue);
+	CZ_LOG(logDefault, Log, F("    m_numReadings=%u"), (unsigned int)m_numReadings);
+}
+
+void GroupConfig::save(AT24C::Ptr& dst) const
+{
+	if (m_isDirty)
+	{
+		m_isDirty = false;
+		updateEEPROM(dst, reinterpret_cast<const uint8_t*>(&m_data), sizeof(m_data));
+	}
+	else
+	{
+		dst += sizeof(m_data);
+	}
+}
+
+void GroupConfig::load(AT24C::Ptr& src)
+{
+	readEEPROM(src, reinterpret_cast<uint8_t*>(&m_data), sizeof(m_data));
+	m_isDirty = false;
+}
+
+bool GroupConfig::isDirty() const
+{
+	return m_isDirty;
+}
+
+bool GroupConfig::isRunning() const
+{
+	return m_data.running;
+}
+
+void GroupConfig::setRunning(bool running)
+{
+	if (running != m_data.running)
+	{
+		m_isDirty = true;
+		m_data.running = running;
+	}
+}
+
+unsigned int GroupConfig::getThresholdValue() const
+{
+	return m_data.thresholdValue;
+}
+
+unsigned int GroupConfig::getThresholdValueAsPercentage() const
+{
+	unsigned int tmp = cz::clamp(m_data.thresholdValue, m_data.waterValue, m_data.airValue);
+	return map(tmp, m_data.airValue, m_data.waterValue, 0, 100);
+}
+
+void GroupConfig::setThresholdValue(unsigned int value)
+{
+	if (value != m_data.thresholdValue)
+	{
+		m_isDirty = true;
+		m_data.thresholdValue = value;
+	}
+}
+
+void GroupConfig::setThresholdValueAsPercentage(unsigned int percentageValue)
+{
+	unsigned int value = map(cz::clamp<unsigned int>(percentageValue, 0, 100), 0, 100, m_data.airValue, m_data.waterValue);
+	if (value != m_data.thresholdValue)
+	{
+		m_isDirty = true;
+		m_data.thresholdValue = value;
+	}
+}
+
+unsigned int GroupConfig::getCurrentValue() const
+{
+	return m_currentValue;
+}
+
+unsigned int GroupConfig::getCurrentValueAsPercentage() const
+{
+	return map(m_currentValue, m_data.airValue, m_data.waterValue, 0, 100);
+}
+
+unsigned int GroupConfig::getAirValue() const
+{
+	return m_data.airValue;
+}
+
+unsigned int GroupConfig::getWaterValue() const
+{
+	return m_data.waterValue;
+}
+
+unsigned int GroupConfig::getSamplingInterval() const
+{
+	return m_data.samplingInterval;
+}
+
+unsigned int GroupConfig::getSamplingIntervalInMinutes() const
+{
+	return m_data.samplingInterval / 60;
+}
+
+void GroupConfig::setSamplingInterval(unsigned int value_)
+{
+	unsigned int value = cz::clamp<unsigned int>(value_, 1, MOISTURESENSOR_MAX_SAMPLINGINTERVAL);
+	if (value != m_data.samplingInterval)
+	{
+		m_isDirty = true;
+		m_data.samplingInterval = value;
+	}
+}
+
+unsigned int GroupConfig::getShotDuration() const
+{
+	return m_data.shotDuration;
+}
+
+void GroupConfig::setShotDuration(unsigned int value_)
+{
+	unsigned int value = cz::clamp<unsigned int>(value_, 1, SHOT_MAX_DURATION);
+	if (value != m_data.shotDuration)
+	{
+		m_isDirty = true;
+		m_data.shotDuration = value;
+	}
+}
+
+void GroupConfig::setSensorValue(unsigned int currentValue_, bool adjustRange)
+{
+	m_numReadings++;
+
+	// If we are calibrating, we accept any value, and then adjust the air/water values accordingly
+	if (adjustRange)
+	{
+		m_currentValue = currentValue_;
+		if (m_currentValue > m_data.airValue)
+		{
+			m_isDirty = true;
+			m_data.airValue = m_currentValue;
+		}
+		else if (m_currentValue < m_data.waterValue)
+		{
+			m_isDirty = true;
+			m_data.waterValue = m_currentValue;
+		}
+	}
+	else
+	{
+		m_currentValue = cz::clamp(currentValue_, m_data.waterValue, m_data.airValue);
+	}
+}
+
+///////////////////////////////////////////////////////////////////////
 // GroupData
 ///////////////////////////////////////////////////////////////////////
 
@@ -151,22 +317,17 @@ void GroupData::begin(uint8_t index)
 
 void GroupData::setMoistureSensorValues(const SensorReading& sample)
 {
-	if (!m_cfg.running)
-	{
-		return;
-	}
-
 	if (m_inConfigMenu)
 	{
 		// If we are configuring this group, then we want to ignore the readings and just raise calibration events
 		Component::raiseEvent(SoilMoistureSensorCalibrationReadingEvent(m_index, sample));
 	}
-	else
+	else if (m_cfg.isRunning())
 	{
 		m_cfg.setSensorValue(sample.meanValue, false);
 
 		GraphPoint point = {0, 0, sample.status};
-		point.val = map(m_cfg.currentValue, m_cfg.airValue, m_cfg.waterValue, 0, GRAPH_POINT_MAXVAL);
+		point.val = map(m_cfg.getCurrentValue(), m_cfg.getAirValue(), m_cfg.getWaterValue(), 0, GRAPH_POINT_MAXVAL);
 
 		// Since a motor can be turned on then off without a sensor reading in between, we use
 		// m_pendingMotorPoint as a reminder there was a motor event, and so we'll draw that motor plot
@@ -209,7 +370,7 @@ bool GroupData::isMotorOn() const
 
 void GroupData::setRunning(bool state)
 {
-	if (m_cfg.running == state)
+	if (m_cfg.isRunning() == state)
 	{
 		return;
 	}
@@ -218,7 +379,7 @@ void GroupData::setRunning(bool state)
 	// This allows the user to fix whatever is wrong and restart the group to get rid of the error
 	m_sensorErrors = 0;
 
-	m_cfg.running = state;
+	m_cfg.setRunning(state);
 	Component::raiseEvent(GroupOnOffEvent(m_index, state));
 }
 
@@ -229,11 +390,10 @@ void GroupData::resetHistory()
 
 void GroupData::save(AT24C::Ptr& dst, bool saveConfig, bool saveHistory) const
 {
-
 	if (saveConfig)
 	{
 		CZ_LOG(logDefault, Log, F("Saving group %d config at address %u"), m_index, dst.getAddress());
-		updateEEPROM(dst, reinterpret_cast<const uint8_t*>(&m_cfg), sizeof(m_cfg));
+		m_cfg.save(dst);
 	}
 
 	if (saveHistory)
@@ -248,7 +408,7 @@ void GroupData::load(AT24C::Ptr& src, bool loadConfig, bool loadHistory)
 	if (loadConfig)
 	{
 		CZ_LOG(logDefault, Log, F("Loading group %d config from address %u"), m_index, src.getAddress());
-		readEEPROM(src, reinterpret_cast<uint8_t*>(&m_cfg), sizeof(m_cfg));
+		m_cfg.load(src);
 	}
 
 	if (loadHistory)
@@ -276,6 +436,14 @@ void ProgramData::begin()
 	{
 		g.begin(idx);
 		idx++;
+	}
+}
+
+void ProgramData::logConfig() const
+{
+	for(const GroupData& g : m_group)
+	{
+		g.logConfig();
 	}
 }
 
@@ -352,7 +520,7 @@ void ProgramData::saveGroupConfig(uint8_t index)
 
 	for(uint8_t idx = 0; idx<index; ++idx)
 	{
-		ptr += m_group[idx].getConfigSize();
+		ptr += m_group[idx].getConfigSaveSize();
 	}
 
 	m_group[index].save(ptr, true, false);

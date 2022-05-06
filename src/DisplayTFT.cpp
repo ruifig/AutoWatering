@@ -189,7 +189,7 @@ void DisplayTFT::BootMenuState::tick(float deltaSeconds)
 			);
 		}
 	}
-	else // We are 
+	else
 	{
 		if (m_outer.m_touch.pressed && BootMenu::getConfirmButtonPos().contains(m_outer.m_touch.pos))
 		{
@@ -526,7 +526,7 @@ void DisplayTFT::OverviewState::draw()
 			{
 				PROFILE_SCOPE(F("drawTextValues"));
 				Overview::sensorLabels[i][0].setValueAndDraw(data.getWaterValue(), m_forceRedraw);
-				Overview::sensorLabels[i][1].setValueAndDraw(data.getPercentageValue(), m_forceRedraw);
+				Overview::sensorLabels[i][1].setValueAndDraw(data.getCurrentValueAsPercentage(), m_forceRedraw);
 				Overview::sensorLabels[i][2].setValueAndDraw(data.getAirValue(), m_forceRedraw);
 			}
 			else

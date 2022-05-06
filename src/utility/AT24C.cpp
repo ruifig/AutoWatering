@@ -125,7 +125,7 @@ uint16_t AT24C::write(uint16_t address, const uint8_t* src, uint16_t len)
 		uint16_t bytes = calcBulkSize(address, todo);
 		waitForReady();
 
-		CZ_LOG(logDefault, Verbose, F("	address=%u, bytes=%u"), (unsigned)address, (unsigned)bytes);
+		CZ_LOG(logDefault, Verbose, F("    address=%u, bytes=%u"), (unsigned)address, (unsigned)bytes);
 		m_wire.beginTransmission(m_id);
 		writeAddress(address);
 		todo -= m_wire.write(src, bytes);
@@ -148,7 +148,7 @@ uint16_t AT24C::read(uint16_t address, uint8_t* dest, uint16_t len)
 		uint8_t bytes = calcBulkSize(address, todo);
 		waitForReady();
 
-		CZ_LOG(logDefault, Verbose, F("	address=%u, bytes=%u"), (unsigned)address, (unsigned)bytes);
+		CZ_LOG(logDefault, Verbose, F("    address=%u, bytes=%u"), (unsigned)address, (unsigned)bytes);
 		m_wire.beginTransmission(m_id);
 		writeAddress(address);
 		m_wire.endTransmission();
@@ -234,7 +234,7 @@ AT24C256::AT24C256(uint8_t address, TwoWire& wire)
 				mem.write8(addr, addr & 0xFF);
 			}
 			unsigned long t2 = micros();
-			CZ_LOG(logDefault, Log, F("	Time to write all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
+			CZ_LOG(logDefault, Log, F("    Time to write all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
 		}
 
 		{
@@ -244,12 +244,12 @@ AT24C256::AT24C256(uint8_t address, TwoWire& wire)
 				uint8_t ret = mem.read8(addr);
 				if (ret != (addr & 0xFF))
 				{
-					CZ_LOG(logDefault, Log, F("	Address %u - Expected %d, got %d"), (unsigned int)addr, (int)addr & 0xFF, ret);
+					CZ_LOG(logDefault, Log, F("    Address %u - Expected %d, got %d"), (unsigned int)addr, (int)addr & 0xFF, ret);
 					return false;
 				}
 			}
 			unsigned long t2 = micros();
-			CZ_LOG(logDefault, Log, F("	Time to real all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
+			CZ_LOG(logDefault, Log, F("    Time to real all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
 		}
 
 		return true;
@@ -265,7 +265,7 @@ AT24C256::AT24C256(uint8_t address, TwoWire& wire)
 				mem.write16(addr, addr);
 			}
 			unsigned long t2 = micros();
-			CZ_LOG(logDefault, Log, F("	Time to write all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
+			CZ_LOG(logDefault, Log, F("    Time to write all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
 		}
 
 		{
@@ -275,12 +275,12 @@ AT24C256::AT24C256(uint8_t address, TwoWire& wire)
 				uint16_t ret = mem.read16(addr);
 				if (ret != addr)
 				{
-					CZ_LOG(logDefault, Log, F("	Address %u - Expected %d, got %d"), (unsigned int)addr, (int)addr, ret);
+					CZ_LOG(logDefault, Log, F("    Address %u - Expected %d, got %d"), (unsigned int)addr, (int)addr, ret);
 					return false;
 				}
 			}
 			unsigned long t2 = micros();
-			CZ_LOG(logDefault, Log, F("	Time to real all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
+			CZ_LOG(logDefault, Log, F("    Time to real all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
 		}
 
 		return true;
@@ -296,7 +296,7 @@ AT24C256::AT24C256(uint8_t address, TwoWire& wire)
 				mem.write32(addr, (uint32_t(1) << 24) | (uint32_t(2) << 16) | addr);
 			}
 			unsigned long t2 = micros();
-			CZ_LOG(logDefault, Log, F("	Time to write all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
+			CZ_LOG(logDefault, Log, F("    Time to write all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
 		}
 
 		{
@@ -307,12 +307,12 @@ AT24C256::AT24C256(uint8_t address, TwoWire& wire)
 				uint32_t expected = (uint32_t(1) << 24) | (uint32_t(2) << 16) | addr;
 				if (ret != expected)
 				{
-					CZ_LOG(logDefault, Log, F("	Address %u - Expected %lu, got %d"), (unsigned int)addr, (unsigned long)expected, ret);
+					CZ_LOG(logDefault, Log, F("    Address %u - Expected %lu, got %d"), (unsigned int)addr, (unsigned long)expected, ret);
 					return false;
 				}
 			}
 			unsigned long t2 = micros();
-			CZ_LOG(logDefault, Log, F("	Time to real all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
+			CZ_LOG(logDefault, Log, F("    Time to real all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
 		}
 
 		return true;
@@ -334,7 +334,7 @@ AT24C256::AT24C256(uint8_t address, TwoWire& wire)
 				CZ_ASSERT(ret == todo);
 			}
 			unsigned long t2 = micros();
-			CZ_LOG(logDefault, Log, F("	Time to write all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
+			CZ_LOG(logDefault, Log, F("    Time to write all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
 		}
 
 		{
@@ -348,13 +348,13 @@ AT24C256::AT24C256(uint8_t address, TwoWire& wire)
 				CZ_ASSERT(ret == todo);
 				if (strncmp(buf, readBuf, todo) != 0)
 				{
-					CZ_LOG(logDefault, Log, F("	Address %u - Expected %s, got %s"), (unsigned int)addr, buf, readBuf);
+					CZ_LOG(logDefault, Log, F("    Address %u - Expected %s, got %s"), (unsigned int)addr, buf, readBuf);
 					return false;
 				}
 				CZ_LOG(logDefault, Log, F("%s"), readBuf);
 			}
 			unsigned long t2 = micros();
-			CZ_LOG(logDefault, Log, F("	Time to read all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
+			CZ_LOG(logDefault, Log, F("    Time to read all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
 		}
 
 		return true;
@@ -375,7 +375,7 @@ AT24C256::AT24C256(uint8_t address, TwoWire& wire)
 		CZ_ASSERT(ret == todo);
 		if (strncmp(expected, readBuf, todo) != 0)
 		{
-			CZ_LOG(logDefault, Log, F("	Address %u - Expected %s, got %s"), (unsigned int)addr, expected, readBuf);
+			CZ_LOG(logDefault, Log, F("    Address %u - Expected %s, got %s"), (unsigned int)addr, expected, readBuf);
 			return false;
 		}
 		CZ_LOG(logDefault, Log, F("%s"), readBuf);
@@ -404,7 +404,7 @@ AT24C256::AT24C256(uint8_t address, TwoWire& wire)
 				}
 			}
 			unsigned long t2 = micros();
-			CZ_LOG(logDefault, Log, F("	Time to write all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
+			CZ_LOG(logDefault, Log, F("    Time to write all: %ld microseconds (%ld milliseconds)"), t2 - t1, (t2 - t1) / 1000);
 		}
 
 		return true;

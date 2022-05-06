@@ -6,4 +6,24 @@
 	* Graph then can react to the event, and trigger a full redraw of the plot history - DONE
 
 
-* Implement SettingsMenu::m_configIsDirty
+* SettingsMenu
+	* Calibration sub-menu
+		* Have the labels reflect the current sensor state
+			* air value needs to be updated
+			* water value needs to be updated
+			* current sensor reading shown in the middle as %
+		* Have the "set threshold" button react and apply the calibration settings
+	* Implement m_configIsDirty
+		* Saving button needs to update
+		* Have the saving button perform a save and close
+
+* Save the group config when we start or stop, so it remembers that when rebooting, otherwise there is no way to start/stop a group and get that saved
+
+BUGS
+====
+
+* The history plot line draws red dots inconsistently 
+	* Repro: Start and stop a group while getting stable readings of say 30%
+	* When restarting a group, and the plot starts moving, spots with red dots will move to the left as expected, but without properly erasing the ones on the right, causing a read line to incorrectly grow in the plot
+
+* When a group is stopped, and we go into the calibration menu, the calibration doesn't work. Probably we are not getting any events.

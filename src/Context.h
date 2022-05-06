@@ -93,104 +93,111 @@ namespace cz
 	// Data that should be saved/loaded
 	// NOTE: No members in this struct should raise any events, because this is also used in the UI to hold
 	// temporary configs while in the settings menu.
-	struct GroupConfig
+	class GroupConfig
 	{
-		// Tells if this group is currently running
-		bool running = false;
-		// Sensor sampling interval in seconds
-		unsigned int samplingInterval = MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL;
-		// Motor shot duration in seconds
-		unsigned int shotDuration = SHOT_DEFAULT_DURATION;
-		// Number of sensor readings done
-		uint32_t numReadings = 0;
+	  private:
 
-		// The sensor values decreases as moisture increases. (High Value = Dry, Low Value = Wet)
-		// Air and water values are calculated automatically as sensor values are provided. This means the user wipe clean the sensor
-		// to set the air value, and then submerse the sensor to set the water value.
-		// Having air and water properly is not a requirement for things to work, since what matter is that the system know what 
-		// sensor value is the threshold to turn on/off the motor
-		#define START_AIR_VALUE 420
-		#define START_WATER_VALUE 280
-		unsigned int airValue = START_AIR_VALUE;
-		unsigned int waterValue = START_WATER_VALUE;
+		//
+		// Data that should be save/loaded
+		struct SaveData
+		{
+			// Tells if this group is currently running
+			bool running = false;
+			// Sensor sampling interval in seconds
+			unsigned int samplingInterval = MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL;
+			// Motor shot duration in seconds
+			unsigned int shotDuration = SHOT_DEFAULT_DURATION;
+
+			// The sensor values decreases as moisture increases. (High Value = Dry, Low Value = Wet)
+			// Air and water values are calculated automatically as sensor values are provided. This means the user wipe clean the sensor
+			// to set the air value, and then submerse the sensor to set the water value.
+			// Having air and water properly is not a requirement for things to work, since what matter is that the system know what 
+			// sensor value is the threshold to turn on/off the motor
+			#define START_AIR_VALUE 420
+			#define START_WATER_VALUE 280
+			unsigned int airValue = START_AIR_VALUE;
+			unsigned int waterValue = START_WATER_VALUE;
+
+			// Value above which irrigation should be turned on
+			// NOTE: ABOVE because higher values means drier.
+			// Using a big value as initial value, which means it will not turn on the motor until things are setup properly
+			unsigned int thresholdValue = 65535;
+		} m_data;
+
+		// This needs to start as true, because:
+		//	* Boot screen will save the config. If it was false, then "save" in the boot screen would skip stuff internally instead of actualy writting the data
+		//		* When saving, this will be reset to false as part of "save()"
+		//	* If the user chooses to let the boot menu load the current saved config, then this will be reset to false as part of "load()"
+		mutable bool m_isDirty = true;
 
 		// Current sensor value
-		unsigned int currentValue = START_AIR_VALUE - (START_AIR_VALUE-START_WATER_VALUE)/2;
+		// This doesn't need to be saved or loaded
+		unsigned int m_currentValue = START_AIR_VALUE - (START_AIR_VALUE-START_WATER_VALUE)/2;
 
-		// Value above which irrigation should be turned on
-		// NOTE: ABOVE because higher values means drier.
-		// Using a big value as initial value, which means it will not turn on the motor until things are setup properly
-		unsigned int thresholdValue = 65535;
+		// Number of sensor readings done
+		uint32_t m_numReadings = 0;
 
-		void setThresholdValueAsPercentage(unsigned int percentageValue)
+	  public:
+
+		int getSaveSize() const
 		{
-			unsigned int value = map(cz::clamp<unsigned int>(percentageValue, 0, 100), 0, 100, airValue, waterValue);
-			thresholdValue = value;
+			return sizeof(m_data);
 		}
 
-		unsigned int getThresholdValueAsPercentage() const
-		{
-			unsigned int tmp = cz::clamp(thresholdValue, waterValue, airValue);
-			return map(tmp, airValue, waterValue, 0, 100);
-		}
+	  	void log() const;
+		void save(AT24C::Ptr& dst) const;
+		void load(AT24C::Ptr& src);
+		bool isDirty() const;
+		bool isRunning() const;
+		void setRunning(bool running);
 
-		unsigned int getPercentageValue() const
-		{
-			return map(currentValue, airValue, waterValue, 0, 100);
-		}
+		unsigned int getThresholdValue() const;
+		unsigned int getThresholdValueAsPercentage() const;
+		void setThresholdValue(unsigned int value);
+		void setThresholdValueAsPercentage(unsigned int percentageValue);
+
+		unsigned int getCurrentValue() const;
+		unsigned int getCurrentValueAsPercentage() const;
+
+		unsigned int getAirValue() const;
+		unsigned int getWaterValue() const;
+
+		/**
+		 * Gets the sampling interval in seconds
+		 */
+		unsigned int getSamplingInterval() const;
 
 		/**
 		 * The UI needs the sampling interval in minutes
 		 * When the sampling interval is < 1 min, it will return 0. THIS IS INTENTIONAL, so
 		 * we let the UI specify minutes, but treat 0 as shortest possible (1 second)
 		 */
-		unsigned int getSamplingIntervalInMinutes() const
-		{
-			return samplingInterval / 60;
-		}
+		unsigned int getSamplingIntervalInMinutes() const;
 
 		/**
 		 * Sets the sampling interval (in seconds)
 		 * Since the UI deals with this in minutes, we can allow the UI to also allow a value of 0, which
 		 * internally gets clamped to 1 second. This is intentional
 		 */
-		void setSamplingInterval(unsigned int value)
-		{
-			samplingInterval = cz::clamp<unsigned int>(value, 1, MOISTURESENSOR_MAX_SAMPLINGINTERVAL);
-		}
+		void setSamplingInterval(unsigned int value_);
 
-		void setShotDuration(unsigned int value)
-		{
-			shotDuration = cz::clamp<unsigned int>(value, 1, SHOT_MAX_DURATION);
-		}
+		/**
+		 * Returns the water shot duration in seconds
+		 */
+		unsigned int getShotDuration() const;
+
+		/**
+		 * Set the water shot duration in seconds
+		 */
+		void setShotDuration(unsigned int value_);
 
 		/**
 		 * Changes the sensor value.
 		 * \param currentValue The sensor value to save
 		 * \param adjustRange If true, then air and water values are ajusted to accomodate for the "currentValue" parameter
 		 */
-		void setSensorValue(unsigned int currentValue_, bool adjustRange)
-		{
-			numReadings++;
+		void setSensorValue(unsigned int currentValue_, bool adjustRange);
 
-			// If we are calibrating, we accept any value, and then adjust the air/water values accordingly
-			if (adjustRange)
-			{
-				currentValue = currentValue_;
-				if (currentValue > airValue)
-				{
-					airValue = currentValue;
-				}
-				else if (currentValue < waterValue)
-				{
-					waterValue = currentValue;
-				}
-			}
-			else
-			{
-				currentValue = cz::clamp(currentValue_, waterValue, airValue);
-			}
-		}
 	};
 
 	class GroupData
@@ -202,54 +209,30 @@ namespace cz
 		
 		void begin(uint8_t index);
 
+		void logConfig() const
+		{
+			CZ_LOG(logDefault, Log, F("Group %u config:"), (unsigned int)m_index);
+			m_cfg.log();
+		}
+
 		void setMoistureSensorValues(const SensorReading& sample);
 
 		void setMotorState(bool state);
 		bool isMotorOn() const;
+
+		bool isRunning() const
+		{
+			return m_cfg.isRunning();
+		}
 
 		// Turns this group on or off
 		// On : It will monitor and water
 		// Off : Stops monitoring and watering
 		void setRunning(bool state);
 
-		bool isRunning() const
-		{
-			return m_cfg.running;
-		}
-
-		unsigned int getAirValue() const
-		{
-			return m_cfg.airValue;
-		}
-
-		unsigned int getWaterValue() const
-		{
-			return m_cfg.waterValue;
-		}
-
-		unsigned int getCurrentValue() const
-		{
-			return m_cfg.currentValue;
-		}
-
-		unsigned int getPercentageValue() const
-		{
-			return m_cfg.getPercentageValue();
-		}
-
-		void setThresholdValue(unsigned int value)
-		{
-			m_cfg.thresholdValue = value;
-		}
-
-		void setThresholdValueAsPercentage(unsigned int percentageValue)
-		{
-			m_cfg.setThresholdValueAsPercentage(percentageValue);
-		}
-
 		unsigned int getThresholdValue() const
 		{
-			return m_cfg.thresholdValue;
+			return m_cfg.getThresholdValue();
 		}
 
 		unsigned int getThresholdValueAsPercentage() const
@@ -257,14 +240,59 @@ namespace cz
 			return m_cfg.getThresholdValueAsPercentage();
 		}
 
+		void setThresholdValue(unsigned int value)
+		{
+			m_cfg.setThresholdValue(value);
+		}
+
+		void setThresholdValueAsPercentage(unsigned int percentageValue)
+		{
+			m_cfg.setThresholdValueAsPercentage(percentageValue);
+		}
+
+		unsigned int getCurrentValue() const
+		{
+			return m_cfg.getCurrentValue();
+		}
+
+		unsigned int getCurrentValueAsPercentage() const
+		{
+			return m_cfg.getCurrentValueAsPercentage();
+		}
+
+		unsigned int getAirValue() const
+		{
+			return m_cfg.getAirValue();
+		}
+
+		unsigned int getWaterValue() const
+		{
+			return m_cfg.getWaterValue();
+		}
+
 		unsigned int getSamplingInterval() const
 		{
-			return m_cfg.samplingInterval;
+			return m_cfg.getSamplingInterval();
+		}
+
+		unsigned int getSamplingIntervalInMinutes() const
+		{
+			return m_cfg.getSamplingIntervalInMinutes();
+		}
+
+		void setSamplingInterval(unsigned int value)
+		{
+			m_cfg.setSamplingInterval(value);
 		}
 
 		unsigned int getShotDuration() const
 		{
-			return m_cfg.shotDuration;	
+			return m_cfg.getShotDuration();
+		}
+
+		void setShotDuration(unsigned int value)
+		{
+			m_cfg.setShotDuration(value);
 		}
 
 		const HistoryQueue& getHistory()
@@ -316,9 +344,9 @@ namespace cz
 		friend class ProgramData;
 		void save(AT24C::Ptr& dst, bool saveConfig, bool saveHistory) const;
 		void load(AT24C::Ptr& src, bool loadConfig, bool loadHistory);
-		int getConfigSize() const
+		int getConfigSaveSize() const
 		{
-			return sizeof(m_cfg);
+			return sizeof(m_cfg.getSaveSize());
 		}
 
 	  private:
@@ -361,6 +389,8 @@ public:
 	void load();
 
 	void begin();
+
+	void logConfig() const;
 
 	//
 	// Returns true if a group is selected, false otherwise

@@ -67,9 +67,6 @@ class SettingsMenu : public Menu
 	// When getting out of the settings menu, we apply this to the real data
 	GroupConfig m_dummyCfg;
 
-	// #TODO : Implement this
-	bool m_configIsDirty = false;
-
 	gfx::ImageButton m_buttons[(int)ButtonId::Max];
 
 	ButtonId m_pressedId = ButtonId::Max;	

@@ -155,6 +155,8 @@ void setup()
 	}
 
 	gTimer.begin();
+
+	//runTests(gCtx.eeprom);
 }
 
 PROFILER_CREATE(30);
@@ -265,6 +267,18 @@ void loop()
 					gCtx.data.getGroupData(idx).setRunning(false);
 				}
 			}
+			else if (strcmp_P(cmd, (const char*)F("logconfig"))==0)
+			{
+				gCtx.data.logConfig();
+			}
+			else if (strcmp_P(cmd, (const char*)F("loggroupconfig"))==0)
+			{
+				int idx;
+				if (parseCommand(idx) && idx < NUM_PAIRS)
+				{
+					gCtx.data.getGroupData(idx).logConfig();
+				}
+			}
 			else if (strcmp_P(cmd, (const char*)F("selectgroup"))==0)
 			{
 				int8_t idx;
@@ -310,6 +324,11 @@ void loop()
 			else if (strcmp_P(cmd, (const char*)F("save"))==0)
 			{
 				gCtx.data.save();
+
+				ProgramData prgData(gCtx);
+				prgData.begin();
+				prgData.load();
+				prgData.logConfig();
 			}
 			else if (strcmp_P(cmd, (const char*)F("savegroup"))==0)
 			{
