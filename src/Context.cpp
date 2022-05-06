@@ -341,7 +341,7 @@ void ProgramData::save() const
 	}
 	
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
-	CZ_LOG(logDefault, Log, F("Saving %u bytes to EEPROM took %u ms"), ptr.getAddress(), elapsedMs);
+	CZ_LOG(logDefault, Log, F("Saving full config to EEPROM. %u bytes. Took %u ms"), ptr.getAddress(), elapsedMs);
 	Component::raiseEvent(ConfigSaveEvent());
 }
 
@@ -357,8 +357,8 @@ void ProgramData::saveGroupConfig(uint8_t index)
 
 	m_group[index].save(ptr, true, false);
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
-	CZ_LOG(logDefault, Log, F("Saving %u bytes to EEPROM took %u ms"), ptr.getAddress(), elapsedMs);
-	Component::raiseEvent(ConfigLoadEvent());
+	CZ_LOG(logDefault, Log, F("Saving group %u to EEPROM. %u bytes. Took %u ms"), (unsigned int)index, ptr.getAddress(), elapsedMs);
+	Component::raiseEvent(ConfigSaveEvent(index));
 }
 
 void ProgramData::load()

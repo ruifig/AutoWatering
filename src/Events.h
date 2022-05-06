@@ -56,6 +56,7 @@ struct ConfigSaveEvent : public Event
 {
 	ConfigSaveEvent(int8_t group = -1)
 		: Event(Event::ConfigSave)
+		, group(group)
 	{
 	}
 	

@@ -45,6 +45,17 @@ void GroupGraph::onEvent(const Event& evt)
 		}
 		break;
 
+		case Event::ConfigSave:
+		{
+			int8_t group = static_cast<const ConfigSaveEvent&>(evt).group;
+			if (group == m_index)
+			{
+				// If the config was saved, probably something changed, so we redraw everything
+				m_forceRedraw = true;
+			}
+		}
+		break;
+
 		case Event::GroupOnOff:
 		{
 			auto idx = static_cast<const GroupOnOffEvent&>(evt).index;

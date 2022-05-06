@@ -91,7 +91,7 @@ namespace cz
 
 
 	// Data that should be saved/loaded
-	// NOTE: No memberse in this struct should raise any events, because this is also used in the UI to hold
+	// NOTE: No members in this struct should raise any events, because this is also used in the UI to hold
 	// temporary configs while in the settings menu.
 	struct GroupConfig
 	{
@@ -113,6 +113,7 @@ namespace cz
 		#define START_WATER_VALUE 280
 		unsigned int airValue = START_AIR_VALUE;
 		unsigned int waterValue = START_WATER_VALUE;
+
 		// Current sensor value
 		unsigned int currentValue = START_AIR_VALUE - (START_AIR_VALUE-START_WATER_VALUE)/2;
 
@@ -290,6 +291,11 @@ namespace cz
 		GroupConfig copyConfig() const
 		{
 			return m_cfg;
+		}
+
+		void setTo(GroupConfig cfg)
+		{
+			m_cfg = cfg;
 		}
 
 		// Sets this group as being configured or not at the moment.

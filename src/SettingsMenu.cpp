@@ -210,9 +210,16 @@ bool SettingsMenu::processTouch(const Pos& pos)
 		}
 	};
 
-	if (
-		checkButtonPressed(ButtonId::CloseAndSave) ||
-		checkButtonPressed(ButtonId::CloseAndIgnore))
+	if (checkButtonPressed(ButtonId::CloseAndSave))
+	{
+		if (m_configIsDirty)
+		{
+			gCtx.data.getSelectedGroup()->setTo(m_dummyCfg);
+			gCtx.data.saveGroupConfig(gCtx.data.getSelectedGroupIndex());
+		}
+		return true;
+	}
+	else if (checkButtonPressed(ButtonId::CloseAndIgnore))
 	{
 		return true;
 	}
@@ -233,6 +240,14 @@ bool SettingsMenu::processTouch(const Pos& pos)
 		setState(m_state==State::SettingShotDuration ? State::Main : State::SettingShotDuration);
 		return true;
 	}
+	else if (checkButtonPressed(ButtonId::SetGroupThreshold))
+	{
+		// NOTE : The only way this button should respond is if we are in the CalibratingSensor state already
+		assert(m_state==State::CalibratingSensor);
+		m_dummyCfg.thresholdValue = m_dummyCfg.currentValue;
+		setState(State::Main);
+		return true;
+	}
 
 	return false;
 }
@@ -249,6 +264,10 @@ void SettingsMenu::onEvent(const Event& evt)
 				// We only adjust the sensor range (air/water values) if we are in the sensor calibration menu
 				m_dummyCfg.setSensorValue(e.reading.meanValue, m_state==State::CalibratingSensor ? true : false);
 				setSensorLabels();
+				if (m_state == State::CalibratingSensor)
+				{
+					m_configIsDirty = true;
+				}
 			}
 		}
 		break;
@@ -324,6 +343,7 @@ void SettingsMenu::show()
 	GroupData* data = gCtx.data.getSelectedGroup();
 	m_dummyCfg = data->copyConfig();
 	data->setInConfigMenu(true);
+	m_configIsDirty = false;
 
 	setState(State::Main);
 }
@@ -332,7 +352,18 @@ void SettingsMenu::setSensorLabels()
 {
 	CZ_LOG(logDefault, Log, F("%s:TickCount=%u"), __FUNCTION__, gTickCount);
 	m_calibrationLabels[0].setValue(m_dummyCfg.waterValue);
-	m_calibrationLabels[1].setValue(m_dummyCfg.getThresholdValueAsPercentage());
+	if (m_state == State::CalibratingSensor)
+	{
+		// If in the calibration sub-menu we want this label to reflect the current sensor reading, so the user knows what the threshold
+		// will be if he hits the "set threshold button"
+		m_calibrationLabels[1].setValue(m_dummyCfg.getPercentageValue());
+	}
+	else
+	{
+		// If NOT in the calibration sub-menu, we want this label to show what the current threshold is (in the dummy config)
+		m_calibrationLabels[1].setValue(m_dummyCfg.getThresholdValueAsPercentage());
+	}
+
 	m_calibrationLabels[2].setValue(m_dummyCfg.airValue);
 }
 

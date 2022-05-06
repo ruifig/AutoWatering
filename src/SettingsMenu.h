@@ -66,6 +66,7 @@ class SettingsMenu : public Menu
 	// Dummy config we act on while in the settings.
 	// When getting out of the settings menu, we apply this to the real data
 	GroupConfig m_dummyCfg;
+
 	// #TODO : Implement this
 	bool m_configIsDirty = false;
 
@@ -82,9 +83,9 @@ class SettingsMenu : public Menu
 	//    Line 2: Threshold in %, as currently saved in the settings
 	//    Line 3: Fully dry sensor reading, as currently saved in the settings
 	// When inside the actual calibration sub-menu, the lines are dynamic and change accordingly to what's happening:
-	//    Line 1: Current minimum sensor reading (wettest reading). This will be the new "water value" if saving these settings
+	//    Line 1: Current minimum sensor reading (wettest reading). This will be the new "water value" when exiting the sub-menu
 	//    Line 2: Current sensor reading. This will be set as the threshold if the user presses the "Check" button
-	//    Line 3: Current maximum sensor reading (driest reading). This will be the new "air value" if saving these settings
+	//    Line 3: Current maximum sensor reading (driest reading). This will be the new "air value" when exiting the sub-menu
 	gfx::NumLabel<true> m_calibrationLabels[3];
 
 	// Soil sensor sampling interval labels
