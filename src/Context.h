@@ -346,7 +346,7 @@ namespace cz
 		void load(AT24C::Ptr& src, bool loadConfig, bool loadHistory);
 		int getConfigSaveSize() const
 		{
-			return sizeof(m_cfg.getSaveSize());
+			return m_cfg.getSaveSize();
 		}
 
 	  private:

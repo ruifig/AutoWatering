@@ -117,6 +117,7 @@ void GroupConfig::save(AT24C::Ptr& dst) const
 	}
 	else
 	{
+		CZ_LOG(logDefault, Log, F("Group is not dirty. Nothing to save"));
 		dst += sizeof(m_data);
 	}
 }
@@ -509,7 +510,7 @@ void ProgramData::save() const
 	}
 	
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
-	CZ_LOG(logDefault, Log, F("Saving full config to EEPROM. %u bytes. Took %u ms"), ptr.getAddress(), elapsedMs);
+	CZ_LOG(logDefault, Log, F("Saving full config to EEPROM, Took %u ms"), elapsedMs);
 	Component::raiseEvent(ConfigSaveEvent());
 }
 
@@ -523,9 +524,14 @@ void ProgramData::saveGroupConfig(uint8_t index)
 		ptr += m_group[idx].getConfigSaveSize();
 	}
 
+	uint16_t startAddress = ptr.getAddress();
 	m_group[index].save(ptr, true, false);
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
-	CZ_LOG(logDefault, Log, F("Saving group %u to EEPROM. %u bytes. Took %u ms"), (unsigned int)index, ptr.getAddress(), elapsedMs);
+	CZ_LOG(logDefault, Log, F("Saving group %u to EEPROM. Address %u, %u bytes. Took %u ms"),
+		(unsigned int)index,
+		startAddress,
+		ptr.getAddress() - startAddress,
+		elapsedMs);
 	Component::raiseEvent(ConfigSaveEvent(index));
 }
 
@@ -545,7 +551,7 @@ void ProgramData::load()
 	}
 	
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
-	CZ_LOG(logDefault, Log, F("Loading %u bytes from EEPROM took %u ms"), ptr.getAddress(), elapsedMs);
+	CZ_LOG(logDefault, Log, F("Loading full config from EEPROM took %u ms"), elapsedMs);
 	Component::raiseEvent(ConfigLoadEvent());
 }
 
