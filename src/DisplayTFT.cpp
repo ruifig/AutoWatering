@@ -584,6 +584,7 @@ bool MainMenu::processTouch(const Pos& pos)
 		{
 			CZ_ASSERT(gCtx.data.hasGroupSelected());
 			gCtx.data.getSelectedGroup()->setRunning(true);
+			gCtx.data.saveGroupConfig(gCtx.data.getSelectedGroupIndex());
 			return true;
 		}
 	}
@@ -594,6 +595,7 @@ bool MainMenu::processTouch(const Pos& pos)
 		{
 			CZ_ASSERT(gCtx.data.hasGroupSelected());
 			gCtx.data.getSelectedGroup()->setRunning(false);
+			gCtx.data.saveGroupConfig(gCtx.data.getSelectedGroupIndex());
 			return true;
 		}
 	}
