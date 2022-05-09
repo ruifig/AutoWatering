@@ -202,6 +202,17 @@
  */
 #define SCREEN_DEFAULT_BRIGHTNESS 100
 
+/**
+ * How long to wait until turning off the screen backlight, if there are no touch events detected
+ */
+#define SCREEN_OFF_TIMEOUT 60
+
+/**
+ * How fast to dim the screen to 0.
+ * This is in percentiles per second. E.g: a value of 10 means the brightness will go down at 10% per second
+ */
+#define SCREEN_OFF_DIM_SPEED 10
+
 #define SCREEN_BKG_COLOUR Colour_Black
 
 #define INTRO_TEXT_COLOUR Colour_Green

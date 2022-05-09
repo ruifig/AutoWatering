@@ -183,14 +183,22 @@ class DisplayTFT : public Component
 
 	struct
 	{
-		bool pressed;
+		bool pressed = false;
 		Pos pos;
 		// A "press" condition requires us to touch and untouch the screen, so we need to hold the previous value
 		// to compare against in the next tick
 		TouchPoint tmp;
+		// This is set to true when we want to sleep and we set turn off the screen backlight.
+		// When a touch is process, if this is true, that one touch will be ignored, and we wake up/turn on the backlight
+		bool sleeping = false;
+		float secondsSinceLastTouch = 0;
+
+		// used to slowly dim the brightness to 0 when putting to sleep.
+		// This is better than simply turning off the backlight, so the user knows it's a fault. 
+		float currentBrightness = 0;
 	} m_touch;
 
-	void updateTouch();
+	void updateTouch(float deltaSeconds);
 };
 	
 	

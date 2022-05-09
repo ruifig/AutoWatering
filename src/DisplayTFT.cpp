@@ -726,7 +726,7 @@ float DisplayTFT::tick(float deltaSeconds)
 
 	m_timeInState += deltaSeconds;
 
-	updateTouch();
+	updateTouch(deltaSeconds);
 
 	//CZ_LOG(logDefault, Log, F("DisplayTFT::%s: state=%s, timeInState = %d"), __FUNCTION__, ms_stateNames[(int)m_state], (int)m_timeInState);
 	m_state->tick(deltaSeconds);
@@ -734,7 +734,7 @@ float DisplayTFT::tick(float deltaSeconds)
 	return 1.0f / 30.0f;
 }
 
-void DisplayTFT::updateTouch()
+void DisplayTFT::updateTouch(float deltaSeconds)
 {
 	TouchPoint p = gTs.getPoint();
 
@@ -747,9 +747,40 @@ void DisplayTFT::updateTouch()
 	// If we are not touching right now, but were in the previous call, that means we have a press event
 	if (p.z < TS_MIN_PRESSURE && m_touch.tmp.z >= TS_MIN_PRESSURE)
 	{
-		m_touch.pos = {p.x, p.y};
-		m_touch.pressed = true;
-		CZ_LOG(logDefault, Verbose, F("Press=(%3d,%3d)"), m_touch.pos.x, m_touch.pos.y);
+		m_touch.secondsSinceLastTouch = 0;
+		if (m_touch.sleeping)
+		{
+			CZ_LOG(logDefault, Log, F("Waking up"));
+			m_touch.sleeping = false;
+			gScreen.setBacklightBrightness(SCREEN_DEFAULT_BRIGHTNESS);
+		}
+		else
+		{
+			m_touch.pos = {p.x, p.y};
+			m_touch.pressed = true;
+			CZ_LOG(logDefault, Verbose, F("Press=(%3d,%3d)"), m_touch.pos.x, m_touch.pos.y);
+		}
+	}
+	else
+	{
+		if (m_touch.sleeping)
+		{
+			if (m_touch.currentBrightness>0)
+			{
+				m_touch.currentBrightness -= deltaSeconds * SCREEN_OFF_DIM_SPEED;
+				gScreen.setBacklightBrightness((uint8_t)cz::clamp(m_touch.currentBrightness, 0.0f, 100.0f));
+			}
+		}
+		else
+		{
+			m_touch.secondsSinceLastTouch += deltaSeconds;
+			if (m_touch.secondsSinceLastTouch > SCREEN_OFF_TIMEOUT)
+			{
+				CZ_LOG(logDefault, Log, F("Starting sleep"));
+				m_touch.sleeping = true;
+				m_touch.currentBrightness = SCREEN_DEFAULT_BRIGHTNESS;
+			}
+		}
 	}
 
 	m_touch.tmp = p;

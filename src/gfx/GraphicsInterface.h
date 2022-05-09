@@ -130,7 +130,7 @@ class GraphicsInterface
 									uint16_t *h) = 0;
 
 	/**
-	 * \param brightness 0 (off) to 255 (max)
+	 * \param brightness 0 (off) to 100 (max)
 	 */
 	virtual void setBacklightBrightness(uint8_t brightness) = 0;
 
