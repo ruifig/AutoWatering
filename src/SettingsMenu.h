@@ -38,6 +38,10 @@ class SettingsMenu : public Menu
 
 	State m_state = State::Main;
 
+	// When was the last time (in microseconds) we pressed the Minu or Plus buttons
+	// This is used to detect how fast we click Minus/Plus, so we can cause Minus/Plus to decrement/increment faster
+	uint64_t m_lastMinusPlusPressTimeMicros = 0;
+
 	enum class ButtonId : uint8_t
 	{
 		// First line

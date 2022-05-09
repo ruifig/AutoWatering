@@ -1,12 +1,14 @@
 #include "SettingsMenu.h"
 #include "Icons.h"
 #include "DisplayCommon.h"
+#include "Timer.h"
 
 extern uint32_t gTickCount;
 
 namespace cz
 {
 
+extern Timer gTimer;
 using namespace gfx;
 
 namespace
@@ -210,6 +212,22 @@ bool SettingsMenu::processTouch(const Pos& pos)
 		}
 	};
 
+	// gets a scaling factor for the Minus/Plus buttons, based on how fast we are clicking them
+	auto getScalingFactor = [this]() -> int
+	{
+		uint64_t deltaMs = (gTimer.getTotalMicros() - m_lastMinusPlusPressTimeMicros) / 1000;
+		m_lastMinusPlusPressTimeMicros = gTimer.getTotalMicros();
+
+		if (deltaMs > 300)
+		{
+			return 1;
+		}
+		else
+		{
+			return 10;
+		}
+	};
+
 	if (checkButtonPressed(ButtonId::CloseAndSave))
 	{
 		if (m_dummyCfg.isDirty())
@@ -248,6 +266,39 @@ bool SettingsMenu::processTouch(const Pos& pos)
 		setState(State::Main);
 		return true;
 	}
+	else if (checkButtonPressed(ButtonId::Minus))
+	{
+		if (m_state==State::SettingSensorInterval)
+		{
+			changeSamplingInterval(-1 * getScalingFactor());
+		}
+		else if (m_state==State::SettingShotDuration)
+		{
+			changeShotDuration(-1 * getScalingFactor());
+		}
+		else
+		{
+			CZ_UNEXPECTED();
+		}
+		return true;
+	}
+	else if (checkButtonPressed(ButtonId::Plus))
+	{
+		if (m_state==State::SettingSensorInterval)
+		{
+			changeSamplingInterval(+1 * getScalingFactor());
+		}
+		else if (m_state==State::SettingShotDuration)
+		{
+			changeShotDuration(+1 * getScalingFactor());
+		}
+		else
+		{
+			CZ_UNEXPECTED();
+		}
+		return true;
+	}
+
 
 	return false;
 }
@@ -363,14 +414,26 @@ void SettingsMenu::setSensorLabels()
 
 void SettingsMenu::changeSamplingInterval(int direction)
 {
-	m_dummyCfg.setSamplingInterval(m_dummyCfg.getSamplingInterval() + direction*60);
-	m_samplingIntervalLabels[0].setText(*IntToString(static_cast<int>(m_dummyCfg.getSamplingIntervalInMinutes())));
+	int newSamplingInterval = (int)m_dummyCfg.getSamplingInterval() + direction*60;
+	// >=0 because we want to allow 0 to be passed down to the config.
+	// This is because the config expected a value in seconds, but the UI uses minutes for the sampling interval, and if we clamped here in minutes, 
+	// the minimum sampling interval would be 1 minute which is too high for testing.
+	// So, we allow passing 0 (minutes) down to the config, and it gets clamped there to 1 second.
+	if (newSamplingInterval >= 0)
+	{
+		m_dummyCfg.setSamplingInterval(newSamplingInterval);
+		m_samplingIntervalLabels[0].setText(*IntToString(static_cast<int>(m_dummyCfg.getSamplingIntervalInMinutes())));
+	}
 }
 
 void SettingsMenu::changeShotDuration(int direction)
 {
-	m_dummyCfg.setShotDuration(m_dummyCfg.getShotDuration() + direction);
-	m_shotDurationLabels[0].setText(*IntToString(static_cast<int>(m_dummyCfg.getShotDuration())));
+	int newShotDuration = (int)m_dummyCfg.getShotDuration() + direction;
+	if (newShotDuration > 0)
+	{
+		m_dummyCfg.setShotDuration(m_dummyCfg.getShotDuration() + direction);
+		m_shotDurationLabels[0].setText(*IntToString(static_cast<int>(m_dummyCfg.getShotDuration())));
+	}
 }
 
 void SettingsMenu::hide()

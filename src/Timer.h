@@ -46,6 +46,11 @@ class Timer
 		return m_runningTime;
 	}
 
+	uint64_t getTotalMicros() const
+	{
+		return m_totalMicros;
+	}
+
   private:
 	unsigned long m_previousMicros = 0;
 	float m_deltaSeconds = 0.0f;
