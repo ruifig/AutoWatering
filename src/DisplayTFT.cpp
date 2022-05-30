@@ -340,7 +340,7 @@ void DisplayTFT::OverviewState::init()
 
 	m_sensorMainMenu.init();
 	m_settingsMenu.init();
-
+	m_shotConfirmationMenu.init();
 }
 
 void DisplayTFT::OverviewState::tick(float deltaSeconds)
@@ -362,44 +362,44 @@ void DisplayTFT::OverviewState::tick(float deltaSeconds)
 
 		if (!consumed)
 		{
-			if (m_inSettingsMenu)
-			{
-				consumed = m_settingsMenu.processTouch(m_outer.m_touch.pos);
-			}
-			else
-			{
-				consumed = m_sensorMainMenu.processTouch(m_outer.m_touch.pos);
-			}
+			consumed = m_currentMenu->processTouch(m_outer.m_touch.pos);
 		}
-
 	}
 
-	if (!m_inSettingsMenu)
+	Menu* newCurrentMenu = nullptr;
+	if (m_currentMenu == &m_sensorMainMenu)
 	{
 		// Doing this before the tick, so if we switch to the Settings menu, the main menu has a chance to be drawn as disabled
-		if (m_sensorMainMenu.checkShowSettings())
+		MainMenu::ButtonId buttonId = m_sensorMainMenu.checkButtonPressed();
+		if (buttonId == MainMenu::ButtonId::Settings)
 		{
 			CZ_LOG(logDefault, Log, F("Switching to settings"));
 			m_sensorMainMenu.hide();	
 			m_settingsMenu.show();
-			m_inSettingsMenu = true;
+			newCurrentMenu = &m_settingsMenu;
 		}
-
-		m_sensorMainMenu.tick(deltaSeconds);
+		else if (buttonId == MainMenu::ButtonId::Shot)
+		{
+			CZ_LOG(logDefault, Log, F("Switching to shot confirmation menu"));
+			m_sensorMainMenu.hide();
+			m_shotConfirmationMenu.show();
+			newCurrentMenu = &m_shotConfirmationMenu;
+		}
+	}
+	else if (m_currentMenu->checkClose())
+	{
+		CZ_LOG(logDefault, Log, F("Switching to main menu"));
+		m_currentMenu->hide();
+		m_sensorMainMenu.show();
+		newCurrentMenu = &m_sensorMainMenu;
 	}
 
-	if (m_inSettingsMenu)
+	// Tick the current and new menu
+	m_currentMenu->tick(deltaSeconds);
+	if (newCurrentMenu)
 	{
-		bool doSave;
-		if (m_settingsMenu.checkClose(doSave))
-		{
-			CZ_LOG(logDefault, Log, F("Switching to main menu"));
-			m_settingsMenu.hide();
-			m_sensorMainMenu.show();
-			m_inSettingsMenu = false;
-		}
-
-		m_settingsMenu.tick(deltaSeconds);
+		newCurrentMenu->tick(deltaSeconds);
+		m_currentMenu = newCurrentMenu;
 	}
 
 	{
@@ -421,10 +421,12 @@ void DisplayTFT::OverviewState::tick(float deltaSeconds)
 void DisplayTFT::OverviewState::onEnter()
 {
 	m_forceRedraw = true;
-	m_inSettingsMenu = false;
+	m_currentMenu = &m_sensorMainMenu;
 	memset(m_sensorUpdates, 0, sizeof(m_sensorUpdates));
+
 	m_sensorMainMenu.setForceDraw();
 	m_settingsMenu.setForceDraw();
+	m_shotConfirmationMenu.setForceDraw();
 
 	gScreen.setTextColor(GRAPH_VALUES_TEXT_COLOUR, Colour_VeryDarkGrey);
 	gScreen.setFont(TINY_FONT);
@@ -445,14 +447,7 @@ void DisplayTFT::OverviewState::onLeave()
 
 void DisplayTFT::OverviewState::onEvent(const Event& evt)
 {
-	if (m_inSettingsMenu)
-	{
-		m_settingsMenu.onEvent(evt);
-	}
-	else
-	{
-		m_sensorMainMenu.onEvent(evt);
-	}
+	m_currentMenu->onEvent(evt);
 	
 	for(GroupGraph& w : m_groupGraphs)
 	{
@@ -555,7 +550,7 @@ void DisplayTFT::OverviewState::draw()
 //
 void MainMenu::init()
 {
-	m_showSettings = false;
+	m_buttonPressed = ButtonId::Max;
 	
 	auto initButton = [this](ButtonId id, auto&&... params)
 	{
@@ -604,9 +599,7 @@ bool MainMenu::processTouch(const Pos& pos)
 		ImageButton& btn = m_buttons[(int)ButtonId::Shot];
 		if (btn.canAcceptInput() && btn.contains(pos))
 		{
-			CZ_ASSERT(gCtx.data.hasGroupSelected());
-			GroupData* data = gCtx.data.getSelectedGroup();
-			doGroupShot(data->getIndex());
+			m_buttonPressed = ButtonId::Shot;
 			return true;
 		}
 	}
@@ -616,7 +609,7 @@ bool MainMenu::processTouch(const Pos& pos)
 		if (btn.canAcceptInput() && btn.contains(pos))
 		{
 			CZ_ASSERT(gCtx.data.hasGroupSelected());
-			m_showSettings = true;
+			m_buttonPressed = ButtonId::Settings;
 			return true;
 		}
 	}
@@ -684,17 +677,11 @@ void MainMenu::hide()
 	Menu::hide();
 }
 
-bool MainMenu::checkShowSettings()
+MainMenu::ButtonId MainMenu::checkButtonPressed()
 {
-	if (m_showSettings)
-	{
-		m_showSettings = false;
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+	ButtonId ret = m_buttonPressed;
+	m_buttonPressed = ButtonId::Max;
+	return ret;
 }
 
 //

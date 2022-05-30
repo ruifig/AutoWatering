@@ -7,6 +7,7 @@
 #include "gfx/MyXPT2046.h"
 
 #include "SettingsMenu.h"
+#include "ShotConfirmationMenu.h"
 
 namespace cz
 {
@@ -24,11 +25,7 @@ class MainMenu : public Menu
 
 	virtual void show() override;
 	virtual void hide() override;
-	bool checkShowSettings();
-
-  protected:
-	virtual void draw() override;
-	void updateButtons();
+	virtual bool checkClose() override { return false; }
 
 	enum class ButtonId : uint8_t
 	{
@@ -38,8 +35,15 @@ class MainMenu : public Menu
 		Settings,
 		Max
 	};
+
+	ButtonId checkButtonPressed();
+
+  protected:
+	virtual void draw() override;
+	void updateButtons();
+
 	gfx::ImageButton m_buttons[(int)ButtonId::Max];
-	bool m_showSettings : 1;
+	ButtonId m_buttonPressed = ButtonId::Max;
 };
 
 class DisplayTFT : public Component
@@ -154,11 +158,12 @@ class DisplayTFT : public Component
 		uint8_t m_sensorUpdates[NUM_PAIRS];
 		MainMenu m_sensorMainMenu;
 		SettingsMenu m_settingsMenu;
+		ShotConfirmationMenu m_shotConfirmationMenu;
+		Menu* m_currentMenu = nullptr;
 		// Instead of keepin track of time passed to update the running time label every second
 		// we just look for a change in the seconds part.
 		uint8_t m_previousRunningTimeSeconds=255;
 		bool m_forceRedraw : 1;
-		bool m_inSettingsMenu : 1;
 	};
 
 	struct States

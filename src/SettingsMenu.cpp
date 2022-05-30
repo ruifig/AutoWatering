@@ -461,17 +461,15 @@ void SettingsMenu::hide()
 	Menu::hide();
 }
 
-bool SettingsMenu::checkClose(bool& doSave)
+bool SettingsMenu::checkClose()
 {
 	if (m_pressedId == ButtonId::CloseAndSave)
 	{
-		doSave = true;
 		m_pressedId = ButtonId::Max;
 		return true;
 	}
 	else if (m_pressedId == ButtonId::CloseAndIgnore)
 	{
-		doSave = false;
 		m_pressedId = ButtonId::Max;
 		return true;
 	}

@@ -19,7 +19,7 @@ class SettingsMenu : public Menu
 
 	virtual void show() override;
 	virtual void hide() override;
-	bool checkClose(bool& doSave);
+	virtual bool checkClose() override;
 
   protected:
 	virtual void draw() override;

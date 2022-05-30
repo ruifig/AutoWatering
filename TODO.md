@@ -7,17 +7,24 @@
 
 
 * SettingsMenu
-	* Calibration sub-menu
-		* Have the labels reflect the current sensor state
-			* air value needs to be updated
-			* water value needs to be updated
-			* current sensor reading shown in the middle as %
-		* Have the "set threshold" button react and apply the calibration settings
-	* Implement m_configIsDirty
-		* Saving button needs to update
-		* Have the saving button perform a save and close
+	* Calibration sub-menu - DONE
+		* Have the labels reflect the current sensor state - DONE
+			* air value needs to be updated - DONE
+			* water value needs to be updated - DONE
+			* current sensor reading shown in the middle as % - DONE
+		* Have the "set threshold" button react and apply the calibration settings - DONE
+	* Implement m_configIsDirty - DONE
+		* Saving button needs to update - DONE
+		* Have the saving button perform a save and close - DONE
 
-* Save the group config when we start or stop, so it remembers that when rebooting, otherwise there is no way to start/stop a group and get that saved
+* Save the group config when we start or stop, so it remembers that when rebooting, otherwise there is no way to start/stop a group and get that saved - DONE
+* When a group is stopped, and we go into the calibration menu, the calibration doesn't work. Probably we are not getting any events. - DONE
+
+* Add a confirmation sub-menu for the user initiated shot - DONE
+	* It's probably enough to show under the shot button, a label with "SURE?", and a button with the check mark, and also show the close button like in the settings menu. - DONE
+* Add blue marker (along side the error red dot), to mark when the motor is on
+	* This helps knowing when the board is trying telling the motor to turn on, and for some reason it is NOT turning on
+
 
 BUGS
 ====
@@ -25,5 +32,3 @@ BUGS
 * The history plot line draws red dots inconsistently 
 	* Repro: Start and stop a group while getting stable readings of say 30%
 	* When restarting a group, and the plot starts moving, spots with red dots will move to the left as expected, but without properly erasing the ones on the right, causing a read line to incorrectly grow in the plot
-
-* When a group is stopped, and we go into the calibration menu, the calibration doesn't work. Probably we are not getting any events.

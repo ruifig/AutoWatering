@@ -21,13 +21,15 @@ class Menu
 	{
 		m_forceDraw = true;
 	}
+
+	virtual void show();
+	virtual void hide();
+	virtual bool checkClose() = 0;
 	
   protected:
 	void clearEntireArea();
 
 	virtual void draw() = 0;
-	virtual void show();
-	virtual void hide();
 	bool m_forceDraw = false;
 };
 

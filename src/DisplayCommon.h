@@ -30,6 +30,11 @@ struct LayoutHelper
 		return pos;
 	}
 
+	static constexpr Rect getMenuButtonRect(uint8_t col, uint8_t row)
+	{
+		return Rect(getMenuButtonPos(col, row), 32, 32);
+	}
+
 	static constexpr Pos getMenuTopLeft()
 	{
 		return getMenuButtonPos(0,0);
