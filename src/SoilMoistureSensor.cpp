@@ -98,7 +98,8 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 
 SensorReading SoilMoistureSensor::readSensor()
 {
-	constexpr int numSamples = 20;
+	unsigned long startMicros = micros();
+	constexpr int numSamples = 30;
 	int samples[numSamples];
 	for(auto&& s : samples)
 	{
@@ -108,13 +109,12 @@ SensorReading SoilMoistureSensor::readSensor()
 	StandardDeviation res = calcStandardDeviation(samples, numSamples);
 	SensorReading sample(static_cast<unsigned int>(res.mean), res.stdDeviation);
 
-	// #TODO : Enable this
-	#if 0
-	CZ_LOG(logDefault, Log, F("SoilMoistureSensor(%d) : Mean=%u, stdDeviation=%4.2f")
+	unsigned int long endMicros = micros() - startMicros;
+	CZ_LOG(logDefault, Log, F("SoilMoistureSensor(%d) : duration=%4.2fms Mean=%u, stdDeviation=%4.2f")
 		, m_index
+		, ((float)endMicros/1000.0f)
 		, sample.meanValue
 		, sample.standardDeviation);
-	#endif
 
 	return sample;
 }

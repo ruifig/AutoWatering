@@ -184,7 +184,7 @@
  * How long to show the intro for when powering up
  */
 #if FASTER_ITERATION
-	#define INTRO_DURATION 0.1f
+	#define INTRO_DURATION 0.25f
 #else
 	#define INTRO_DURATION 1.0f
 #endif
@@ -255,4 +255,3 @@ static_assert(1<<GRAPH_POINT_NUM_BITS < GRAPH_HEIGHT, "Reduce number of bits, or
 // When a sensor is connected, but not getting power, it will consistently report very low values
 // Any value below this, and we consider that the sensor is not getting power
 #define MOISTURESENSOR_ACCEPTABLE_MIN_VALUE 100
-
