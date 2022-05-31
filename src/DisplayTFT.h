@@ -122,7 +122,7 @@ class DisplayTFT : public Component
 		void draw();
 
 		GroupGraph m_groupGraphs[NUM_PAIRS];
-		uint8_t m_sensorUpdates[NUM_PAIRS];
+		bool m_sensorUpdates[NUM_PAIRS];
 		MainMenu m_sensorMainMenu;
 		SettingsMenu m_settingsMenu;
 		ShotConfirmationMenu m_shotConfirmationMenu;

@@ -466,7 +466,7 @@ void DisplayTFT::OverviewState::onEvent(const Event& evt)
 			else
 			{
 				// Force an update to the group labels
-				m_sensorUpdates[group]++;
+				m_sensorUpdates[group] = true;
 			}
 		}
 		break;
@@ -475,14 +475,14 @@ void DisplayTFT::OverviewState::onEvent(const Event& evt)
 		{
 			const GroupOnOffEvent& e = static_cast<const GroupOnOffEvent&>(evt);
 			// Force an update to the group labels;
-			m_sensorUpdates[e.index]++;
+			m_sensorUpdates[e.index] = true;
 		}
 		break;
 
 		case Event::SoilMoistureSensorReading:
 		{
 			auto idx = static_cast<const SoilMoistureSensorReadingEvent&>(evt).index;
-			m_sensorUpdates[idx]++;
+			m_sensorUpdates[idx] = true;
 		}
 		break;
 
@@ -531,7 +531,7 @@ void DisplayTFT::OverviewState::draw()
 					label.clearValueAndDraw(m_forceRedraw);
 				}
 			}
-			m_sensorUpdates[i] = 0;
+			m_sensorUpdates[i] = false;
 		}
 	}
 
