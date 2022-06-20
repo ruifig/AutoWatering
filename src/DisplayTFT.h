@@ -26,6 +26,8 @@ class DisplayTFT : public Component
 	virtual float tick(float deltaSeconds) override;
 	virtual void onEvent(const Event& evt) override;
 
+	void scrollSlots(int inc);
+
   private:
 
 	//
@@ -117,12 +119,22 @@ class DisplayTFT : public Component
 		virtual void onLeave() override;
 		virtual void onEvent(const Event& evt) override;
 
+		void scrollSlots(int inc);
 	protected:
 
 		void draw();
+		void drawGroupNumbers();
 
-		GroupGraph m_groupGraphs[NUM_PAIRS];
-		bool m_sensorUpdates[NUM_PAIRS];
+		struct Group
+		{
+			GroupGraph graph;
+			bool sensorUpdates = false;
+		};
+
+		Group m_groups[VISIBLE_NUM_PAIRS];
+		Group* tryGetGroupByPairIndex(int8_t pairIndex);
+		Group& getGroupByPairIndex(int8_t pairIndex);
+
 		MainMenu m_sensorMainMenu;
 		SettingsMenu m_settingsMenu;
 		ShotConfirmationMenu m_shotConfirmationMenu;
@@ -130,6 +142,8 @@ class DisplayTFT : public Component
 		// Instead of keepin track of time passed to update the running time label every second
 		// we just look for a change in the seconds part.
 		uint8_t m_previousRunningTimeSeconds=255;
+		// What pair is in the first screen slot
+		int8_t m_topSlotPairIndex = 0;
 		bool m_forceRedraw : 1;
 	};
 

@@ -257,14 +257,14 @@ DEFINE_SENSOR_LABELS(1)
 DEFINE_SENSOR_LABELS(2)
 DEFINE_SENSOR_LABELS(3)
 
-NumLabel<true> sensorLabels[NUM_PAIRS][3] =
+NumLabel<true> sensorLabels[VISIBLE_NUM_PAIRS][3] =
 {
 	{
 		{ sensor0line0 },
 		{ sensor0line1 },
 		{ sensor0line2 }
 	}
-#if NUM_PAIRS>1
+#if VISIBLE_NUM_PAIRS>1
 	,
 	{
 		{ sensor1line0 },
@@ -272,7 +272,7 @@ NumLabel<true> sensorLabels[NUM_PAIRS][3] =
 		{ sensor1line2 }
 	}
 #endif
-#if NUM_PAIRS>2
+#if VISIBLE_NUM_PAIRS>2
 	,
 	{
 		{ sensor2line0 },
@@ -280,7 +280,7 @@ NumLabel<true> sensorLabels[NUM_PAIRS][3] =
 		{ sensor2line2 }
 	}
 #endif
-#if NUM_PAIRS>3
+#if VISIBLE_NUM_PAIRS>3
 	,
 	{
 		{ sensor3line0 },
@@ -333,10 +333,8 @@ DisplayTFT::OverviewState::OverviewState(DisplayTFT& outer)
 
 void DisplayTFT::OverviewState::init()
 {
-	for(int idx = 0; idx<NUM_PAIRS; idx++)
-	{
-		m_groupGraphs[idx].init(idx);
-	}
+	m_topSlotPairIndex = 0;
+	scrollSlots(0);
 
 	m_sensorMainMenu.init();
 	m_settingsMenu.init();
@@ -350,12 +348,11 @@ void DisplayTFT::OverviewState::tick(float deltaSeconds)
 	{
 		bool consumed = false;
 
-		for(int8_t idx = 0; idx<NUM_PAIRS; idx++)
+		for(Group& group : m_groups)
 		{
-			if (m_groupGraphs[idx].contains(m_outer.m_touch.pos))
+			consumed = group.graph.processTouch(m_outer.m_touch.pos);
+			if (consumed)
 			{
-				gCtx.data.trySetSelectedGroup(idx);
-				consumed = true;
 				break;
 			}
 		}
@@ -418,55 +415,117 @@ void DisplayTFT::OverviewState::tick(float deltaSeconds)
 	draw();
 }
 
+DisplayTFT::OverviewState::Group* DisplayTFT::OverviewState::tryGetGroupByPairIndex(int8_t pairIndex)
+{
+	int8_t screenSlot = pairIndex - m_topSlotPairIndex;
+	if (screenSlot>=0 && screenSlot<VISIBLE_NUM_PAIRS)
+	{
+		return &m_groups[screenSlot];
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+DisplayTFT::OverviewState::Group& DisplayTFT::OverviewState::getGroupByPairIndex(int8_t pairIndex)
+{
+	Group* g = tryGetGroupByPairIndex(pairIndex);
+	CZ_ASSERT(g!=nullptr);
+	return *g;
+}
+
+void DisplayTFT::OverviewState::drawGroupNumbers()
+{
+	gScreen.setTextColor(GRAPH_VALUES_TEXT_COLOUR, Colour_VeryDarkGrey);
+	gScreen.setFont(TINY_FONT);
+	for(int i=0; i<VISIBLE_NUM_PAIRS; i++)
+	{
+		int pairIndex = i + m_topSlotPairIndex;
+		if (pairIndex < MAX_NUM_PAIRS)
+		{
+			printAligned(
+				{{0, LayoutHelper::getHistoryPlotRect(i).top()}, GROUP_NUM_WIDTH, LayoutHelper::getHistoryPlotRect(i).height},
+				HAlign::Center, VAlign::Center,
+				formatString(F("%d"), pairIndex + 1),
+				true
+			);
+		}
+	}
+}
+
 void DisplayTFT::OverviewState::onEnter()
 {
 	m_forceRedraw = true;
 	m_currentMenu = &m_sensorMainMenu;
-	memset(m_sensorUpdates, 0, sizeof(m_sensorUpdates));
+
+	for(Group& group : m_groups)
+	{
+		group.sensorUpdates = false;
+	}
 
 	m_sensorMainMenu.setForceDraw();
 	m_settingsMenu.setForceDraw();
 	m_shotConfirmationMenu.setForceDraw();
 
-	gScreen.setTextColor(GRAPH_VALUES_TEXT_COLOUR, Colour_VeryDarkGrey);
-	gScreen.setFont(TINY_FONT);
-	for(int i=0; i<NUM_PAIRS; i++)
-	{
-		printAligned(
-			{{0, LayoutHelper::getHistoryPlotRect(i).top()}, GROUP_NUM_WIDTH, LayoutHelper::getHistoryPlotRect(i).height},
-			HAlign::Center, VAlign::Center,
-			formatString(F("%d"), i+1),
-			true
-		);
-	}
+	drawGroupNumbers();
 }
 
 void DisplayTFT::OverviewState::onLeave()
 {
 }
 
+
+void DisplayTFT::OverviewState::scrollSlots(int inc)
+{
+	m_topSlotPairIndex = clamp(m_topSlotPairIndex+inc, 0, MAX_NUM_PAIRS - VISIBLE_NUM_PAIRS);
+
+	// If for some reason we can't unselect the selected group, then we don't perform any scrolling
+	if (!gCtx.data.trySetSelectedGroup(-1))
+	{
+		return;
+	}
+
+	drawGroupNumbers();
+
+	for(int idx = 0; idx<VISIBLE_NUM_PAIRS; idx++)
+	{
+		int pairIndex = idx + m_topSlotPairIndex;
+		// Pass pairIndex as -1 if it's an empty screen slot
+		m_groups[idx].graph.setAssociation(idx, (pairIndex<MAX_NUM_PAIRS) ? pairIndex : -1);
+		m_groups[idx].sensorUpdates = true;
+		Overview::sensorLabels[idx][0].clearValue();
+		Overview::sensorLabels[idx][1].clearValue();
+		Overview::sensorLabels[idx][2].clearValue();
+	}
+
+}
+
 void DisplayTFT::OverviewState::onEvent(const Event& evt)
 {
 	m_currentMenu->onEvent(evt);
 	
-	for(GroupGraph& w : m_groupGraphs)
+	for(Group& g : m_groups)
 	{
-		w.onEvent(evt);
+		g.graph.onEvent(evt);
 	}
 
 	switch(evt.type)
 	{
 		case Event::ConfigLoad:
 		{
-			int8_t group = static_cast<const ConfigLoadEvent&>(evt).group;
-			if (group == -1)
+			int8_t idx = static_cast<const ConfigLoadEvent&>(evt).group;
+			if (idx == -1)
 			{
 				m_forceRedraw = true;
 			}
 			else
 			{
-				// Force an update to the group labels
-				m_sensorUpdates[group] = true;
+				if (Group* group = tryGetGroupByPairIndex(idx))
+				{
+					// Force an update to the group labels
+					group->sensorUpdates = true;
+				}
 			}
 		}
 		break;
@@ -475,14 +534,20 @@ void DisplayTFT::OverviewState::onEvent(const Event& evt)
 		{
 			const GroupOnOffEvent& e = static_cast<const GroupOnOffEvent&>(evt);
 			// Force an update to the group labels;
-			m_sensorUpdates[e.index] = true;
+			if (Group* group = tryGetGroupByPairIndex(e.index))
+			{
+				group->sensorUpdates = true;
+			}
 		}
 		break;
 
 		case Event::SoilMoistureSensorReading:
 		{
 			auto idx = static_cast<const SoilMoistureSensorReadingEvent&>(evt).index;
-			m_sensorUpdates[idx] = true;
+			if (Group* group = tryGetGroupByPairIndex(idx))
+			{
+				group->sensorUpdates = true;
+			}
 		}
 		break;
 
@@ -504,18 +569,17 @@ void DisplayTFT::OverviewState::draw()
 {
 	PROFILE_SCOPE(F("OverviewState::draw"));
 
-	for(int i=0; i<NUM_PAIRS; i++)
+	for(int i=0; i<VISIBLE_NUM_PAIRS; i++)
 	{
 		PROFILE_SCOPE(F("groupDrawing"));
 
-		m_groupGraphs[i].draw(m_forceRedraw);
-
-		GroupData& data = gCtx.data.getGroupData(i);
+		m_groups[i].graph.draw(m_forceRedraw);
+		GroupData& data = gCtx.data.getGroupData(i+m_topSlotPairIndex);
 
 		//
 		// Draw values
 		//
-		if (m_sensorUpdates[i] || m_forceRedraw)
+		if (m_groups[i].sensorUpdates || m_forceRedraw)
 		{
 			if (data.isRunning())
 			{
@@ -531,7 +595,7 @@ void DisplayTFT::OverviewState::draw()
 					label.clearValueAndDraw(m_forceRedraw);
 				}
 			}
-			m_sensorUpdates[i] = false;
+			m_groups[i].sensorUpdates = false;
 		}
 	}
 
@@ -632,6 +696,11 @@ void DisplayTFT::updateTouch(float deltaSeconds)
 void DisplayTFT::onEvent(const Event& evt)
 {
 	m_state->onEvent(evt);	
+}
+
+void DisplayTFT::scrollSlots(int inc)
+{
+	m_states.overview.scrollSlots(inc);
 }
 
 void DisplayTFT::changeToState(DisplayState& newState)

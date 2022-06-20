@@ -17,18 +17,24 @@ GroupGraph::~GroupGraph()
 {
 }
 
-void GroupGraph::init(int8_t index)
+void GroupGraph::setAssociation(int8_t screenSlot, int8_t pairIndex)
 {
-	CZ_ASSERT(index>=0 && index<NUM_PAIRS);
-	m_index = index;
+	CZ_ASSERT(pairIndex >=-1 && pairIndex < MAX_NUM_PAIRS);
+	CZ_ASSERT(screenSlot >= 0 && screenSlot < VISIBLE_NUM_PAIRS);
+	m_pairIndex = pairIndex;
+	m_screenSlot = screenSlot;
+	m_sensorUpdates = 0;
+	m_thresholdUpdates = 0;
+	m_previousThresholdMarkerY = 0;
+
 	m_forceRedraw = true;
 	m_selected = false;
 	m_redrawOuterBox = true; 
 }
 
-bool GroupGraph::contains(const Pos& pos) const
+Rect GroupGraph::getScreenSlotRect() const
 {
-	return LayoutHelper::getHistoryPlotRect(m_index).contains(pos);
+	return LayoutHelper::getHistoryPlotRect(m_screenSlot);
 }
 
 void GroupGraph::onEvent(const Event& evt)
@@ -38,7 +44,7 @@ void GroupGraph::onEvent(const Event& evt)
 		case Event::ConfigLoad:
 		{
 			int8_t group = static_cast<const ConfigLoadEvent&>(evt).group;
-			if (group == m_index)
+			if (group == m_pairIndex)
 			{
 				m_forceRedraw = true;
 			}
@@ -48,7 +54,7 @@ void GroupGraph::onEvent(const Event& evt)
 		case Event::ConfigSave:
 		{
 			int8_t group = static_cast<const ConfigSaveEvent&>(evt).group;
-			if (group == m_index)
+			if (group == m_pairIndex)
 			{
 				// If the config was saved, probably something changed, so we redraw everything
 				m_forceRedraw = true;
@@ -59,7 +65,7 @@ void GroupGraph::onEvent(const Event& evt)
 		case Event::GroupOnOff:
 		{
 			auto idx = static_cast<const GroupOnOffEvent&>(evt).index;
-			if (idx == m_index)
+			if (idx == m_pairIndex)
 			{
 				m_forceRedraw = true;
 			}
@@ -69,20 +75,28 @@ void GroupGraph::onEvent(const Event& evt)
 		case Event::GroupSelected:
 		{
 			const GroupSelectedEvent& e = static_cast<const GroupSelectedEvent&>(evt);
-			if (e.index == m_index)
+
+			if (m_pairIndex==-1)
 			{
-				if (!m_selected)
-				{
-					m_selected = true;
-					m_redrawOuterBox = true;
-				}
+				// No pair associated with this object, so do nothing
 			}
 			else
 			{
-				if (m_selected)
+				if (e.index == m_pairIndex)
 				{
-					m_selected = false;
-					m_redrawOuterBox = true;
+					if (!m_selected)
+					{
+						m_selected = true;
+						m_redrawOuterBox = true;
+					}
+				}
+				else
+				{
+					if (m_selected)
+					{
+						m_selected = false;
+						m_redrawOuterBox = true;
+					}
 				}
 			}
 		}
@@ -91,7 +105,7 @@ void GroupGraph::onEvent(const Event& evt)
 		case Event::SoilMoistureSensorReading:
 		{
 			auto idx = static_cast<const SoilMoistureSensorReadingEvent&>(evt).index;
-			if (idx == m_index)
+			if (idx == m_pairIndex)
 			{
 				m_sensorUpdates++;
 			}
@@ -105,7 +119,13 @@ void GroupGraph::onEvent(const Event& evt)
 
 void GroupGraph::draw(bool forceDraw)
 {
-	CZ_ASSERT(m_index!=-1); // Check if init was called
+	CZ_ASSERT( m_screenSlot != -1); // Check if init was called
+
+	// If not associated with a pair, do nothing.
+	if (m_pairIndex==-1)
+	{
+		return;
+	}
 
 	 m_forceRedraw |= forceDraw;
 
@@ -124,14 +144,14 @@ void GroupGraph::draw(bool forceDraw)
 	//
 	if (m_forceRedraw)
 	{
-		GroupData& data = gCtx.data.getGroupData(m_index);
+		GroupData& data = gCtx.data.getGroupData(m_pairIndex);
 		if (!data.isRunning())
 		{
 			PROFILE_SCOPE(F("notRunning"));
 
 			gScreen.setFont(MEDIUM_FONT);
 			gScreen.setTextColor(GRAPH_NOTRUNNING_TEXT_COLOUR);
-			printAligned(LayoutHelper::getHistoryPlotRect(m_index), HAlign::Center, VAlign::Center, F("Not Running"));
+			printAligned(getScreenSlotRect(), HAlign::Center, VAlign::Center, F("Not Running"));
 		}
 	}
 
@@ -143,9 +163,9 @@ void GroupGraph::plotHistory()
 	PROFILE_SCOPE(F("GroupGraph::plotHistory"));
 
 	constexpr int h = GRAPH_HEIGHT;
-	Rect rect = LayoutHelper::getHistoryPlotRect(m_index);
+	Rect rect = getScreenSlotRect();
 	int bottomY = rect.bottom();
-	GroupData& data = gCtx.data.getGroupData(m_index);
+	GroupData& data = gCtx.data.getGroupData(m_pairIndex);
 	const HistoryQueue& history = data.getHistory();
 
 	unsigned int thresholdPercentage = data.getThresholdValueAsPercentage();
@@ -204,7 +224,7 @@ void GroupGraph::plotHistory()
 		if (drawLevel)
 		{
 			// 0 means it's not set yet
-			if (m_previousThresholdMarkerY!=0)
+			if (m_previousThresholdMarkerY != 0)
 			{
 				gScreen.drawPixel(xx, m_previousThresholdMarkerY, GRAPH_BKG_COLOUR);
 			}
@@ -231,7 +251,7 @@ void GroupGraph::drawOuterBox()
 {
 	PROFILE_SCOPE(F("GroupGraph::drawOuterBox"));
 	
-	Rect historyRect = LayoutHelper::getHistoryPlotRect(m_index);
+	Rect historyRect = getScreenSlotRect();
 	Rect historyOuterBox = historyRect.expand(1);
 	Rect groupOuterBox = {0, historyOuterBox.top(), SCREEN_WIDTH, historyOuterBox.height};
 
@@ -259,5 +279,18 @@ void GroupGraph::drawOuterBox()
 	m_redrawOuterBox = false;
 }
 
+bool GroupGraph::processTouch(const Pos& pos)
+{
+	if (m_pairIndex!=-1 && getScreenSlotRect().contains(pos))
+	{
+		gCtx.data.trySetSelectedGroup(m_pairIndex);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
+
+} // namespace cz
 

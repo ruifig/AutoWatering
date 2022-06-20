@@ -87,11 +87,11 @@
  * Pins of the IO Expander used to turn on/off the motors
  */
 #define IO_EXPANDER_MOTOR0 cz::IOExpanderPin(8+7)
-#define IO_EXPANDER_MOTOR1 cz::IOExpanderPin(0+0)
-#define IO_EXPANDER_MOTOR2 cz::IOExpanderPin(0+1)
-#define IO_EXPANDER_MOTOR3 cz::IOExpanderPin(0+2)
-#define IO_EXPANDER_MOTOR4 cz::IOExpanderPin(0+3)
-#define IO_EXPANDER_MOTOR5 cz::IOExpanderPin(0+4)
+#define IO_EXPANDER_MOTOR1 cz::IOExpanderPin(0+7)
+#define IO_EXPANDER_MOTOR2 cz::IOExpanderPin(0+6)
+#define IO_EXPANDER_MOTOR3 cz::IOExpanderPin(0+5)
+#define IO_EXPANDER_MOTOR4 cz::IOExpanderPin(0+4)
+#define IO_EXPANDER_MOTOR5 cz::IOExpanderPin(0+3)
 
 /**
  * Multiplexer pin used to read temperature/humidity
@@ -111,7 +111,12 @@
 /**
  * How many sensor/motor pairs to support
  */
-#define NUM_PAIRS 4
+#define MAX_NUM_PAIRS 6
+
+/**
+ * How many sensor/motor pairs fit on the screen
+ */
+#define VISIBLE_NUM_PAIRS 4
 
 /**
  * When we want to take a moisture reading, we enable power to the the sensor and need to wait a bit before doing the

@@ -476,7 +476,7 @@ bool ProgramData::trySetSelectedGroup(int8_t index)
 
 GroupData& ProgramData::getGroupData(uint8_t index)
 {
-	CZ_ASSERT(index < NUM_PAIRS);
+	CZ_ASSERT(index < MAX_NUM_PAIRS);
 	return m_group[index];
 }
 

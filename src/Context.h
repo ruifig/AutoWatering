@@ -423,7 +423,7 @@ public:
 	
   private:
 	Context& m_outer;
-	GroupData m_group[NUM_PAIRS];
+	GroupData m_group[MAX_NUM_PAIRS];
 	bool m_muxMutex = false;
 	int8_t m_selectedGroup = -1;
 

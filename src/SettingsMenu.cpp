@@ -328,7 +328,6 @@ void SettingsMenu::draw()
 {
 	GroupData* data = gCtx.data.getSelectedGroup();
 
-
 	if (m_clearMenuSecondLine)
 	{
 		m_clearMenuSecondLine = false;

@@ -45,33 +45,45 @@ using namespace cz;
 using TemperatureAndHumiditySensorTicker = TTicker<TemperatureAndHumiditySensor, float, TickingMethod>;
 TemperatureAndHumiditySensorTicker gTempAndHumiditySensor(true, IO_EXPANDER_VPIN_TEMPSENSOR, MUX_TEMP_SENSOR);
 
-SoilMoistureSensorTicker gSoilMoistureSensors[NUM_PAIRS] =
+SoilMoistureSensorTicker gSoilMoistureSensors[MAX_NUM_PAIRS] =
 {
 	 {true, 0, IO_EXPANDER_VPIN_SENSOR0, MUX_MOISTURE_SENSOR0}
-#if NUM_PAIRS>1
+#if MAX_NUM_PAIRS>1
 	,{true, 1, IO_EXPANDER_VPIN_SENSOR1, MUX_MOISTURE_SENSOR1}
 #endif
-#if NUM_PAIRS>2
+#if MAX_NUM_PAIRS>2
 	,{true, 2, IO_EXPANDER_VPIN_SENSOR2, MUX_MOISTURE_SENSOR2}
 #endif
-#if NUM_PAIRS>3
+#if MAX_NUM_PAIRS>3
 	,{true, 3, IO_EXPANDER_VPIN_SENSOR3, MUX_MOISTURE_SENSOR3}
+#endif
+#if MAX_NUM_PAIRS>4
+	,{true, 4, IO_EXPANDER_VPIN_SENSOR4, MUX_MOISTURE_SENSOR4}
+#endif
+#if MAX_NUM_PAIRS>5
+	,{true, 5, IO_EXPANDER_VPIN_SENSOR5, MUX_MOISTURE_SENSOR5}
 #endif
 };
 
 using GroupMonitorTicker = TTicker<GroupMonitor, float, TickingMethod>;
 
-GroupMonitorTicker gGroupMonitors[NUM_PAIRS] =
+GroupMonitorTicker gGroupMonitors[MAX_NUM_PAIRS] =
 {
 	 { true, 0, IO_EXPANDER_MOTOR0}
-#if NUM_PAIRS>1
+#if MAX_NUM_PAIRS>1
 	,{ true, 1, IO_EXPANDER_MOTOR1}
 #endif
-#if NUM_PAIRS>2
+#if MAX_NUM_PAIRS>2
 	,{ true, 2, IO_EXPANDER_MOTOR2}
 #endif
-#if NUM_PAIRS>3
+#if MAX_NUM_PAIRS>3
 	,{ true, 3, IO_EXPANDER_MOTOR3}
+#endif
+#if MAX_NUM_PAIRS>4
+	,{ true, 4, IO_EXPANDER_MOTOR4}
+#endif
+#if MAX_NUM_PAIRS>5
+	,{ true, 5, IO_EXPANDER_MOTOR5}
 #endif
 };
 
@@ -219,10 +231,18 @@ void loop()
 			{
 				PROFILER_RESET();
 			}
+			else if (strcmp_P(cmd, (const char*)F("scroll"))==0)
+			{
+				int inc;
+				if (parseCommand(inc))
+				{
+					gDisplay.getObj().scrollSlots(inc);
+				}
+			}
 			else if (strcmp_P(cmd, (const char*)F("motoroff"))==0)
 			{
 				int idx;
-				if (parseCommand(idx) && idx < NUM_PAIRS)
+				if (parseCommand(idx) && idx < MAX_NUM_PAIRS)
 				{
 					gGroupMonitors[idx].getObj().turnMotorOff();
 				}
@@ -230,7 +250,7 @@ void loop()
 			else if (strcmp_P(cmd, (const char*)F("motoron"))==0)
 			{
 				int idx;
-				if (parseCommand(idx) && idx < NUM_PAIRS)
+				if (parseCommand(idx) && idx < MAX_NUM_PAIRS)
 				{
 					gGroupMonitors[idx].getObj().doShot();
 				}
@@ -238,7 +258,7 @@ void loop()
 			else if (strcmp_P(cmd, (const char*)F("setgroupthreshold"))==0)
 			{
 				int idx, value;
-				if (parseCommand(idx, value) && idx < NUM_PAIRS)
+				if (parseCommand(idx, value) && idx < MAX_NUM_PAIRS)
 				{
 					gCtx.data.getGroupData(idx).setThresholdValue(value);
 				}
@@ -246,7 +266,7 @@ void loop()
 			else if (strcmp_P(cmd, (const char*)F("setgroupthresholdaspercentage"))==0)
 			{
 				int idx, value;
-				if (parseCommand(idx, value) && idx < NUM_PAIRS)
+				if (parseCommand(idx, value) && idx < MAX_NUM_PAIRS)
 				{
 					gCtx.data.getGroupData(idx).setThresholdValueAsPercentage(value);
 				}
@@ -254,7 +274,7 @@ void loop()
 			else if (strcmp_P(cmd, (const char*)F("startgroup"))==0)
 			{
 				int idx;
-				if (parseCommand(idx) && idx < NUM_PAIRS)
+				if (parseCommand(idx) && idx < MAX_NUM_PAIRS)
 				{
 					gCtx.data.getGroupData(idx).setRunning(true);
 				}
@@ -262,7 +282,7 @@ void loop()
 			else if (strcmp_P(cmd, (const char*)F("stopgroup"))==0)
 			{
 				int idx;
-				if (parseCommand(idx) && idx < NUM_PAIRS)
+				if (parseCommand(idx) && idx < MAX_NUM_PAIRS)
 				{
 					gCtx.data.getGroupData(idx).setRunning(false);
 				}
@@ -274,7 +294,7 @@ void loop()
 			else if (strcmp_P(cmd, (const char*)F("loggroupconfig"))==0)
 			{
 				int idx;
-				if (parseCommand(idx) && idx < NUM_PAIRS)
+				if (parseCommand(idx) && idx < MAX_NUM_PAIRS)
 				{
 					gCtx.data.getGroupData(idx).logConfig();
 				}
@@ -282,7 +302,7 @@ void loop()
 			else if (strcmp_P(cmd, (const char*)F("selectgroup"))==0)
 			{
 				int8_t idx;
-				if (parseCommand(idx) && idx < NUM_PAIRS)
+				if (parseCommand(idx) && idx < MAX_NUM_PAIRS)
 				{
 					gCtx.data.trySetSelectedGroup(idx);
 				}
@@ -305,7 +325,7 @@ void loop()
 			else if (strcmp_P(cmd, (const char*)F("setmocksensor"))==0)
 			{
 				int idx, value;
-				if (parseCommand(idx, value) && idx < NUM_PAIRS)
+				if (parseCommand(idx, value) && idx < MAX_NUM_PAIRS)
 				{
 					Component::raiseEvent(SetMockSensorValueEvent(idx, value));
 				}
@@ -315,7 +335,7 @@ void loop()
 				int value;
 				if (parseCommand(value))
 				{
-					for(int idx=0; idx<NUM_PAIRS; idx++)
+					for(int idx=0; idx<MAX_NUM_PAIRS; idx++)
 					{
 						Component::raiseEvent(SetMockSensorValueEvent(idx, value));
 					}
@@ -333,7 +353,7 @@ void loop()
 			else if (strcmp_P(cmd, (const char*)F("savegroup"))==0)
 			{
 				uint8_t idx;
-				if (parseCommand(idx) && idx < NUM_PAIRS)
+				if (parseCommand(idx) && idx < MAX_NUM_PAIRS)
 				{
 					gCtx.data.saveGroupConfig(idx);
 				}
