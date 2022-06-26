@@ -85,7 +85,8 @@ void SettingsMenu::init()
 	initButton(ButtonId::CloseAndIgnore, LayoutHelper::getMenuButtonPos(5,0), SCREEN_BKG_COLOUR, img_Close);
 
 	// Second line
-	initButton(ButtonId::SetGroupThreshold, LayoutHelper::getMenuButtonPos(CALIBRATE_BTN_COL+1,1), SCREEN_BKG_COLOUR, img_SetThreshold).setClearWhenHidden(false);
+	initButton(ButtonId::ResetRange, LayoutHelper::getMenuButtonPos(CALIBRATE_BTN_COL-1,1), SCREEN_BKG_COLOUR, img_Eraser).setClearWhenHidden(false);
+	initButton(ButtonId::SetThreshold, LayoutHelper::getMenuButtonPos(CALIBRATE_BTN_COL+1,1), SCREEN_BKG_COLOUR, img_SetThreshold).setClearWhenHidden(false);
 	initButton(ButtonId::Minus, LayoutHelper::getMenuButtonPos(0,1), SCREEN_BKG_COLOUR, img_Remove).setClearWhenHidden(false);
 	initButton(ButtonId::Plus, LayoutHelper::getMenuButtonPos(0,1), SCREEN_BKG_COLOUR, img_Add).setClearWhenHidden(false);
 
@@ -119,7 +120,8 @@ void SettingsMenu::setState(State state)
 	m_buttons[(int)ButtonId::CloseAndIgnore].setEnabled(true);
 
 	bool showMinusPlus = (m_state==State::SettingSensorInterval || m_state==State::SettingShotDuration);
-	setButton(ButtonId::SetGroupThreshold, state==State::CalibratingSensor, state==State::CalibratingSensor);
+	setButton(ButtonId::ResetRange, state==State::CalibratingSensor, state==State::CalibratingSensor);
+	setButton(ButtonId::SetThreshold, state==State::CalibratingSensor, state==State::CalibratingSensor);
 	setButton(ButtonId::Minus, showMinusPlus, showMinusPlus);
 	setButton(ButtonId::Plus, showMinusPlus, showMinusPlus);
 
@@ -258,7 +260,14 @@ bool SettingsMenu::processTouch(const Pos& pos)
 		setState(m_state==State::SettingShotDuration ? State::Main : State::SettingShotDuration);
 		return true;
 	}
-	else if (checkButtonPressed(ButtonId::SetGroupThreshold))
+	else if (checkButtonPressed(ButtonId::ResetRange))
+	{
+		// NOTE : The only way this button should respond is if we are in the CalibratingSensor state already
+		assert(m_state==State::CalibratingSensor);
+		m_dummyCfg.resetSensorRange();
+		return true;
+	}
+	else if (checkButtonPressed(ButtonId::SetThreshold))
 	{
 		// NOTE : The only way this button should respond is if we are in the CalibratingSensor state already
 		assert(m_state==State::CalibratingSensor);

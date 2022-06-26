@@ -198,6 +198,11 @@ namespace cz
 		 */
 		void setSensorValue(unsigned int currentValue_, bool adjustRange);
 
+		/**
+		 * Resets the air/water values to the default values, which is a very narrow range so it allows a new sensor range to be detected properly
+		 */
+		void resetSensorRange();
+
 	};
 
 	class GroupData

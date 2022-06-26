@@ -54,7 +54,8 @@ class SettingsMenu : public Menu
 		CloseAndIgnore,
 
 		// Second line
-		SetGroupThreshold,
+		ResetRange,
+		SetThreshold,
 		Minus,
 		Plus,
 		

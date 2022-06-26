@@ -266,6 +266,15 @@ void GroupConfig::setSensorValue(unsigned int currentValue_, bool adjustRange)
 	}
 }
 
+void GroupConfig::resetSensorRange()
+{
+	m_isDirty = true;
+	m_data.waterValue = START_WATER_VALUE;
+	m_data.airValue = START_AIR_VALUE;
+	m_currentValue = cz::clamp(m_currentValue, m_data.waterValue, m_data.airValue);
+}
+
+
 ///////////////////////////////////////////////////////////////////////
 // GroupData
 ///////////////////////////////////////////////////////////////////////
