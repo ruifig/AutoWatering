@@ -113,8 +113,8 @@ namespace cz
 			// to set the air value, and then submerse the sensor to set the water value.
 			// Having air and water properly is not a requirement for things to work, since what matter is that the system know what 
 			// sensor value is the threshold to turn on/off the motor
-			#define START_AIR_VALUE 420
-			#define START_WATER_VALUE 280
+			#define START_AIR_VALUE 370
+			#define START_WATER_VALUE (START_AIR_VALUE-5)
 			unsigned int airValue = START_AIR_VALUE;
 			unsigned int waterValue = START_WATER_VALUE;
 
@@ -449,6 +449,8 @@ struct Context
 	}
 
 	void begin();
+
+	void setMuxEnabled(bool enabled);
 
 #if MOCK_COMPONENTS
 	MockMCP23017Wrapper ioExpander;

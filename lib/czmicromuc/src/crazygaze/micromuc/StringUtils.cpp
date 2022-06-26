@@ -52,12 +52,15 @@ namespace detail
 	bool parseParam(const char* src, bool& dst)
 	{
 		int dummy;
-		if (!parseParam(src, dummy))
+		if (parseParam(src, dummy))
+		{
+			dst = dummy==0 ? false : true;
+			return true;
+		}
+		else
 		{
 			return false;
 		}
-
-		return dummy==0 ? false : true;
 	}
 
 	bool parseParam(const char* src, int& dst)

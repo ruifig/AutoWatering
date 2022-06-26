@@ -89,6 +89,15 @@ void Context::begin()
 	ioExpander.begin(IO_EXPANDER_ADDR);
 	mux.begin();
 	data.begin();
+
+	ioExpander.pinMode(IO_EXPANDER_TO_MUX_ENABLE, OUTPUT);
+	setMuxEnabled(false);
+}
+
+void Context::setMuxEnabled(bool enabled)
+{
+	CZ_LOG(logDefault, Verbose, F("Setting mux to %s"), enabled ? "enabled" : "disabled");
+	ioExpander.digitalWrite(IO_EXPANDER_TO_MUX_ENABLE, enabled ? LOW : HIGH);
 }
 
 ///////////////////////////////////////////////////////////////////////

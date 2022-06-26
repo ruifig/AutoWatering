@@ -43,7 +43,7 @@ using namespace cz;
 #endif
 
 using TemperatureAndHumiditySensorTicker = TTicker<TemperatureAndHumiditySensor, float, TickingMethod>;
-TemperatureAndHumiditySensorTicker gTempAndHumiditySensor(true, IO_EXPANDER_VPIN_TEMPSENSOR, MUX_TEMP_SENSOR);
+TemperatureAndHumiditySensorTicker gTempAndHumiditySensor(true);
 
 SoilMoistureSensorTicker gSoilMoistureSensors[MAX_NUM_PAIRS] =
 {
@@ -253,6 +253,14 @@ void loop()
 				if (parseCommand(idx) && idx < MAX_NUM_PAIRS)
 				{
 					gGroupMonitors[idx].getObj().doShot();
+				}
+			}
+			else if (strcmp_P(cmd, (const char*)F("setmuxenabled"))==0)
+			{
+				bool enabled;
+				if (parseCommand(enabled))
+				{
+					gCtx.setMuxEnabled(enabled);
 				}
 			}
 			else if (strcmp_P(cmd, (const char*)F("setgroupthreshold"))==0)

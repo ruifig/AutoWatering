@@ -164,6 +164,7 @@ void SoilMoistureSensor::onLeaveState()
 		gCtx.ioExpander.digitalWrite(m_vinPin, LOW);
 		// release the mutex so other sensors can read
 		gCtx.data.releaseMuxMutex();
+		gCtx.setMuxEnabled(false);
 		break;
 
 	default:
@@ -185,6 +186,7 @@ void SoilMoistureSensor::onEnterState()
 		break;
 
 	case State::Reading:
+		gCtx.setMuxEnabled(true);
 		//  To take a measurement, we turn the sensor ON, wait a bit, then switch it off
 		gCtx.ioExpander.digitalWrite(m_vinPin, HIGH);
 		m_nextTickWait = MOISTURESENSOR_POWERUP_WAIT;
