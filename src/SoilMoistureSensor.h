@@ -27,7 +27,7 @@ class SoilMoistureSensor : public Component
 	 * @param vinPin What io expander pin we are using to power this sensor
 	 * @param dataPin What multiplexer pin we are using to read the sensor
 	 */
-	SoilMoistureSensor(uint8_t index, IOExpanderPin vinPin, MultiplexerPin dataPin);
+	SoilMoistureSensor(uint8_t index, IOExpanderPinInstance vinPin, MuxPinInstance dataPin);
 
 	// Disable copying
 	SoilMoistureSensor(const SoilMoistureSensor&) = delete;
@@ -56,8 +56,8 @@ class SoilMoistureSensor : public Component
 	float m_nextTickWait = 0;
 	State m_state = State::Initializing;
 	uint8_t m_index;
-	IOExpanderPin m_vinPin;
-	MultiplexerPin m_dataPin;
+	IOExpanderPinInstance m_vinPin;
+	MuxPinInstance m_dataPin;
 
 	virtual SensorReading readSensor();
 

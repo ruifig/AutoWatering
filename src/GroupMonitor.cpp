@@ -4,7 +4,7 @@
 namespace cz
 {
 
-GroupMonitor::GroupMonitor(uint8_t index, IOExpanderPin motorPin)
+GroupMonitor::GroupMonitor(uint8_t index, IOExpanderPinInstance motorPin)
 	: m_index(index)
 	, m_motorPin(motorPin)
 	, m_sensorValidReadingSinceLastShot(0)
@@ -13,8 +13,8 @@ GroupMonitor::GroupMonitor(uint8_t index, IOExpanderPin motorPin)
 
 void GroupMonitor::begin()
 {
-	gCtx.ioExpander.pinMode(m_motorPin, OUTPUT);
-	gCtx.ioExpander.digitalWrite(m_motorPin, LOW);
+	m_motorPin.pinMode(OUTPUT);
+	m_motorPin.digitalWrite(LOW);
 }
 
 void GroupMonitor::doShot()
@@ -32,7 +32,7 @@ void GroupMonitor::turnMotorOn()
 		return;
 	}
 
-	gCtx.ioExpander.digitalWrite(m_motorPin, HIGH);
+	m_motorPin.digitalWrite(HIGH);
 	data.setMotorState(true);
 	m_motorOffCountdown = data.getShotDuration();
 	m_sensorValidReadingSinceLastShot = false;
@@ -40,7 +40,7 @@ void GroupMonitor::turnMotorOn()
 
 void GroupMonitor::turnMotorOff()
 {
-	gCtx.ioExpander.digitalWrite(m_motorPin, LOW);
+	m_motorPin.digitalWrite(LOW);
 	GroupData& data = gCtx.data.getGroupData(m_index);
 	data.setMotorState(false);
 }
@@ -87,7 +87,6 @@ void GroupMonitor::onEvent(const Event& evt)
 
 		case Event::SoilMoistureSensorReading:
 		{
-			GroupData& data = gCtx.data.getGroupData(m_index);
 			const auto& e = static_cast<const SoilMoistureSensorReadingEvent&>(evt);
 			// The system will still raise events for invalid readings, but we don't want to act. As-in, we don't want bad sensor readings
 			// to end up turning the water on.

@@ -137,6 +137,13 @@ namespace cz
 		// Number of sensor readings done
 		uint32_t m_numReadings = 0;
 
+		struct
+		{
+			unsigned int minValue;
+			unsigned int maxValue;
+			bool enabled = false;
+		} m_calibration;
+		
 	  public:
 
 		int getSaveSize() const
@@ -201,7 +208,8 @@ namespace cz
 		/**
 		 * Resets the air/water values to the default values, which is a very narrow range so it allows a new sensor range to be detected properly
 		 */
-		void resetSensorRange();
+		void startCalibration();
+		void endCalibration();
 
 	};
 
@@ -442,27 +450,23 @@ public:
 struct Context
 {
 	Context()
-		: mux(
-			ioExpander,
-			IO_EXPANDER_TO_MUX_S0,
-			IO_EXPANDER_TO_MUX_S1,
-			IO_EXPANDER_TO_MUX_S2,
-			MCU_TO_MUX_ZPIN)
-		, data(*this)
+		: data(*this)
 		, eeprom(0)
 	{
 	}
 
 	void begin();
 
-	void setMuxEnabled(bool enabled);
+	struct I2CBoard
+	{
+	#if MOCK_COMPONENTS
+		MockMCP23017Wrapper ioExpander;
+	#else
+		MCP23017Wrapper ioExpander;
+	#endif
+		Mux8Channels mux;
+	} m_i2cBoards[MAX_NUM_I2C_BOARDS];
 
-#if MOCK_COMPONENTS
-	MockMCP23017Wrapper ioExpander;
-#else
-	MCP23017Wrapper ioExpander;
-#endif
-	Mux8Channels mux;
 	ProgramData data;
 	AT24C256 eeprom;
 };

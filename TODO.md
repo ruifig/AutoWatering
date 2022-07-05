@@ -26,6 +26,13 @@
 	* This helps knowing when the board is trying telling the motor to turn on, and for some reason it is NOT turning on
 
 
+CLEAN UP
+========
+
+* Delete lib\Adafruit_DHT-sensor-library if not used
+* Remove the "setmuxenabled" and "setmuxchannel"
+
+
 BUGS
 ====
 

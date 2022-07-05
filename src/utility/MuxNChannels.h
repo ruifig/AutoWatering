@@ -4,50 +4,65 @@
 namespace cz
 {
 
+class MuxInterface
+{
+  public:
+	virtual MCUPin getMCUZPin() const = 0;
+	virtual void setChannel(MultiplexerPin channel) = 0;
+	virtual int analogRead(MultiplexerPin channel, PinMode zPinMode = INPUT) = 0;
+	virtual void setEnabled(bool enabled) = 0;
+};
+
 namespace detail
 {
 	extern const uint8_t muxChannel[16][4];
 	// Base class for a 74HC4051 8-Channel-Mux  or 74HC4067 16-Channel-Mux that is connected to an MCP23017
 	template<int NUM_SPINS>
-	class BaseMux
+	class BaseMux : public MuxInterface
 	{
 	public:
-
-		// Constructor for an 8 channel mux
-		BaseMux(MCP23017WrapperInterface& ioExpander, IOExpanderPin s0, IOExpanderPin s1, IOExpanderPin s2, MCUPin z)
-			: m_ioExpander(ioExpander)
-			, m_sPins{s0, s1, s2}
-			, m_zPin(z)
+		BaseMux()
+			: m_sPins{ IOExpanderPin(0), IOExpanderPin(0), IOExpanderPin(0) }
+			, m_zPin(MCUPin(0))
+			, m_enablePin{IOExpanderPin(0)}
 		{
 		}
 
-		// Constructor for an 16 channel mux
-		BaseMux(MCP23017WrapperInterface& ioExpander, IOExpanderPin s0, IOExpanderPin s1, IOExpanderPin s2, IOExpanderPin s3, MCUPin z)
-			: m_ioExpander(ioExpander)
-			, m_sPins{s0, s1, s2, s3}
-			, m_zPin(z)
+		// Begin for 8 channel mux
+		void begin(MCP23017WrapperInterface& ioExpander, IOExpanderPin s0, IOExpanderPin s1, IOExpanderPin s2, MCUPin z, IOExpanderPin enable)
 		{
+			m_ioExpander = &ioExpander;
+			m_sPins[0] = s0;
+			m_sPins[1] = s1;
+			m_sPins[2] = s2;
+			m_zPin = z;
+			m_enablePin = enable;
+			doBegin();
 		}
 
-		MCUPin getMCUZPin() const
+		// Begin for 8 channel mux
+		void begin(MCP23017WrapperInterface& ioExpander, IOExpanderPin s0, IOExpanderPin s1, IOExpanderPin s2, IOExpanderPin s3, MCUPin z, IOExpanderPin enable)
+		{
+			m_ioExpander = &ioExpander;
+			m_sPins[0] = s0;
+			m_sPins[1] = s1;
+			m_sPins[2] = s2;
+			m_sPins[3] = s3;
+			m_zPin = z;
+			m_enablePin = enable;
+			doBegin();
+		}
+
+		virtual MCUPin getMCUZPin() const override
 		{
 			return m_zPin;
-		}
-
-		void begin()
-		{
-			pinMode(m_zPin.raw, m_zPinMode);
-			for (auto&& pin : m_sPins)
-			{
-				m_ioExpander.pinMode(pin, OUTPUT);
-			}
 		}
 
 		/**
 		 * Sets the channel to use, and sets the MCU's pinMode to unknown,
 		 * so external code can make use of it directly.
 		 */
-		void setChannel(MultiplexerPin channel)
+		virtual void setChannel(MultiplexerPin channel) override
 		{
 			setChannelImpl(channel);
 			m_zPinModeFlag = 255;
@@ -56,7 +71,7 @@ namespace detail
 		/**
 		 * Sets the mux channel
 		 */
-		int analogRead(MultiplexerPin channel, PinMode zPinMode = INPUT)
+		virtual int analogRead(MultiplexerPin channel, PinMode zPinMode = INPUT) override
 		{
 			if (m_zPinMode != zPinMode )
 			{
@@ -74,25 +89,47 @@ namespace detail
 		#endif
 		}
 
+		virtual void setEnabled(bool enabled) override
+		{
+			// LOW - enabled
+			// HIGH - disabled
+			m_ioExpander->digitalWrite(m_enablePin, enabled ? LOW : HIGH);
+		}
+
 	protected:
+		void doBegin()
+		{
+			pinMode(m_zPin.raw, m_zPinMode);
+
+			m_ioExpander->pinMode(m_enablePin, OUTPUT);
+			for (auto&& pin : m_sPins)
+			{
+				m_ioExpander->pinMode(pin, OUTPUT);
+			}
+
+			setEnabled(false);
+		}
+
 		void setChannelImpl(MultiplexerPin channel)
 		{
 			// Set s0-sN
 			for (uint8_t i = 0; i < NUM_SPINS ; i++)
 			{
-				m_ioExpander.digitalWrite(m_sPins[i], muxChannel[channel.raw][i]);
+				m_ioExpander->digitalWrite(m_sPins[i], muxChannel[channel.raw][i]);
 			}
 
 			// Seems like I need this delay after setting the channel ?
 			// In some occasions if the pinMode changed externally and is set above, the first call to this function
 			// after the external use of the MCU's pin wouldn't give the right result.
 			//delayMicroseconds(70);
+			// I had a couple of other bugs in the code at the time, so maybe this wasn't the problem?
 			delayMicroseconds(1);
 		}
 
-		MCP23017WrapperInterface& m_ioExpander;
+		MCP23017WrapperInterface* m_ioExpander = nullptr;
 		IOExpanderPin m_sPins[NUM_SPINS];
 		MCUPin m_zPin;
+		IOExpanderPin m_enablePin;
 
 		union
 		{
@@ -107,14 +144,37 @@ namespace detail
 class Mux8Channels : public detail::BaseMux<3>
 {
   public:
-
-	Mux8Channels(MCP23017WrapperInterface& ioExpander, IOExpanderPin s0, IOExpanderPin s1, IOExpanderPin s2, MCUPin z) : BaseMux(ioExpander, s0, s1, s2, z) {}
 };
 
 class Mux16Channels : public detail::BaseMux<4>
 {
   public:
-	Mux16Channels(MCP23017WrapperInterface& ioExpander, IOExpanderPin s0, IOExpanderPin s1, IOExpanderPin s2, IOExpanderPin s3, MCUPin z) : BaseMux(ioExpander, s0, s1, s2, s3, z) {}
+};
+
+class MuxPinInstance
+{
+  public:
+	MuxPinInstance(MuxInterface& mux, MultiplexerPin pin)
+		: m_mux(mux)
+		, m_pin(pin)
+	{
+	}
+
+	MuxPinInstance(const MuxPinInstance&) = default;
+
+	int analogRead(PinMode zPinMode = INPUT)
+	{
+		return m_mux.analogRead(m_pin, zPinMode);
+	}
+
+	MuxInterface& getMux()
+	{
+		return m_mux;
+	}
+
+  private:
+	MuxInterface& m_mux;
+	MultiplexerPin m_pin;
 };
 
 } // namespace cz

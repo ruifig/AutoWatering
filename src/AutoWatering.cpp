@@ -45,46 +45,102 @@ using namespace cz;
 using TemperatureAndHumiditySensorTicker = TTicker<TemperatureAndHumiditySensor, float, TickingMethod>;
 TemperatureAndHumiditySensorTicker gTempAndHumiditySensor(true);
 
+#define SOILMOISTURE_TICKER(index, boardIndex, POWER_PIN, MUXPIN) \
+	 {true, index, IOExpanderPinInstance(gCtx.m_i2cBoards[boardIndex].ioExpander, POWER_PIN), MuxPinInstance(gCtx.m_i2cBoards[boardIndex].mux, MUXPIN)}
+
 SoilMoistureSensorTicker gSoilMoistureSensors[MAX_NUM_PAIRS] =
 {
-	 {true, 0, IO_EXPANDER_VPIN_SENSOR0, MUX_MOISTURE_SENSOR0}
+	//
+	// First i2c board
+	//
+	 //{true, 0, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_VPIN_SENSOR0), MuxPinInstance(gCtx.m_i2cBoards[0].mux, MUX_MOISTURE_SENSOR0)}
+	 SOILMOISTURE_TICKER(0, 0, IO_EXPANDER_VPIN_SENSOR0, MUX_MOISTURE_SENSOR0)
 #if MAX_NUM_PAIRS>1
-	,{true, 1, IO_EXPANDER_VPIN_SENSOR1, MUX_MOISTURE_SENSOR1}
+	,SOILMOISTURE_TICKER(1, 0, IO_EXPANDER_VPIN_SENSOR1, MUX_MOISTURE_SENSOR1)
 #endif
 #if MAX_NUM_PAIRS>2
-	,{true, 2, IO_EXPANDER_VPIN_SENSOR2, MUX_MOISTURE_SENSOR2}
+	,SOILMOISTURE_TICKER(2, 0, IO_EXPANDER_VPIN_SENSOR2, MUX_MOISTURE_SENSOR2)
 #endif
 #if MAX_NUM_PAIRS>3
-	,{true, 3, IO_EXPANDER_VPIN_SENSOR3, MUX_MOISTURE_SENSOR3}
+	,SOILMOISTURE_TICKER(3, 0, IO_EXPANDER_VPIN_SENSOR3, MUX_MOISTURE_SENSOR3)
 #endif
 #if MAX_NUM_PAIRS>4
-	,{true, 4, IO_EXPANDER_VPIN_SENSOR4, MUX_MOISTURE_SENSOR4}
+	,SOILMOISTURE_TICKER(4, 0, IO_EXPANDER_VPIN_SENSOR4, MUX_MOISTURE_SENSOR4)
 #endif
 #if MAX_NUM_PAIRS>5
-	,{true, 5, IO_EXPANDER_VPIN_SENSOR5, MUX_MOISTURE_SENSOR5}
+	,SOILMOISTURE_TICKER(5, 0, IO_EXPANDER_VPIN_SENSOR5, MUX_MOISTURE_SENSOR5)
 #endif
+
+	//
+	// Second i2c board
+	//
+#if MAX_NUM_PAIRS>6
+	,SOILMOISTURE_TICKER(6, 1, IO_EXPANDER_VPIN_SENSOR0, MUX_MOISTURE_SENSOR0)
+#endif
+#if MAX_NUM_PAIRS>7
+	,SOILMOISTURE_TICKER(7, 1, IO_EXPANDER_VPIN_SENSOR1, MUX_MOISTURE_SENSOR1)
+#endif
+#if MAX_NUM_PAIRS>8
+	,SOILMOISTURE_TICKER(8, 1, IO_EXPANDER_VPIN_SENSOR2, MUX_MOISTURE_SENSOR2)
+#endif
+#if MAX_NUM_PAIRS>9
+	,SOILMOISTURE_TICKER(9, 1, IO_EXPANDER_VPIN_SENSOR3, MUX_MOISTURE_SENSOR3)
+#endif
+#if MAX_NUM_PAIRS>10
+	,SOILMOISTURE_TICKER(10, 1, IO_EXPANDER_VPIN_SENSOR4, MUX_MOISTURE_SENSOR4)
+#endif
+#if MAX_NUM_PAIRS>11
+	,SOILMOISTURE_TICKER(11, 1, IO_EXPANDER_VPIN_SENSOR5, MUX_MOISTURE_SENSOR5)
+#endif
+
 };
 
 using GroupMonitorTicker = TTicker<GroupMonitor, float, TickingMethod>;
 
 GroupMonitorTicker gGroupMonitors[MAX_NUM_PAIRS] =
 {
-	 { true, 0, IO_EXPANDER_MOTOR0}
+	//
+	// First i2c board
+	//
+	 { true, 0, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR0)}
 #if MAX_NUM_PAIRS>1
-	,{ true, 1, IO_EXPANDER_MOTOR1}
+	,{ true, 1, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR1)}
 #endif
 #if MAX_NUM_PAIRS>2
-	,{ true, 2, IO_EXPANDER_MOTOR2}
+	,{ true, 2, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR2)}
 #endif
 #if MAX_NUM_PAIRS>3
-	,{ true, 3, IO_EXPANDER_MOTOR3}
+	,{ true, 3, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR3)}
 #endif
 #if MAX_NUM_PAIRS>4
-	,{ true, 4, IO_EXPANDER_MOTOR4}
+	,{ true, 4, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR4)}
 #endif
 #if MAX_NUM_PAIRS>5
-	,{ true, 5, IO_EXPANDER_MOTOR5}
+	,{ true, 5, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR5)}
 #endif
+
+//
+// Second i2c board
+//
+#if MAX_NUM_PAIRS>6
+	,{ true, 6, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR0)}
+#endif
+#if MAX_NUM_PAIRS>7
+	,{ true, 7, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR1)}
+#endif
+#if MAX_NUM_PAIRS>8
+	,{ true, 8, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR2)}
+#endif
+#if MAX_NUM_PAIRS>9
+	,{ true, 9, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR3)}
+#endif
+#if MAX_NUM_PAIRS>10
+	,{ true, 10, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR4)}
+#endif
+#if MAX_NUM_PAIRS>11
+	,{ true, 11, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR5)}
+#endif
+
 };
 
 
@@ -257,10 +313,39 @@ void loop()
 			}
 			else if (strcmp_P(cmd, (const char*)F("setmuxenabled"))==0)
 			{
+				int boardIdx;
 				bool enabled;
-				if (parseCommand(enabled))
+				if (parseCommand(boardIdx, enabled))
 				{
-					gCtx.setMuxEnabled(enabled);
+					if (boardIdx>=0 && boardIdx<MAX_NUM_I2C_BOARDS)
+					{
+						gCtx.m_i2cBoards[boardIdx].mux.setEnabled(enabled);
+					}
+					else
+					{
+						CZ_LOG(logDefault, Error, F("Invalid board index (%d)"), boardIdx);
+					}
+				}
+			}
+			else if (strcmp_P(cmd, (const char*)F("setmuxchannel"))==0)
+			{
+				int boardIdx;
+				int muxpin;
+				if (parseCommand(boardIdx, muxpin))
+				{
+					if (boardIdx<0 && boardIdx>=MAX_NUM_I2C_BOARDS)
+					{
+						CZ_LOG(logDefault, Error, F("Invalid board index (%d)"), boardIdx);
+						continue;
+					}
+
+					if (muxpin<0 || muxpin>=8)
+					{
+						CZ_LOG(logDefault, Error, F("Invalid mux channel (%d)"), muxpin);
+						continue;
+					}
+
+					gCtx.m_i2cBoards[boardIdx].mux.setChannel(MultiplexerPin(muxpin));
 				}
 			}
 			else if (strcmp_P(cmd, (const char*)F("setgroupthreshold"))==0)

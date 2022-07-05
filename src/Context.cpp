@@ -86,18 +86,23 @@ void load(AT24C::Ptr& src, TFixedCapacityQueue<T>& v)
 void Context::begin()
 {
 	static_assert(IO_EXPANDER_ADDR>=0x0 && IO_EXPANDER_ADDR<=0x7, "Wrong macro value");
-	ioExpander.begin(IO_EXPANDER_ADDR);
-	mux.begin();
+
+	// Initialize the i2c boards
+	for(int i = 0; i< MAX_NUM_I2C_BOARDS; i++)
+	{
+		I2CBoard& board = m_i2cBoards[i];
+		board.ioExpander.begin(IO_EXPANDER_ADDR + i);
+		board.mux.begin(
+			board.ioExpander,
+			IO_EXPANDER_TO_MUX_S0,
+			IO_EXPANDER_TO_MUX_S1,
+			IO_EXPANDER_TO_MUX_S2,
+			MCU_TO_MUX_ZPIN,
+			IO_EXPANDER_TO_MUX_ENABLE);
+
+	}
+
 	data.begin();
-
-	ioExpander.pinMode(IO_EXPANDER_TO_MUX_ENABLE, OUTPUT);
-	setMuxEnabled(false);
-}
-
-void Context::setMuxEnabled(bool enabled)
-{
-	CZ_LOG(logDefault, Verbose, F("Setting mux to %s"), enabled ? "enabled" : "disabled");
-	ioExpander.digitalWrite(IO_EXPANDER_TO_MUX_ENABLE, enabled ? LOW : HIGH);
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -246,34 +251,45 @@ void GroupConfig::setSensorValue(unsigned int currentValue_, bool adjustRange)
 	m_numReadings++;
 
 	// If we are calibrating, we accept any value, and then adjust the air/water values accordingly
-	if (adjustRange)
+	if (m_calibration.enabled)
 	{
-		m_currentValue = currentValue_;
-		if (m_currentValue > m_data.airValue)
+		if (currentValue_ < m_calibration.minValue)
+		{
+			m_calibration.minValue = currentValue_;
+		}
+
+		if (currentValue_ > m_calibration.maxValue)
+		{
+			m_calibration.maxValue = currentValue_;
+		}
+
+		if (m_data.airValue != m_calibration.maxValue)
 		{
 			m_isDirty = true;
-			m_data.airValue = m_currentValue;
+			m_data.airValue = m_calibration.maxValue;
 		}
-		else if (m_currentValue < m_data.waterValue)
+
+		if (m_data.waterValue != m_calibration.minValue)
 		{
 			m_isDirty = true;
-			m_data.waterValue = m_currentValue;
+			m_data.waterValue = m_calibration.minValue;
 		}
 	}
-	else
-	{
-		m_currentValue = cz::clamp(currentValue_, m_data.waterValue, m_data.airValue);
-	}
+
+	m_currentValue = cz::clamp(currentValue_, m_data.waterValue, m_data.airValue);
 }
 
-void GroupConfig::resetSensorRange()
+void GroupConfig::startCalibration()
 {
-	m_isDirty = true;
-	m_data.waterValue = START_WATER_VALUE;
-	m_data.airValue = START_AIR_VALUE;
-	m_currentValue = cz::clamp(m_currentValue, m_data.waterValue, m_data.airValue);
+	m_calibration.enabled = true;
+	m_calibration.minValue = 1024;
+	m_calibration.maxValue = 0;
 }
 
+void GroupConfig::endCalibration()
+{
+	m_calibration.enabled = false;
+}
 
 ///////////////////////////////////////////////////////////////////////
 // GroupData

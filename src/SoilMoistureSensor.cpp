@@ -17,7 +17,7 @@ const char* const SoilMoistureSensor::ms_stateNames[3] =
 	"Reading"
 };
 
-SoilMoistureSensor::SoilMoistureSensor(uint8_t index, IOExpanderPin vinPin, MultiplexerPin dataPin)
+SoilMoistureSensor::SoilMoistureSensor(uint8_t index, IOExpanderPinInstance vinPin, MuxPinInstance dataPin)
 	: m_index(index)
 	, m_vinPin(vinPin)
 	, m_dataPin(dataPin)
@@ -103,7 +103,7 @@ SensorReading SoilMoistureSensor::readSensor()
 	int samples[numSamples];
 	for(auto&& s : samples)
 	{
-		s = gCtx.mux.analogRead(m_dataPin);
+		s = m_dataPin.analogRead();
 	}
 
 	StandardDeviation res = calcStandardDeviation(samples, numSamples);
@@ -161,10 +161,11 @@ void SoilMoistureSensor::onLeaveState()
 
 	case State::Reading:
 		//  Turn power off
-		gCtx.ioExpander.digitalWrite(m_vinPin, LOW);
+		m_vinPin.digitalWrite(LOW);
 		// release the mutex so other sensors can read
 		gCtx.data.releaseMuxMutex();
-		gCtx.setMuxEnabled(false);
+		// Disable the required mux, so other sensors on other i2c boards can share the same MCU's analog pin
+		m_dataPin.getMux().setEnabled(false);
 		break;
 
 	default:
@@ -177,18 +178,19 @@ void SoilMoistureSensor::onEnterState()
 	switch (m_state)
 	{
 	case State::Initializing:
-		gCtx.ioExpander.pinMode(m_vinPin, OUTPUT);
+		m_vinPin.pinMode(OUTPUT);
 		// Switch the sensor off
-		gCtx.ioExpander.digitalWrite(m_vinPin, LOW);
+		m_vinPin.digitalWrite(LOW);
 		break;
 
 	case State::PoweredDown:
 		break;
 
 	case State::Reading:
-		gCtx.setMuxEnabled(true);
+		// Enable the required mux
+		m_dataPin.getMux().setEnabled(true);
 		//  To take a measurement, we turn the sensor ON, wait a bit, then switch it off
-		gCtx.ioExpander.digitalWrite(m_vinPin, HIGH);
+		m_vinPin.digitalWrite(HIGH);
 		m_nextTickWait = MOISTURESENSOR_POWERUP_WAIT;
 		break;
 

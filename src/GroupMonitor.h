@@ -9,7 +9,7 @@ namespace cz
 class GroupMonitor : public Component
 {
   public:
-	GroupMonitor(uint8_t index, IOExpanderPin motorPin);
+	GroupMonitor(uint8_t index, IOExpanderPinInstance motorPin);
 
 	void begin();
 	virtual float tick(float deltaSeconds) override;
@@ -27,7 +27,7 @@ class GroupMonitor : public Component
 	void turnMotorOn();
 
 	uint8_t m_index;
-	IOExpanderPin m_motorPin;
+	IOExpanderPinInstance m_motorPin;
 
 	// Tells if there was a valid sensor reading since the last watering.
 	// This is used to make sure we don't turn on the motor unless there was a recent sensor reading

@@ -81,12 +81,12 @@
 /**
  * Pins of the IO Expander used to power the capacitive soil moisture sensors
  */
-#define IO_EXPANDER_VPIN_SENSOR0 cz::IOExpanderPin(8+0)
-#define IO_EXPANDER_VPIN_SENSOR1 cz::IOExpanderPin(8+1)
-#define IO_EXPANDER_VPIN_SENSOR2 cz::IOExpanderPin(8+2)
-#define IO_EXPANDER_VPIN_SENSOR3 cz::IOExpanderPin(8+3)
-#define IO_EXPANDER_VPIN_SENSOR4 cz::IOExpanderPin(8+4)
-#define IO_EXPANDER_VPIN_SENSOR5 cz::IOExpanderPin(8+5)
+#define IO_EXPANDER_VPIN_SENSOR0 cz::IOExpanderPin(8+5)
+#define IO_EXPANDER_VPIN_SENSOR1 cz::IOExpanderPin(8+4)
+#define IO_EXPANDER_VPIN_SENSOR2 cz::IOExpanderPin(8+3)
+#define IO_EXPANDER_VPIN_SENSOR3 cz::IOExpanderPin(8+2)
+#define IO_EXPANDER_VPIN_SENSOR4 cz::IOExpanderPin(8+1)
+#define IO_EXPANDER_VPIN_SENSOR5 cz::IOExpanderPin(8+0)
 
 /*
  * Pin from the IO Expander to the Mux's E pin.
@@ -99,17 +99,20 @@
 /**
  * Multiplexer pins used to read the soil moisture sensors
  */
-#define MUX_MOISTURE_SENSOR0 cz::MultiplexerPin(0) // Y0
-#define MUX_MOISTURE_SENSOR1 cz::MultiplexerPin(1) // ...
-#define MUX_MOISTURE_SENSOR2 cz::MultiplexerPin(2)
-#define MUX_MOISTURE_SENSOR3 cz::MultiplexerPin(3)
-#define MUX_MOISTURE_SENSOR4 cz::MultiplexerPin(4)
-#define MUX_MOISTURE_SENSOR5 cz::MultiplexerPin(5)
+#define MUX_MOISTURE_SENSOR0 cz::MultiplexerPin(7) // Y0
+#define MUX_MOISTURE_SENSOR1 cz::MultiplexerPin(5) // ...
+#define MUX_MOISTURE_SENSOR2 cz::MultiplexerPin(3)
+#define MUX_MOISTURE_SENSOR3 cz::MultiplexerPin(0)
+#define MUX_MOISTURE_SENSOR4 cz::MultiplexerPin(1)
+#define MUX_MOISTURE_SENSOR5 cz::MultiplexerPin(2)
+
+#define MAX_NUM_I2C_BOARDS 2
 
 /**
  * How many sensor/motor pairs to support
+ * Each i2c board has 6 pairs
  */
-#define MAX_NUM_PAIRS 6
+#define MAX_NUM_PAIRS (6*MAX_NUM_I2C_BOARDS)
 
 /**
  * How many sensor/motor pairs fit on the screen

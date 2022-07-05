@@ -234,6 +234,7 @@ bool SettingsMenu::processTouch(const Pos& pos)
 	{
 		if (m_dummyCfg.isDirty())
 		{
+			m_dummyCfg.endCalibration();
 			gCtx.data.getSelectedGroup()->setTo(m_dummyCfg);
 			gCtx.data.saveGroupConfig(gCtx.data.getSelectedGroupIndex());
 		}
@@ -264,7 +265,7 @@ bool SettingsMenu::processTouch(const Pos& pos)
 	{
 		// NOTE : The only way this button should respond is if we are in the CalibratingSensor state already
 		assert(m_state==State::CalibratingSensor);
-		m_dummyCfg.resetSensorRange();
+		m_dummyCfg.startCalibration();
 		return true;
 	}
 	else if (checkButtonPressed(ButtonId::SetThreshold))
