@@ -265,6 +265,8 @@ bool SettingsMenu::processTouch(const Pos& pos)
 	{
 		// NOTE : The only way this button should respond is if we are in the CalibratingSensor state already
 		assert(m_state==State::CalibratingSensor);
+		// Once we click the button, we mark it as disabled just for visible feedback. If the user wants to hit reaset again, it needs to get out of the menu and join again.
+		setButton(ButtonId::ResetRange, false, true);
 		m_dummyCfg.startCalibration();
 		return true;
 	}
