@@ -172,6 +172,11 @@ unsigned int GroupConfig::getThresholdValueAsPercentage() const
 	return map(tmp, m_data.airValue, m_data.waterValue, 0, 100);
 }
 
+float GroupConfig::getThresholdValueOnePercent() const
+{
+	return (m_data.airValue - m_data.waterValue) / 100.0f;
+}
+
 void GroupConfig::setThresholdValue(unsigned int value)
 {
 	if (value != m_data.thresholdValue)

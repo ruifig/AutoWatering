@@ -160,6 +160,7 @@ namespace cz
 
 		unsigned int getThresholdValue() const;
 		unsigned int getThresholdValueAsPercentage() const;
+		float getThresholdValueOnePercent() const;
 		void setThresholdValue(unsigned int value);
 		void setThresholdValueAsPercentage(unsigned int percentageValue);
 
@@ -251,6 +252,14 @@ namespace cz
 		unsigned int getThresholdValueAsPercentage() const
 		{
 			return m_cfg.getThresholdValueAsPercentage();
+		}
+
+		//
+		// Returns how much the threshold needs to change to show up as a 1% difference
+		// This is used by the calibration menu, to allow for manually setting the threshold range
+		float getThresholdValueOnePercent()
+		{
+			return m_cfg.getThresholdValueOnePercent();
 		}
 
 		void setThresholdValue(unsigned int value)
