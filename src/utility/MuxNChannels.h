@@ -112,6 +112,13 @@ namespace detail
 
 		void setChannelImpl(MultiplexerPin channel)
 		{
+			if (m_currChannel == channel.raw)
+			{
+				return;
+			}
+
+			m_currChannel = channel.raw;
+
 			// Set s0-sN
 			for (uint8_t i = 0; i < NUM_SPINS ; i++)
 			{
@@ -121,15 +128,17 @@ namespace detail
 			// Seems like I need this delay after setting the channel ?
 			// In some occasions if the pinMode changed externally and is set above, the first call to this function
 			// after the external use of the MCU's pin wouldn't give the right result.
-			//delayMicroseconds(70);
-			// I had a couple of other bugs in the code at the time, so maybe this wasn't the problem?
-			delayMicroseconds(1);
+			// One particular problem I noticed was when having 2 groups ON (A and B), where A actually has a sensor connector, and B doesn't,
+			// B would read garbage as expected, but when reading A the first reading would be wrong to the point it will mostly significantly affect 
+			// the calculated standard deviation
+			delayMicroseconds(100);
 		}
 
 		MCP23017WrapperInterface* m_ioExpander = nullptr;
 		IOExpanderPin m_sPins[NUM_SPINS];
 		MCUPin m_zPin;
 		IOExpanderPin m_enablePin;
+		int m_currChannel = 255;
 
 		union
 		{
