@@ -166,7 +166,7 @@
 
 // Temperature/humidity sensor sampling interval in seconds.
 #if FASTER_ITERATION
-	#define TEMPSENSOR_DEFAULT_SAMPLINGINTERVAL 5.0f
+	#define TEMPSENSOR_DEFAULT_SAMPLINGINTERVAL 10.0f
 #else
 	#define TEMPSENSOR_DEFAULT_SAMPLINGINTERVAL 60.0f
 #endif
