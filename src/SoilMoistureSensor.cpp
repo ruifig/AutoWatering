@@ -101,6 +101,7 @@ SensorReading SoilMoistureSensor::readSensor()
 	unsigned long startMicros = micros();
 	constexpr int numSamples = 30;
 	int samples[numSamples];
+
 	for(auto&& s : samples)
 	{
 		s = m_dataPin.analogRead();
@@ -115,6 +116,16 @@ SensorReading SoilMoistureSensor::readSensor()
 		, ((float)endMicros/1000.0f)
 		, sample.meanValue
 		, sample.standardDeviation);
+
+#if 0
+	char buf[2048];
+	buf[0] = 0;
+	for(auto&& s : samples)
+	{
+		strCatPrintf(buf, "%d,", s);
+	}
+	CZ_LOG(logDefault, Log, F("Samples[%d]={%s}"), numSamples, buf);
+#endif
 
 	return sample;
 }
