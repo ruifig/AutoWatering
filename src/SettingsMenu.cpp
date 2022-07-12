@@ -450,14 +450,20 @@ void SettingsMenu::setSensorLabels()
 void SettingsMenu::changeThresholdValue(int direction)
 {
 	int currentValue = (int)m_dummyCfg.getThresholdValue();
-	int newValue = currentValue + (direction * m_dummyCfg.getThresholdValueOnePercent());
+	int newValue = cz::clamp<int>(currentValue + (direction * m_dummyCfg.getThresholdValueOnePercent()), 0, 1023);
 	m_dummyCfg.setThresholdValue(newValue);
 	CZ_LOG(logDefault, Log, F("%s(%d): %d -> %d"), __FUNCTION__, direction, currentValue, newValue);
 }
 
 void SettingsMenu::changeSamplingInterval(int direction)
 {
-	int newSamplingInterval = (int)m_dummyCfg.getSamplingInterval() + direction*60;
+	int currentSamplingInterval = m_dummyCfg.getSamplingInterval();
+	// Remove any inconsistencies in the settings
+	// * The config works internally as seconds, but the UI works in minutes
+	// * Intentionally converting to minutes and back to seconds
+	currentSamplingInterval = (currentSamplingInterval/60) * 60;
+
+	int newSamplingInterval = currentSamplingInterval + direction*60;
 	// >=0 because we want to allow 0 to be passed down to the config.
 	// This is because the config expected a value in seconds, but the UI uses minutes for the sampling interval, and if we clamped here in minutes, 
 	// the minimum sampling interval would be 1 minute which is too high for testing.
