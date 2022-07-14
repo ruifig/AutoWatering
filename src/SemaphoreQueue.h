@@ -145,29 +145,19 @@ class TSemaphoreQueue
 	 */
 	bool tryAcquire(const IDType& id, bool registerInterest)
 	{
-		//CZ_LOG(logDefault, Log, F("%s(%d,%s)"), __FUNCTION__, (int)id, registerInterest ? "true" : "false");
-
-		debugLog("BEFORE");
-
 		// id is already active, so do nothing
 		if (m_active.find(id))
 		{
-			//CZ_LOG(logDefault, Log, F("    id is already active"));
-			//CZ_LOG(logDefault, Log, F("    Return TRUE"));
 			return true;
 		}
 
 		// If no available active slots, nothing we can do other than register interest (if requested)
 		if (m_active.size() == m_active.capacity())
 		{
-			//CZ_LOG(logDefault, Log, F("    No active slots available"));
 			if (registerInterest && !m_q.find(id))
 			{
-				//CZ_LOG(logDefault, Log, F("    Registering interest"));
 				m_q.push(id);
 			}
-			//CZ_LOG(logDefault, Log, F("    Return FALSE"));
-			debugLog("AFTER");
 			return false;
 		}
 
@@ -178,29 +168,20 @@ class TSemaphoreQueue
 		IDType next;
 		if ( m_q.isEmpty())
 		{
-			//CZ_LOG(logDefault, Log, F("    Queue empty. Assigning a slot"));
 			m_active.push(id);
-			//CZ_LOG(logDefault, Log, F("    Return TRUE"));
-			debugLog("AFTER");
 			return true;
 		}
 		else if (m_q.peek(next) && next==id)
 		{
-			//CZ_LOG(logDefault, Log, F("    id at the front of the queue. Assigning slot"));
 			m_q.pop();
 			m_active.push(id);
-			//CZ_LOG(logDefault, Log, F("    Return TRUE"));
-			debugLog("AFTER");
 			return true;
 		}
 		else if (registerInterest && !m_q.find(id))
 		{
-			//CZ_LOG(logDefault, Log, F("    Registering interest"));
 			m_q.push(id);
 		}
 
-		//CZ_LOG(logDefault, Log, F("    Return FALSE"));
-		debugLog("AFTER");
 		return false;
 	}
 
@@ -215,36 +196,14 @@ class TSemaphoreQueue
 	 */
 	bool release(const IDType& id)
 	{
-		//CZ_LOG(logDefault, Log,  F("%s(%s)"), __FUNCTION__, (int)id);
 		// Remove any interest from acquiring a slot
 		m_q.remove(id);
 		// Release the active slot this id is taking (if any)
 		int count = m_active.removeIfExists(id);
-		//CZ_LOG(logDefault, Log,  F("    Return %s"), count==0 ? "false" : "true");
 		return count==0 ? false : true;
 	}
 
   private:
-
-	void debugLog(const char* title)
-	{
-		return;
-		char buf[2048];
-		buf[0]=0;
-		strCatPrintf(buf, F("    %s-m_q[%d]={"), title, m_q.size());
-		for(int i=0; i<m_q.size(); i++)
-		{
-			strCatPrintf(buf, F("%d,"), (int)m_q.getAtIndex(i));
-		}
-
-		strCatPrintf(buf, F("}, m_active[%d]={"), m_active.size());
-		for(auto&& e : m_active)
-		{
-			strCatPrintf(buf, F("%d,"), (int)e);
-		}
-		strCatPrintf(buf, F("}"));
-		CZ_LOG(logDefault, Log, F("%s"), buf);
-	};
 
 	static_assert(NumSlots>=MaxActive, "MaxActive needs to be <= NumSlots");
 	IDType m_idCounter = 0;
