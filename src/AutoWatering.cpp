@@ -234,7 +234,7 @@ uint32_t gTickCount = 0;
 void loop()
 {
 	PROFILER_STARTRUN();
-	 gTickCount++;
+	gTickCount++;
 
 	gTimer.update();
 	const float deltaSeconds = gTimer.getDeltaSeconds();
@@ -256,7 +256,7 @@ void loop()
 			countdown = std::min(ticker.tick(deltaSeconds), countdown);
 		}
 	}
-	
+
 	// We use this so that we can just put a breakpoint in here and force the code to run when we want to check the profiler data
 	#if CONSOLE_COMMANDS
 	{

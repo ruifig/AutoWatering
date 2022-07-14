@@ -14,13 +14,17 @@ const char* const SoilMoistureSensor::ms_stateNames[3] =
 {
 	"Initializing",
 	"PoweredDown",
+	"QueuedForReading"
 	"Reading"
 };
+
+SoilMoistureSensor::SemaphoreQueue SoilMoistureSensor::ms_semaphoreQueue;
 
 SoilMoistureSensor::SoilMoistureSensor(uint8_t index, IOExpanderPinInstance vinPin, MuxPinInstance dataPin)
 	: m_index(index)
 	, m_vinPin(vinPin)
 	, m_dataPin(dataPin)
+	, m_queueHandle(ms_semaphoreQueue.createHandle(m_index))
 {
 }
 
@@ -29,17 +33,15 @@ void SoilMoistureSensor::begin()
 	onEnterState();
 }
 
-bool SoilMoistureSensor::tryEnterReadingState()
+void SoilMoistureSensor::tryEnterReadingState()
 {
-	// From Initializing, we jump straight to a first reading
-	if (gCtx.data.tryAcquireMuxMutex())
+	if (m_queueHandle.tryAcquire(true))
 	{
 		changeToState(State::Reading);
-		return true;
 	}
-	else
+	else if (m_state != State::QueuedForReading)
 	{
-		return false;
+		changeToState(State::QueuedForReading);
 	}
 }
 
@@ -73,7 +75,12 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 				tryEnterReadingState();
 			}
 		}
-		
+		break;
+
+	case State::QueuedForReading:
+		{
+			tryEnterReadingState();
+		}
 		break;
 
 	case State::Reading:
@@ -170,11 +177,12 @@ void SoilMoistureSensor::onLeaveState()
 	case State::PoweredDown:
 		break;
 
+	case State::QueuedForReading:
+		break;
+
 	case State::Reading:
 		//  Turn power off
 		m_vinPin.digitalWrite(LOW);
-		// release the mutex so other sensors can read
-		gCtx.data.releaseMuxMutex();
 		// Disable the required mux, so other sensors on other i2c boards can share the same MCU's analog pin
 		m_dataPin.getMux().setEnabled(false);
 		break;
@@ -195,6 +203,11 @@ void SoilMoistureSensor::onEnterState()
 		break;
 
 	case State::PoweredDown:
+		// Release the semaphore queue handle, so other sensors can get their turn
+		m_queueHandle.release();
+		break;
+
+	case State::QueuedForReading:
 		break;
 
 	case State::Reading:

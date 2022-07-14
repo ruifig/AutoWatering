@@ -50,7 +50,7 @@ class GroupMonitor : public Component
 
 	bool m_inSemaphoreQueue = false;
 
-	static TSemaphoreQueue<uint8_t, MAX_NUM_PAIRS, 3> ms_semaphoreQueue;
+	static TSemaphoreQueue<uint8_t, MAX_NUM_PAIRS, MAX_SIMULTANEOUS_MOTORS> ms_semaphoreQueue;
 };
 
 } // namespace cz

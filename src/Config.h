@@ -120,6 +120,18 @@
 #define VISIBLE_NUM_PAIRS 4
 
 /**
+ * How many motors can be active at one given time
+ * This is to control the peak power usage, depending on what power supply it is being used
+ */
+#define MAX_SIMULTANEOUS_MOTORS 3
+
+/**
+ * How many sensors can be active at one given time
+ * This should be always 1, because we are sharing a single Arduino pin for the analog reads
+ */
+#define MAX_SIMULTANEOUS_SENSORS 1
+
+/**
  * When we want to take a moisture reading, we enable power to the the sensor and need to wait a bit before doing the
  * actual reading.
  * This specifies how many seconds to wait before doing the reading

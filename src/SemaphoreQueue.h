@@ -20,7 +20,6 @@ class TSemaphoreQueue
 	using Type = T;
 	using QueueType = TSemaphoreQueue<T, NumSlots, MaxActive>;
 
-#if 0
 	class Handle
 	{
 	  public:
@@ -28,14 +27,45 @@ class TSemaphoreQueue
 	  	enum State : uint8_t
 		{
 			Inactive,
-			Queued, // It's registered in the queue, to a call to acquire will eventually succeed as new active slots are released by other handles
+			Queued, // It's registered in the queue so a call to acquire will eventually succeed as new active slots are released by other handles
 			Active // Currently holds an active slot
 		};
 
+		Handle& operator=(const Handle&) = delete;
+		Handle(const Handle&) = delete;
+
+		Handle()
+		{
+		}
+
 	  	Handle(QueueType& q, const Type& obj)
-			: m_q(q)
+			: m_q(&q)
 			, m_obj(obj)
 		{
+		}
+
+		Handle(Handle&& other)
+		{
+			moveFrom(std::move(other));
+		}
+
+		Handle& operator=(Handle&& other)
+		{
+			if (this != &other)
+			{
+				moveFrom(std::move(other));
+			}
+			return *this;
+		}
+
+		void moveFrom(Handle&& other)
+		{
+			release();
+			m_q = other.m_q;
+			m_obj = other.m_obj;
+			m_state = other.m_state;
+			other.m_q = nullptr;
+			other.m_state = State::Inactive;
 		}
 
 		~Handle()
@@ -43,23 +73,58 @@ class TSemaphoreQueue
 			release();
 		}
 
+		bool isActive() const
+		{
+			return m_state == State::Active;
+		}
+
+		bool isActiveOrQueued() const
+		{
+			return m_state==State::Queued || m_state==State::Active ? true : false;
+		}
+
+		bool tryAcquire(bool registerInterest)
+		{
+			if (m_q == nullptr)
+			{
+				return false;
+			}
+
+			if (m_q->tryAcquire(m_obj, registerInterest))
+			{
+				m_state = State::Active;
+				return true;
+			}
+			else if (registerInterest)
+			{
+				CZ_ASSERT(m_state==State::Inactive || m_state==State::Queued);
+				// We might be already in 
+				m_state = State::Queued;
+			}
+
+			return false;
+		}
+
 		void release()
 		{
-			if (m_holdingResources)
+			if (m_q && m_state != State::Inactive)
 			{
-				m_holdingResources = false;
-				m_q.release();
+				m_q->release(m_obj);
+				m_state = State::Inactive;
 			}
 		}
 
-		bool isActive
-
 	  protected:
-		ThisType& m_q;
+		QueueType* m_q = nullptr;
 		Type m_obj;
-		State m_state;
+		State m_state = State::Inactive;
 	};
-#endif
+
+
+	Handle createHandle(Type& obj)
+	{
+		return Handle(*this, obj);
+	}
 
 	/**
 	 * Tries to acquire an active slot for the specified object.

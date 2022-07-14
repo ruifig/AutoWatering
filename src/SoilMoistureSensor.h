@@ -4,6 +4,7 @@
 #include <assert.h>
 #include "Config.h"
 #include "Component.h"
+#include "SemaphoreQueue.h"
 
 namespace cz
 {
@@ -42,6 +43,7 @@ class SoilMoistureSensor : public Component
 	{
 		Initializing,
 		PoweredDown,
+		QueuedForReading, // Sensor needs a reading, and it's waiting its turn, to respect MAX_SIMULTANEOUS_SENSORS
 		Reading // Sensor is powering up to perform a read
 	};
 
@@ -59,12 +61,16 @@ class SoilMoistureSensor : public Component
 	IOExpanderPinInstance m_vinPin;
 	MuxPinInstance m_dataPin;
 
+	using SemaphoreQueue = TSemaphoreQueue<uint8_t, MAX_NUM_PAIRS, MAX_SIMULTANEOUS_SENSORS>;
+	static SemaphoreQueue ms_semaphoreQueue;
+	SemaphoreQueue::Handle m_queueHandle;
+
 	virtual SensorReading readSensor();
 
 	void changeToState(State newState);
 	void onLeaveState();
 	void onEnterState();
-	bool tryEnterReadingState();
+	void tryEnterReadingState();
 };
 
 class MockSoilMoistureSensor : public SoilMoistureSensor
@@ -105,7 +111,6 @@ protected:
 		// How long in seconds to wait for the currentValue to start chasing the target value.
 		// This is useful to simulate the fact that once the motor is turned on, it might take a bit for the soil
 		// to soak the water and for the sensor to react.
-
 		float currentValueChaseDelay = 0;
 
 		bool motorIsOn = false;
