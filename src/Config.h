@@ -256,7 +256,7 @@ static_assert(1<<GRAPH_POINT_NUM_BITS < GRAPH_HEIGHT, "Reduce number of bits, or
 
 // Maximum acceptable value for standard deviation.
 // Anything above is considered too random and means the sensor is probably not connected
-#define MOISTURESENSOR_ACCEPTABLE_STANDARD_DEVIATION 5
+#define MOISTURESENSOR_ACCEPTABLE_STANDARD_DEVIATION 10
 
 // When a sensor is connected, but not getting power, it will consistently report very low values
 // Any value below this, and we consider that the sensor is not getting power

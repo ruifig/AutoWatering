@@ -26,6 +26,12 @@
 	* This helps knowing when the board is trying telling the motor to turn on, and for some reason it is NOT turning on
 
 
+* GroupMonitor:
+	* Need to put the active slot "release" somewhere. As-in, every time we call tryAcquire, we need to remember that and make sure "release" is called when we are no longer trying to acquire (or the motor is turned off)
+	* Manual shots (and the console command shots) need to go through the GroupMonitor::tick function, so it respects the allowed number of active motors
+		* Probably need another field (e.g: bool m_doExplicitShot) in GroupMonitor, and then in the tick function where we check the last sensor reading, we also check that bool
+
+
 CLEAN UP
 ========
 

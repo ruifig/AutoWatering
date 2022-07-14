@@ -29,7 +29,9 @@
         "random": "cpp",
         "future": "cpp",
         "optional": "cpp",
-        "mstd_iterator": "cpp"
+        "mstd_iterator": "cpp",
+        "ratio": "cpp",
+        "streambuf": "cpp"
     },
     "gitlens.advanced.blame.customArguments": [],
 
