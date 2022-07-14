@@ -402,6 +402,7 @@ namespace cz
 	class TStaticArray<Type, Size, true> : public TBaseArray<Type>
 	{
 	public:
+		using Super = TBaseArray<Type>;
 
 		TStaticArray() : mUsedSize(0)
 		{
@@ -549,7 +550,7 @@ namespace cz
 		*/
 		bool find(const Type &val, int &destIndex) const
 		{
-			return _find(&eleAt(0), &eleAt(mUsedSize), val, destIndex);
+			return Super::_find(&eleAt(0), &eleAt(mUsedSize), val, destIndex);
 		}
 
 		/*! Finds an element
@@ -558,7 +559,7 @@ namespace cz
 		*/
 		bool find(const Type &val) const
 		{
-			return _find(&eleAt(0), &eleAt(mUsedSize), val);
+			return Super::_find(&eleAt(0), &eleAt(mUsedSize), val);
 		}
 
 		/*! Inserts the specified value at the specified index, moving forward all the elements, starting at index "index"
