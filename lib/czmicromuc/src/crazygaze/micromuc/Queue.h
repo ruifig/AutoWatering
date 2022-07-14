@@ -167,6 +167,20 @@ public:
 		return getAtIndex(size()-1);
 	}
 
+	/**
+	 * Checks if the given value is in the queue
+	 */
+	bool find(const Type& val) const
+	{
+		for(int i=0; i<size(); i++)
+		{
+			if (getAtIndex(i) == val)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
 
 };
 
