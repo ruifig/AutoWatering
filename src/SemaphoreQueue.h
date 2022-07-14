@@ -13,12 +13,11 @@ namespace cz
  * Not sure what to call this.
  * It's to implement a queue system for the sensors and motors, where we can specify how many we allow to be active at one given time
  */
-template<typename T, int NumSlots, int MaxActive>
+template<typename IDType, int NumSlots, int MaxActive>
 class TSemaphoreQueue
 {
   public:
-	using Type = T;
-	using QueueType = TSemaphoreQueue<T, NumSlots, MaxActive>;
+	using QueueType = TSemaphoreQueue<IDType, NumSlots, MaxActive>;
 
 	class Handle
 	{
@@ -38,12 +37,6 @@ class TSemaphoreQueue
 		{
 		}
 
-	  	Handle(QueueType& q, const Type& obj)
-			: m_q(&q)
-			, m_obj(obj)
-		{
-		}
-
 		Handle(Handle&& other)
 		{
 			moveFrom(std::move(other));
@@ -56,16 +49,6 @@ class TSemaphoreQueue
 				moveFrom(std::move(other));
 			}
 			return *this;
-		}
-
-		void moveFrom(Handle&& other)
-		{
-			release();
-			m_q = other.m_q;
-			m_obj = other.m_obj;
-			m_state = other.m_state;
-			other.m_q = nullptr;
-			other.m_state = State::Inactive;
 		}
 
 		~Handle()
@@ -90,7 +73,7 @@ class TSemaphoreQueue
 				return false;
 			}
 
-			if (m_q->tryAcquire(m_obj, registerInterest))
+			if (m_q->tryAcquire(m_id, registerInterest))
 			{
 				m_state = State::Active;
 				return true;
@@ -109,46 +92,67 @@ class TSemaphoreQueue
 		{
 			if (m_q && m_state != State::Inactive)
 			{
-				m_q->release(m_obj);
+				m_q->release(m_id);
 				m_state = State::Inactive;
 			}
 		}
 
 	  protected:
+
+	  	friend QueueType;
+
+	  	Handle(QueueType& q, const IDType& id)
+			: m_q(&q)
+			, m_id(id)
+		{
+		}
+
+		void moveFrom(Handle&& other)
+		{
+			release();
+			m_q = other.m_q;
+			m_id = other.m_id;
+			m_state = other.m_state;
+			other.m_q = nullptr;
+			other.m_state = State::Inactive;
+		}
+
 		QueueType* m_q = nullptr;
-		Type m_obj;
+		IDType m_id;
 		State m_state = State::Inactive;
 	};
 
-
-	Handle createHandle(Type& obj)
+	Handle createHandle()
 	{
-		return Handle(*this, obj);
+		return Handle(*this, m_idCounter++);
 	}
 
+
+  protected:
+
 	/**
-	 * Tries to acquire an active slot for the specified object.
-	 * If acquisition fails, it can optionally add the object to an interest queue, so that a future tryAcquire success is guarenteed as
-	 * slots are release by other objects
+	 * Tries to acquire an active slot for the specified id.
+	 * If acquisition fails, it can optionally add the id to an interest queue, so that a future tryAcquire success is guarenteed as
+	 * slots are release by other ids
 	 * 
-	 * \param obj Object to register as acquiring a slot
+	 * \param id id to register as acquiring a slot
 	 * \param registerInterest
-	 * 		If this is true and we fail to acquire a slot, it adds the object to the request queue. As slots are acquired and released.
-	 * 		If making calls for a give object with this set to true, calls to "release" must be made even if a slot is not acquired, in
-	 * 		order to remove the object from the interest queue
+	 * 		If this is true and we fail to acquire a slot, it adds the id to the request queue. As slots are acquired and released.
+	 * 		If making calls for a give id with this set to true, calls to "release" must be made even if a slot is not acquired, in
+	 * 		order to remove the id from the interest queue
 	 * \return
 	 * 		True if an active slot is acquired, either with this call, or due to a previous call.
 	 */
-	bool tryAcquire(const Type& obj, bool registerInterest)
+	bool tryAcquire(const IDType& id, bool registerInterest)
 	{
-		//CZ_LOG(logDefault, Log, F("%s(%d,%s)"), __FUNCTION__, (int)obj, registerInterest ? "true" : "false");
+		//CZ_LOG(logDefault, Log, F("%s(%d,%s)"), __FUNCTION__, (int)id, registerInterest ? "true" : "false");
 
 		debugLog("BEFORE");
 
-		// Object is already active, so do nothing
-		if (m_active.find(obj))
+		// id is already active, so do nothing
+		if (m_active.find(id))
 		{
-			//CZ_LOG(logDefault, Log, F("    Object is already active"));
+			//CZ_LOG(logDefault, Log, F("    id is already active"));
 			//CZ_LOG(logDefault, Log, F("    Return TRUE"));
 			return true;
 		}
@@ -157,10 +161,10 @@ class TSemaphoreQueue
 		if (m_active.size() == m_active.capacity())
 		{
 			//CZ_LOG(logDefault, Log, F("    No active slots available"));
-			if (registerInterest && !m_q.find(obj))
+			if (registerInterest && !m_q.find(id))
 			{
 				//CZ_LOG(logDefault, Log, F("    Registering interest"));
-				m_q.push(obj);
+				m_q.push(id);
 			}
 			//CZ_LOG(logDefault, Log, F("    Return FALSE"));
 			debugLog("AFTER");
@@ -169,30 +173,30 @@ class TSemaphoreQueue
 
 		// If there active slots available:
 		// * If the queue is empty, we can acquire
-		// * If the queue is not empty, we check if the object is the next in queue
-		// * Register interest if we failed to acquire and object NOT in queue already
-		Type next;
+		// * If the queue is not empty, we check if the id is the next in queue
+		// * Register interest if we failed to acquire and id NOT in queue already
+		IDType next;
 		if ( m_q.isEmpty())
 		{
 			//CZ_LOG(logDefault, Log, F("    Queue empty. Assigning a slot"));
-			m_active.push(obj);
+			m_active.push(id);
 			//CZ_LOG(logDefault, Log, F("    Return TRUE"));
 			debugLog("AFTER");
 			return true;
 		}
-		else if (m_q.peek(next) && next==obj)
+		else if (m_q.peek(next) && next==id)
 		{
-			//CZ_LOG(logDefault, Log, F("    Object at the front of the queue. Assigning slot"));
+			//CZ_LOG(logDefault, Log, F("    id at the front of the queue. Assigning slot"));
 			m_q.pop();
-			m_active.push(obj);
+			m_active.push(id);
 			//CZ_LOG(logDefault, Log, F("    Return TRUE"));
 			debugLog("AFTER");
 			return true;
 		}
-		else if (registerInterest && !m_q.find(obj))
+		else if (registerInterest && !m_q.find(id))
 		{
 			//CZ_LOG(logDefault, Log, F("    Registering interest"));
-			m_q.push(obj);
+			m_q.push(id);
 		}
 
 		//CZ_LOG(logDefault, Log, F("    Return FALSE"));
@@ -203,19 +207,19 @@ class TSemaphoreQueue
 	/**
 	 * Releases hold of an active slot
 	 * \return
-	 * 		True if the object was holding to an active slot
-	 * 		False if the object was not holding to an active slot
+	 * 		True if the id was holding to an active slot
+	 * 		False if the id was not holding to an active slot
 	 * 
 	 * \note
-	 * 	Calling this with an "obj" that didn't manage to acquire an active slot causes no problems 
+	 * 	Calling this with an "id" that didn't manage to acquire an active slot causes no problems 
 	 */
-	bool release(const Type& obj)
+	bool release(const IDType& id)
 	{
-		//CZ_LOG(logDefault, Log,  F("%s(%s)"), __FUNCTION__, (int)obj);
+		//CZ_LOG(logDefault, Log,  F("%s(%s)"), __FUNCTION__, (int)id);
 		// Remove any interest from acquiring a slot
-		m_q.remove(obj);
-		// Release the active slot this object is taking (if any)
-		int count = m_active.removeIfExists(obj);
+		m_q.remove(id);
+		// Release the active slot this id is taking (if any)
+		int count = m_active.removeIfExists(id);
 		//CZ_LOG(logDefault, Log,  F("    Return %s"), count==0 ? "false" : "true");
 		return count==0 ? false : true;
 	}
@@ -243,8 +247,9 @@ class TSemaphoreQueue
 	};
 
 	static_assert(NumSlots>=MaxActive, "MaxActive needs to be <= NumSlots");
-	TStaticFixedCapacityQueue<Type, NumSlots> m_q;
-	TStaticArray<Type, MaxActive, true> m_active;
+	IDType m_idCounter = 0;
+	TStaticFixedCapacityQueue<IDType, NumSlots> m_q;
+	TStaticArray<IDType, MaxActive, true> m_active;
 
 };
 

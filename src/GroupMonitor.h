@@ -32,8 +32,6 @@ class GroupMonitor : public Component
 	 */
 	bool tryTurnMotorOn(bool registerInterest);
 
-	void removeFromSemaphoreQueue();
-
 	uint8_t m_index;
 	IOExpanderPinInstance m_motorPin;
 
@@ -48,9 +46,9 @@ class GroupMonitor : public Component
 	//		* If <= (-MINIMUM_TIME_BETWEEN_MOTOR_ON) then we can do another sensor sheck
 	float m_motorOffCountdown = -MINIMUM_TIME_BETWEEN_MOTOR_ON;
 
-	bool m_inSemaphoreQueue = false;
-
-	static TSemaphoreQueue<uint8_t, MAX_NUM_PAIRS, MAX_SIMULTANEOUS_MOTORS> ms_semaphoreQueue;
+	using SemaphoreQueue = TSemaphoreQueue<uint8_t, MAX_NUM_PAIRS, MAX_SIMULTANEOUS_MOTORS>;
+	static SemaphoreQueue ms_semaphoreQueue;
+	SemaphoreQueue::Handle m_queueHandle;
 };
 
 } // namespace cz

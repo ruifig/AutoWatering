@@ -4,12 +4,13 @@
 namespace cz
 {
 
-TSemaphoreQueue<uint8_t, MAX_NUM_PAIRS, 3> GroupMonitor::ms_semaphoreQueue;
+GroupMonitor::SemaphoreQueue GroupMonitor::ms_semaphoreQueue;
 
 GroupMonitor::GroupMonitor(uint8_t index, IOExpanderPinInstance motorPin)
 	: m_index(index)
 	, m_motorPin(motorPin)
 	, m_sensorValidReadingSinceLastShot(0)
+	, m_queueHandle(ms_semaphoreQueue.createHandle())
 {
 }
 
@@ -23,16 +24,14 @@ void GroupMonitor::doShot()
 {
 	CZ_LOG(logDefault, Log, F("Initiating user requested shot for group %d"), m_index);
 	// If we are already trying to turn the motor on (it's waiting in queue), then do nothing
-	if (!m_inSemaphoreQueue)
+	if (m_queueHandle.isActiveOrQueued())
+	{
+		CZ_LOG(logDefault, Log, F("Motor for group %d is already On or is queued to turn on."), m_index);
+	}
+	else
 	{
 		tryTurnMotorOn(false);
 	}
-}
-
-void GroupMonitor::removeFromSemaphoreQueue()
-{
-	ms_semaphoreQueue.release(m_index);
-	m_inSemaphoreQueue = false;
 }
 
 bool GroupMonitor::tryTurnMotorOn(bool registerInterest)
@@ -44,13 +43,7 @@ bool GroupMonitor::tryTurnMotorOn(bool registerInterest)
 		return false;
 	}
 
-	if (registerInterest)
-	{
-		// Note: Intentionally not doing m_inSemaphoreQueue = registerInterest, because we don't want to accidentely change from true to false
-		m_inSemaphoreQueue = true;
-	}
-
-	if (ms_semaphoreQueue.tryAcquire(m_index, registerInterest))
+	if (m_queueHandle.tryAcquire(registerInterest))
 	{
 		m_motorPin.digitalWrite(HIGH);
 		data.setMotorState(true);
@@ -60,7 +53,7 @@ bool GroupMonitor::tryTurnMotorOn(bool registerInterest)
 	}
 	else
 	{
-		if (!m_inSemaphoreQueue)
+		if (!m_queueHandle.isActiveOrQueued())
 		{
 			CZ_LOG(logDefault, Log, F("Request to turn motor on for group %d failed."), m_index)
 		}
@@ -73,7 +66,7 @@ void GroupMonitor::turnMotorOff()
 	m_motorPin.digitalWrite(LOW);
 	GroupData& data = gCtx.data.getGroupData(m_index);
 	data.setMotorState(false);
-	removeFromSemaphoreQueue();
+	m_queueHandle.release();
 }
 
 float GroupMonitor::tick(float deltaSeconds)
@@ -103,10 +96,7 @@ float GroupMonitor::tick(float deltaSeconds)
 		{
 			// If we are at a point where the motor is ready to turn on, but for some reason it didn't (group not running, no sensor reading since last shot, etc)
 			// then we need to make sure we release our slot from the semaphore queue
-			if (m_inSemaphoreQueue)
-			{
-				removeFromSemaphoreQueue();
-			}
+			m_queueHandle.release();
 		}
 	}
 	else // m_motorOffCountdown is in the ]-MINIMUM_TIME_BETWEEN_MOTOR_ON, 0] range

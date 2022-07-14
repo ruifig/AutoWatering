@@ -24,7 +24,7 @@ SoilMoistureSensor::SoilMoistureSensor(uint8_t index, IOExpanderPinInstance vinP
 	: m_index(index)
 	, m_vinPin(vinPin)
 	, m_dataPin(dataPin)
-	, m_queueHandle(ms_semaphoreQueue.createHandle(m_index))
+	, m_queueHandle(ms_semaphoreQueue.createHandle())
 {
 }
 
