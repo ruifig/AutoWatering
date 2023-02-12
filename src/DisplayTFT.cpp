@@ -691,7 +691,7 @@ void DisplayTFT::updateTouch(float deltaSeconds)
 		else
 		{
 			m_touch.secondsSinceLastTouch += deltaSeconds;
-			if (m_touch.secondsSinceLastTouch > SCREEN_OFF_TIMEOUT)
+			if ((SCREEN_OFF_TIMEOUT!=0) && (m_touch.secondsSinceLastTouch > SCREEN_OFF_TIMEOUT))
 			{
 				CZ_LOG(logDefault, Log, F("Starting sleep"));
 				m_touch.sleeping = true;

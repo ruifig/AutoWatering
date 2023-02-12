@@ -90,7 +90,7 @@
 
 /*
  * Pin from the IO Expander to the Mux's E pin.
- * This allows us to turn off the Mux, so multilple sensor boards can share a single sensor reading pin.
+ * This allows us to turn off the Mux, so multiple sensor boards can share a single sensor reading pin.
  * LOW - Mux enabled
  * HIGH - Mux disabled
  */
@@ -222,8 +222,9 @@
 
 /**
  * How long to wait until turning off the screen backlight, if there are no touch events detected
+ * If 0, screen timeout is considered disabled (as-in, screen is always on)
  */
-#define SCREEN_OFF_TIMEOUT 60
+#define SCREEN_OFF_TIMEOUT 0
 
 /**
  * How fast to dim the screen to 0.
