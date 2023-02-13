@@ -148,7 +148,12 @@ namespace cz
 {
 	MyDisplay1 gScreen(TFT_PIN_CS, TFT_PIN_DC, TFT_PIN_BACKLIGHT);
 	const TouchCalibrationData gTsCalibrationData = {211, 3412, 334, 3449, 4};
-	MyXPT2046 gTs(gScreen, TOUCH_PIN_CS, TOUCH_PIN_IRQ, &gTsCalibrationData);
+	#ifdef TOUCH_PIN_IRQ
+		#define TOUCH_PIN_IRQ_VALUE TOUCH_PIN_IRQ
+	#else
+		#define TOUCH_PIN_IRQ_VALUE MCUPin(255) // The touch library checks for a value of 255, which means it won't try to use an irq pin
+	#endif
+	MyXPT2046 gTs(gScreen, TOUCH_PIN_CS, TOUCH_PIN_IRQ_VALUE, &gTsCalibrationData);
 	Timer gTimer;
 }
 

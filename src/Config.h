@@ -39,14 +39,17 @@
 /**
  * Display pins
  */
-#define TFT_PIN_DC cz::MCUPin(9)
-#define TFT_PIN_CS cz::MCUPin(10)
-#define TFT_PIN_BACKLIGHT cz::MCUPin(4)
+#define TFT_PIN_DC cz::MCUPin(9) // DC - Data/Command
+#define TFT_PIN_CS cz::MCUPin(10) // CS - Chip Select
+#define TFT_PIN_BACKLIGHT cz::MCUPin(4) // Backlight control. This needs to be PWM pin, so it can be used with analogWrite(...).
 
 /**
  * Touch controller pins
  */
-#define TOUCH_PIN_CS cz::MCUPin(2)
+#define TOUCH_PIN_CS cz::MCUPin(2) // CS - Chip Select
+// Pin used to signal an interrupt when touching the screen.
+// This is not strictily necessary and can be left undefined, in which case the touch libray will use non-irq mod
+// IRQ mode is faster, because no SPI calls are made unless a touch was detected
 #define TOUCH_PIN_IRQ cz::MCUPin(3)
 
 /**
@@ -57,7 +60,7 @@
 /**
  * What arduino pin we are using to communicate with the multiplexer.
  * Also known as the multiplexer Z pin
- * This needs to be an analog capable pin, so we can do sensor readings
+ * This needs to be an analog capable pin (to use with analogRead(...)), so we can do sensor readings
  */
 #define MCU_TO_MUX_ZPIN cz::MCUPin(16)
 
@@ -221,10 +224,10 @@
 #define SCREEN_DEFAULT_BRIGHTNESS 100
 
 /**
- * How long to wait until turning off the screen backlight, if there are no touch events detected
+ * How long to wait (in seconds) until turning off the screen backlight, if there are no touch events detected
  * If 0, screen timeout is considered disabled (as-in, screen is always on)
  */
-#define SCREEN_OFF_TIMEOUT 0
+#define SCREEN_OFF_TIMEOUT 30
 
 /**
  * How fast to dim the screen to 0.
