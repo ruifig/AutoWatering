@@ -28,6 +28,14 @@ public:
   void writeGPIOAB(uint16_t);
   uint16_t readGPIOAB();
 
+  /*
+   * Returns the address of the device 0..7
+   */
+  uint8_t getAddress()
+  {
+    return i2caddr;
+  }
+
 private:
   uint8_t i2caddr;
 };

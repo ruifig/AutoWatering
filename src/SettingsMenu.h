@@ -25,6 +25,7 @@ class SettingsMenu : public Menu
 	virtual void draw() override;
 
 	void setSensorLabels();
+	void changeThresholdValue(int direction);
 	void changeSamplingInterval(int direction);
 	void changeShotDuration(int direction);
 
@@ -54,7 +55,8 @@ class SettingsMenu : public Menu
 		CloseAndIgnore,
 
 		// Second line
-		SetGroupThreshold,
+		ResetRange,
+		SetThreshold,
 		Minus,
 		Plus,
 		
@@ -88,6 +90,8 @@ class SettingsMenu : public Menu
 	//    Line 2: Current sensor reading. This will be set as the threshold if the user presses the "Check" button
 	//    Line 3: Current maximum sensor reading (driest reading). This will be the new "air value" when exiting the sub-menu
 	gfx::NumLabel<true> m_calibrationLabels[3];
+	gfx::NumLabel<true> m_calibrationManualThresholdLabel;
+
 
 	// Soil sensor sampling interval labels
 	// 1: number of minutes

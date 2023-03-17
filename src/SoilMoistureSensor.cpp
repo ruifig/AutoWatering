@@ -14,13 +14,17 @@ const char* const SoilMoistureSensor::ms_stateNames[3] =
 {
 	"Initializing",
 	"PoweredDown",
+	"QueuedForReading"
 	"Reading"
 };
 
-SoilMoistureSensor::SoilMoistureSensor(uint8_t index, IOExpanderPin vinPin, MultiplexerPin dataPin)
+SoilMoistureSensor::SemaphoreQueue SoilMoistureSensor::ms_semaphoreQueue;
+
+SoilMoistureSensor::SoilMoistureSensor(uint8_t index, IOExpanderPinInstance vinPin, MuxPinInstance dataPin)
 	: m_index(index)
 	, m_vinPin(vinPin)
 	, m_dataPin(dataPin)
+	, m_queueHandle(ms_semaphoreQueue.createHandle())
 {
 }
 
@@ -29,17 +33,15 @@ void SoilMoistureSensor::begin()
 	onEnterState();
 }
 
-bool SoilMoistureSensor::tryEnterReadingState()
+void SoilMoistureSensor::tryEnterReadingState()
 {
-	// From Initializing, we jump straight to a first reading
-	if (gCtx.data.tryAcquireMuxMutex())
+	if (m_queueHandle.tryAcquire(true))
 	{
 		changeToState(State::Reading);
-		return true;
 	}
-	else
+	else if (m_state != State::QueuedForReading)
 	{
-		return false;
+		changeToState(State::QueuedForReading);
 	}
 }
 
@@ -73,7 +75,12 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 				tryEnterReadingState();
 			}
 		}
-		
+		break;
+
+	case State::QueuedForReading:
+		{
+			tryEnterReadingState();
+		}
 		break;
 
 	case State::Reading:
@@ -101,9 +108,10 @@ SensorReading SoilMoistureSensor::readSensor()
 	unsigned long startMicros = micros();
 	constexpr int numSamples = 30;
 	int samples[numSamples];
+
 	for(auto&& s : samples)
 	{
-		s = gCtx.mux.analogRead(m_dataPin);
+		s = m_dataPin.analogRead();
 	}
 
 	StandardDeviation res = calcStandardDeviation(samples, numSamples);
@@ -115,6 +123,16 @@ SensorReading SoilMoistureSensor::readSensor()
 		, ((float)endMicros/1000.0f)
 		, sample.meanValue
 		, sample.standardDeviation);
+
+#if 0
+	char buf[2048];
+	buf[0] = 0;
+	for(auto&& s : samples)
+	{
+		strCatPrintf(buf, "%d,", s);
+	}
+	CZ_LOG(logDefault, Log, F("Samples[%d]={%s}"), numSamples, buf);
+#endif
 
 	return sample;
 }
@@ -159,11 +177,14 @@ void SoilMoistureSensor::onLeaveState()
 	case State::PoweredDown:
 		break;
 
+	case State::QueuedForReading:
+		break;
+
 	case State::Reading:
 		//  Turn power off
-		gCtx.ioExpander.digitalWrite(m_vinPin, LOW);
-		// release the mutex so other sensors can read
-		gCtx.data.releaseMuxMutex();
+		m_vinPin.digitalWrite(LOW);
+		// Disable the required mux, so other sensors on other i2c boards can share the same MCU's analog pin
+		m_dataPin.getMux().setEnabled(false);
 		break;
 
 	default:
@@ -176,17 +197,24 @@ void SoilMoistureSensor::onEnterState()
 	switch (m_state)
 	{
 	case State::Initializing:
-		gCtx.ioExpander.pinMode(m_vinPin, OUTPUT);
+		m_vinPin.pinMode(OUTPUT);
 		// Switch the sensor off
-		gCtx.ioExpander.digitalWrite(m_vinPin, LOW);
+		m_vinPin.digitalWrite(LOW);
 		break;
 
 	case State::PoweredDown:
+		// Release the semaphore queue handle, so other sensors can get their turn
+		m_queueHandle.release();
+		break;
+
+	case State::QueuedForReading:
 		break;
 
 	case State::Reading:
+		// Enable the required mux
+		m_dataPin.getMux().setEnabled(true);
 		//  To take a measurement, we turn the sensor ON, wait a bit, then switch it off
-		gCtx.ioExpander.digitalWrite(m_vinPin, HIGH);
+		m_vinPin.digitalWrite(HIGH);
 		m_nextTickWait = MOISTURESENSOR_POWERUP_WAIT;
 		break;
 

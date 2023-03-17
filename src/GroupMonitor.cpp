@@ -4,45 +4,69 @@
 namespace cz
 {
 
-GroupMonitor::GroupMonitor(uint8_t index, IOExpanderPin motorPin)
+GroupMonitor::SemaphoreQueue GroupMonitor::ms_semaphoreQueue;
+
+GroupMonitor::GroupMonitor(uint8_t index, IOExpanderPinInstance motorPin)
 	: m_index(index)
 	, m_motorPin(motorPin)
 	, m_sensorValidReadingSinceLastShot(0)
+	, m_queueHandle(ms_semaphoreQueue.createHandle())
 {
 }
 
 void GroupMonitor::begin()
 {
-	gCtx.ioExpander.pinMode(m_motorPin, OUTPUT);
-	gCtx.ioExpander.digitalWrite(m_motorPin, LOW);
+	m_motorPin.pinMode(OUTPUT);
+	m_motorPin.digitalWrite(LOW);
 }
 
 void GroupMonitor::doShot()
 {
 	CZ_LOG(logDefault, Log, F("Initiating user requested shot for group %d"), m_index);
-	turnMotorOn();
+	// If we are already trying to turn the motor on (it's waiting in queue), then do nothing
+	if (m_queueHandle.isActiveOrQueued())
+	{
+		CZ_LOG(logDefault, Log, F("Motor for group %d is already On or is queued to turn on."), m_index);
+	}
+	else
+	{
+		tryTurnMotorOn(false);
+	}
 }
 
-void GroupMonitor::turnMotorOn()
+bool GroupMonitor::tryTurnMotorOn(bool registerInterest)
 {
 	GroupData& data = gCtx.data.getGroupData(m_index);
 	if (data.isMotorOn())
 	{
 		CZ_LOG(logDefault, Warning, F("Request to turn motor on for group %d ignored because motor was already on"), m_index);
-		return;
+		return false;
 	}
 
-	gCtx.ioExpander.digitalWrite(m_motorPin, HIGH);
-	data.setMotorState(true);
-	m_motorOffCountdown = data.getShotDuration();
-	m_sensorValidReadingSinceLastShot = false;
+	if (m_queueHandle.tryAcquire(registerInterest))
+	{
+		m_motorPin.digitalWrite(HIGH);
+		data.setMotorState(true);
+		m_motorOffCountdown = data.getShotDuration();
+		m_sensorValidReadingSinceLastShot = false;
+		return true;
+	}
+	else
+	{
+		if (!m_queueHandle.isActiveOrQueued())
+		{
+			CZ_LOG(logDefault, Log, F("Request to turn motor on for group %d failed."), m_index)
+		}
+		return false;
+	}
 }
 
 void GroupMonitor::turnMotorOff()
 {
-	gCtx.ioExpander.digitalWrite(m_motorPin, LOW);
+	m_motorPin.digitalWrite(LOW);
 	GroupData& data = gCtx.data.getGroupData(m_index);
 	data.setMotorState(false);
+	m_queueHandle.release();
 }
 
 float GroupMonitor::tick(float deltaSeconds)
@@ -66,7 +90,13 @@ float GroupMonitor::tick(float deltaSeconds)
 	{
 		if (data.isRunning() && m_sensorValidReadingSinceLastShot && m_lastValidReading.meanValue > data.getThresholdValue())
 		{
-			turnMotorOn();
+			tryTurnMotorOn(true);
+		}
+		else
+		{
+			// If we are at a point where the motor is ready to turn on, but for some reason it didn't (group not running, no sensor reading since last shot, etc)
+			// then we need to make sure we release our slot from the semaphore queue
+			m_queueHandle.release();
 		}
 	}
 	else // m_motorOffCountdown is in the ]-MINIMUM_TIME_BETWEEN_MOTOR_ON, 0] range
@@ -87,7 +117,6 @@ void GroupMonitor::onEvent(const Event& evt)
 
 		case Event::SoilMoistureSensorReading:
 		{
-			GroupData& data = gCtx.data.getGroupData(m_index);
 			const auto& e = static_cast<const SoilMoistureSensorReadingEvent&>(evt);
 			// The system will still raise events for invalid readings, but we don't want to act. As-in, we don't want bad sensor readings
 			// to end up turning the water on.

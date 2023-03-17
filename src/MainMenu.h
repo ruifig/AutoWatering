@@ -27,6 +27,8 @@ class MainMenu : public Menu
 		StopGroup,
 		Shot,
 		Settings,
+		Up,
+		Down,
 		Max
 	};
 

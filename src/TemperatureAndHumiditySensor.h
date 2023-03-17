@@ -4,6 +4,7 @@
 #include <assert.h>
 #include "Config.h"
 #include "Component.h"
+#include <Adafruit_HTU21DF.h>
 
 namespace cz
 {
@@ -14,7 +15,7 @@ namespace cz
 class TemperatureAndHumiditySensor : public Component
 {
   public:
-	TemperatureAndHumiditySensor(IOExpanderPin vinPin, MultiplexerPin dataPin);
+	TemperatureAndHumiditySensor();
 
 	void begin();
 
@@ -29,25 +30,24 @@ class TemperatureAndHumiditySensor : public Component
 	enum class State : uint8_t
 	{
 		Initializing,
-		PoweredDown,
+		Idle,
 		Reading
 	};
 
 	static const char* const ms_stateNames[3];
 
 	virtual void readSensor(float& temperature, float& humidity);
+	virtual void resetSensor();
 
 	void changeToState(State newState);
 	void onLeaveState();
 	void onEnterState();
-	bool tryEnterReadingState();
 
-	IOExpanderPin m_vinPin;
-	MultiplexerPin m_dataPin;
 	float m_timeInState;
 	float m_nextTickWait = 0;
 	float m_timeSinceLastRead = 0;
 	State m_state = State::Initializing;
+	Adafruit_HTU21DF m_htu;
 };
 
 } // namespace cz

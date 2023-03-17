@@ -26,9 +26,28 @@
 	* This helps knowing when the board is trying telling the motor to turn on, and for some reason it is NOT turning on
 
 
+* GroupMonitor:
+	* DONE - Need to put the active slot "release" somewhere. As-in, every time we call tryAcquire, we need to remember that and make sure "release" is called when we are no longer trying to acquire (or the motor is turned off)
+	* DONE - Manual shots (and the console command shots) need to go through the GroupMonitor::tick function, so it respects the allowed number of active motors
+		* Probably need another field (e.g: bool m_doExplicitShot) in GroupMonitor, and then in the tick function where we check the last sensor reading, we also check that bool
+
+
+CLEAN UP
+========
+
+* Delete lib\Adafruit_DHT-sensor-library if not used
+* Remove the "setmuxenabled" and "setmuxchannel"
+
+
 BUGS
 ====
 
+* Motor will turn on before time. Repro steps:
+	1. Set a sensor interval to say 2minutes and save.
+	2. Open the settings for the group again, and open the calibration menu
+	3. Squeeze the sensor so it goes over the threshold.
+	4. Close the settings without saving.
+	5. The motor will turn on as soon as we close the settings menu.
 * The history plot line draws red dots inconsistently 
 	* Repro: Start and stop a group while getting stable readings of say 30%
 	* When restarting a group, and the plot starts moving, spots with red dots will move to the left as expected, but without properly erasing the ones on the right, causing a read line to incorrectly grow in the plot

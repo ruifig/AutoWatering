@@ -13,19 +13,20 @@ using namespace gfx;
 
 namespace
 {
-	#define DEFINE_SENSOR_CALIBRATION_LABEL_LINE(LINE_INDEX, FLAGS) \
-	const LabelData sensorCalibrationSettings##LINE_INDEX PROGMEM = \
+	#define DEFINE_SENSOR_CALIBRATION_LABEL_LINE(COL, LINE, SUBLINE, FLAGS) \
+	const LabelData sensorCalibrationSettings##COL##LINE##SUBLINE PROGMEM = \
 	{ \
-		{LayoutHelper::getMenuButtonPos(1, 1).x, LayoutHelper::getMenuButtonPos(1,1).y + (LINE_INDEX * (GRAPH_HEIGHT/3)), 32, GRAPH_HEIGHT/3}, \
+		{LayoutHelper::getMenuButtonPos(COL, LINE).x, LayoutHelper::getMenuButtonPos(COL,LINE).y + (SUBLINE * (GRAPH_HEIGHT/3)), 32, GRAPH_HEIGHT/3}, \
 		HAlign::Center, VAlign::Center, \
 		TINY_FONT, \
 		GRAPH_VALUES_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
 		WidgetFlag::EraseBkg | FLAGS \
 	};
 
-	DEFINE_SENSOR_CALIBRATION_LABEL_LINE(0, WidgetFlag::None)
-	DEFINE_SENSOR_CALIBRATION_LABEL_LINE(1, WidgetFlag::NumAsPercentage)
-	DEFINE_SENSOR_CALIBRATION_LABEL_LINE(2, WidgetFlag::None)
+	DEFINE_SENSOR_CALIBRATION_LABEL_LINE(1, 1, 0, WidgetFlag::None)
+	DEFINE_SENSOR_CALIBRATION_LABEL_LINE(1, 1, 1, WidgetFlag::NumAsPercentage)
+	DEFINE_SENSOR_CALIBRATION_LABEL_LINE(1, 1, 2, WidgetFlag::None)
+	DEFINE_SENSOR_CALIBRATION_LABEL_LINE(4, 1, 1, WidgetFlag::NumAsPercentage) // For the data we show where we can use the minus/plus to change the threshold
 
 	// Defines the label data for menus, where a single cell can take 2 lines
 	#define DEFINE_LABEL_LINE2(COL, name, CELL_LINE, FLAGS) \
@@ -47,10 +48,11 @@ namespace
 SettingsMenu::SettingsMenu()
 	: m_calibrationLabels
 		{
-			{ sensorCalibrationSettings0},
-			{ sensorCalibrationSettings1},
-			{ sensorCalibrationSettings2},
+			{ sensorCalibrationSettings110},
+			{ sensorCalibrationSettings111},
+			{ sensorCalibrationSettings112},
 		}
+	, m_calibrationManualThresholdLabel{sensorCalibrationSettings411}
 	, m_samplingIntervalLabels
 		{
 			{ &labelData_samplingInterval_0 },
@@ -85,7 +87,8 @@ void SettingsMenu::init()
 	initButton(ButtonId::CloseAndIgnore, LayoutHelper::getMenuButtonPos(5,0), SCREEN_BKG_COLOUR, img_Close);
 
 	// Second line
-	initButton(ButtonId::SetGroupThreshold, LayoutHelper::getMenuButtonPos(CALIBRATE_BTN_COL+1,1), SCREEN_BKG_COLOUR, img_SetThreshold).setClearWhenHidden(false);
+	initButton(ButtonId::ResetRange, LayoutHelper::getMenuButtonPos(CALIBRATE_BTN_COL-1,1), SCREEN_BKG_COLOUR, img_Eraser).setClearWhenHidden(false);
+	initButton(ButtonId::SetThreshold, LayoutHelper::getMenuButtonPos(CALIBRATE_BTN_COL+1,1), SCREEN_BKG_COLOUR, img_SetThreshold).setClearWhenHidden(false);
 	initButton(ButtonId::Minus, LayoutHelper::getMenuButtonPos(0,1), SCREEN_BKG_COLOUR, img_Remove).setClearWhenHidden(false);
 	initButton(ButtonId::Plus, LayoutHelper::getMenuButtonPos(0,1), SCREEN_BKG_COLOUR, img_Add).setClearWhenHidden(false);
 
@@ -118,13 +121,16 @@ void SettingsMenu::setState(State state)
 	m_buttons[(int)ButtonId::CloseAndIgnore].setVisible(true);
 	m_buttons[(int)ButtonId::CloseAndIgnore].setEnabled(true);
 
-	bool showMinusPlus = (m_state==State::SettingSensorInterval || m_state==State::SettingShotDuration);
-	setButton(ButtonId::SetGroupThreshold, state==State::CalibratingSensor, state==State::CalibratingSensor);
+	bool showMinusPlus = (m_state==State::CalibratingSensor || m_state==State::SettingSensorInterval || m_state==State::SettingShotDuration);
+	setButton(ButtonId::ResetRange, state==State::CalibratingSensor, state==State::CalibratingSensor);
+	setButton(ButtonId::SetThreshold, state==State::CalibratingSensor, state==State::CalibratingSensor);
 	setButton(ButtonId::Minus, showMinusPlus, showMinusPlus);
 	setButton(ButtonId::Plus, showMinusPlus, showMinusPlus);
 
 	if (m_state==State::CalibratingSensor)
 	{
+		m_buttons[(int)ButtonId::Minus].move(LayoutHelper::getMenuButtonPos(CALIBRATE_BTN_COL+2, 1), true);
+		m_buttons[(int)ButtonId::Plus ].move(LayoutHelper::getMenuButtonPos(CALIBRATE_BTN_COL+4, 1), true);
 	}
 	else if (state==State::SettingSensorInterval)
 	{
@@ -147,6 +153,7 @@ void SettingsMenu::setState(State state)
 		{
 			l.clearValue();
 		}
+		m_calibrationManualThresholdLabel.clearValue();
 	}
 
 	//
@@ -184,6 +191,8 @@ void SettingsMenu::setState(State state)
 	{
 		l.setDirty(true);
 	}
+	m_calibrationManualThresholdLabel.setDirty(true);
+
 	for(auto&& l : m_samplingIntervalLabels)
 	{
 		l.setDirty(true);
@@ -232,6 +241,7 @@ bool SettingsMenu::processTouch(const Pos& pos)
 	{
 		if (m_dummyCfg.isDirty())
 		{
+			m_dummyCfg.endCalibration();
 			gCtx.data.getSelectedGroup()->setTo(m_dummyCfg);
 			gCtx.data.saveGroupConfig(gCtx.data.getSelectedGroupIndex());
 		}
@@ -258,7 +268,16 @@ bool SettingsMenu::processTouch(const Pos& pos)
 		setState(m_state==State::SettingShotDuration ? State::Main : State::SettingShotDuration);
 		return true;
 	}
-	else if (checkButtonPressed(ButtonId::SetGroupThreshold))
+	else if (checkButtonPressed(ButtonId::ResetRange))
+	{
+		// NOTE : The only way this button should respond is if we are in the CalibratingSensor state already
+		assert(m_state==State::CalibratingSensor);
+		// Once we click the button, we mark it as disabled just for visible feedback. If the user wants to hit reaset again, it needs to get out of the menu and join again.
+		setButton(ButtonId::ResetRange, false, true);
+		m_dummyCfg.startCalibration();
+		return true;
+	}
+	else if (checkButtonPressed(ButtonId::SetThreshold))
 	{
 		// NOTE : The only way this button should respond is if we are in the CalibratingSensor state already
 		assert(m_state==State::CalibratingSensor);
@@ -268,7 +287,12 @@ bool SettingsMenu::processTouch(const Pos& pos)
 	}
 	else if (checkButtonPressed(ButtonId::Minus))
 	{
-		if (m_state==State::SettingSensorInterval)
+		if (m_state==State::CalibratingSensor)
+		{
+			// NOTE: Higher values (higher voltage returned by the sensor), means drier
+			changeThresholdValue(+1 * getScalingFactor());
+		}
+		else if (m_state==State::SettingSensorInterval)
 		{
 			changeSamplingInterval(-1 * getScalingFactor());
 		}
@@ -284,7 +308,12 @@ bool SettingsMenu::processTouch(const Pos& pos)
 	}
 	else if (checkButtonPressed(ButtonId::Plus))
 	{
-		if (m_state==State::SettingSensorInterval)
+		if (m_state==State::CalibratingSensor)
+		{
+			// NOTE: Lower values (low voltage returned by the sensor), means wetter
+			changeThresholdValue(-1 * getScalingFactor());
+		}
+		else if (m_state==State::SettingSensorInterval)
 		{
 			changeSamplingInterval(+1 * getScalingFactor());
 		}
@@ -340,6 +369,12 @@ void SettingsMenu::draw()
 		{
 			for(auto&& l : m_calibrationLabels)
 				l.draw();
+
+			if (m_state==State::CalibratingSensor)
+			{
+				// This label shows between the minus and plus, and ONLY when in the calibrating submenu
+				m_calibrationManualThresholdLabel.draw();
+			}
 		}
 
 		if (m_state==State::Main || m_state==State::SettingSensorInterval)
@@ -401,6 +436,7 @@ void SettingsMenu::setSensorLabels()
 		// If in the calibration sub-menu we want this label to reflect the current sensor reading, so the user knows what the threshold
 		// will be if he hits the "set threshold button"
 		m_calibrationLabels[1].setValue(m_dummyCfg.getCurrentValueAsPercentage());
+		m_calibrationManualThresholdLabel.setValue(m_dummyCfg.getThresholdValueAsPercentage());
 	}
 	else
 	{
@@ -411,9 +447,23 @@ void SettingsMenu::setSensorLabels()
 	m_calibrationLabels[2].setValue(m_dummyCfg.getAirValue());
 }
 
+void SettingsMenu::changeThresholdValue(int direction)
+{
+	int currentValue = (int)m_dummyCfg.getThresholdValue();
+	int newValue = cz::clamp<int>(currentValue + (direction * m_dummyCfg.getThresholdValueOnePercent()), 0, 1023);
+	m_dummyCfg.setThresholdValue(newValue);
+	CZ_LOG(logDefault, Log, F("%s(%d): %d -> %d"), __FUNCTION__, direction, currentValue, newValue);
+}
+
 void SettingsMenu::changeSamplingInterval(int direction)
 {
-	int newSamplingInterval = (int)m_dummyCfg.getSamplingInterval() + direction*60;
+	int currentSamplingInterval = m_dummyCfg.getSamplingInterval();
+	// Remove any inconsistencies in the settings
+	// * The config works internally as seconds, but the UI works in minutes
+	// * Intentionally converting to minutes and back to seconds
+	currentSamplingInterval = (currentSamplingInterval/60) * 60;
+
+	int newSamplingInterval = currentSamplingInterval + direction*60;
 	// >=0 because we want to allow 0 to be passed down to the config.
 	// This is because the config expected a value in seconds, but the UI uses minutes for the sampling interval, and if we clamped here in minutes, 
 	// the minimum sampling interval would be 1 minute which is too high for testing.
@@ -441,10 +491,12 @@ void SettingsMenu::hide()
 	// Even though Menu::hide clears the entire menu area, this is still needed, so the UI elements are marked dirty when we
 	// enter the menu again
 	setButtonRange(ButtonId::First, ButtonId::Max, false, false);
-	for(auto&& l :m_calibrationLabels)
+	for(auto&& l : m_calibrationLabels)
 	{
 		l.clearValue();
 	}
+	m_calibrationManualThresholdLabel.clearValue();
+
 	for(auto&& l : m_samplingIntervalLabels)
 	{
 		l.clearValue();

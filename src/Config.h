@@ -39,14 +39,17 @@
 /**
  * Display pins
  */
-#define TFT_PIN_DC cz::MCUPin(9)
-#define TFT_PIN_CS cz::MCUPin(10)
-#define TFT_PIN_BACKLIGHT cz::MCUPin(4)
+#define TFT_PIN_DC cz::MCUPin(9) // DC - Data/Command
+#define TFT_PIN_CS cz::MCUPin(10) // CS - Chip Select
+#define TFT_PIN_BACKLIGHT cz::MCUPin(4) // Backlight control. This needs to be PWM pin, so it can be used with analogWrite(...).
 
 /**
  * Touch controller pins
  */
-#define TOUCH_PIN_CS cz::MCUPin(2)
+#define TOUCH_PIN_CS cz::MCUPin(2) // CS - Chip Select
+// Pin used to signal an interrupt when touching the screen.
+// This is not strictily necessary and can be left undefined, in which case the touch libray will use non-irq mod
+// IRQ mode is faster, because no SPI calls are made unless a touch was detected
 #define TOUCH_PIN_IRQ cz::MCUPin(3)
 
 /**
@@ -57,66 +60,79 @@
 /**
  * What arduino pin we are using to communicate with the multiplexer.
  * Also known as the multiplexer Z pin
- * This needs to be an analog capable pin, so we can do sensor readings
+ * This needs to be an analog capable pin (to use with analogRead(...)), so we can do sensor readings
  */
-#define MCU_TO_MUX_ZPIN cz::MCUPin(17)
+#define MCU_TO_MUX_ZPIN cz::MCUPin(16)
 
 /**
  * Pins of the IO expander to use to set the s0..s2 pins of the mux
  */
-#define IO_EXPANDER_TO_MUX_S0 cz::IOExpanderPin(0)
-#define IO_EXPANDER_TO_MUX_S1 cz::IOExpanderPin(1)
-#define IO_EXPANDER_TO_MUX_S2 cz::IOExpanderPin(2)
-
-/**
- * Pin of the IO Expander used to power the temperature/humidity sensor
- */
-#define IO_EXPANDER_VPIN_TEMPSENSOR cz::IOExpanderPin(8+0)
-
-/**
- * Pins of the IO Expander used to power the capacitive soil moisture sensors
- */
-#define IO_EXPANDER_VPIN_SENSOR0 cz::IOExpanderPin(8+6)
-#define IO_EXPANDER_VPIN_SENSOR1 cz::IOExpanderPin(8+5)
-#define IO_EXPANDER_VPIN_SENSOR2 cz::IOExpanderPin(8+4)
-#define IO_EXPANDER_VPIN_SENSOR3 cz::IOExpanderPin(8+3)
-#define IO_EXPANDER_VPIN_SENSOR4 cz::IOExpanderPin(8+2)
-#define IO_EXPANDER_VPIN_SENSOR5 cz::IOExpanderPin(8+1)
+#define IO_EXPANDER_TO_MUX_S0 cz::IOExpanderPin(0+0)
+#define IO_EXPANDER_TO_MUX_S1 cz::IOExpanderPin(0+1)
+#define IO_EXPANDER_TO_MUX_S2 cz::IOExpanderPin(0+2)
 
 /**
  * Pins of the IO Expander used to turn on/off the motors
  */
-#define IO_EXPANDER_MOTOR0 cz::IOExpanderPin(8+7)
-#define IO_EXPANDER_MOTOR1 cz::IOExpanderPin(0+7)
-#define IO_EXPANDER_MOTOR2 cz::IOExpanderPin(0+6)
-#define IO_EXPANDER_MOTOR3 cz::IOExpanderPin(0+5)
-#define IO_EXPANDER_MOTOR4 cz::IOExpanderPin(0+4)
-#define IO_EXPANDER_MOTOR5 cz::IOExpanderPin(0+3)
+#define IO_EXPANDER_MOTOR0 cz::IOExpanderPin(0+3)
+#define IO_EXPANDER_MOTOR1 cz::IOExpanderPin(0+4)
+#define IO_EXPANDER_MOTOR2 cz::IOExpanderPin(0+5)
+#define IO_EXPANDER_MOTOR3 cz::IOExpanderPin(0+6)
+#define IO_EXPANDER_MOTOR4 cz::IOExpanderPin(0+7)
+#define IO_EXPANDER_MOTOR5 cz::IOExpanderPin(8+6)
 
 /**
- * Multiplexer pin used to read temperature/humidity
+ * Pins of the IO Expander used to power the capacitive soil moisture sensors
  */
-#define MUX_TEMP_SENSOR cz::MultiplexerPin(3) // Y3
+#define IO_EXPANDER_VPIN_SENSOR0 cz::IOExpanderPin(8+5)
+#define IO_EXPANDER_VPIN_SENSOR1 cz::IOExpanderPin(8+4)
+#define IO_EXPANDER_VPIN_SENSOR2 cz::IOExpanderPin(8+3)
+#define IO_EXPANDER_VPIN_SENSOR3 cz::IOExpanderPin(8+2)
+#define IO_EXPANDER_VPIN_SENSOR4 cz::IOExpanderPin(8+1)
+#define IO_EXPANDER_VPIN_SENSOR5 cz::IOExpanderPin(8+0)
+
+/*
+ * Pin from the IO Expander to the Mux's E pin.
+ * This allows us to turn off the Mux, so multiple sensor boards can share a single sensor reading pin.
+ * LOW - Mux enabled
+ * HIGH - Mux disabled
+ */
+#define IO_EXPANDER_TO_MUX_ENABLE cz::IOExpanderPin(8+7)
 
 /**
  * Multiplexer pins used to read the soil moisture sensors
  */
-#define MUX_MOISTURE_SENSOR0 cz::MultiplexerPin(1) // Y1
-#define MUX_MOISTURE_SENSOR1 cz::MultiplexerPin(0) // ...
-#define MUX_MOISTURE_SENSOR2 cz::MultiplexerPin(7)
-#define MUX_MOISTURE_SENSOR3 cz::MultiplexerPin(5)
-#define MUX_MOISTURE_SENSOR4 cz::MultiplexerPin(6)
-#define MUX_MOISTURE_SENSOR5 cz::MultiplexerPin(4)
+#define MUX_MOISTURE_SENSOR0 cz::MultiplexerPin(7) // Y0
+#define MUX_MOISTURE_SENSOR1 cz::MultiplexerPin(5) // ...
+#define MUX_MOISTURE_SENSOR2 cz::MultiplexerPin(3)
+#define MUX_MOISTURE_SENSOR3 cz::MultiplexerPin(0)
+#define MUX_MOISTURE_SENSOR4 cz::MultiplexerPin(1)
+#define MUX_MOISTURE_SENSOR5 cz::MultiplexerPin(2)
+
+#define MAX_NUM_I2C_BOARDS 2
 
 /**
  * How many sensor/motor pairs to support
+ * Each i2c board has 6 pairs
  */
-#define MAX_NUM_PAIRS 6
+#define MAX_NUM_PAIRS (6*MAX_NUM_I2C_BOARDS)
 
 /**
  * How many sensor/motor pairs fit on the screen
  */
 #define VISIBLE_NUM_PAIRS 4
+
+/**
+ * How many motors can be active at one given time
+ * This is to control the peak power usage, depending on what power supply it is being used
+ */
+#define MAX_SIMULTANEOUS_MOTORS 3
+
+/**
+ * How many sensors can be active at one given time
+ * This should be always 1, because we are sharing a single Arduino pin for the analog reads
+ */
+#define MAX_SIMULTANEOUS_SENSORS 1
 
 /**
  * When we want to take a moisture reading, we enable power to the the sensor and need to wait a bit before doing the
@@ -165,7 +181,7 @@
 
 // Temperature/humidity sensor sampling interval in seconds.
 #if FASTER_ITERATION
-	#define TEMPSENSOR_DEFAULT_SAMPLINGINTERVAL 5.0f
+	#define TEMPSENSOR_DEFAULT_SAMPLINGINTERVAL 10.0f
 #else
 	#define TEMPSENSOR_DEFAULT_SAMPLINGINTERVAL 60.0f
 #endif
@@ -208,9 +224,10 @@
 #define SCREEN_DEFAULT_BRIGHTNESS 100
 
 /**
- * How long to wait until turning off the screen backlight, if there are no touch events detected
+ * How long to wait (in seconds) until turning off the screen backlight, if there are no touch events detected
+ * If 0, screen timeout is considered disabled (as-in, screen is always on)
  */
-#define SCREEN_OFF_TIMEOUT 60
+#define SCREEN_OFF_TIMEOUT 30
 
 /**
  * How fast to dim the screen to 0.
@@ -255,7 +272,7 @@ static_assert(1<<GRAPH_POINT_NUM_BITS < GRAPH_HEIGHT, "Reduce number of bits, or
 
 // Maximum acceptable value for standard deviation.
 // Anything above is considered too random and means the sensor is probably not connected
-#define MOISTURESENSOR_ACCEPTABLE_STANDARD_DEVIATION 20
+#define MOISTURESENSOR_ACCEPTABLE_STANDARD_DEVIATION 10
 
 // When a sensor is connected, but not getting power, it will consistently report very low values
 // Any value below this, and we consider that the sensor is not getting power

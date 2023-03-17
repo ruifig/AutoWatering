@@ -29,6 +29,8 @@ void MainMenu::init()
 	initButton(ButtonId::StopGroup, LayoutHelper::getMenuButtonPos(0,0), SCREEN_BKG_COLOUR, img_Stop);
 	initButton(ButtonId::Shot, LayoutHelper::getMenuButtonPos(1,0), SCREEN_BKG_COLOUR, img_Shot);
 	initButton(ButtonId::Settings, LayoutHelper::getMenuButtonPos(2,0), SCREEN_BKG_COLOUR, img_Settings);
+	initButton(ButtonId::Up, LayoutHelper::getMenuButtonPos(8,0), SCREEN_BKG_COLOUR, img_Up);
+	initButton(ButtonId::Down, LayoutHelper::getMenuButtonPos(8,1), SCREEN_BKG_COLOUR, img_Down);
 
 	show();
 }
@@ -40,45 +42,44 @@ void MainMenu::tick(float deltaSeconds)
 
 bool MainMenu::processTouch(const Pos& pos)
 {
+	auto testButtonPressed = [this](const Pos& pos) -> ButtonId
 	{
-		ImageButton& btn = m_buttons[(int)ButtonId::StartGroup];
-		if (btn.canAcceptInput() && btn.contains(pos))
+		for(int i=0; i<(int)ButtonId::Max; i++)
 		{
-			CZ_ASSERT(gCtx.data.hasGroupSelected());
-			gCtx.data.getSelectedGroup()->setRunning(true);
-			gCtx.data.saveGroupConfig(gCtx.data.getSelectedGroupIndex());
-			return true;
+			ImageButton& btn = m_buttons[i];
+			if (btn.canAcceptInput() && btn.contains(pos))
+			{
+				return (ButtonId)i;
+			}
 		}
-	}
-	
-	{
-		ImageButton& btn = m_buttons[(int)ButtonId::StopGroup];
-		if (btn.canAcceptInput() && btn.contains(pos))
-		{
-			CZ_ASSERT(gCtx.data.hasGroupSelected());
-			gCtx.data.getSelectedGroup()->setRunning(false);
-			gCtx.data.saveGroupConfig(gCtx.data.getSelectedGroupIndex());
-			return true;
-		}
-	}
+		return ButtonId::Max;
+	};
 
+	m_buttonPressed = testButtonPressed(pos);
+
+	if (m_buttonPressed==ButtonId::StartGroup || m_buttonPressed==ButtonId::StopGroup)
 	{
-		ImageButton& btn = m_buttons[(int)ButtonId::Shot];
-		if (btn.canAcceptInput() && btn.contains(pos))
-		{
-			m_buttonPressed = ButtonId::Shot;
-			return true;
-		}
+		CZ_ASSERT(gCtx.data.hasGroupSelected());
+		gCtx.data.getSelectedGroup()->setRunning(m_buttonPressed==ButtonId::StartGroup ? true : false);
+		gCtx.data.saveGroupConfig(gCtx.data.getSelectedGroupIndex());
+		return true;
 	}
-	
+	else if (m_buttonPressed==ButtonId::Shot)
 	{
-		ImageButton& btn = m_buttons[(int)ButtonId::Settings];
-		if (btn.canAcceptInput() && btn.contains(pos))
-		{
-			CZ_ASSERT(gCtx.data.hasGroupSelected());
-			m_buttonPressed = ButtonId::Settings;
-			return true;
-		}
+		CZ_ASSERT(gCtx.data.hasGroupSelected());
+		// Do nothing. m_buttonPressed is set, and the external code will detect that
+		return true;
+	}
+	else if (m_buttonPressed==ButtonId::Settings)
+	{
+		CZ_ASSERT(gCtx.data.hasGroupSelected());
+		// Do nothing. m_buttonPressed is set, and the external code will detect that
+		return true;
+	}
+	else if (m_buttonPressed==ButtonId::Up || m_buttonPressed==ButtonId::Down)
+	{
+		// Do nothing. m_buttonPressed is set, and the external code will detect that
+		return true;
 	}
 
 	return false;
@@ -97,6 +98,10 @@ void MainMenu::updateButtons()
 	// Shot and Settings stay enabled even if the group is not running. This is intentional
 	m_buttons[(int)ButtonId::Shot].setEnabled(isGroupSelected);
 	m_buttons[(int)ButtonId::Settings].setEnabled(isGroupSelected);
+
+	m_buttons[(int)ButtonId::Up].setEnabled(true);
+	m_buttons[(int)ButtonId::Down].setEnabled(true);
+
 }
 
 void MainMenu::onEvent(const Event& evt)

@@ -113,8 +113,8 @@ namespace cz
 			// to set the air value, and then submerse the sensor to set the water value.
 			// Having air and water properly is not a requirement for things to work, since what matter is that the system know what 
 			// sensor value is the threshold to turn on/off the motor
-			#define START_AIR_VALUE 420
-			#define START_WATER_VALUE 280
+			#define START_AIR_VALUE 370
+			#define START_WATER_VALUE (START_AIR_VALUE-5)
 			unsigned int airValue = START_AIR_VALUE;
 			unsigned int waterValue = START_WATER_VALUE;
 
@@ -137,6 +137,13 @@ namespace cz
 		// Number of sensor readings done
 		uint32_t m_numReadings = 0;
 
+		struct
+		{
+			unsigned int minValue;
+			unsigned int maxValue;
+			bool enabled = false;
+		} m_calibration;
+		
 	  public:
 
 		int getSaveSize() const
@@ -153,6 +160,7 @@ namespace cz
 
 		unsigned int getThresholdValue() const;
 		unsigned int getThresholdValueAsPercentage() const;
+		float getThresholdValueOnePercent() const;
 		void setThresholdValue(unsigned int value);
 		void setThresholdValueAsPercentage(unsigned int percentageValue);
 
@@ -198,6 +206,12 @@ namespace cz
 		 */
 		void setSensorValue(unsigned int currentValue_, bool adjustRange);
 
+		/**
+		 * Resets the air/water values to the default values, which is a very narrow range so it allows a new sensor range to be detected properly
+		 */
+		void startCalibration();
+		void endCalibration();
+
 	};
 
 	class GroupData
@@ -238,6 +252,14 @@ namespace cz
 		unsigned int getThresholdValueAsPercentage() const
 		{
 			return m_cfg.getThresholdValueAsPercentage();
+		}
+
+		//
+		// Returns how much the threshold needs to change to show up as a 1% difference
+		// This is used by the calibration menu, to allow for manually setting the threshold range
+		float getThresholdValueOnePercent()
+		{
+			return m_cfg.getThresholdValueOnePercent();
 		}
 
 		void setThresholdValue(unsigned int value)
@@ -437,25 +459,23 @@ public:
 struct Context
 {
 	Context()
-		: mux(
-			ioExpander,
-			IO_EXPANDER_TO_MUX_S0,
-			IO_EXPANDER_TO_MUX_S1,
-			IO_EXPANDER_TO_MUX_S2,
-			MCU_TO_MUX_ZPIN)
-		, data(*this)
+		: data(*this)
 		, eeprom(0)
 	{
 	}
 
 	void begin();
 
-#if MOCK_COMPONENTS
-	MockMCP23017Wrapper ioExpander;
-#else
-	MCP23017Wrapper ioExpander;
-#endif
-	Mux8Channels mux;
+	struct I2CBoard
+	{
+	#if MOCK_COMPONENTS
+		MockMCP23017Wrapper ioExpander;
+	#else
+		MCP23017Wrapper ioExpander;
+	#endif
+		Mux8Channels mux;
+	} m_i2cBoards[MAX_NUM_I2C_BOARDS];
+
 	ProgramData data;
 	AT24C256 eeprom;
 };

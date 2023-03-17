@@ -382,6 +382,16 @@ void DisplayTFT::OverviewState::tick(float deltaSeconds)
 			m_shotConfirmationMenu.show();
 			newCurrentMenu = &m_shotConfirmationMenu;
 		}
+		else if (buttonId == MainMenu::ButtonId::Up)
+		{
+			CZ_LOG(logDefault, Log, F("Scrolling up"));
+			scrollSlots(-1);
+		}
+		else if (buttonId == MainMenu::ButtonId::Down)
+		{
+			CZ_LOG(logDefault, Log, F("Scrolling down"));
+			scrollSlots(1);
+		}
 	}
 	else if (m_currentMenu->checkClose())
 	{
@@ -681,7 +691,7 @@ void DisplayTFT::updateTouch(float deltaSeconds)
 		else
 		{
 			m_touch.secondsSinceLastTouch += deltaSeconds;
-			if (m_touch.secondsSinceLastTouch > SCREEN_OFF_TIMEOUT)
+			if ((SCREEN_OFF_TIMEOUT!=0) && (m_touch.secondsSinceLastTouch > SCREEN_OFF_TIMEOUT))
 			{
 				CZ_LOG(logDefault, Log, F("Starting sleep"));
 				m_touch.sleeping = true;

@@ -2,6 +2,7 @@
 
 #include "PinTypes.h"
 #include "Adafruit_MCP23017.h"
+#include "crazygaze/micromuc/Logging.h"
 
 namespace cz
 {
@@ -37,11 +38,13 @@ class MCP23017Wrapper : public MCP23017WrapperInterface
 
 	virtual void pinMode(IOExpanderPin pin, uint8_t mode) override
 	{
+		//CZ_LOG(logDefault, Log, F("ioExpander%d.pinMode(%d, %d)"), (int)m_inner.getAddress(), (int)pin.raw, (int)mode);
 		m_inner.pinMode(pin.raw, mode);
 	}
 
 	virtual void digitalWrite(IOExpanderPin pin, uint8_t value) override
 	{
+		//CZ_LOG(logDefault, Log, F("ioExpander%d.digitalWrite(%d, %s)"), (int)m_inner.getAddress(), (int)pin.raw, value==LOW ? "LOW":"HIGH");
 		m_inner.digitalWrite(pin.raw, value);
 	}
 
@@ -93,6 +96,32 @@ public:
 	{
 		return 0;
 	}
+};
+
+class IOExpanderPinInstance
+{
+  public:
+	IOExpanderPinInstance(MCP23017WrapperInterface& ioExpander, IOExpanderPin pin)
+		: m_ioExpander(ioExpander)
+		, m_pin(pin)
+	{
+	}
+
+	IOExpanderPinInstance(const IOExpanderPinInstance&) = default;
+
+	void pinMode(uint8_t d)
+	{
+		m_ioExpander.pinMode(m_pin, d);
+	}
+
+	void digitalWrite(uint8_t d)
+	{
+		m_ioExpander.digitalWrite(m_pin, d);
+	}
+
+  private:
+	MCP23017WrapperInterface& m_ioExpander;
+	IOExpanderPin m_pin;
 };
 
 }  // namespace cz

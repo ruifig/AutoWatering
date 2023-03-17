@@ -2,6 +2,7 @@
 
 #include "Config.h"
 #include "Component.h"
+#include "SemaphoreQueue.h"
 
 namespace cz
 {
@@ -9,7 +10,7 @@ namespace cz
 class GroupMonitor : public Component
 {
   public:
-	GroupMonitor(uint8_t index, IOExpanderPin motorPin);
+	GroupMonitor(uint8_t index, IOExpanderPinInstance motorPin);
 
 	void begin();
 	virtual float tick(float deltaSeconds) override;
@@ -24,10 +25,15 @@ class GroupMonitor : public Component
 	
   protected:
 
-	void turnMotorOn();
+	/**
+	 * Tries to turn the motor on
+	 * \param registerInterest If true it will register interest in the semaphore queue, so it goes up in priority as multiple tries are done
+	 * \return true if motor was started
+	 */
+	bool tryTurnMotorOn(bool registerInterest);
 
 	uint8_t m_index;
-	IOExpanderPin m_motorPin;
+	IOExpanderPinInstance m_motorPin;
 
 	// Tells if there was a valid sensor reading since the last watering.
 	// This is used to make sure we don't turn on the motor unless there was a recent sensor reading
@@ -39,6 +45,10 @@ class GroupMonitor : public Component
 	// * If <= 0 then it means the motor is OFF, and...
 	//		* If <= (-MINIMUM_TIME_BETWEEN_MOTOR_ON) then we can do another sensor sheck
 	float m_motorOffCountdown = -MINIMUM_TIME_BETWEEN_MOTOR_ON;
+
+	using SemaphoreQueue = TSemaphoreQueue<uint8_t, MAX_NUM_PAIRS, MAX_SIMULTANEOUS_MOTORS>;
+	static SemaphoreQueue ms_semaphoreQueue;
+	SemaphoreQueue::Handle m_queueHandle;
 };
 
 } // namespace cz

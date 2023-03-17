@@ -6,42 +6,24 @@
 #include "crazygaze/micromuc/StringUtils.h"
 #include <Arduino.h>
 #include <algorithm>
-#include <DHT.h>
 
 namespace cz
 {
 
-#define DHT22_POWERUP_TIME 2.0f
-
 const char* const TemperatureAndHumiditySensor::ms_stateNames[3] =
 {
 	"Initializing",
-	"PoweredDown",
+	"Idle",
 	"Reading"
 };
 
-TemperatureAndHumiditySensor::TemperatureAndHumiditySensor(IOExpanderPin vinPin, MultiplexerPin dataPin)
-	: m_vinPin(vinPin)
-	, m_dataPin(dataPin)
+TemperatureAndHumiditySensor::TemperatureAndHumiditySensor()
 {
 }
 
 void TemperatureAndHumiditySensor::begin()
 {
 	onEnterState();
-}
-
-bool TemperatureAndHumiditySensor::tryEnterReadingState()
-{
-	if (gCtx.data.tryAcquireMuxMutex())
-	{
-		changeToState(State::Reading);
-		return true;
-	}
-	else
-	{
-		return false;
-	}
 }
 
 float TemperatureAndHumiditySensor::tick(float deltaSeconds)
@@ -51,33 +33,42 @@ float TemperatureAndHumiditySensor::tick(float deltaSeconds)
 	m_timeInState += deltaSeconds;
 	m_timeSinceLastRead += deltaSeconds;
 
-	m_nextTickWait = 0.5f;
+	m_nextTickWait = 1.0f;
 
 	switch (m_state)
 	{
 	case State::Initializing:
-		changeToState(State::PoweredDown);
+		changeToState(State::Idle);
 		break;
 
-	case State::PoweredDown:
+	case State::Idle:
 		if (m_timeSinceLastRead >= TEMPSENSOR_DEFAULT_SAMPLINGINTERVAL)
 		{
-			tryEnterReadingState();
+			changeToState(State::Reading);
 		}
 		break;
 
 	case State::Reading:
-		if (m_timeInState >= DHT22_POWERUP_TIME)
 		{
-			CZ_LOG(logDefault, Verbose, F("TemperatureAndHumiditySensor: Power up finished. Starting read"))
+			CZ_LOG(logDefault, Verbose, F("TemperatureAndHumiditySensor: Starting read"))
 			float temperature, humidity;
 			readSensor(temperature, humidity);
 			gCtx.data.setTemperatureReading(temperature);
 			gCtx.data.setHumidityReading(humidity);
 
-			// #TODO : If reading failed (e.g: returned NAN), then we need to read again instead of just resetting the timer
+			if (isnan(temperature))
+			{
+				CZ_LOG(logDefault, Verbose, F("TemperatureAndHumiditySensor: Error reading temperature"));
+				resetSensor();
+			}
+			else if (isnan(humidity))
+			{
+				CZ_LOG(logDefault, Verbose, F("TemperatureAndHumiditySensor: Error reading humidity"));
+				resetSensor();
+			}
+
 			m_timeSinceLastRead = 0;
-			changeToState(State::PoweredDown);
+			changeToState(State::Idle);
 		}
 		break;
 
@@ -96,25 +87,8 @@ void TemperatureAndHumiditySensor::readSensor(float& temperature, float& humidit
 	temperature = 20.0f + counter / 10.0f;
 	humidity = 50.0f + counter / 10.0f;
 #else
-	//CZ_LOG(logDefault, Log, F("TemperatureAndHumiditySensor: 1"));
-	gCtx.mux.setChannel(m_dataPin);
-	//CZ_LOG(logDefault, Log, F("TemperatureAndHumiditySensor: 2"));
-	DHT dht(gCtx.mux.getMCUZPin().raw, DHT22);
-	//CZ_LOG(logDefault, Log, F("TemperatureAndHumiditySensor: 3"));
-	dht.begin();
-
-	//CZ_LOG(logDefault, Log, F("TemperatureAndHumiditySensor: 4"));
-	humidity = dht.readHumidity();
-	//CZ_LOG(logDefault, Log, F("TemperatureAndHumiditySensor: 5"));
-	temperature = dht.readTemperature();
-
-	//
-	// Clean up mux usage
-	pinMode(gCtx.mux.getMCUZPin(), OUTPUT);
-	digitalWrite(gCtx.mux.getMCUZPin(), LOW);
-	pinMode(gCtx.mux.getMCUZPin(), INPUT);
-
-	//CZ_LOG(logDefault, Log, F("TemperatureAndHumiditySensor: Finished reading DHT22 sensor"));
+	temperature = m_htu.readTemperature();
+	humidity = m_htu.readHumidity();
 #endif
 }
 
@@ -132,6 +106,11 @@ void TemperatureAndHumiditySensor::changeToState(State newState)
 	onEnterState();
 }
 
+void TemperatureAndHumiditySensor::resetSensor()
+{
+	m_htu.reset();
+}
+
 void TemperatureAndHumiditySensor::onLeaveState()
 {
 	switch(m_state)
@@ -139,14 +118,10 @@ void TemperatureAndHumiditySensor::onLeaveState()
 	case State::Initializing:
 		break;
 
-	case State::PoweredDown:
+	case State::Idle:
 		break;
 
 	case State::Reading:
-		//  Turn power off
-		gCtx.ioExpander.digitalWrite(m_vinPin, LOW);
-		// release the mutex so other sensors can read
-		gCtx.data.releaseMuxMutex();
 		break;
 	}
 
@@ -158,18 +133,16 @@ void TemperatureAndHumiditySensor::onEnterState()
 	{
 	
 	case State::Initializing:
-		gCtx.ioExpander.pinMode(m_vinPin, OUTPUT);
-		// Switch the sensor off
-		gCtx.ioExpander.digitalWrite(m_vinPin, LOW);
+		if (!m_htu.begin())
+		{
+			CZ_LOG(logDefault, Error, F("Error initializing temperature/humidity sensor"));
+		}
 		break;
 
-	case State::PoweredDown:
+	case State::Idle:
 		break;
 
 	case State::Reading:
-		// To take a measurement, we turn the sensor ON, wait a bit, then switch it off
-		gCtx.ioExpander.digitalWrite(m_vinPin, HIGH);
-		m_nextTickWait = DHT22_POWERUP_TIME;
 		break;
 
 	default:
