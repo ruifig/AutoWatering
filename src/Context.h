@@ -4,7 +4,7 @@
 #include "utility/MCP23017Wrapper.h"
 #include "utility/MuxNChannels.h"
 #include <crazygaze/micromuc/Queue.h>
-#include "utility/AT24C.h"
+#include "AT24C.h"
 #include "crazygaze/micromuc/MathUtils.h"
 
 namespace cz

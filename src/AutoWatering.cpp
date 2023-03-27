@@ -146,15 +146,39 @@ GroupMonitorTicker gGroupMonitors[MAX_NUM_PAIRS] =
 
 namespace cz
 {
-	MyDisplay1 gScreen(TFT_PIN_CS, TFT_PIN_DC, TFT_PIN_BACKLIGHT);
-	const TouchCalibrationData gTsCalibrationData = {211, 3412, 334, 3449, 4};
-	#ifdef TOUCH_PIN_IRQ
-		#define TOUCH_PIN_IRQ_VALUE TOUCH_PIN_IRQ
-	#else
-		#define TOUCH_PIN_IRQ_VALUE MCUPin(255) // The touch library checks for a value of 255, which means it won't try to use an irq pin
-	#endif
-	MyXPT2046 gTs(gScreen, TOUCH_PIN_CS, TOUCH_PIN_IRQ_VALUE, &gTsCalibrationData);
+	MyDisplay1 gScreen;
+	bool gScreenDetected = false;
+	const TouchCalibrationData gTsCalibrationData = {233, 3460, 349, 3547, 2};
+	// Minimal graphics interface the touch controller needs
+	class TouchControllerDisplayWrapper : public TouchScreenController_GraphicsInterface
+	{
+		public:
+		virtual int16_t width() override { return gScreen.width(); }
+		virtual int16_t height() override { return gScreen.height(); }
+		virtual void fillScreen(uint16_t colour) override { gScreen.fillScreen(Colour(colour)); }
+		virtual void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t colour) override
+		{
+			gScreen.drawLine(x0, y0, x1, y1, Colour(colour));
+		}
+	};
+	TouchControllerDisplayWrapper gTsDisplayWrapper;
+
+#ifdef TOUCH_MY_IRQ
+	#define Touch_Pin_IRQ TOUCH_MY_IRQ
+#else
+	#define Touch_Pin_IRQ \
+		255  // The touch library checks for a value of 255, which means it won't try to use an irq pin
+#endif
+	XPT2046 gTs(gTsDisplayWrapper, TOUCH_MY_CS, Touch_Pin_IRQ, &gTsCalibrationData);
+
 	Timer gTimer;
+}
+
+// TFT_espi spi object
+// Need access to this, so I can reset the frequency after using touch
+extern "C"
+{
+	extern SPIClassRP2040 spi;
 }
 
 namespace
@@ -177,16 +201,29 @@ void doGroupShot(uint8_t index)
 
 void setup()
 {
+	// MCP23017 : 400kHz at 3.3v
+	// AT24C256 : 400kHz at 2.7v, 2.5v
+	Wire.setSDA(0);
+	Wire.setSCL(1);
+	Wire.begin();
+	Wire.setClock(400000);
+
 	#if MOCK_COMPONENTS
 		randomSeed(micros());
 	#endif
 
 #if CZ_SERIAL_LOG_ENABLED
-	gSerialLogOutput.begin(Serial1, 115200);
+
+	#if CZ_USE_PROBE_SERIAL
+		MySerial.setRX(MySerial_RXPin);
+		MySerial.setTX(MySerial_TXPin);
+	#endif
+
+	gSerialLogOutput.begin(MySerial, 115200);
 #endif
 
 #if CONSOLE_COMMANDS
-	gSerialStringReader.begin(Serial1);
+	gSerialStringReader.begin(MySerial);
 #endif
 
 	//
@@ -208,8 +245,18 @@ void setup()
 	}
 #endif
 
-	gScreen.begin();
-	gTs.begin();
+	if (gScreen.begin())
+	{
+		gScreenDetected = true;
+		CZ_LOG(logDefault, Log, "Screen detected.");
+	}
+	else
+	{
+		gScreenDetected = false;
+		CZ_LOG(logDefault, Warning, "*** SCREEN NOT DETECTED ***");
+	}
+
+	gTs.begin(spi);
 	//gTs.calibrate();
 
 	gCtx.begin();

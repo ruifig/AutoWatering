@@ -14,6 +14,20 @@
 #endif
 
 /**
+ * If 1, it will consider we are using the Raspberry Pi Debug Probe, and setup logging to use Serial1
+ * If 0, it will use the default Serial object
+*/
+#define CZ_USE_PROBE_SERIAL 1
+
+#if CZ_USE_PROBE_SERIAL
+	#define MySerial Serial1
+	#define MySerial_RXPin 17
+	#define MySerial_TXPin 16
+#else
+	#define MySerial Serial
+#endif
+
+/**
  * What pin to as CS/SS for the SD card reader
  */
 //#define SD_CARD_SS_PIN 53
@@ -34,23 +48,6 @@
 		#define CONSOLE_COMMANDS 0
 	#endif
 #endif
-
-
-/**
- * Display pins
- */
-#define TFT_PIN_DC cz::MCUPin(9) // DC - Data/Command
-#define TFT_PIN_CS cz::MCUPin(10) // CS - Chip Select
-#define TFT_PIN_BACKLIGHT cz::MCUPin(4) // Backlight control. This needs to be PWM pin, so it can be used with analogWrite(...).
-
-/**
- * Touch controller pins
- */
-#define TOUCH_PIN_CS cz::MCUPin(2) // CS - Chip Select
-// Pin used to signal an interrupt when touching the screen.
-// This is not strictily necessary and can be left undefined, in which case the touch libray will use non-irq mod
-// IRQ mode is faster, because no SPI calls are made unless a touch was detected
-#define TOUCH_PIN_IRQ cz::MCUPin(3)
 
 /**
  * Note. Internally it adds 0x20, which is the base address

@@ -4,7 +4,7 @@
 #include "Config.h"
 #include "GroupGraph.h"
 #include "gfx/MyDisplay1.h"
-#include "gfx/MyXPT2046.h"
+#include "crazygaze/TouchController/XPT2046.h"
 
 #include "SettingsMenu.h"
 #include "MainMenu.h"
@@ -169,11 +169,10 @@ class DisplayTFT : public Component
 
 	struct
 	{
+		// A touch&release happened, and we should process it
 		bool pressed = false;
-		Pos pos;
-		// A "press" condition requires us to touch and untouch the screen, so we need to hold the previous value
-		// to compare against in the next tick
-		TouchPoint tmp;
+		Pos pos; // Position to process as clicked
+
 		// This is set to true when we want to sleep and we set turn off the screen backlight.
 		// When a touch is process, if this is true, that one touch will be ignored, and we wake up/turn on the backlight
 		bool sleeping = false;
@@ -189,7 +188,4 @@ class DisplayTFT : public Component
 	
 	
 } // namespace cz
-
-
-
 

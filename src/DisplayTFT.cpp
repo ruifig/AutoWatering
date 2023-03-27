@@ -20,7 +20,7 @@ namespace cz
 {
 
 extern MyDisplay1 gScreen;
-extern MyXPT2046 gTs;
+extern XPT2046 gTs;
 extern Timer gTimer;
 
 using namespace gfx;
@@ -653,18 +653,16 @@ float DisplayTFT::tick(float deltaSeconds)
 
 void DisplayTFT::updateTouch(float deltaSeconds)
 {
+	gTs.updateState();
+
+	TouchState touchState = gTs.getState();
+	m_touch.pressed = false;
 	TouchPoint p = gTs.getPoint();
 
-	if (p.z > TS_MIN_PRESSURE)
-	{
-		//CZ_LOG(logDefault, Log, F("Touch=(%3d,%3d,%3d)"), p.x, p.y, p.z);
-	}
-
-	m_touch.pressed = false;
-	// If we are not touching right now, but were in the previous call, that means we have a press event
-	if (p.z < TS_MIN_PRESSURE && m_touch.tmp.z >= TS_MIN_PRESSURE)
+	if (touchState == TouchState::Released)
 	{
 		m_touch.secondsSinceLastTouch = 0;
+		// If we are currently sleeping, we wake up the screen and ignore this Release
 		if (m_touch.sleeping)
 		{
 			CZ_LOG(logDefault, Log, F("Waking up"));
@@ -699,8 +697,6 @@ void DisplayTFT::updateTouch(float deltaSeconds)
 			}
 		}
 	}
-
-	m_touch.tmp = p;
 }
 	
 void DisplayTFT::onEvent(const Event& evt)

@@ -90,7 +90,7 @@ void drawRGBBitmapDisabled_P(const Rect& area, const uint16_t *bitmap_P, const u
 template<typename T>
 void printAlignedImpl(const Rect& area, HAlign halign, VAlign valign, const T* txt, bool eraseBackground)
 {
-	gScreen.setTextSize(0,0);
+	gScreen.setTextSize(0);
 	Rect bounds;
 	gScreen.getTextBounds(txt, 0,0, &bounds.x, &bounds.y, &bounds.width, &bounds.height);
 

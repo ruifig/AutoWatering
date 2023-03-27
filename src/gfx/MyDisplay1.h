@@ -15,12 +15,12 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wignored-qualifiers"
-  #include "SPI.h"
-  #include "Adafruit_ILI9341.h"
+  //#include "SPI.h"
 #pragma GCC diagnostic pop
 
-#include "../utility/PinTypes.h"
+#include "TFT_eSPI.h"
 #include "GraphicsInterface.h"
+#include "../utility/PinTypes.h"
 
 namespace cz
 {
@@ -28,14 +28,18 @@ namespace cz
 class MyDisplay1 : public GraphicsInterface
 {
   public:
-	MyDisplay1(MCUPin displayCS, MCUPin displayDC, MCUPin displayBacklight);
+	MyDisplay1();
 
-	void begin();
+	/*
+	* Starts the display device, and returns true on success, or false if not found.
+	* The detection method is simply based on drawing a few pixels and reading them back.
+	*/
+	bool begin();
 
-	virtual int16_t height() const override { return m_tft.height(); }
-	virtual int16_t width() const override { return m_tft.width(); }
+	virtual int16_t height() override { return m_tft.height(); }
+	virtual int16_t width() override { return m_tft.width(); }
 
-	virtual void writePixel(int16_t x, int16_t y, Colour color) override { m_tft.writePixel(x, y, color); }
+	virtual void writePixel(int16_t x, int16_t y, Colour color) override { m_tft.drawPixel(x, y, color); }
 	virtual void startWrite() override { m_tft.startWrite(); }
 	virtual void endWrite() override { m_tft.endWrite(); }
 
@@ -79,10 +83,9 @@ class MyDisplay1 : public GraphicsInterface
 	//
 
 	virtual void setTextSize(uint8_t s) override { m_tft.setTextSize(s); }
-	virtual void setTextSize(uint8_t s_x, uint8_t s_y) override { m_tft.setTextSize(s_x, s_y); }
 	virtual void setFont(const GFXfont* font) override
 	{
-		m_tft.setFont(font);
+		m_tft.setFreeFont(font);
 	}
 
 	virtual GFXfont* getGfxFont() override
@@ -133,14 +136,20 @@ class MyDisplay1 : public GraphicsInterface
 									int16_t *x1, int16_t *y1, uint16_t *w,
 									uint16_t *h) override
 	{
-		m_tft.getTextBounds(str, x, y, x1, y1, w, h);
+		*x1 = x;
+		*y1 = y;
+		*w = m_tft.textWidth(str);
+		*h = m_tft.fontHeight();
 	}
 
 	virtual void getTextBounds(const __FlashStringHelper *str, int16_t x, int16_t y,
 									int16_t *x1, int16_t *y1, uint16_t *w,
 									uint16_t *h) override
 	{
-		m_tft.getTextBounds(str, x, y, x1, y1, w, h);
+		*x1 = x;
+		*y1 = y;
+		*w = m_tft.textWidth(str);
+		*h = m_tft.fontHeight();
 	}
 
 	/**
@@ -151,7 +160,14 @@ class MyDisplay1 : public GraphicsInterface
 
 	virtual void setBacklightBrightness(uint8_t brightness) override;
 
+	TFT_eSPI& getTFT_eSPI()
+	{
+		return m_tft;
+	}
+
   private:
+
+	uint32_t readRegister(uint8_t reg, int16_t bytes, uint8_t index);
 
 	void logProperties();
 	MCUPin m_bkpin;
@@ -160,10 +176,10 @@ class MyDisplay1 : public GraphicsInterface
 	Colour m_textBkgColour;
 
 	// Wrapping, so I can access protected members
-	class MyAdafruit_ILI9341 : public Adafruit_ILI9341
+	class My_TFT_eSPI : public TFT_eSPI
 	{
 	  public:
-		using Adafruit_ILI9341::Adafruit_ILI9341;
+		using TFT_eSPI::TFT_eSPI;
 		GFXfont* getGfxFont() { return gfxFont; }
 	} m_tft;
 };

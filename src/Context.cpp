@@ -5,13 +5,6 @@
 #include <Arduino.h>
 #include <type_traits>
 
-
-auto test()
-{
-	std::chrono::seconds secs;
-	return secs;
-}
-
 namespace cz
 {
 

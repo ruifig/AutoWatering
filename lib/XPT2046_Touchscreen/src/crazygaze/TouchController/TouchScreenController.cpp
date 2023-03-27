@@ -1,12 +1,11 @@
 #include "TouchScreenController.h"
-#include "GraphicsInterface.h"
 #include "crazygaze/micromuc/Logging.h"
 #include "crazygaze/micromuc/MathUtils.h"
 
 namespace cz
 {
 
-TouchScreenController::TouchScreenController(GraphicsInterface& display, const TouchCalibrationData* calibrationData)
+TouchScreenController::TouchScreenController(TouchScreenController_GraphicsInterface& display, const TouchCalibrationData* calibrationData)
 	: m_display(display)
 {
 
@@ -30,7 +29,6 @@ TouchScreenController::TouchScreenController(GraphicsInterface& display, const T
 		m_touchCalibration_invert_x = calibrationData->b4 & 0x02;
 		m_touchCalibration_invert_y = calibrationData->b4 & 0x04;
 	}
-
 }
 
 TouchPoint TouchScreenController::convertRawToScreen(const RawTouchPoint& point) const
@@ -71,21 +69,20 @@ TouchPoint TouchScreenController::convertRawToScreen(const RawTouchPoint& point)
 	return ret;
 }
 
-TouchPoint TouchScreenController::getPoint()
-{
-	RawTouchPoint raw = getRawPoint();
-	return convertRawToScreen(raw);
-}
-
 TouchCalibrationData TouchScreenController::calibrate()
 {
-	Colour colour_fg = Colour_Pink;
-	Colour colour_bg = Colour_Green;
-	uint8_t size = 15; // Rectangle size
+	constexpr uint16_t colour_fg = 0x0000; // Black
+	constexpr uint16_t colour_bg = 0xFFFF; // White
+
+	constexpr uint8_t size = 15; // Rectangle size
 
 	int16_t values[] = {0, 0, 0, 0, 0, 0, 0, 0};
 	int16_t height = m_display.height();
 	int16_t width = m_display.width();
+	CZ_LOG(logDefault, Log, "Screen: width=%d, height=%d", width, height);
+
+	// Call once to kickstart anything
+	getRawPoint();
 
 	for (uint8_t i = 0; i < 4; i++)
 	{
@@ -116,27 +113,22 @@ TouchCalibrationData TouchScreenController::calibrate()
 			break;
 		}
 
-		// user has to get the chance to release
-		if (i > 0)
-			delay(1000);
+		while(getState() != TouchState::Idle) { updateState(); }
+		while(getState() != TouchState::Touching) { updateState(); }
+		while(getState() != TouchState::Released) { updateState(); }
 
-		for (uint8_t j = 0; j < 8; j++)
-		{
-			// Block until we touch the screen
-			while (!isTouched())
-			{
-			}
-			RawTouchPoint tmp = getRawPoint();
-			values[i * 2] += tmp.x;
-			values[i * 2 + 1] += tmp.y;
-		}
-		values[i * 2] /= 8;
-		values[i * 2 + 1] /= 8;
+		RawTouchPoint tmp = getRawPoint();
+		CZ_LOG(logDefault, Log, "RawTouchPoint: x=%u, y=%u, z=%u", tmp.x, tmp.y, tmp.z);
+		values[i * 2] = tmp.x;
+		values[i * 2 + 1] = tmp.y;
 
 		// quickly fill inverted, for visual feedback that we moved to the next step
+		// Reset TFT_eSPI frequency, because touch is using the same SPI ports.
 		m_display.fillScreen(colour_fg);
 		m_display.fillScreen(colour_bg);
 	}
+
+	while(getState() != TouchState::Idle) { updateState(); }
 
 	// from case 0 to case 1, the y value changed.
 	// If the measured delta of the touch x axis is bigger than the delta of the y axis, the touch and TFT axes are switched.

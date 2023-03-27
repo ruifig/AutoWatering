@@ -91,9 +91,9 @@ class TextButton : public BaseButton
 	Colour m_outlineColour;
 	Colour m_textColour;
 
+	// #RVF : Is this actually doing anything after the upgrade to TFT_eSPI ?
 	// Text magnification
-	uint8_t m_textMagX;
-	uint8_t m_textMagY;
+	uint8_t m_textMag;
 
 	const GFXfont* m_font = nullptr;
 	char m_text[20];
