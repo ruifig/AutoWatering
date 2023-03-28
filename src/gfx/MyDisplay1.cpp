@@ -48,22 +48,7 @@ uint32_t MyDisplay1::readRegister(uint8_t reg, int16_t bytes, uint8_t index)
 		index++;
 	}
 
-	MySerial.print("Register 0x");
-	if (reg < 0x10)
-		MySerial.print("0");
-	MySerial.print(reg, HEX);
-
-	MySerial.print(": 0x");
-
-	// Add leading zeros as needed
-	uint32_t mask = 0x1 << 28;
-	while (data < mask && mask > 0x1)
-	{
-		MySerial.print("0");
-		mask = mask >> 4;
-	}
-
-	MySerial.println(data, HEX);
+	CZ_LOG(logDefault, Log, "Display Register 0x%X: 0x%X", reg, data);
 
 	return data;
 }

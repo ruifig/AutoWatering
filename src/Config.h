@@ -59,7 +59,7 @@
  * Also known as the multiplexer Z pin
  * This needs to be an analog capable pin (to use with analogRead(...)), so we can do sensor readings
  */
-#define MCU_TO_MUX_ZPIN cz::MCUPin(16)
+#define MCU_TO_MUX_ZPIN cz::MCUPin(28)
 
 /**
  * Pins of the IO expander to use to set the s0..s2 pins of the mux

@@ -199,26 +199,15 @@ void doGroupShot(uint8_t index)
 	gGroupMonitors[index].getObj().doShot();
 }
 
+#include "tests.h"
+
 void setup()
 {
-	// MCP23017 : 400kHz at 3.3v
-	// AT24C256 : 400kHz at 2.7v, 2.5v
-	Wire.setSDA(0);
-	Wire.setSCL(1);
-	Wire.begin();
-	Wire.setClock(400000);
-
-	#if MOCK_COMPONENTS
-		randomSeed(micros());
-	#endif
-
 #if CZ_SERIAL_LOG_ENABLED
-
 	#if CZ_USE_PROBE_SERIAL
 		MySerial.setRX(MySerial_RXPin);
 		MySerial.setTX(MySerial_TXPin);
 	#endif
-
 	gSerialLogOutput.begin(MySerial, 115200);
 #endif
 
@@ -226,6 +215,16 @@ void setup()
 	gSerialStringReader.begin(MySerial);
 #endif
 
+	CZ_LOG(logDefault, Log, "");
+	CZ_LOG(logDefault, Log, "Autowatering, %s", __TIMESTAMP__);
+
+	CZ_LOG(logDefault, Log, "Initializing I2C");
+	// MCP23017 : 400kHz at 3.3v
+	// AT24C256 : 400kHz at 2.7v, 2.5v
+	Wire.setSDA(0);
+	Wire.setSCL(1);
+	Wire.begin();
+	Wire.setClock(400000);
 	//
 	// Initialize I2C
 	// NOTE: The original Adafruit_MCP23017.cpp code automatically initialized IC2, but that causes some problems
@@ -236,6 +235,9 @@ void setup()
 	// AT24C256 : 400kHz at 2.7v, 2.5v
 	Wire.setClock(400000);
 
+	#if MOCK_COMPONENTS
+		randomSeed(micros());
+	#endif
 
 #if SD_CARD_LOGGING
 	if (gSDCard.betin(SD_CARD_SS_PIN))
@@ -245,6 +247,7 @@ void setup()
 	}
 #endif
 
+	CZ_LOG(logDefault, Log, "Initialing screen");
 	if (gScreen.begin())
 	{
 		gScreenDetected = true;
@@ -256,12 +259,18 @@ void setup()
 		CZ_LOG(logDefault, Warning, "*** SCREEN NOT DETECTED ***");
 	}
 
-	gTs.begin(spi);
-	//gTs.calibrate();
+	if (gScreenDetected)
+	{
+		CZ_LOG(logDefault, Log, "Initializing touchscreen");
+		gTs.begin(spi);
+		CZ_LOG(logDefault, Log, "Finished initializing touchscreen");
+		//gTs.calibrate();
+	}
 
 	gCtx.begin();
 	gDisplay.getObj().begin();
 
+	CZ_LOG(logDefault, Log, "Initializing the temperature/humidity sensor");
 	gTempAndHumiditySensor.getObj().begin();
 
 	for(auto&& ticker : gSoilMoistureSensors)
@@ -276,7 +285,11 @@ void setup()
 
 	gTimer.begin();
 
+	//runTests();
+
 	//runTests(gCtx.eeprom);
+
+	CZ_LOG(logDefault, Log, "Finished setup()");
 }
 
 PROFILER_CREATE(30);
