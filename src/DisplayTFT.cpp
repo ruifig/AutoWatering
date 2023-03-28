@@ -290,9 +290,10 @@ NumLabel<true> sensorLabels[VISIBLE_NUM_PAIRS][3] =
 #endif
 };
 
+
 const LabelData humidityLabelData PROGMEM = \
 { \
-	LayoutHelper::getStatusBarCells(STATUS_BAR_DIVISIONS-4, 4), \
+	LayoutHelper::getStatusBarCells(STATUS_BAR_DIVISIONS-3, 3), \
 	HAlign::Center, VAlign::Center, \
 	SMALL_FONT, \
 	HUMIDITY_LABEL_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
@@ -304,7 +305,7 @@ FixedLabel<> humidityLabel(&humidityLabelData, F("---.-%"));
 
 const LabelData temperatureLabelData PROGMEM = \
 { \
-	LayoutHelper::getStatusBarCells(STATUS_BAR_DIVISIONS-8, 4), \
+	LayoutHelper::getStatusBarCells(STATUS_BAR_DIVISIONS-6, 3), \
 	HAlign::Center, VAlign::Center, \
 	SMALL_FONT, \
 	TEMPERATURE_LABEL_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
@@ -315,7 +316,7 @@ FixedLabel<> temperatureLabel(&temperatureLabelData, F("---.-C"));
 
 const LabelData runningTimeLabelData PROGMEM = \
 { \
-	LayoutHelper::getStatusBarCells(STATUS_BAR_DIVISIONS-16, 8), \
+	LayoutHelper::getStatusBarCells(STATUS_BAR_DIVISIONS-14, 8), \
 	HAlign::Center, VAlign::Center, \
 	SMALL_FONT, \
 	RUNNINGTIME_LABEL_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
@@ -323,6 +324,17 @@ const LabelData runningTimeLabelData PROGMEM = \
 };
 
 FixedLabel<14> runningTimeLabel(&runningTimeLabelData, F("---d--h--m--s"));
+
+const LabelData batteryLabelData PROGMEM = \
+{ \
+	LayoutHelper::getStatusBarCells(0, 6), \
+	HAlign::Center, VAlign::Center, \
+	SMALL_FONT, \
+	BATTERYLEVEL_LABEL_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
+	WidgetFlag::EraseBkg | WidgetFlag::DrawBorder \
+};
+
+FixedLabel<12> batteryLabel(&batteryLabelData, F("---% -.---v"));
 
 } } // namespace Overview
 
@@ -569,6 +581,13 @@ void DisplayTFT::OverviewState::onEvent(const Event& evt)
 			Overview::humidityLabel.setText(formatString(F("%3.1f%%"), gCtx.data.getHumidityReading()));
 		break;
 
+		case Event::BatteryLifeReading:
+		{
+			const BatteryLifeReadingEvent& e = static_cast<const BatteryLifeReadingEvent&>(evt);
+			Overview::batteryLabel.setText(formatString(F("%d%% %1.3fv"), e.percentage, e.voltage));
+		}
+		break;
+
 		default:
 		break;
 	}
@@ -614,6 +633,7 @@ void DisplayTFT::OverviewState::draw()
 		Overview::temperatureLabel.draw(m_forceRedraw);
 		Overview::humidityLabel.draw(m_forceRedraw);
 		Overview::runningTimeLabel.draw(m_forceRedraw);
+		Overview::batteryLabel.draw(m_forceRedraw);
 	}
 
 	m_forceRedraw = false;

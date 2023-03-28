@@ -19,6 +19,7 @@ struct Event
 		SoilMoistureSensorCalibrationReading,
 		TemperatureSensorReading,
 		HumiditySensorReading,
+		BatteryLifeReading,
 		GroupOnOff,
 		GroupSelected,
 		Motor,
@@ -140,7 +141,23 @@ struct HumiditySensorReadingEvent : public Event
 	float humidity;
 };
 
+struct BatteryLifeReadingEvent : public Event
+{
+	BatteryLifeReadingEvent(int percentage, float voltage)
+		: Event(Event::BatteryLifeReading)
+		, percentage(percentage)
+		, voltage (voltage)
+	{
+	}
 
+	virtual void log() const override
+	{
+		CZ_LOG(logEvents, Log, F("BatteryLifeReading(%d%%, %1.3fv)"), percentage, voltage);
+	}
+
+	int percentage;
+	float voltage;
+};
 
 struct GroupOnOffEvent : public Event
 {

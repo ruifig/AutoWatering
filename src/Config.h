@@ -61,6 +61,12 @@
  */
 #define MCU_TO_MUX_ZPIN cz::MCUPin(28)
 
+
+/**
+ * What pin to use for battery voltage readings
+ */
+#define BATTERY_LIFE_PIN cz::MCUPin(26)
+
 /**
  * Pins of the IO expander to use to set the s0..s2 pins of the mux
  */
@@ -258,6 +264,7 @@
 #define HUMIDITY_LABEL_TEXT_COLOUR Colour_Cyan
 #define RUNNINGTIME_LABEL_TEXT_COLOUR Colour_Yellow
 
+#define BATTERYLEVEL_LABEL_TEXT_COLOUR Colour_White
 
 //
 // * Top line is used for the motor on/off info

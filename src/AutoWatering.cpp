@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <utility>
 #include <memory>
+#include "utility/BatteryLifeCalculator.h"
 
 #include "crazygaze/micromuc/SDLogOutput.h"
 #include "crazygaze/micromuc/Profiler.h"
@@ -147,6 +148,26 @@ GroupMonitorTicker gGroupMonitors[MAX_NUM_PAIRS] =
 namespace cz
 {
 	MyDisplay1 gScreen;
+
+
+	void doBatteryLifeCalculation()
+	{
+		// Using these resistor values for the voltage divider, allows plugging the device to USB without the risk of damaging the pin used for reading the voltage.
+		// This is because the USB spec says voltage can be up to 5.25v (from what I find online), and since 
+		// Vout = (Vs x R2) / (R1 + R2), the maximum voltage the adc pin will see is 3.32v
+		static BatteryLifeCalculator batteryLifeCalculator(BATTERY_LIFE_PIN, 267200, 459600, 2.5f, 4.2f, 1.07f);
+		static int perc = 0;
+		static float voltage = 0;
+		int newPerc = batteryLifeCalculator.readBatteryLife(&voltage);
+		if (newPerc != perc)
+		{
+			perc = newPerc;
+			Component::raiseEvent(BatteryLifeReadingEvent(perc, voltage));
+		}
+	}
+
+	FunctionTicker gBatteryLifeCalculator(doBatteryLifeCalculation, 5.0f);
+
 	bool gScreenDetected = false;
 	const TouchCalibrationData gTsCalibrationData = {233, 3460, 349, 3547, 2};
 	// Minimal graphics interface the touch controller needs
@@ -320,6 +341,8 @@ void loop()
 		{
 			countdown = std::min(ticker.tick(deltaSeconds), countdown);
 		}
+
+		countdown = std::min(gBatteryLifeCalculator.tick(deltaSeconds), countdown);
 	}
 
 	// We use this so that we can just put a breakpoint in here and force the code to run when we want to check the profiler data
@@ -554,5 +577,12 @@ void loop()
 		}
 	}
 	#endif // CONSOLE_COMMANDS
+
+
+	{
+		unsigned long ms = static_cast<unsigned long>(countdown * 1000);
+		CZ_LOG(logDefault, Verbose, F("delay(%lu)"), ms);
+		delay(ms);
+	}
 
 }
