@@ -220,8 +220,6 @@ void doGroupShot(uint8_t index)
 	gGroupMonitors[index].getObj().doShot();
 }
 
-#include "tests.h"
-
 void setup()
 {
 #if CZ_SERIAL_LOG_ENABLED
@@ -238,6 +236,9 @@ void setup()
 
 	CZ_LOG(logDefault, Log, "");
 	CZ_LOG(logDefault, Log, "Autowatering, %s", __TIMESTAMP__);
+
+	CZ_LOG(logDefault, Log, "Setting ADC reporting to %d bits", ADC_NUM_BITS);
+	analogReadResolution(ADC_NUM_BITS);
 
 	CZ_LOG(logDefault, Log, "Initializing I2C");
 	// MCP23017 : 400kHz at 3.3v
@@ -305,10 +306,6 @@ void setup()
 	}
 
 	gTimer.begin();
-
-	//runTests();
-
-	//runTests(gCtx.eeprom);
 
 	CZ_LOG(logDefault, Log, "Finished setup()");
 }

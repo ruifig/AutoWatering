@@ -50,6 +50,12 @@
 #endif
 
 /**
+ * How many bits to set the ADC readings to.
+ * E.g: The RP2040 has a 12-bit ADC
+ */
+#define ADC_NUM_BITS 12
+
+/**
  * Note. Internally it adds 0x20, which is the base address
  */
 #define IO_EXPANDER_ADDR 0x0
