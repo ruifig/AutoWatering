@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PinTypes.h"
+#include "../Config.h"
 
 namespace cz
 {
@@ -75,7 +76,7 @@ It's also important to consider other factors that can affect the battery voltag
 	int sampleADC(int pin, int numSamples);
 
 	static constexpr float m_MCUVoltage = 3.3f;
-	static constexpr int m_adcBits = 12;
+	static constexpr int m_adcBits = ADC_NUM_BITS;
 	int m_ADCPin;
 	int m_R1;
 	int m_R2;
