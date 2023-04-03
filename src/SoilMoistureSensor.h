@@ -1,8 +1,8 @@
 #pragma once
 
 #include <Arduino.h>
+#include "Config/Config.h"
 #include <assert.h>
-#include "Config.h"
 #include "Component.h"
 #include "SemaphoreQueue.h"
 

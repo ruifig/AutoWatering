@@ -1,6 +1,6 @@
 #include "MyDisplay1.h"
 #include "crazygaze/micromuc/Logging.h"
-#include "../Config.h"
+#include "../Config/Config.h"
 
 namespace cz
 {

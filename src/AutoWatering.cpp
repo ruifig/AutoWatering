@@ -1,16 +1,16 @@
-#include "Config.h"
+#include "Config/Config.h"
 
 #if __MBED__
 	#include "utility/PluggableUSBDevice_fix.h"
 #endif
 
-#include "Config.h"
 #include "Context.h"
 #include "TemperatureAndHumiditySensor.h"
 #include "SoilMoistureSensor.h"
 #include "GroupMonitor.h"
 #include "BatteryLife.h"
 #include "DisplayTFT.h"
+#include "AdafruitIOManager.h"
 #include "Timer.h"
 #include "crazygaze/micromuc/Logging.h"
 #include <algorithm>
@@ -20,8 +20,6 @@
 #include "crazygaze/micromuc/SDLogOutput.h"
 #include "crazygaze/micromuc/Profiler.h"
 #include "crazygaze/micromuc/SerialStringReader.h"
-
-#include "scratchpad/AsyncMQTT_GenericTests.h"
 
 using namespace cz;
 
@@ -128,6 +126,10 @@ GroupMonitor gGroupMonitors[MAX_NUM_PAIRS] =
 };
 
 BatteryLife gBatteryLife;
+
+#if WIFI_ENABLED
+AdafruitIOManager gAdafruitIOManager;
+#endif
 
 namespace cz
 {
@@ -257,7 +259,6 @@ void setup()
 	gCtx.begin();
 	gDisplay.begin();
 
-	CZ_LOG(logDefault, Log, "Initializing the temperature/humidity sensor");
 	gTempAndHumiditySensor.begin();
 
 	for(auto&& ticker : gSoilMoistureSensors)
@@ -272,7 +273,7 @@ void setup()
 
 	gTimer.begin();
 
-	setup_2();
+	gAdafruitIOManager.begin();
 
 	CZ_LOG(logDefault, Log, "Finished setup()");
 }
@@ -294,8 +295,6 @@ void loop()
 		PROFILE_SCOPE(F("TickAll"));
 		countdown = std::min(Component::tickAll(deltaSeconds), countdown);
 	}
-
-	loop_2(deltaSeconds);
 
 	// We use this so that we can just put a breakpoint in here and force the code to run when we want to check the profiler data
 	#if CONSOLE_COMMANDS

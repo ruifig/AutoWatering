@@ -1,7 +1,7 @@
 #pragma once
 
 #include "PinTypes.h"
-#include "../Config.h"
+#include "../Config/Config.h"
 
 namespace cz
 {

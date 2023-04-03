@@ -1,5 +1,8 @@
 #pragma once
 
+// Dummy so other headers can detect if Config.h was include first
+#define CONFIG_H
+
 #include <Arduino.h>
 #include "crazygaze/micromuc/czmicromuc.h"
 #include "utility/PinTypes.h"
@@ -48,6 +51,12 @@
 		#define CONSOLE_COMMANDS 0
 	#endif
 #endif
+
+/**
+ * Set this to 0 to disable Wifi or 1 to enable
+ * If set to 1, make sure you provide your network details. See Config/Secrets.h for more information
+ */
+#define WIFI_ENABLED 1
 
 /**
  * How many bits to set the ADC readings to.
@@ -287,3 +296,5 @@ static_assert(1<<GRAPH_POINT_NUM_BITS < GRAPH_HEIGHT, "Reduce number of bits, or
 // When a sensor is connected, but not getting power, it will consistently report very low values
 // Any value below this, and we consider that the sensor is not getting power
 #define MOISTURESENSOR_ACCEPTABLE_MIN_VALUE 100
+
+#include "Secrets.h"

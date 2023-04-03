@@ -1,7 +1,7 @@
 #pragma once
 
+#include "Config/Config.h"
 #include "Component.h"
-#include "Config.h"
 #include "GroupGraph.h"
 #include "gfx/MyDisplay1.h"
 #include "crazygaze/TouchController/XPT2046.h"

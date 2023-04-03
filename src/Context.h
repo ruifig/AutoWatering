@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Config.h"
+#include "Config/Config.h"
 #include "utility/MCP23017Wrapper.h"
 #include "utility/MuxNChannels.h"
 #include <crazygaze/micromuc/Queue.h>

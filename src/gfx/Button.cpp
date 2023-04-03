@@ -1,5 +1,5 @@
 #include "Button.h"
-#include "../Config.h"
+#include "../Config/Config.h"
 #include "MyDisplay1.h"
 
 namespace cz

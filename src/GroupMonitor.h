@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Config.h"
+#include "Config/Config.h"
 #include "Component.h"
 #include "SemaphoreQueue.h"
 

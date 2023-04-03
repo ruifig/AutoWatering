@@ -23,6 +23,7 @@ TemperatureAndHumiditySensor::TemperatureAndHumiditySensor()
 
 void TemperatureAndHumiditySensor::begin()
 {
+	CZ_LOG(logDefault, Log, "Initializing the temperature/humidity sensor");
 	onEnterState();
 }
 
