@@ -3,54 +3,39 @@
 namespace cz
 {
 
-Component* Component::ms_first = nullptr;
-Component* Component::ms_last = nullptr;
+namespace
+{
+	DoublyLinkedList<Component> gComponents;
+}
 
 Component::Component()
+	: m_ticker(this)
 {
-	m_next = nullptr;
-	if (ms_last)
-	{
-		ms_last->m_next = this;
-		m_previous = ms_last;
-		ms_last = this;
-	}
-	else
-	{
-		ms_last = ms_first = this;
-		m_previous = nullptr;
-	}
+	gComponents.pushBack(this);
 }
 
 Component::~Component()
 {
-	if (m_next)
+	gComponents.remove(this);
+}
+
+float Component::tickAll(float deltaSeconds)
+{
+	float countdown = 60*60;
+	for(auto&& component : gComponents)
 	{
-		m_next->m_previous = m_previous;
-	}
-	else
-	{
-		ms_last = m_previous;
+		countdown = std::min(component->m_ticker.tick(deltaSeconds), countdown);
 	}
 
-	if (m_previous)
-	{
-		m_previous->m_next = m_next;
-	}
-	else
-	{
-		ms_first = m_next;
-	}
+	return countdown;
 }
 
 void Component::raiseEvent(const Event& evt)
 {
 	evt.log();
-	Component* obj = ms_first;
-	while(obj)
+	for(auto&& component : gComponents)
 	{
-		obj->onEvent(evt);
-		obj = obj->m_next;
+		component->onEvent(evt);
 	}
 }
 

@@ -9,6 +9,7 @@
 namespace cz
 {
 
+
 /**
  * Capacitive Soil Moisture Sensor: https://www.amazon.co.uk/gp/product/B08GC5KT4T
  *
@@ -19,7 +20,7 @@ namespace cz
  * - The sensor Vin should be connected to an Arduino digital pin. This is required so that the sensor is only powered
  * up when we need to make a reading. This saves power.
  */
-class SoilMoistureSensor : public Component
+class RealSoilMoistureSensor : public Component
 {
   public:
 
@@ -28,11 +29,11 @@ class SoilMoistureSensor : public Component
 	 * @param vinPin What io expander pin we are using to power this sensor
 	 * @param dataPin What multiplexer pin we are using to read the sensor
 	 */
-	SoilMoistureSensor(uint8_t index, IOExpanderPinInstance vinPin, MuxPinInstance dataPin);
+	RealSoilMoistureSensor(uint8_t index, IOExpanderPinInstance vinPin, MuxPinInstance dataPin);
 
 	// Disable copying
-	SoilMoistureSensor(const SoilMoistureSensor&) = delete;
-	const SoilMoistureSensor& operator=(const SoilMoistureSensor&) = delete;
+	RealSoilMoistureSensor(const RealSoilMoistureSensor&) = delete;
+	const RealSoilMoistureSensor& operator=(const RealSoilMoistureSensor&) = delete;
 
 	virtual void begin();
 	virtual float tick(float deltaSeconds) override;
@@ -73,10 +74,10 @@ class SoilMoistureSensor : public Component
 	void tryEnterReadingState();
 };
 
-class MockSoilMoistureSensor : public SoilMoistureSensor
+class MockSoilMoistureSensor : public RealSoilMoistureSensor
 {
 public:
-	using SoilMoistureSensor::SoilMoistureSensor;
+	using RealSoilMoistureSensor::RealSoilMoistureSensor;
 
 	virtual void begin() override;
 	virtual float tick(float deltaSeconds) override;
@@ -115,7 +116,12 @@ protected:
 
 		bool motorIsOn = false;
 	} m_mock;
-
 };
+
+#if MOCK_COMPONENTS
+	using SoilMoistureSensor  = MockSoilMoistureSensor;
+#else
+	using SoilMoistureSensor  = RealSoilMoistureSensor;
+#endif
 
 }  // namespace cz

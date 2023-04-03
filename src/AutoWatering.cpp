@@ -9,18 +9,19 @@
 #include "TemperatureAndHumiditySensor.h"
 #include "SoilMoistureSensor.h"
 #include "GroupMonitor.h"
+#include "BatteryLife.h"
 #include "DisplayTFT.h"
 #include "Timer.h"
-#include "crazygaze/micromuc/Ticker.h"
 #include "crazygaze/micromuc/Logging.h"
 #include <algorithm>
 #include <utility>
 #include <memory>
-#include "utility/BatteryLifeCalculator.h"
 
 #include "crazygaze/micromuc/SDLogOutput.h"
 #include "crazygaze/micromuc/Profiler.h"
 #include "crazygaze/micromuc/SerialStringReader.h"
+
+#include "scratchpad/AsyncMQTT_GenericTests.h"
 
 using namespace cz;
 
@@ -29,27 +30,12 @@ using namespace cz;
 	SDLogOutput gSdLogOutput;
 #endif
 
-#if 1
-	// Use normal ticking, where the object is only ticked as often as it wants
-	using TickingMethod = TickerPolicy::TTime<float>;
-#else
-	// Use forced ticking, where the object is always ticked every loop independently of how often it wants to be ticked
-	using TickingMethod = TickerPolicy::TTimeAlwaysTick<float>;
-#endif
-
-#if MOCK_COMPONENTS
-	using SoilMoistureSensorTicker = TTicker<MockSoilMoistureSensor, float, TickingMethod>;
-#else
-	using SoilMoistureSensorTicker = TTicker<SoilMoistureSensor, float, TickingMethod>;
-#endif
-
-using TemperatureAndHumiditySensorTicker = TTicker<TemperatureAndHumiditySensor, float, TickingMethod>;
-TemperatureAndHumiditySensorTicker gTempAndHumiditySensor(true);
+TemperatureAndHumiditySensor gTempAndHumiditySensor;
 
 #define SOILMOISTURE_TICKER(index, boardIndex, POWER_PIN, MUXPIN) \
-	 {true, index, IOExpanderPinInstance(gCtx.m_i2cBoards[boardIndex].ioExpander, POWER_PIN), MuxPinInstance(gCtx.m_i2cBoards[boardIndex].mux, MUXPIN)}
+	 {index, IOExpanderPinInstance(gCtx.m_i2cBoards[boardIndex].ioExpander, POWER_PIN), MuxPinInstance(gCtx.m_i2cBoards[boardIndex].mux, MUXPIN)}
 
-SoilMoistureSensorTicker gSoilMoistureSensors[MAX_NUM_PAIRS] =
+SoilMoistureSensor gSoilMoistureSensors[MAX_NUM_PAIRS] =
 {
 	//
 	// First i2c board
@@ -96,77 +82,56 @@ SoilMoistureSensorTicker gSoilMoistureSensors[MAX_NUM_PAIRS] =
 
 };
 
-using GroupMonitorTicker = TTicker<GroupMonitor, float, TickingMethod>;
-
-GroupMonitorTicker gGroupMonitors[MAX_NUM_PAIRS] =
+GroupMonitor gGroupMonitors[MAX_NUM_PAIRS] =
 {
 	//
 	// First i2c board
 	//
-	 { true, 0, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR0)}
+	 {0, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR0)}
 #if MAX_NUM_PAIRS>1
-	,{ true, 1, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR1)}
+	,{1, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR1)}
 #endif
 #if MAX_NUM_PAIRS>2
-	,{ true, 2, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR2)}
+	,{2, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR2)}
 #endif
 #if MAX_NUM_PAIRS>3
-	,{ true, 3, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR3)}
+	,{3, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR3)}
 #endif
 #if MAX_NUM_PAIRS>4
-	,{ true, 4, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR4)}
+	,{4, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR4)}
 #endif
 #if MAX_NUM_PAIRS>5
-	,{ true, 5, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR5)}
+	,{5, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR5)}
 #endif
 
 //
 // Second i2c board
 //
 #if MAX_NUM_PAIRS>6
-	,{ true, 6, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR0)}
+	,{ 6, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR0)}
 #endif
 #if MAX_NUM_PAIRS>7
-	,{ true, 7, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR1)}
+	,{ 7, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR1)}
 #endif
 #if MAX_NUM_PAIRS>8
-	,{ true, 8, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR2)}
+	,{ 8, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR2)}
 #endif
 #if MAX_NUM_PAIRS>9
-	,{ true, 9, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR3)}
+	,{ 9, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR3)}
 #endif
 #if MAX_NUM_PAIRS>10
-	,{ true, 10, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR4)}
+	,{ 10, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR4)}
 #endif
 #if MAX_NUM_PAIRS>11
-	,{ true, 11, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR5)}
+	,{ 11, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR5)}
 #endif
-
 };
 
+BatteryLife gBatteryLife;
 
 namespace cz
 {
 	MyDisplay1 gScreen;
-
-
-	void doBatteryLifeCalculation()
-	{
-		// Using these resistor values for the voltage divider, allows plugging the device to USB without the risk of damaging the pin used for reading the voltage.
-		// This is because the USB spec says voltage can be up to 5.25v (from what I find online), and since 
-		// Vout = (Vs x R2) / (R1 + R2), the maximum voltage the adc pin will see is 3.32v
-		static BatteryLifeCalculator batteryLifeCalculator(BATTERY_LIFE_PIN, 267200, 459600, 2.5f, 4.2f, 1.07f);
-		static int perc = 0;
-		static float voltage = 0;
-		int newPerc = batteryLifeCalculator.readBatteryLife(&voltage);
-		if (newPerc != perc)
-		{
-			perc = newPerc;
-			Component::raiseEvent(BatteryLifeReadingEvent(perc, voltage));
-		}
-	}
-
-	FunctionTicker gBatteryLifeCalculator(doBatteryLifeCalculation, 5.0f);
 
 	bool gScreenDetected = false;
 	const TouchCalibrationData gTsCalibrationData = {233, 3460, 349, 3547, 2};
@@ -213,11 +178,11 @@ namespace
 #endif
 }
 
-TTicker<DisplayTFT, float, TickingMethod> gDisplay(true);
+DisplayTFT gDisplay;
 
 void doGroupShot(uint8_t index)
 {
-	gGroupMonitors[index].getObj().doShot();
+	gGroupMonitors[index].doShot();
 }
 
 void setup()
@@ -290,22 +255,24 @@ void setup()
 	}
 
 	gCtx.begin();
-	gDisplay.getObj().begin();
+	gDisplay.begin();
 
 	CZ_LOG(logDefault, Log, "Initializing the temperature/humidity sensor");
-	gTempAndHumiditySensor.getObj().begin();
+	gTempAndHumiditySensor.begin();
 
 	for(auto&& ticker : gSoilMoistureSensors)
 	{
-		ticker.getObj().begin();
+		ticker.begin();
 	}
 
 	for(auto&& ticker : gGroupMonitors)
 	{
-		ticker.getObj().begin();
+		ticker.begin();
 	}
 
 	gTimer.begin();
+
+	setup_2();
 
 	CZ_LOG(logDefault, Log, "Finished setup()");
 }
@@ -325,22 +292,10 @@ void loop()
 	float countdown = 60*60;
 	{
 		PROFILE_SCOPE(F("TickAll"));
-		countdown = std::min(gDisplay.tick(deltaSeconds), countdown);
-
-		countdown = std::min(gTempAndHumiditySensor.tick(deltaSeconds), countdown);
-
-		for (auto&& ticker : gSoilMoistureSensors)
-		{
-			countdown = std::min(ticker.tick(deltaSeconds), countdown);
-		}
-
-		for (auto&& ticker : gGroupMonitors)
-		{
-			countdown = std::min(ticker.tick(deltaSeconds), countdown);
-		}
-
-		countdown = std::min(gBatteryLifeCalculator.tick(deltaSeconds), countdown);
+		countdown = std::min(Component::tickAll(deltaSeconds), countdown);
 	}
+
+	loop_2(deltaSeconds);
 
 	// We use this so that we can just put a breakpoint in here and force the code to run when we want to check the profiler data
 	#if CONSOLE_COMMANDS
@@ -372,12 +327,16 @@ void loop()
 			{
 				PROFILER_RESET();
 			}
+			else if (strcmp_P(cmd, (const char*)F("heapinfo"))==0)
+			{
+				CZ_LOG(logDefault, Log,"HEAP INFO: size=%d, used=%d, free=%d", rp2040.getTotalHeap(), rp2040.getUsedHeap(), rp2040.getFreeHeap());
+			}
 			else if (strcmp_P(cmd, (const char*)F("scroll"))==0)
 			{
 				int inc;
 				if (parseCommand(inc))
 				{
-					gDisplay.getObj().scrollSlots(inc);
+					gDisplay.scrollSlots(inc);
 				}
 			}
 			else if (strcmp_P(cmd, (const char*)F("motoroff"))==0)
@@ -385,7 +344,7 @@ void loop()
 				int idx;
 				if (parseCommand(idx) && idx < MAX_NUM_PAIRS)
 				{
-					gGroupMonitors[idx].getObj().turnMotorOff();
+					gGroupMonitors[idx].turnMotorOff();
 				}
 			}
 			else if (strcmp_P(cmd, (const char*)F("motoron"))==0)
@@ -393,7 +352,7 @@ void loop()
 				int idx;
 				if (parseCommand(idx) && idx < MAX_NUM_PAIRS)
 				{
-					gGroupMonitors[idx].getObj().doShot();
+					gGroupMonitors[idx].doShot();
 				}
 			}
 			else if (strcmp_P(cmd, (const char*)F("setmuxenabled"))==0)

@@ -138,7 +138,7 @@ class TSemaphoreQueue
 	 * \param id id to register as acquiring a slot
 	 * \param registerInterest
 	 * 		If this is true and we fail to acquire a slot, it adds the id to the request queue. As slots are acquired and released.
-	 * 		If making calls for a give id with this set to true, calls to "release" must be made even if a slot is not acquired, in
+	 * 		If making calls for a given id with this set to true, calls to "release" must be made even if a slot is not acquired, in
 	 * 		order to remove the id from the interest queue
 	 * \return
 	 * 		True if an active slot is acquired, either with this call, or due to a previous call.

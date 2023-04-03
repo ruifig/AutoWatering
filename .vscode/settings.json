@@ -60,7 +60,12 @@
         "stop_token": "cpp",
         "thread": "cpp",
         "cinttypes": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "bitset": "cpp",
+        "cstring": "cpp",
+        "regex": "cpp",
+        "istream": "cpp",
+        "sstream": "cpp"
     },
     "gitlens.advanced.blame.customArguments": [],
 
