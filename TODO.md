@@ -1,3 +1,5 @@
+* Add date/time reading from https://learn.adafruit.com/adafruit-magtag/getting-the-date-time
+
 * GroupMonitor should make use of a mutex style thing like the sensors, to keep maximum current usage low. - DONE
 	* Make sure the mutex is released when turning off the motor - DONE
 

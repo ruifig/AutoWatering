@@ -450,10 +450,9 @@ public:
 	int8_t m_selectedGroup = -1;
 
 	// Temperature in Celcius
-	float m_temperature;
+	float m_temperature = -100.0f;
 	// Relative humiditity
-	float m_humidity;
-
+	float m_humidity = -100.0f;
 };
 
 struct Context

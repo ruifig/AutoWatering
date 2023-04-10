@@ -120,7 +120,7 @@ struct TemperatureSensorReadingEvent : public Event
 		CZ_LOG(logEvents, Log, F("TemperatureSensorReadingEvent(%2.1fC)"), temperatureC);
 	}
 
-	// temperature in Celcius
+	// temperature in Celsius
 	float temperatureC;
 };
 

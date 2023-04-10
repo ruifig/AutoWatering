@@ -28,6 +28,49 @@ using namespace cz;
 	SDLogOutput gSdLogOutput;
 #endif
 
+// #TODO : Remove these
+struct SemaphoreDebug
+{
+	struct Take
+	{
+		const char* file;
+		int line;
+		int counter;
+	} take;
+
+	struct Give
+	{
+		const char* file;
+		int line;
+		int counter;
+	} give;
+
+	int counter;
+} gSem;
+
+extern void *pxCurrentTCB;
+
+void MySemaphoreTake(bool& sem, const char* file, int line)
+{
+	while(sem)
+	{
+	}
+	sem = true;
+	++gSem.counter;
+	++gSem.take.counter;
+	gSem.take.file = file;
+	gSem.take.line = line;
+}
+
+void MySemaphoreGive(bool& sem, const char* file, int line)
+{
+	gSem.give.file = file;
+	gSem.give.line = line;
+	++gSem.give.counter;
+	--gSem.counter;
+	sem = false;
+}
+
 TemperatureAndHumiditySensor gTempAndHumiditySensor;
 
 #define SOILMOISTURE_TICKER(index, boardIndex, POWER_PIN, MUXPIN) \
@@ -525,6 +568,12 @@ void loop()
 					}
 				}
 			}
+			#if WIFI_ENABLED
+			else if (strcmp_P(cmd, (const char*)F("logcachedmqttvalues"))==0)
+			{
+				gAdafruitIOManager.logCache();
+			}
+			#endif
 			else
 			{
 				CZ_LOG(logDefault, Error, F("Command \"%s\" not recognized"), gSerialStringReader.retrieve());
