@@ -2,7 +2,7 @@
 #include <crazygaze/micromuc/FNVHash.h>
 #include <crazygaze/micromuc/StringUtils.h>
 
-#include "AsyncMqttClient_Generic.hpp"
+#include "MqttClient.h"
 
 CZ_DEFINE_LOG_CATEGORY(logMQTTCache);
 
@@ -22,12 +22,11 @@ MQTTCache::~MQTTCache()
 	ms_instance = nullptr;
 }
 
-void MQTTCache::begin(AsyncMqttClient* mqttClient, MQTTCache::Listener* listener, float publishInterval)
+void MQTTCache::begin(MqttClient* mqttClient, MQTTCache::Listener* listener, float publishInterval)
 {
 	m_mqttClient = mqttClient;
 	m_listener = listener;
-	m_mqttClient->onMessage(onMqttMessageCallback);
-	m_mqttClient->onPublish(onMqttPublishCallback);
+	m_publishInterval = publishInterval;
 }
 
 MQTTCache::Entry* MQTTCache::find(const char* topic, bool create, int* index)
@@ -151,8 +150,9 @@ void MQTTCache::doRemove(int index)
 	}
 }
 
-void MQTTCache::onMqttMessage(char* topic, char* payload, const AsyncMqttClientMessageProperties& properties, const size_t& len, const size_t& index, const size_t& total)
+void MQTTCache::onMqttMessage(MqttClient::MessageData& md)
 {
+	const char* topic = md.topicName.cstring;
 	auto entry = find(topic, false);
 
 	// We only accept entries that are registered
@@ -162,8 +162,10 @@ void MQTTCache::onMqttMessage(char* topic, char* payload, const AsyncMqttClientM
 		return;
 	}
 
+
+	const int len = md.message.payloadLen;
 	char message[len + 1];
-	memcpy(message, payload, len);
+	memcpy(message, md.message.payload, len);
 	message[len] = 0;
 
 	CZ_LOG(logMQTTCache, Log, "onMqttMessage: (%s), message='%s'", toLogString(entry), message);
@@ -184,10 +186,10 @@ void MQTTCache::onMqttMessage(char* topic, char* payload, const AsyncMqttClientM
 		m_listener->onCacheReceived(entry);
 	}
 }
-void MQTTCache::onMqttMessageCallback(char* topic, char* payload, const AsyncMqttClientMessageProperties& properties, const size_t& len, const size_t& index, const size_t& total)
+void MQTTCache::onMqttMessageCallback(MqttClient::MessageData& md)
 {
 	CZ_ASSERT(ms_instance);
-	ms_instance->onMqttMessage(topic, payload, properties, len, index, total);
+	ms_instance->onMqttMessage(md);
 }
 
 void MQTTCache::onMqttPublish(uint16_t packetId)
@@ -241,7 +243,28 @@ void MQTTCache::tick(float deltaSeconds, bool checkSendQueue)
 	CZ_ASSERT(entry->state == MQTTCache::State::QueuedForSend);
 	CZ_LOG(logMQTTCache, Log, "Publishing...");
 	MySerial.flush();
-	entry->packetId = m_mqttClient->publish(entry->topic.c_str(), entry->qos, true, entry->value.c_str());
+
+	{
+		//entry->packetId = m_mqttClient->publish(entry->topic.c_str(), entry->qos, true, entry->value.c_str());
+		MqttClient::Message msg;
+		msg.qos = static_cast<MqttClient::QoS>(entry->qos);
+		msg.retained = true;
+		msg.dup = false;
+		msg.payload = (void*) entry->value.c_str();
+		msg.payloadLen = entry->value.length();
+		auto startPublish = millis();
+		MqttClient::Error::type rc = m_mqttClient->publish(entry->topic.c_str(), msg);
+		auto endPublish = millis();
+		if (rc != MqttClient::Error::SUCCESS)
+		{
+			CZ_LOG(logMQTTCache, Error, "Failed to publish: %i", rc);
+		}
+		else
+		{
+			CZ_LOG(logMQTTCache, Log, "Publish time: %u ms", endPublish - startPublish);
+		}
+	}
+
 	CZ_LOG(logMQTTCache, Log, "... done");
 	MySerial.flush();
 	// If sending with qos 0, we are not receiving any confirmation, so we set the state to Synced

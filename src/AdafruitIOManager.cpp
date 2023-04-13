@@ -1,20 +1,15 @@
 #include "AdafruitIOManager.h"
 #include <crazygaze/micromuc/MathUtils.h>
 
-// To be included only in main(), .ino with setup() to avoid `Multiple Definitions` Linker Error
-#include <AsyncMqtt_Generic.h>
-
 // Check connection every 1s
+// #TODO : Is this being used?
 #define MQTT_CHECK_INTERVAL_MS 1000
 
-// #define MQTT_HOST         IPAddress(192, 168, 2, 110)
 #define MQTT_HOST "io.adafruit.com"
 #define MQTT_PORT 1883
+#define MQTT_CLIENT_ID "AutoWatering"
 
 CZ_DEFINE_LOG_CATEGORY(logMQTT);
-
-// #TODO : Remove this
-SemInfo gSemInfo;
 
 namespace
 {
@@ -38,25 +33,35 @@ namespace
 			return cz::formatString(ADAFRUIT_IO_USERNAME "/feeds/" TOPIC_GROUP "pair%d-moisturethreshold", index);
 		}
 	}
+
+	class MyMqttSystem : public MqttClient::System
+	{
+	public:
+		virtual unsigned long millis() const override {
+			return ::millis();
+		}
+	};
+
+	class MyMqttLogger : public MqttClient::Logger
+	{
+	public:
+
+		virtual void println(const char* msg) override
+		{
+			CZ_LOG(logMQTT, Log, "MQTTCLIENT: %s", msg);
+		}
+	};
+
 }
 
 namespace cz
 {
-
-///////////////////////////////////////////////////////////////////////////////////////////
-//				MQTTCache
-///////////////////////////////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////////////////////////////
-//				MQTTCache
-///////////////////////////////////////////////////////////////////////////////////////////
 
 AdafruitIOManager* AdafruitIOManager::ms_instance = nullptr;
 
 AdafruitIOManager::AdafruitIOManager()
 {
 	CZ_ASSERT(ms_instance==nullptr);
-	m_mqttClient = std::make_unique<AsyncMqttClient>();
 	ms_instance = this;
 }
 
@@ -67,31 +72,57 @@ AdafruitIOManager::~AdafruitIOManager()
 
 void AdafruitIOManager::begin()
 {
-	CZ_LOG(logMQTT, Log, "Starting AdafruitIOManager. BOARD_NAME=%s, AsyncMQTT_Generic Version=%s", BOARD_NAME, ASYNC_MQTT_GENERIC_VERSION);
+	m_multi.addAP(WIFI_SSID, WIFI_PASSWORD);
+	//connectToWifi();
 
-	m_cache.begin(m_mqttClient.get(), this, 5.0f);
+	m_mqtt.system = std::make_unique<MyMqttSystem>();
+	m_mqtt.logger = std::make_unique<MyMqttLogger>();
+	m_mqtt.network = std::make_unique<MqttClient::NetworkClientImpl<WiFiClient>>(m_wifiClient, *m_mqtt.system);
+	m_mqtt.sendBuffer = std::make_unique<MqttClient::ArrayBuffer<512>>();
+	m_mqtt.recvBuffer = std::make_unique<MqttClient::ArrayBuffer<1024>>();
+	// Allow up to X subscriptions simultaneously
+	m_mqtt.messageHandlers = std::make_unique<MqttClient::MessageHandlersImpl<20>>();
+	MqttClient::Options mqttOptions;
+	mqttOptions.commandTimeoutMs = 10000;
+	m_mqtt.client = std::make_unique<MqttClient>(
+		mqttOptions, *m_mqtt.logger, *m_mqtt.system, *m_mqtt.network,
+		*m_mqtt.sendBuffer, *m_mqtt.recvBuffer, *m_mqtt.messageHandlers);
 
-	connectToWifi();
-	m_mqttClient->onConnect(onMqttConnectCallback);
-	m_mqttClient->onDisconnect(onMqttDisconnectCallback);
-	m_mqttClient->onSubscribe(onMqttSubscribeCallback);
-	m_mqttClient->onUnsubscribe(onMqttUnsubscribeCallback);
-	m_mqttClient->onMessage(onMqttMessageCallback);
-	m_mqttClient->onPublish(onMqttPublishCallback);
+	m_cache.begin(m_mqtt.client.get(), this, 2.0f);
+}
 
-	m_mqttClient->setServer(MQTT_HOST, MQTT_PORT);
-	m_mqttClient->setClientId("AutoWatering");
-	m_mqttClient->setCredentials(ADAFRUIT_IO_USERNAME, ADAFRUIT_IO_KEY);
-
-	connectToMqtt();
+bool AdafruitIOManager::_REMOVEME()
+{
+	if (connectToWifi())
+	{
+		return connectToMqtt();
+	}
+	else
+	{
+		return false;
+	}
 }
 
 float AdafruitIOManager::tick(float deltaSeconds)
 {
-	connectToMqttLoop();
+#if 0
+	if (connectToWifi())
+	{
+		connectToMqtt();
+	}
+#endif
+
+	if (m_mqtt.client->isConnected())
+	{
+		m_mqtt.client->yield(1);
+	}
+	else
+	{
+		CZ_LOG(logDefault, Warning, "MQTT not connected");
+	}
 
 	// Tick publishing queue
-	m_cache.tick(deltaSeconds, m_connectedMQTT);
+	m_cache.tick(deltaSeconds, m_mqtt.client->isConnected());
 
 	return MQTT_CHECK_INTERVAL_MS/1000.0f;
 }
@@ -160,46 +191,46 @@ void AdafruitIOManager::printWifiStatus()
 	CZ_LOG(logMQTT, Log, "Local IP Address: %s", ip.toString().c_str());
 
 	// print the received signal strength:
-	long rssi = WiFi.RSSI();
-	CZ_LOG(logMQTT, Log, "Signal strenght (RSSI): %l dBm", rssi)
+	int rssi = WiFi.RSSI();
+	CZ_LOG(logMQTT, Log, "Signal strenght (RSSI): %d dBm", rssi)
 }
 
 bool AdafruitIOManager::connectToWifi()
 {
-	// check for the WiFi module:
-	if (WiFi.status() == WL_NO_MODULE)
+	if (m_wifiClient.connected())
 	{
-		CZ_LOG(logMQTT, Fatal, "Communication with WiFi module failed!");
-
-		// don't continue
-		while (true)
-			;
+		return true;
 	}
-
-	CZ_LOG(logMQTT, Log, "Connecting to SSID: %s", WIFI_SSID);
 
 	#define MAX_NUM_WIFI_CONNECT_TRIES_PER_LOOP 20
-
-	uint8_t numWiFiConnectTries = 0;
-
-	// attempt to connect to WiFi network
-	while ((m_status != WL_CONNECTED) && (numWiFiConnectTries++ < MAX_NUM_WIFI_CONNECT_TRIES_PER_LOOP))
+	uint8_t numWifiConnectTries = 0;
+	while(m_wifiClient.connected() != WL_CONNECTED)
 	{
-		m_status = WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-		delay(500);
+		CZ_LOG(logDefault, Log, "Connecting to %s", WIFI_SSID);
+		if (m_multi.run() == WL_CONNECTED)
+		{
+			CZ_LOG(logDefault, Log, "Wifi connected. IP %s", m_wifiClient.localIP().toString().c_str());
+			printWifiStatus();
+			return true;
+		}
+
+		numWifiConnectTries++;
+		if (numWifiConnectTries > MAX_NUM_WIFI_CONNECT_TRIES_PER_LOOP)
+		{
+			// Restart for Portenta as something is very wrong
+			CZ_LOG(logMQTT, Error, "Can't connect to any WiFi. Resetting");
+			cz::LogOutput::flush();
+			delay(5000);
+			NVIC_SystemReset();
+			return false;
+		}
+		else
+		{
+			delay(500);
+		}
 	}
 
-	if (m_status != WL_CONNECTED)
-	{
-		// Restart for Portenta as something is very wrong
-		CZ_LOG(logMQTT, Log, "Resetting. Can't connect to any WiFi");
-		NVIC_SystemReset();
-	}
-
-	printWifiStatus();
-
-	m_connectedWiFi = (m_status == WL_CONNECTED);
-	return (m_status == WL_CONNECTED);
+	return true;
 }
 
 bool AdafruitIOManager::isWiFiConnected()
@@ -217,36 +248,60 @@ bool AdafruitIOManager::isWiFiConnected()
 	return false;
 }
 
-void AdafruitIOManager::connectToMqttLoop()
+bool AdafruitIOManager::connectToMqtt()
 {
-	if (isWiFiConnected())
+	if (m_mqtt.client->isConnected())
 	{
-		if (!m_connectedMQTT)
-		{
-			m_mqttClient->connect();
-		}
-
-		if (!m_connectedWiFi)
-		{
-			CZ_LOG(logMQTT, Log, "WiFi reconnected");
-			m_connectedWiFi = true;
-		}
+		return true;
 	}
 	else
 	{
-		if (m_connectedWiFi)
-		{
-			CZ_LOG(logMQTT, Log, "WiFi disconnected. Reconnecting");
-			m_connectedWiFi = false;
-			connectToWifi();
-		}
-	}
-}
+		// Close connection if exists
+		m_wifiClient.stop();
 
-void AdafruitIOManager::connectToMqtt()
-{
-	CZ_LOG(logMQTT, Log, "Connecting to MQTT...");
-	m_mqttClient->connect();
+		// Re-establish TCP connection with MQTT broker
+		CZ_LOG(logDefault, Log, "Creating TCP connection to %s:%u...", MQTT_HOST, MQTT_PORT);
+		m_wifiClient.connect(MQTT_HOST, MQTT_PORT);
+		if (!m_wifiClient.connected())
+		{
+			CZ_LOG(logDefault, Error, "Can't establish the TCP connection to %s:%d", MQTT_HOST, MQTT_PORT);
+			return false;
+		}
+		else
+		{
+			CZ_LOG(logDefault, Log, "TCP connection created");
+		}
+
+		// Start new MQTT connection
+		{
+			CZ_LOG(logDefault, Log, "Starting MQTT session...");
+			MqttClient::ConnectResult connectResult;
+			MQTTPacket_connectData options = MQTTPacket_connectData_initializer;
+			options.MQTTVersion = 4;
+			options.clientID.cstring = (char *)MQTT_CLIENT_ID;
+			options.cleansession = true;
+			options.keepAliveInterval = 15; // 15 seconds
+			options.username.cstring = ADAFRUIT_IO_USERNAME;
+			options.password.cstring = ADAFRUIT_IO_KEY;
+			MqttClient::Error::type rc = m_mqtt.client->connect(options, connectResult);
+			if (rc != MqttClient::Error::SUCCESS)
+			{
+				CZ_LOG(logDefault, Error, "MQTT Session start error: %i", rc);
+				return false;
+			}
+			else
+			{
+				CZ_LOG(logDefault, Log, "MQTT Session started")
+			}
+		}
+
+		// Subscribe
+		{
+
+		}
+
+		return true;
+	}
 }
 
 void AdafruitIOManager::printSeparationLine()
@@ -254,117 +309,20 @@ void AdafruitIOManager::printSeparationLine()
 	CZ_LOG(logMQTT, Log, "************************************************");
 }
 
-void AdafruitIOManager::onMqttConnect(bool sessionPresent)
+void AdafruitIOManager::onMqttMessage(MqttClient::MessageData& md)
 {
-	CZ_LOG(logMQTT, Log, "Connected to MQTT broker: %s, port: %d", MQTT_HOST, MQTT_PORT);
-
-	CZ_LOG(logMQTT, Log, "outTopic: %s", outTopic);
-	CZ_LOG(logMQTT, Log, "inTopic: %s", inTopic);
-
-	m_connectedMQTT = true;
-
-	printSeparationLine();
-	CZ_LOG(logMQTT, Log, "Session present: %d", static_cast<int>(sessionPresent));
-
-	uint16_t packetIdSub = m_mqttClient->subscribe(inTopic, 2);
-	CZ_LOG(logMQTT, Log, "Subscribing at QoS 2, packetId: %d", static_cast<int>(packetIdSub));
-
-
-	// As per Adafruit's IO documentation (https://io.adafruit.com/api/docs/mqtt.html#mqtt-retain), "retain is not
-	// really implemented. The special workaround Adafruit IO gives us is a special topic "/get", where if we publish
-	// anything, the broker will send back just to this client the most recent value of the feed
-	uint16_t packetIdSubGet = m_mqttClient->publish(cz::formatString("%s/get", inTopic), 2, false);
-	CZ_LOG(logMQTT, Log, "Publish for GET at QoS 2");
-
-	m_mqttClient->publish(outTopic, 0, true, "Hello World from AsyncMQTT_GenericTests");
-	CZ_LOG(logMQTT, Log, "Publishing at QoS 0");
-
-	{
-		uint16_t packetIdPub = m_mqttClient->publish(Topics::temperature, 2, true, "20.5");
-		CZ_LOG(logMQTT, Log, "Publishing at QoS 2, packetId: %d", static_cast<int>(packetIdPub));
-	}
-
-	uint16_t packetIdPub1 = m_mqttClient->publish(outTopic, 1, true, "Test 2");
-	CZ_LOG(logMQTT, Log, "Publishing at QoS 1, packetId: %d", static_cast<int>(packetIdPub1));
-
-	uint16_t packetIdPub2 = m_mqttClient->publish(outTopic, 2, true, "Test 3");
-	CZ_LOG(logMQTT, Log, "Publishing at QoS 2, packetId: %d", static_cast<int>(packetIdPub2));
-
-	printSeparationLine();
+	const MqttClient::Message &msg = md.message;
+	char payload[msg.payloadLen + 1];
+	memcpy(payload, msg.payload, msg.payloadLen);
+	payload[msg.payloadLen] = '\0';
+	CZ_LOG(logDefault, Log,
+		   "Message arrived: qos %d, retained %d, dup %d, packetid %d, payload:[%s]",
+		   msg.qos, msg.retained, msg.dup, msg.id, payload);
 }
 
-void AdafruitIOManager::onMqttConnectCallback(bool sessionPresent)
+void AdafruitIOManager::onMqttMessageCallback(MqttClient::MessageData& msg)
 {
-	ms_instance->onMqttConnect(sessionPresent);
-}
-
-void AdafruitIOManager::onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
-{
-	(void)reason;
-	m_connectedMQTT = false;
-	CZ_LOG(logMQTT, Warning, "Disconnected from MQTT.");
-}
-
-void AdafruitIOManager::onMqttDisconnectCallback(AsyncMqttClientDisconnectReason reason)
-{
-	ms_instance->onMqttDisconnect(reason);
-}
-
-void AdafruitIOManager::onMqttSubscribe(const uint16_t& packetId, const uint8_t& qos)
-{
-	CZ_LOG(logMQTT, Log, "Subscribe acknowledged. packetId=%d, qos=%d", static_cast<int>(packetId), static_cast<int>(qos));
-}
-
-void AdafruitIOManager::onMqttSubscribeCallback(const uint16_t& packetId, const uint8_t& qos)
-{
-	ms_instance->onMqttSubscribe(packetId, qos);
-}
-
-void AdafruitIOManager::onMqttUnsubscribe(const uint16_t& packetId)
-{
-	CZ_LOG(logMQTT, Log, "Unsubscribe acknowledged: packetId=%d", static_cast<int>(packetId));
-}
-
-void AdafruitIOManager::onMqttUnsubscribeCallback(const uint16_t& packetId)
-{
-	ms_instance->onMqttUnsubscribe(packetId);
-}
-
-void AdafruitIOManager::onMqttMessage(char* topic, char* payload, const AsyncMqttClientMessageProperties& properties, const size_t& len,
-                   const size_t& index, const size_t& total)
-{
-	char message[len + 1];
-
-	memcpy(message, payload, len);
-	message[len] = 0;
-
-	CZ_LOG(logMQTT, Log, "Publish received: topic=%s, message=\"%s\", qos=%d, dup=%d, retain=%d, len=%u, index=%u, total=%u",
-		topic,
-		message,
-		static_cast<int>(properties.qos),
-		static_cast<int>(properties.dup),
-		static_cast<int>(properties.retain),
-		static_cast<unsigned int>(len),
-		static_cast<unsigned int>(index),
-		static_cast<unsigned int>(total)
-	);
-
-}
-
-void AdafruitIOManager::onMqttMessageCallback(char* topic, char* payload, const AsyncMqttClientMessageProperties& properties, const size_t& len,
-                   const size_t& index, const size_t& total)
-{
-	ms_instance->onMqttMessage(topic, payload, properties, len, index, total);
-}
-
-void AdafruitIOManager::onMqttPublish(const uint16_t& packetId)
-{
-	CZ_LOG(logMQTT, Log, "Publish acknowledged: packetId=%d", static_cast<int>(packetId));
-}
-
-void AdafruitIOManager::onMqttPublishCallback(const uint16_t& packetId)
-{
-	ms_instance->onMqttPublish(packetId);
+	ms_instance->onMqttMessage(msg);
 }
 
 void AdafruitIOManager::logCache() const

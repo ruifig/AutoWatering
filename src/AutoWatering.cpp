@@ -369,6 +369,12 @@ void loop()
 			{
 				PROFILER_RESET();
 			}
+			else if (strcmp_P(cmd, (const char*)F("connectToWifi"))==0)
+			{
+				CZ_LOG(logDefault, Log, "_REMOVEME begin");
+				bool res = gAdafruitIOManager._REMOVEME();
+				CZ_LOG(logDefault, Log, "_REMOVEME end: %d", static_cast<int>(res));
+			}
 			else if (strcmp_P(cmd, (const char*)F("heapinfo"))==0)
 			{
 				CZ_LOG(logDefault, Log,"HEAP INFO: size=%d, used=%d, free=%d", rp2040.getTotalHeap(), rp2040.getUsedHeap(), rp2040.getFreeHeap());

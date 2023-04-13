@@ -15,4 +15,5 @@
 
 
 src/Config/MySecrets.h
+compile_commands.json
 

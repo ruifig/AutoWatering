@@ -7,10 +7,8 @@
 #include "Config/Config.h"
 #include <crazygaze/micromuc/Logging.h>
 
-// Forward declarations
-class AsyncMqttClient;
-enum class AsyncMqttClientDisconnectReason : uint8_t;
-struct AsyncMqttClientMessageProperties;
+#define MQTT_LOG_ENABLED 1
+#include "MqttClient.h"
 
 namespace cz
 {
@@ -75,7 +73,7 @@ class MQTTCache
 	 * @param listener Listener object
 	 * @param publishInterval How long to wait (in seconds) between sends. This is for rate limiting
 	 */
-	void begin(AsyncMqttClient* mqttClient, Listener* listener, float publishInterval);
+	void begin(MqttClient* mqttClient, Listener* listener, float publishInterval);
 
 	/**
 	 * Sets a cache entry to the specified value.
@@ -114,15 +112,15 @@ class MQTTCache
 	Entry* find(const char* topic, bool create, int* index = nullptr);
 	Entry* findByPacketId(uint16_t packetId, int* index = nullptr);
 
-	void onMqttMessage(char* topic, char* payload, const AsyncMqttClientMessageProperties& properties, const size_t& len, const size_t& index, const size_t& total);
-	static void onMqttMessageCallback(char* topic, char* payload, const AsyncMqttClientMessageProperties& properties, const size_t& len, const size_t& index, const size_t& total);
+	void onMqttMessage(MqttClient::MessageData& md);
+	static void onMqttMessageCallback(MqttClient::MessageData& md);
 
 	void onMqttPublish(uint16_t packetId);
 	static void onMqttPublishCallback(uint16_t packetId);
 
 	std::vector<std::unique_ptr<Entry>> m_cache;
 	std::queue<Entry*> m_sendQueue;
-	AsyncMqttClient* m_mqttClient;
+	MqttClient* m_mqttClient;
 	float m_publishInterval;
 	float m_publishCountdown = 0;
 	Listener* m_listener;
