@@ -59,6 +59,11 @@
 #define WIFI_ENABLED 1
 
 /**
+ * If set to 1, it will enable the RP2040 watchdog timer. See https://arduino-pico.readthedocs.io/en/latest/rp2040.html#hardware-watchdog
+ */
+#define WATCHDOG_ENABLED 1
+
+/**
  * How many bits to set the ADC readings to.
  * E.g: The RP2040 has a 12-bit ADC
  */

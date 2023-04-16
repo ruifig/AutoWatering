@@ -568,20 +568,13 @@ void loop()
 					}
 				}
 			}
-			else if (strcmp_P(cmd, (const char*)F("watchdog_tick"))==0)
+			else if (strcmp_P(cmd, (const char*)F("delay"))==0) // Blocks for X ms. Good to simulate a freeze to test the watchdog
 			{
-				static bool watchDogEnabled = false;
-				constexpr int ms = 8300;
-				if (!watchDogEnabled)
+				int ms;
+				if (parseCommand(ms))
 				{
-					watchDogEnabled = true;
-					CZ_LOG(logDefault, Log, "Enabling watchdog (%u ms)", ms)
-					rp2040.wdt_begin(ms);
-				}
-				else
-				{
-					CZ_LOG(logDefault, Log, "Reseting watchdog (%u ms)", ms)
-					rp2040.wdt_reset();
+					CZ_LOG(logDefault, Log, "Delay(%d)", ms);
+					delay(ms);
 				}
 			}
 			#if WIFI_ENABLED
