@@ -24,13 +24,6 @@ class AdafruitIOManager : public Component, public MQTTCache::Listener
 
 	void logCache() const;
 
-	bool _REMOVEMEconnectToWifi()
-	{
-		return connectToWifi();
-	}
-
-	bool _REMOVEME();
-
   private:
 	virtual float tick(float deltaSeconds) override;
 	virtual void onEvent(const Event& evt) override;
@@ -42,9 +35,8 @@ class AdafruitIOManager : public Component, public MQTTCache::Listener
 	virtual void onCacheSent(const MQTTCache::Entry* entry) override;
 
 	void printWifiStatus();
-	bool connectToWifi();
+	bool connectToWifi(bool systemRestOnFail);
 	bool isWiFiConnected();
-	bool connectToMqtt();
 	void printSeparationLine();
 
 	//
@@ -99,22 +91,7 @@ class AdafruitIOManager : public Component, public MQTTCache::Listener
 		}
 	}
 
-	void onMqttMessage(MqttClient::MessageData& msg);
-	static void onMqttMessageCallback(MqttClient::MessageData& msg);
-
-	WiFiClient m_wifiClient;
 	WiFiMulti m_multi;
-	struct MqttObjects
-	{
-		std::unique_ptr<MqttClient::System> system;
-		std::unique_ptr<MqttClient::Logger> logger;
-		std::unique_ptr<MqttClient::Network> network;
-		std::unique_ptr<MqttClient::Buffer> sendBuffer;
-		std::unique_ptr<MqttClient::Buffer> recvBuffer;
-		std::unique_ptr<MqttClient::MessageHandlers> messageHandlers;
-		std::unique_ptr<MqttClient> client;
-	} m_mqtt;
-
 	MQTTCache m_cache;
 	static AdafruitIOManager* ms_instance;
 };

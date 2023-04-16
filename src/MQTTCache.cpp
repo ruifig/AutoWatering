@@ -9,6 +9,152 @@ CZ_DEFINE_LOG_CATEGORY(logMQTTCache);
 namespace cz
 {
 
+namespace
+{
+	class MyMqttSystem : public MqttClient::System
+	{
+	public:
+		virtual unsigned long millis() const override {
+			return ::millis();
+		}
+	};
+
+	class MyMqttLogger : public MqttClient::Logger
+	{
+	public:
+
+		virtual void println(const char* msg) override
+		{
+			CZ_LOG(logMQTTCache, Log, "MQTTCLIENT: %s", msg);
+		}
+	};
+
+	struct MyBuffer: public MqttClient::Buffer
+	{
+			// Disable copy and move
+			MyBuffer(const MyBuffer&) = delete;
+			MyBuffer(MyBuffer&&) = delete;
+			MyBuffer& operator=(const MyBuffer&) = delete;
+			MyBuffer& operator=(MyBuffer&&) = delete;
+
+			MyBuffer(int size)
+			{
+				m_size = size;
+				m_buf = new unsigned char[size];
+				CZ_ASSERT(m_buf);
+			}
+			~MyBuffer()
+			{
+				delete[] m_buf;
+			}
+			virtual unsigned char* get() override {return m_buf;}
+			virtual int size() const override {return m_size;}
+		private:
+			unsigned char* m_buf = nullptr;
+			int m_size;
+	};
+
+	// Copied from ArduinoMQtt's MessageHandlersImpl, and adapted so its not a template
+	class MyMessageHandlers: public MqttClient::MessageHandlers {
+		public:
+			MyMessageHandlers(int handlers_size)
+			{
+				this->handlers_size = handlers_size;
+				handlers = new MqttClient::MessageHandler[handlers_size];
+				CZ_ASSERT(handlers);
+				
+				for (int i = 0; i < size(); ++i) {
+						handlers[i] = MqttClient::MessageHandler();
+				}
+			}
+
+			virtual ~MyMessageHandlers() {}
+
+			int size() const {return handlers_size;}
+
+			bool isFull() const {
+				for (int i = 0; i < size(); ++i) {
+					if (!handlers[i].isUsed()) {
+						return false;
+					}
+				}
+				return true;
+			}
+
+			MqttClient::MessageHandler* get() {return handlers;}
+
+			bool set(const char* topic, MqttClient::MessageHandlerCbk handler) {
+				bool res = false;
+				int emptyIdx = -1;
+				// Try to update existing handler with the same topic
+				for (int i = 0; i < size(); ++i) {
+					if (handlers[i].isUsed()) {
+						if (strcmp(handlers[i].topic, topic) == 0) {
+							// Replace
+							onDeAllocateTopic(handlers[i].topic, i);
+							const char *t = onAllocateTopic(topic, i);
+							if (!t) {
+								return false;
+							}
+							handlers[i].topic = t;
+							handlers[i].cbk = handler;
+							res = true;
+							break;
+						}
+					} else if (emptyIdx < 0) {
+						// Store empty slot index
+						emptyIdx = i;
+					}
+				}
+				// Check result and try to use empty slot if available
+				if (!res && emptyIdx >= 0) {
+					// Set to the first empty slot
+					const char *t = onAllocateTopic(topic, emptyIdx);
+					if (!t) {
+						return false;
+					}
+					handlers[emptyIdx].topic = t;
+					handlers[emptyIdx].cbk = handler;
+					res = true;
+				}
+				return res;
+			}
+
+			void reset(const char* topic) {
+				for (int i = 0; i < size(); ++i) {
+					if (handlers[i].isUsed() && strcmp(handlers[i].topic, topic) == 0) {
+						onDeAllocateTopic(handlers[i].topic, i);
+						handlers[i].reset();
+						break;
+					}
+				}
+			}
+
+			void reset() {
+				for (int i = 0; i < size(); ++i) {
+					if (handlers[i].isUsed()) {
+						onDeAllocateTopic(handlers[i].topic, i);
+						handlers[i].reset();
+					}
+				}
+			}
+
+		protected:
+			virtual const char* onAllocateTopic(const char *topic, int storageIdx) {
+				// Keep provided pointer
+				return topic;
+			}
+
+			virtual void onDeAllocateTopic(const char *topic, int storageIdx) {
+				// Nothing to do
+			}
+
+		private:
+			int handlers_size;
+			MqttClient::MessageHandler *handlers;
+	};
+}
+
 MQTTCache* MQTTCache::ms_instance;
 
 MQTTCache::MQTTCache()
@@ -22,11 +168,32 @@ MQTTCache::~MQTTCache()
 	ms_instance = nullptr;
 }
 
-void MQTTCache::begin(MqttClient* mqttClient, MQTTCache::Listener* listener, float publishInterval)
+void MQTTCache::begin(const MQTTCache::Options& options, MQTTCache::Listener* listener)
 {
-	m_mqttClient = mqttClient;
+	m_cfg.host = options.host;
+	m_cfg.port = options.port;
+	m_cfg.clientId = options.clientId;
+	m_cfg.username = options.username;
+	m_cfg.password = options.password;
+	m_cfg.publishInterval = options.publishInterval;
+
 	m_listener = listener;
-	m_publishInterval = publishInterval;
+
+	m_mqtt.system = std::make_unique<MyMqttSystem>();
+	m_mqtt.logger = std::make_unique<MyMqttLogger>();
+	m_mqtt.network = std::make_unique<MqttClient::NetworkClientImpl<WiFiClient>>(m_wifiClient, *m_mqtt.system);
+	m_mqtt.sendBuffer = std::make_unique<MyBuffer>(options.sendBufferSize);
+	m_mqtt.recvBuffer = std::make_unique<MyBuffer>(options.recvBufferSize);
+	// Allow up to X subscriptions simultaneously
+
+	m_mqtt.messageHandlers = std::make_unique<MyMessageHandlers>(options.maxNumSubscriptions);
+	MqttClient::Options mqttOptions;
+	mqttOptions.commandTimeoutMs = options.commandTimeoutMs;
+	m_mqtt.client = std::make_unique<MqttClient>(
+		mqttOptions, *m_mqtt.logger, *m_mqtt.system, *m_mqtt.network,
+		*m_mqtt.sendBuffer, *m_mqtt.recvBuffer, *m_mqtt.messageHandlers);
+
+	connectToMqttBroker();
 }
 
 MQTTCache::Entry* MQTTCache::find(const char* topic, bool create, int* index)
@@ -152,6 +319,14 @@ void MQTTCache::doRemove(int index)
 
 void MQTTCache::onMqttMessage(MqttClient::MessageData& md)
 {
+	const MqttClient::Message &msg = md.message;
+	char payload[msg.payloadLen + 1];
+	memcpy(payload, msg.payload, msg.payloadLen);
+	payload[msg.payloadLen] = '\0';
+	CZ_LOG(logMQTTCache, Log,
+		   "Message arrived: qos %d, retained %d, dup %d, packetid %d, payload:[%s]",
+		   msg.qos, msg.retained, msg.dup, msg.id, payload);
+
 	const char* topic = md.topicName.cstring;
 	auto entry = find(topic, false);
 
@@ -162,13 +337,7 @@ void MQTTCache::onMqttMessage(MqttClient::MessageData& md)
 		return;
 	}
 
-
-	const int len = md.message.payloadLen;
-	char message[len + 1];
-	memcpy(message, md.message.payload, len);
-	message[len] = 0;
-
-	CZ_LOG(logMQTTCache, Log, "onMqttMessage: (%s), message='%s'", toLogString(entry), message);
+	CZ_LOG(logMQTTCache, Log, "onMqttMessage: (%s), message='%s'", toLogString(entry), payload);
 
 	// If we have a value in the cache queued up for sending, then it's easier to just ignore the message
 	// This means the cache will keep the value we have queued up for sending
@@ -179,13 +348,14 @@ void MQTTCache::onMqttMessage(MqttClient::MessageData& md)
 	}
 
 	entry->state = MQTTCache::State::Synced;
-	if (entry->value != message)
+	if (entry->value != payload)
 	{
-		entry->value = message;
+		entry->value = payload;
 		CZ_LOG(logMQTTCache, Log, "onCacheReceived: %s", toLogString(entry));
 		m_listener->onCacheReceived(entry);
 	}
 }
+
 void MQTTCache::onMqttMessageCallback(MqttClient::MessageData& md)
 {
 	CZ_ASSERT(ms_instance);
@@ -225,10 +395,20 @@ void MQTTCache::onMqttPublishCallback(uint16_t packetId)
 	ms_instance->onMqttPublish(packetId);
 }
 
-void MQTTCache::tick(float deltaSeconds, bool checkSendQueue)
+void MQTTCache::tick(float deltaSeconds)
 {
+	if (!isConnected())
+	{
+		if (!connectToMqttBroker())
+		{
+			return;
+		}
+	}
+
+	m_mqtt.client->yield(1);
+
 	m_publishCountdown -= deltaSeconds;
-	if (!checkSendQueue || m_publishCountdown > 0 || m_sendQueue.size() == 0)
+	if (m_publishCountdown > 0 || m_sendQueue.size() == 0)
 	{
 		return;
 	}
@@ -253,7 +433,7 @@ void MQTTCache::tick(float deltaSeconds, bool checkSendQueue)
 		msg.payload = (void*) entry->value.c_str();
 		msg.payloadLen = entry->value.length();
 		auto startPublish = millis();
-		MqttClient::Error::type rc = m_mqttClient->publish(entry->topic.c_str(), msg);
+		MqttClient::Error::type rc = m_mqtt.client->publish(entry->topic.c_str(), msg);
 		auto endPublish = millis();
 		if (rc != MqttClient::Error::SUCCESS)
 		{
@@ -270,7 +450,7 @@ void MQTTCache::tick(float deltaSeconds, bool checkSendQueue)
 	// If sending with qos 0, we are not receiving any confirmation, so we set the state to Synced
 	entry->state = entry->qos == 0 ? MQTTCache::State::Synced : MQTTCache::State::SentAndWaitingForAck;
 	CZ_LOG(logMQTTCache, Log, "tick:publish(AFTER): %s", toLogString(entry));
-	m_publishCountdown = m_publishInterval;
+	m_publishCountdown = m_cfg.publishInterval;
 }
 
 const char* MQTTCache::toLogString(const MQTTCache::Entry* e) const
@@ -295,5 +475,71 @@ void MQTTCache::logState() const
 	}
 }
 
+bool MQTTCache::isConnected() const
+{
+	return m_mqtt.client->isConnected();
+}
+
+bool MQTTCache::connectToMqttBroker()
+{
+	if (isConnected() && WiFi.status() == WL_CONNECTED)
+	{
+		return true;
+	}
+	else
+	{
+		if (WiFi.status() != WL_CONNECTED)
+		{
+			CZ_LOG(logMQTTCache, Error, "Can't connect to MQTT broker because WiFi is not connected");
+			return false;
+		}
+
+		// Close connection if exists
+		m_wifiClient.stop();
+
+		// Re-establish TCP connection with MQTT broker
+		CZ_LOG(logMQTTCache, Log, "Creating TCP connection to %s:%u...", m_cfg.host.c_str(), static_cast<unsigned int>(m_cfg.port));
+		m_wifiClient.connect(m_cfg.host.c_str(), m_cfg.port);
+		if (!m_wifiClient.connected())
+		{
+			CZ_LOG(logMQTTCache, Error, "Can't establish the TCP connection to %s:%d", m_cfg.host.c_str(), static_cast<unsigned int>(m_cfg.port));
+			return false;
+		}
+		else
+		{
+			CZ_LOG(logMQTTCache, Log, "TCP connection created");
+		}
+
+		// Start new MQTT connection
+		{
+			CZ_LOG(logMQTTCache, Log, "Starting MQTT session...");
+			MqttClient::ConnectResult connectResult;
+			MQTTPacket_connectData options = MQTTPacket_connectData_initializer;
+			options.MQTTVersion = 4;
+			options.clientID.cstring = const_cast<char*>(m_cfg.clientId.c_str());
+			options.cleansession = true;
+			options.keepAliveInterval = 15; // 15 seconds
+			options.username.cstring = const_cast<char*>(m_cfg.username.c_str());
+			options.password.cstring = const_cast<char*>(m_cfg.password.c_str());
+			MqttClient::Error::type rc = m_mqtt.client->connect(options, connectResult);
+			if (rc != MqttClient::Error::SUCCESS)
+			{
+				CZ_LOG(logMQTTCache, Error, "MQTT Session start error: %i", rc);
+				return false;
+			}
+			else
+			{
+				CZ_LOG(logMQTTCache, Log, "MQTT Session started")
+			}
+		}
+
+		// Subscribe
+		{
+			// #TODO : Add/Re-add subscriptions
+		}
+
+		return true;
+	}
+}
 
 }

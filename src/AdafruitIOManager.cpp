@@ -73,56 +73,17 @@ AdafruitIOManager::~AdafruitIOManager()
 void AdafruitIOManager::begin()
 {
 	m_multi.addAP(WIFI_SSID, WIFI_PASSWORD);
-	//connectToWifi();
 
-	m_mqtt.system = std::make_unique<MyMqttSystem>();
-	m_mqtt.logger = std::make_unique<MyMqttLogger>();
-	m_mqtt.network = std::make_unique<MqttClient::NetworkClientImpl<WiFiClient>>(m_wifiClient, *m_mqtt.system);
-	m_mqtt.sendBuffer = std::make_unique<MqttClient::ArrayBuffer<512>>();
-	m_mqtt.recvBuffer = std::make_unique<MqttClient::ArrayBuffer<1024>>();
-	// Allow up to X subscriptions simultaneously
-	m_mqtt.messageHandlers = std::make_unique<MqttClient::MessageHandlersImpl<20>>();
-	MqttClient::Options mqttOptions;
-	mqttOptions.commandTimeoutMs = 10000;
-	m_mqtt.client = std::make_unique<MqttClient>(
-		mqttOptions, *m_mqtt.logger, *m_mqtt.system, *m_mqtt.network,
-		*m_mqtt.sendBuffer, *m_mqtt.recvBuffer, *m_mqtt.messageHandlers);
-
-	m_cache.begin(m_mqtt.client.get(), this, 2.0f);
-}
-
-bool AdafruitIOManager::_REMOVEME()
-{
-	if (connectToWifi())
-	{
-		return connectToMqtt();
-	}
-	else
-	{
-		return false;
-	}
+	MQTTCache::Options options;
+	m_cache.begin(options, this);
 }
 
 float AdafruitIOManager::tick(float deltaSeconds)
 {
-#if 0
-	if (connectToWifi())
-	{
-		connectToMqtt();
-	}
-#endif
-
-	if (m_mqtt.client->isConnected())
-	{
-		m_mqtt.client->yield(1);
-	}
-	else
-	{
-		CZ_LOG(logDefault, Warning, "MQTT not connected");
-	}
+	connectToWifi(true);
 
 	// Tick publishing queue
-	m_cache.tick(deltaSeconds, m_mqtt.client->isConnected());
+	m_cache.tick(deltaSeconds);
 
 	return MQTT_CHECK_INTERVAL_MS/1000.0f;
 }
@@ -195,27 +156,27 @@ void AdafruitIOManager::printWifiStatus()
 	CZ_LOG(logMQTT, Log, "Signal strenght (RSSI): %d dBm", rssi)
 }
 
-bool AdafruitIOManager::connectToWifi()
+bool AdafruitIOManager::connectToWifi(bool systemResetOnFail)
 {
-	if (m_wifiClient.connected())
+	if (WiFi.status() == WL_CONNECTED)
 	{
 		return true;
 	}
 
 	#define MAX_NUM_WIFI_CONNECT_TRIES_PER_LOOP 20
-	uint8_t numWifiConnectTries = 0;
-	while(m_wifiClient.connected() != WL_CONNECTED)
+	int numTries = 0;
+	while(WiFi.status() != WL_CONNECTED)
 	{
-		CZ_LOG(logDefault, Log, "Connecting to %s", WIFI_SSID);
+		numTries++;
+		CZ_LOG(logMQTT, Log, "Connecting to %s (Attempt %d)", WIFI_SSID, numTries);
 		if (m_multi.run() == WL_CONNECTED)
 		{
-			CZ_LOG(logDefault, Log, "Wifi connected. IP %s", m_wifiClient.localIP().toString().c_str());
+			//CZ_LOG(logMQTT, Log, "Wifi connected. IP %s", m_wifiClient.localIP().toString().c_str());
 			printWifiStatus();
 			return true;
 		}
 
-		numWifiConnectTries++;
-		if (numWifiConnectTries > MAX_NUM_WIFI_CONNECT_TRIES_PER_LOOP)
+		if (numTries > MAX_NUM_WIFI_CONNECT_TRIES_PER_LOOP)
 		{
 			// Restart for Portenta as something is very wrong
 			CZ_LOG(logMQTT, Error, "Can't connect to any WiFi. Resetting");
@@ -226,7 +187,7 @@ bool AdafruitIOManager::connectToWifi()
 		}
 		else
 		{
-			delay(500);
+			delay(200);
 		}
 	}
 
@@ -248,81 +209,9 @@ bool AdafruitIOManager::isWiFiConnected()
 	return false;
 }
 
-bool AdafruitIOManager::connectToMqtt()
-{
-	if (m_mqtt.client->isConnected())
-	{
-		return true;
-	}
-	else
-	{
-		// Close connection if exists
-		m_wifiClient.stop();
-
-		// Re-establish TCP connection with MQTT broker
-		CZ_LOG(logDefault, Log, "Creating TCP connection to %s:%u...", MQTT_HOST, MQTT_PORT);
-		m_wifiClient.connect(MQTT_HOST, MQTT_PORT);
-		if (!m_wifiClient.connected())
-		{
-			CZ_LOG(logDefault, Error, "Can't establish the TCP connection to %s:%d", MQTT_HOST, MQTT_PORT);
-			return false;
-		}
-		else
-		{
-			CZ_LOG(logDefault, Log, "TCP connection created");
-		}
-
-		// Start new MQTT connection
-		{
-			CZ_LOG(logDefault, Log, "Starting MQTT session...");
-			MqttClient::ConnectResult connectResult;
-			MQTTPacket_connectData options = MQTTPacket_connectData_initializer;
-			options.MQTTVersion = 4;
-			options.clientID.cstring = (char *)MQTT_CLIENT_ID;
-			options.cleansession = true;
-			options.keepAliveInterval = 15; // 15 seconds
-			options.username.cstring = ADAFRUIT_IO_USERNAME;
-			options.password.cstring = ADAFRUIT_IO_KEY;
-			MqttClient::Error::type rc = m_mqtt.client->connect(options, connectResult);
-			if (rc != MqttClient::Error::SUCCESS)
-			{
-				CZ_LOG(logDefault, Error, "MQTT Session start error: %i", rc);
-				return false;
-			}
-			else
-			{
-				CZ_LOG(logDefault, Log, "MQTT Session started")
-			}
-		}
-
-		// Subscribe
-		{
-
-		}
-
-		return true;
-	}
-}
-
 void AdafruitIOManager::printSeparationLine()
 {
 	CZ_LOG(logMQTT, Log, "************************************************");
-}
-
-void AdafruitIOManager::onMqttMessage(MqttClient::MessageData& md)
-{
-	const MqttClient::Message &msg = md.message;
-	char payload[msg.payloadLen + 1];
-	memcpy(payload, msg.payload, msg.payloadLen);
-	payload[msg.payloadLen] = '\0';
-	CZ_LOG(logDefault, Log,
-		   "Message arrived: qos %d, retained %d, dup %d, packetid %d, payload:[%s]",
-		   msg.qos, msg.retained, msg.dup, msg.id, payload);
-}
-
-void AdafruitIOManager::onMqttMessageCallback(MqttClient::MessageData& msg)
-{
-	ms_instance->onMqttMessage(msg);
 }
 
 void AdafruitIOManager::logCache() const

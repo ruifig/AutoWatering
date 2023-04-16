@@ -369,12 +369,6 @@ void loop()
 			{
 				PROFILER_RESET();
 			}
-			else if (strcmp_P(cmd, (const char*)F("connectToWifi"))==0)
-			{
-				CZ_LOG(logDefault, Log, "_REMOVEME begin");
-				bool res = gAdafruitIOManager._REMOVEME();
-				CZ_LOG(logDefault, Log, "_REMOVEME end: %d", static_cast<int>(res));
-			}
 			else if (strcmp_P(cmd, (const char*)F("heapinfo"))==0)
 			{
 				CZ_LOG(logDefault, Log,"HEAP INFO: size=%d, used=%d, free=%d", rp2040.getTotalHeap(), rp2040.getUsedHeap(), rp2040.getFreeHeap());
@@ -572,6 +566,22 @@ void loop()
 					{
 						CZ_LOG(logDefault, Error, F("Log category \"%s\" doesn't exist"), name);
 					}
+				}
+			}
+			else if (strcmp_P(cmd, (const char*)F("watchdog_tick"))==0)
+			{
+				static bool watchDogEnabled = false;
+				constexpr int ms = 8300;
+				if (!watchDogEnabled)
+				{
+					watchDogEnabled = true;
+					CZ_LOG(logDefault, Log, "Enabling watchdog (%u ms)", ms)
+					rp2040.wdt_begin(ms);
+				}
+				else
+				{
+					CZ_LOG(logDefault, Log, "Reseting watchdog (%u ms)", ms)
+					rp2040.wdt_reset();
 				}
 			}
 			#if WIFI_ENABLED

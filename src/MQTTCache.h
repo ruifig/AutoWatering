@@ -9,6 +9,7 @@
 
 #define MQTT_LOG_ENABLED 1
 #include "MqttClient.h"
+#include "WiFi.h"
 
 namespace cz
 {
@@ -53,6 +54,30 @@ class MQTTCache
 		}
 	};
 
+	struct Options
+	{
+		const char* host = "io.adafruit.com";
+		uint16_t port = 1883;
+		const char* clientId = "MQTTCache";
+
+		const char* username = ADAFRUIT_IO_USERNAME;
+		const char* password = ADAFRUIT_IO_KEY;
+
+		/**
+		 * Interval in seconds between publishes.
+		 * In short, this implements a simple rate limiting.
+		 * NOTE: A free Adafruit IO account allows 30 publishes per minute (1 publish every 2 seconds) PER ACCOUNT, not per device, so make sure you adjust the publishInterval accordingly if you are using multiple devices.
+		*/
+		float publishInterval = 2.0f;
+
+		int sendBufferSize = 1024;
+		int recvBufferSize = 1024;
+		int maxNumSubscriptions = 5;
+
+		// Passed to the ArduinoMqtt library's Options.commandTimeoutMs
+		unsigned long commandTimeoutMs = 5000;
+	};
+
 	struct Listener
 	{
 		/**
@@ -73,7 +98,7 @@ class MQTTCache
 	 * @param listener Listener object
 	 * @param publishInterval How long to wait (in seconds) between sends. This is for rate limiting
 	 */
-	void begin(MqttClient* mqttClient, Listener* listener, float publishInterval);
+	void begin(const Options& options, Listener* listener);
 
 	/**
 	 * Sets a cache entry to the specified value.
@@ -97,9 +122,11 @@ class MQTTCache
 	void remove(const char* topic);
 	void remove(const Entry* entry);
 
-	void tick(float deltaSeconds, bool checkSendQueue);
+	void tick(float deltaSeconds);
 
 	void logState() const;
+
+	bool isConnected() const;
 
   private:
 
@@ -118,13 +145,35 @@ class MQTTCache
 	void onMqttPublish(uint16_t packetId);
 	static void onMqttPublishCallback(uint16_t packetId);
 
+	static MQTTCache* ms_instance;
 	std::vector<std::unique_ptr<Entry>> m_cache;
 	std::queue<Entry*> m_sendQueue;
-	MqttClient* m_mqttClient;
-	float m_publishInterval;
 	float m_publishCountdown = 0;
 	Listener* m_listener;
-	static MQTTCache* ms_instance;
+	WiFiClient m_wifiClient;
+
+	struct Config
+	{
+		String host;
+		uint16_t port;
+		String clientId;
+		String username;
+		String password;
+		float publishInterval;
+	} m_cfg;
+
+	struct MqttObjects
+	{
+		std::unique_ptr<MqttClient::System> system;
+		std::unique_ptr<MqttClient::Logger> logger;
+		std::unique_ptr<MqttClient::Network> network;
+		std::unique_ptr<MqttClient::Buffer> sendBuffer;
+		std::unique_ptr<MqttClient::Buffer> recvBuffer;
+		std::unique_ptr<MqttClient::MessageHandlers> messageHandlers;
+		std::unique_ptr<MqttClient> client;
+	} m_mqtt;
+
+	bool connectToMqttBroker();
 };
 
 } // namespace cz
