@@ -75,7 +75,7 @@ class MQTTCache
 		int maxNumSubscriptions = 5;
 
 		// Passed to the ArduinoMqtt library's Options.commandTimeoutMs
-		unsigned long commandTimeoutMs = 5000;
+		unsigned long commandTimeoutMs = 4000;
 	};
 
 	struct Listener

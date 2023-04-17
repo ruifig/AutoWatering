@@ -181,7 +181,7 @@ bool AdafruitIOManager::connectToWifi(bool systemResetOnFail)
 			// Restart for Portenta as something is very wrong
 			CZ_LOG(logMQTT, Error, "Can't connect to any WiFi. Resetting");
 			cz::LogOutput::flush();
-			delay(5000);
+			delay(3000);
 			NVIC_SystemReset();
 			return false;
 		}
