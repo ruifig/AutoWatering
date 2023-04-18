@@ -17,6 +17,7 @@ private:
 	virtual bool initImpl() override;
 	virtual float tick(float deltaSeconds) override;
 	virtual void onEvent(const Event& evt) override;
+	virtual bool processCommand(const Command& cmd) override;
 
 	void start();
 

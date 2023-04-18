@@ -135,6 +135,17 @@ void AdafruitIOManager::onEvent(const Event& evt)
 	}
 }
 
+bool AdafruitIOManager::processCommand(const Command& cmd)
+{
+	if (cmd.is("logcachedmqttvalues"))
+	{
+		logCache();
+		return true;
+	}
+
+	return false;
+}
+
 void AdafruitIOManager::onCacheReceived(const MQTTCache::Entry* entry)
 {
 }

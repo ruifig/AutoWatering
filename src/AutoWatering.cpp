@@ -208,7 +208,7 @@ namespace
 	cz::SerialLogOutput gSerialLogOutput;
 #endif
 
-#if CONSOLE_COMMANDS
+#if CONSOLE_COMMANDS_ENABLED
 	cz::SerialStringReader<> gSerialStringReader;
 #endif
 }
@@ -330,27 +330,19 @@ void loop()
 					CZ_LOG(logDefault, Error, "Failed to execute %s.%s command", cmd.targetComponent->getName(), cmd.cmd);
 				}
 			}
-			else if (strcasecmp_P(cmd.cmd, (const char*)F("profiler_log"))==0)
+			else if (cmd.is("profiler_log"))
 			{
 				PROFILER_LOG();
 			}
-			else if (strcasecmp_P(cmd.cmd, (const char*)F("profiler_reset"))==0)
+			else if (cmd.is("profiler_reset"))
 			{
 				PROFILER_RESET();
 			}
-			else if (strcasecmp_P(cmd.cmd, (const char*)F("heapinfo"))==0)
+			else if (cmd.is("heapinfo"))
 			{
 				CZ_LOG(logDefault, Log,"HEAP INFO: size=%d, used=%d, free=%d", rp2040.getTotalHeap(), rp2040.getUsedHeap(), rp2040.getFreeHeap());
 			}
-			else if (strcasecmp_P(cmd.cmd, (const char*)F("scroll"))==0)
-			{
-				int inc;
-				if (cmd.parseParams(inc))
-				{
-					gGraphicalUI.scrollSlots(inc);
-				}
-			}
-			else if (strcasecmp_P(cmd.cmd, (const char*)F("setmuxenabled"))==0)
+			else if (cmd.is("setmuxenabled"))
 			{
 				int boardIdx;
 				bool enabled;
@@ -366,7 +358,7 @@ void loop()
 					}
 				}
 			}
-			else if (strcasecmp_P(cmd.cmd, (const char*)F("setmuxchannel"))==0)
+			else if (cmd.is("setmuxchannel"))
 			{
 				int boardIdx;
 				int muxpin;
@@ -387,7 +379,7 @@ void loop()
 					gCtx.m_i2cBoards[boardIdx].mux.setChannel(MultiplexerPin(muxpin));
 				}
 			}
-			else if (strcasecmp_P(cmd.cmd, (const char*)F("setgroupthreshold"))==0)
+			else if (cmd.is("setgroupthreshold"))
 			{
 				int idx, value;
 				if (cmd.parseParams(idx, value) && idx < MAX_NUM_PAIRS)
@@ -395,7 +387,7 @@ void loop()
 					gCtx.data.getGroupData(idx).setThresholdValue(value);
 				}
 			}
-			else if (strcasecmp_P(cmd.cmd, (const char*)F("setgroupthresholdaspercentage"))==0)
+			else if (cmd.is("setgroupthresholdaspercentage"))
 			{
 				int idx, value;
 				if (cmd.parseParams(idx, value) && idx < MAX_NUM_PAIRS)
@@ -403,7 +395,7 @@ void loop()
 					gCtx.data.getGroupData(idx).setThresholdValueAsPercentage(value);
 				}
 			}
-			else if (strcasecmp_P(cmd.cmd, (const char*)F("startgroup"))==0)
+			else if (cmd.is("startgroup"))
 			{
 				int idx;
 				if (cmd.parseParams(idx) && idx < MAX_NUM_PAIRS)
@@ -411,7 +403,7 @@ void loop()
 					gCtx.data.getGroupData(idx).setRunning(true);
 				}
 			}
-			else if (strcasecmp_P(cmd.cmd, (const char*)F("stopgroup"))==0)
+			else if (cmd.is("stopgroup"))
 			{
 				int idx;
 				if (cmd.parseParams(idx) && idx < MAX_NUM_PAIRS)
@@ -419,11 +411,11 @@ void loop()
 					gCtx.data.getGroupData(idx).setRunning(false);
 				}
 			}
-			else if (strcasecmp_P(cmd.cmd, (const char*)F("logconfig"))==0)
+			else if (cmd.is("logconfig"))
 			{
 				gCtx.data.logConfig();
 			}
-			else if (strcasecmp_P(cmd.cmd, (const char*)F("loggroupconfig"))==0)
+			else if (cmd.is("loggroupconfig"))
 			{
 				int idx;
 				if (cmd.parseParams(idx) && idx < MAX_NUM_PAIRS)
@@ -431,7 +423,7 @@ void loop()
 					gCtx.data.getGroupData(idx).logConfig();
 				}
 			}
-			else if (strcasecmp_P(cmd.cmd, (const char*)F("selectgroup"))==0)
+			else if (cmd.is("selectgroup"))
 			{
 				int8_t idx;
 				if (cmd.parseParams(idx) && idx < MAX_NUM_PAIRS)
@@ -439,7 +431,7 @@ void loop()
 					gCtx.data.trySetSelectedGroup(idx);
 				}
 			}
-			else if (strcasecmp_P(cmd.cmd, (const char*)F("setmocksensorerrorstatus"))==0)
+			else if (cmd.is("setmocksensorerrorstatus"))
 			{
 				int idx, status;
 				if (cmd.parseParams(idx, status))
@@ -454,7 +446,7 @@ void loop()
 					}
 				}
 			}
-			else if (strcasecmp_P(cmd.cmd, (const char*)F("setmocksensor"))==0)
+			else if (cmd.is("setmocksensor"))
 			{
 				int idx, value;
 				if (cmd.parseParams(idx, value) && idx < MAX_NUM_PAIRS)
@@ -462,7 +454,7 @@ void loop()
 					Component::raiseEvent(SetMockSensorValueEvent(idx, value));
 				}
 			}
-			else if (strcasecmp_P(cmd.cmd, (const char*)F("setmocksensors"))==0)
+			else if (cmd.is("setmocksensors"))
 			{
 				int value;
 				if (cmd.parseParams(value))
@@ -473,7 +465,7 @@ void loop()
 					}
 				}
 			}
-			else if (strcasecmp_P(cmd.cmd, (const char*)F("save"))==0)
+			else if (cmd.is("save"))
 			{
 				gCtx.data.save();
 
@@ -482,7 +474,7 @@ void loop()
 				prgData.load();
 				prgData.logConfig();
 			}
-			else if (strcasecmp_P(cmd.cmd, (const char*)F("savegroup"))==0)
+			else if (cmd.is("savegroup"))
 			{
 				uint8_t idx;
 				if (cmd.parseParams(idx) && idx < MAX_NUM_PAIRS)
@@ -490,11 +482,11 @@ void loop()
 					gCtx.data.saveGroupConfig(idx);
 				}
 			}
-			else if (strcasecmp_P(cmd.cmd, (const char*)F("load"))==0)
+			else if (cmd.is("load"))
 			{
 				gCtx.data.load();
 			}
-			else if (strcasecmp_P(cmd.cmd, (const char*)F("setverbosity"))==0)
+			else if (cmd.is("setverbosity"))
 			{
 				char name[30];
 				int verbosity;
@@ -521,21 +513,6 @@ void loop()
 					}
 				}
 			}
-			else if (strcasecmp_P(cmd.cmd, (const char*)F("delay"))==0) // Blocks for X ms. Good to simulate a freeze to test the watchdog
-			{
-				int ms;
-				if (cmd.parseParams(ms))
-				{
-					CZ_LOG(logDefault, Log, "Delay(%d)", ms);
-					delay(ms);
-				}
-			}
-			#if WIFI_ENABLED
-			else if (strcasecmp_P(cmd.cmd, (const char*)F("logcachedmqttvalues"))==0)
-			{
-				gAdafruitIOManager.logCache();
-			}
-			#endif
 			else
 			{
 				CZ_LOG(logDefault, Error, F("Command \"%s\" not recognized"), gSerialStringReader.retrieve());

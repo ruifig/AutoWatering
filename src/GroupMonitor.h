@@ -28,7 +28,7 @@ class GroupMonitor : public Component
 	virtual bool initImpl() override;
 	virtual float tick(float deltaSeconds) override;
 	virtual void onEvent(const Event& evt) override;
-	virtual bool processCommand(Command& cmd) override;
+	virtual bool processCommand(const Command& cmd) override;
 
 	/**
 	 * Tries to turn the motor on

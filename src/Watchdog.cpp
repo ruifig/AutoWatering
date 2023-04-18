@@ -67,6 +67,22 @@ void Watchdog::onEvent(const Event& evt)
 	}
 }
 
+bool Watchdog::processCommand(const Command& cmd)
+{
+	// Blocks the program for X ms, so simulate a freeze
+	if (cmd.is("freeze"))
+	{
+		int ms;
+		if (cmd.parseParams(ms))
+		{
+			delay(ms);
+			return true;
+		}
+	}
+
+	return false;
+}
+
 #if WATCHDOG_ENABLED
 	Watchdog gWatchdog;
 #endif

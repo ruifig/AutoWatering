@@ -46,7 +46,7 @@ public:
 	virtual const char* getName() const = 0;
 	virtual float tick(float deltaSeconds) = 0;
 	virtual void onEvent(const Event& evt) = 0;
-	virtual bool processCommand(Command& cmd) { return true; }
+	virtual bool processCommand(const Command& cmd) { return true; }
 
 	static Component* getByName(const char* name);
 	static void raiseEvent(const Event& evt);
@@ -83,9 +83,10 @@ struct Command
 	}
 
 	template<typename... Params>
-	bool parseParams(Params&... params)
+	bool parseParams(Params&... params) const
 	{
-		if (parse(src, params...))
+		const char* tmp = src;
+		if (parse(tmp, params...))
 		{
 			return true;
 		}
@@ -94,7 +95,7 @@ struct Command
 			CZ_LOG(logDefault, Error, F("Error parsing parameters for command \"%s\""), cmd);
 			return false;
 		}
-	};
+	}
 
 };
 

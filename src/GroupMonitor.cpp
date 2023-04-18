@@ -150,7 +150,7 @@ void GroupMonitor::onEvent(const Event& evt)
 	}
 }
 
-bool GroupMonitor::processCommand(Command& cmd)
+bool GroupMonitor::processCommand(const Command& cmd)
 {
 	if (cmd.is("motoroff"))
 	{
@@ -162,10 +162,8 @@ bool GroupMonitor::processCommand(Command& cmd)
 		doShot();
 		return true;
 	}
-	else
-	{
-		return false;
-	}
+
+	return false;
 }
 	
 } // namespace cz

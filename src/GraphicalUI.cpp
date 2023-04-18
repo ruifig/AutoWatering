@@ -725,6 +725,21 @@ void GraphicalUI::onEvent(const Event& evt)
 	m_state->onEvent(evt);	
 }
 
+bool GraphicalUI::processCommand(const Command& cmd)
+{
+	if (cmd.is("scroll"))
+	{
+		int inc;
+		if (cmd.parseParams(inc))
+		{
+			scrollSlots(inc);
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void GraphicalUI::scrollSlots(int inc)
 {
 	m_states.overview.scrollSlots(inc);
