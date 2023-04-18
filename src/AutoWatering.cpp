@@ -7,8 +7,6 @@
 #include "Context.h"
 #include "SoilMoistureSensor.h"
 #include "GroupMonitor.h"
-#include "GraphicalUI.h"
-#include "AdafruitIOManager.h"
 #include "Timer.h"
 #include "crazygaze/micromuc/Logging.h"
 #include <algorithm>
@@ -17,7 +15,8 @@
 
 #include "crazygaze/micromuc/SDLogOutput.h"
 #include "crazygaze/micromuc/Profiler.h"
-#include "crazygaze/micromuc/SerialStringReader.h"
+#include "gfx/MyDisplay1.h"
+#include "crazygaze/TouchController/XPT2046.h"
 
 using namespace cz;
 
@@ -25,49 +24,6 @@ using namespace cz;
 	SDCardHelper gSDCard;
 	SDLogOutput gSdLogOutput;
 #endif
-
-// #TODO : Remove these
-struct SemaphoreDebug
-{
-	struct Take
-	{
-		const char* file;
-		int line;
-		int counter;
-	} take;
-
-	struct Give
-	{
-		const char* file;
-		int line;
-		int counter;
-	} give;
-
-	int counter;
-} gSem;
-
-extern void *pxCurrentTCB;
-
-void MySemaphoreTake(bool& sem, const char* file, int line)
-{
-	while(sem)
-	{
-	}
-	sem = true;
-	++gSem.counter;
-	++gSem.take.counter;
-	gSem.take.file = file;
-	gSem.take.line = line;
-}
-
-void MySemaphoreGive(bool& sem, const char* file, int line)
-{
-	gSem.give.file = file;
-	gSem.give.line = line;
-	++gSem.give.counter;
-	--gSem.counter;
-	sem = false;
-}
 
 #define SOILMOISTURE_TICKER(index, boardIndex, POWER_PIN, MUXPIN) \
 	 {index, IOExpanderPinInstance(gCtx.m_i2cBoards[boardIndex].ioExpander, POWER_PIN), MuxPinInstance(gCtx.m_i2cBoards[boardIndex].mux, MUXPIN)}
@@ -221,15 +177,16 @@ void doGroupShot(uint8_t index)
 void setup()
 {
 #if CZ_SERIAL_LOG_ENABLED
+
+	// We need to increase the uart queue size so CommandConsole works with long commands.
+	// Couldn't pinpoint the exact reason, but at the time of writting, SerialStringReader would messe up when trying to read long commands
+	MySerial.setFIFOSize(256);
+
 	#if CZ_USE_PROBE_SERIAL
 		MySerial.setRX(MySerial_RXPin);
 		MySerial.setTX(MySerial_TXPin);
 	#endif
 	gSerialLogOutput.begin(MySerial, 115200);
-#endif
-
-#if CONSOLE_COMMANDS
-	gSerialStringReader.begin(MySerial);
 #endif
 
 	CZ_LOG(logDefault, Log, "");
@@ -260,7 +217,7 @@ void setup()
 	#endif
 
 #if SD_CARD_LOGGING
-	if (gSDCard.betin(SD_CARD_SS_PIN))
+	if (gSDCard.begin(SD_CARD_SS_PIN))
 	{
 		gSdLogOutput.begin(gSDCard.root, "log.txt", true);
 		CZ_LOG(logDefault, Log, "SD card log file initialized");
@@ -311,216 +268,6 @@ void loop()
 		PROFILE_SCOPE(F("TickAll"));
 		countdown = std::min(Component::tickAll(deltaSeconds), countdown);
 	}
-
-	// We use this so that we can just put a breakpoint in here and force the code to run when we want to check the profiler data
-	#if CONSOLE_COMMANDS
-	{
-		while (gSerialStringReader.tryRead())
-		{
-			Command cmd(gSerialStringReader.retrieve());
-			if (!cmd.parseCmd())
-			{
-				continue;
-			}
-
-			if (cmd.targetComponent)
-			{
-				if (!cmd.targetComponent->processCommand(cmd))
-				{
-					CZ_LOG(logDefault, Error, "Failed to execute %s.%s command", cmd.targetComponent->getName(), cmd.cmd);
-				}
-			}
-			else if (cmd.is("profiler_log"))
-			{
-				PROFILER_LOG();
-			}
-			else if (cmd.is("profiler_reset"))
-			{
-				PROFILER_RESET();
-			}
-			else if (cmd.is("heapinfo"))
-			{
-				CZ_LOG(logDefault, Log,"HEAP INFO: size=%d, used=%d, free=%d", rp2040.getTotalHeap(), rp2040.getUsedHeap(), rp2040.getFreeHeap());
-			}
-			else if (cmd.is("setmuxenabled"))
-			{
-				int boardIdx;
-				bool enabled;
-				if (cmd.parseParams(boardIdx, enabled))
-				{
-					if (boardIdx>=0 && boardIdx<MAX_NUM_I2C_BOARDS)
-					{
-						gCtx.m_i2cBoards[boardIdx].mux.setEnabled(enabled);
-					}
-					else
-					{
-						CZ_LOG(logDefault, Error, F("Invalid board index (%d)"), boardIdx);
-					}
-				}
-			}
-			else if (cmd.is("setmuxchannel"))
-			{
-				int boardIdx;
-				int muxpin;
-				if (cmd.parseParams(boardIdx, muxpin))
-				{
-					if (boardIdx<0 && boardIdx>=MAX_NUM_I2C_BOARDS)
-					{
-						CZ_LOG(logDefault, Error, F("Invalid board index (%d)"), boardIdx);
-						continue;
-					}
-
-					if (muxpin<0 || muxpin>=8)
-					{
-						CZ_LOG(logDefault, Error, F("Invalid mux channel (%d)"), muxpin);
-						continue;
-					}
-
-					gCtx.m_i2cBoards[boardIdx].mux.setChannel(MultiplexerPin(muxpin));
-				}
-			}
-			else if (cmd.is("setgroupthreshold"))
-			{
-				int idx, value;
-				if (cmd.parseParams(idx, value) && idx < MAX_NUM_PAIRS)
-				{
-					gCtx.data.getGroupData(idx).setThresholdValue(value);
-				}
-			}
-			else if (cmd.is("setgroupthresholdaspercentage"))
-			{
-				int idx, value;
-				if (cmd.parseParams(idx, value) && idx < MAX_NUM_PAIRS)
-				{
-					gCtx.data.getGroupData(idx).setThresholdValueAsPercentage(value);
-				}
-			}
-			else if (cmd.is("startgroup"))
-			{
-				int idx;
-				if (cmd.parseParams(idx) && idx < MAX_NUM_PAIRS)
-				{
-					gCtx.data.getGroupData(idx).setRunning(true);
-				}
-			}
-			else if (cmd.is("stopgroup"))
-			{
-				int idx;
-				if (cmd.parseParams(idx) && idx < MAX_NUM_PAIRS)
-				{
-					gCtx.data.getGroupData(idx).setRunning(false);
-				}
-			}
-			else if (cmd.is("logconfig"))
-			{
-				gCtx.data.logConfig();
-			}
-			else if (cmd.is("loggroupconfig"))
-			{
-				int idx;
-				if (cmd.parseParams(idx) && idx < MAX_NUM_PAIRS)
-				{
-					gCtx.data.getGroupData(idx).logConfig();
-				}
-			}
-			else if (cmd.is("selectgroup"))
-			{
-				int8_t idx;
-				if (cmd.parseParams(idx) && idx < MAX_NUM_PAIRS)
-				{
-					gCtx.data.trySetSelectedGroup(idx);
-				}
-			}
-			else if (cmd.is("setmocksensorerrorstatus"))
-			{
-				int idx, status;
-				if (cmd.parseParams(idx, status))
-				{
-					if (status>=SensorReading::Status::First && status<=SensorReading::Status::Last)
-					{
-						Component::raiseEvent(SetMockSensorErrorStatusEvent(idx, static_cast<SensorReading::Status>(status)));
-					}
-					else
-					{
-						CZ_LOG(logDefault, Error, F("Invalid status value"));
-					}
-				}
-			}
-			else if (cmd.is("setmocksensor"))
-			{
-				int idx, value;
-				if (cmd.parseParams(idx, value) && idx < MAX_NUM_PAIRS)
-				{
-					Component::raiseEvent(SetMockSensorValueEvent(idx, value));
-				}
-			}
-			else if (cmd.is("setmocksensors"))
-			{
-				int value;
-				if (cmd.parseParams(value))
-				{
-					for(int idx=0; idx<MAX_NUM_PAIRS; idx++)
-					{
-						Component::raiseEvent(SetMockSensorValueEvent(idx, value));
-					}
-				}
-			}
-			else if (cmd.is("save"))
-			{
-				gCtx.data.save();
-
-				ProgramData prgData(gCtx);
-				prgData.begin();
-				prgData.load();
-				prgData.logConfig();
-			}
-			else if (cmd.is("savegroup"))
-			{
-				uint8_t idx;
-				if (cmd.parseParams(idx) && idx < MAX_NUM_PAIRS)
-				{
-					gCtx.data.saveGroupConfig(idx);
-				}
-			}
-			else if (cmd.is("load"))
-			{
-				gCtx.data.load();
-			}
-			else if (cmd.is("setverbosity"))
-			{
-				char name[30];
-				int verbosity;
-				constexpr int minVerbosity = static_cast<int>(LogVerbosity::Fatal);
-				constexpr int maxVerbosity = static_cast<int>(LogVerbosity::Verbose);
-				if (cmd.parseParams(name, verbosity))
-				{
-					if(LogCategoryBase* category = LogCategoryBase::find(name))
-					{
-						if (verbosity>=minVerbosity && verbosity<=maxVerbosity)
-						{
-							LogVerbosity v = static_cast<LogVerbosity>(verbosity);
-							category->setVerbosity(v);
-							CZ_LOG(logDefault, Log, F("\"%s\" verbosity set to %s"), name, logVerbosityToString(v));
-						}
-						else
-						{
-							CZ_LOG(logDefault, Error, F("Log verbosity needs to be from %d to %d"), minVerbosity, maxVerbosity);
-						}
-					}
-					else
-					{
-						CZ_LOG(logDefault, Error, F("Log category \"%s\" doesn't exist"), name);
-					}
-				}
-			}
-			else
-			{
-				CZ_LOG(logDefault, Error, F("Command \"%s\" not recognized"), gSerialStringReader.retrieve());
-			}
-		}
-	}
-	#endif // CONSOLE_COMMANDS
-
 
 	{
 		unsigned long ms = static_cast<unsigned long>(countdown * 1000);

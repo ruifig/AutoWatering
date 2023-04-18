@@ -5,6 +5,9 @@
 namespace cz
 {
 
+//
+// Command
+//
 bool Command::parseCmd()
 {
 	parse(src, fullCmd);
@@ -38,10 +41,16 @@ bool Command::parseCmd()
 	return true;
 }
 
+
+
 namespace
 {
 	DoublyLinkedList<Component> gComponents;
 }
+
+//
+// Component
+//
 
 Component::Component(Component::ListInsertionPosition insertPos)
 	: m_ticker(this)

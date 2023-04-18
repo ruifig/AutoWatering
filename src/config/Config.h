@@ -37,6 +37,7 @@
 
 /**
  * If 1, it will log to a file in the sd card
+ * WARNING: SD card logging is untested. It was working a long time ago when I was using an Arduino Mega 2560, but hasn't been tested for a very long time.
  */
 #if CZ_LOG_ENABLED
 	#define SD_CARD_LOGGING 0
@@ -44,12 +45,10 @@
 	#define SD_CARD_LOGGING 0
 #endif
 
-#ifndef CONSOLE_COMMANDS
-	#if CZ_DEBUG
-		#define CONSOLE_COMMANDS 1
-	#else
-		#define CONSOLE_COMMANDS 0
-	#endif
+#if CZ_DEBUG
+	#define COMMAND_CONSOLE_ENABLED 1
+#else
+	#define COMMAND_CONSOLE_ENABLED 1
 #endif
 
 /**
