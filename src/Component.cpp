@@ -1,7 +1,42 @@
 #include "Component.h"
+#include <string.h>
+#include <crazygaze/micromuc/Logging.h>
 
 namespace cz
 {
+
+bool Command::parseCmd()
+{
+	parse(src, fullCmd);
+	CZ_LOG(logDefault, Log, "Trying to process command: %s", fullCmd);
+	cmd = fullCmd;
+
+	// Check if the command is int he form of COMPONENT.COMMAND
+	detail::skipToAfter(cmd, '.');
+	if (*cmd != 0 && cmd != fullCmd)
+	{
+		int componentNameLen = cmd - fullCmd - 1;
+		CZ_LOG(logDefault, Log, "name length = %d", componentNameLen);
+		char componentName[componentNameLen + 1];
+		memcpy(componentName, fullCmd, componentNameLen);
+		componentName[componentNameLen] = 0;
+
+		targetComponent = Component::getByName(componentName);
+		if (!targetComponent)
+		{
+			CZ_LOG(logDefault, Error, "No component with name '%s' found", componentName);
+			return false;
+		}
+		CZ_LOG(logDefault, Log, "Component '%s', command '%s'", targetComponent ? targetComponent->getName() : "", cmd);
+	}
+	else
+	{
+		cmd = fullCmd;
+		CZ_LOG(logDefault, Log, "Command '%s'", cmd);
+	}
+
+	return true;
+}
 
 namespace
 {
@@ -39,6 +74,19 @@ bool Component::init()
 		CZ_LOG(logDefault, Log, "        %s", m_initialized ? "DONE" : "DELAYED");
 		return m_initialized;
 	}
+}
+
+Component* Component::getByName(const char* name)
+{
+	for(auto&& component : gComponents)
+	{
+		if (strcasecmp(component->getName(), name) == 0)
+		{
+			return component;
+		}
+	}
+
+	return nullptr;
 }
 
 void Component::initAll()
@@ -81,9 +129,20 @@ void Component::initAll()
 float Component::tickAll(float deltaSeconds)
 {
 	float countdown = 60*60;
+	Component* lowestCountdownCulprit = nullptr;
 	for(auto&& component : gComponents)
 	{
-		countdown = std::min(component->m_ticker.tick(deltaSeconds), countdown);
+		float componentCountdown = component->m_ticker.tick(deltaSeconds);
+		if (componentCountdown < countdown)
+		{
+			lowestCountdownCulprit = component;	
+			countdown = componentCountdown;
+		}
+	}
+
+	if (lowestCountdownCulprit)
+	{
+		CZ_LOG(logDefault, Verbose, "Component causing fastest tick rate: %s. Ticking in %d ms", lowestCountdownCulprit->getName(), static_cast<int>(countdown * 1000));
 	}
 
 	return countdown;

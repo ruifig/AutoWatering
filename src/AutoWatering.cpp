@@ -317,64 +317,44 @@ void loop()
 	{
 		while (gSerialStringReader.tryRead())
 		{
-			char cmd[30];
-			const char* src = gSerialStringReader.retrieve(); 
-			parse(src, cmd);
-
-			auto parseCommand = [&cmd, &src](auto&... params) -> bool
+			Command cmd(gSerialStringReader.retrieve());
+			if (!cmd.parseCmd())
 			{
-				if (parse(src, params...))
-				{
-					return true;
-				}
-				else
-				{
-					CZ_LOG(logDefault, Error, F("Error parsing parameters for command \"%s\""), cmd);
-					return false;
-				}
-			};
+				continue;
+			}
 
-			if (strcmp_P(cmd, (const char*)F("profiler_log"))==0)
+			if (cmd.targetComponent)
+			{
+				if (!cmd.targetComponent->processCommand(cmd))
+				{
+					CZ_LOG(logDefault, Error, "Failed to execute %s.%s command", cmd.targetComponent->getName(), cmd.cmd);
+				}
+			}
+			else if (strcasecmp_P(cmd.cmd, (const char*)F("profiler_log"))==0)
 			{
 				PROFILER_LOG();
 			}
-			else if (strcmp_P(cmd, (const char*)F("profiler_reset"))==0)
+			else if (strcasecmp_P(cmd.cmd, (const char*)F("profiler_reset"))==0)
 			{
 				PROFILER_RESET();
 			}
-			else if (strcmp_P(cmd, (const char*)F("heapinfo"))==0)
+			else if (strcasecmp_P(cmd.cmd, (const char*)F("heapinfo"))==0)
 			{
 				CZ_LOG(logDefault, Log,"HEAP INFO: size=%d, used=%d, free=%d", rp2040.getTotalHeap(), rp2040.getUsedHeap(), rp2040.getFreeHeap());
 			}
-			else if (strcmp_P(cmd, (const char*)F("scroll"))==0)
+			else if (strcasecmp_P(cmd.cmd, (const char*)F("scroll"))==0)
 			{
 				int inc;
-				if (parseCommand(inc))
+				if (cmd.parseParams(inc))
 				{
 					gGraphicalUI.scrollSlots(inc);
 				}
 			}
-			else if (strcmp_P(cmd, (const char*)F("motoroff"))==0)
-			{
-				int idx;
-				if (parseCommand(idx) && idx < MAX_NUM_PAIRS)
-				{
-					gGroupMonitors[idx].turnMotorOff();
-				}
-			}
-			else if (strcmp_P(cmd, (const char*)F("motoron"))==0)
-			{
-				int idx;
-				if (parseCommand(idx) && idx < MAX_NUM_PAIRS)
-				{
-					gGroupMonitors[idx].doShot();
-				}
-			}
-			else if (strcmp_P(cmd, (const char*)F("setmuxenabled"))==0)
+			else if (strcasecmp_P(cmd.cmd, (const char*)F("setmuxenabled"))==0)
 			{
 				int boardIdx;
 				bool enabled;
-				if (parseCommand(boardIdx, enabled))
+				if (cmd.parseParams(boardIdx, enabled))
 				{
 					if (boardIdx>=0 && boardIdx<MAX_NUM_I2C_BOARDS)
 					{
@@ -386,11 +366,11 @@ void loop()
 					}
 				}
 			}
-			else if (strcmp_P(cmd, (const char*)F("setmuxchannel"))==0)
+			else if (strcasecmp_P(cmd.cmd, (const char*)F("setmuxchannel"))==0)
 			{
 				int boardIdx;
 				int muxpin;
-				if (parseCommand(boardIdx, muxpin))
+				if (cmd.parseParams(boardIdx, muxpin))
 				{
 					if (boardIdx<0 && boardIdx>=MAX_NUM_I2C_BOARDS)
 					{
@@ -407,62 +387,62 @@ void loop()
 					gCtx.m_i2cBoards[boardIdx].mux.setChannel(MultiplexerPin(muxpin));
 				}
 			}
-			else if (strcmp_P(cmd, (const char*)F("setgroupthreshold"))==0)
+			else if (strcasecmp_P(cmd.cmd, (const char*)F("setgroupthreshold"))==0)
 			{
 				int idx, value;
-				if (parseCommand(idx, value) && idx < MAX_NUM_PAIRS)
+				if (cmd.parseParams(idx, value) && idx < MAX_NUM_PAIRS)
 				{
 					gCtx.data.getGroupData(idx).setThresholdValue(value);
 				}
 			}
-			else if (strcmp_P(cmd, (const char*)F("setgroupthresholdaspercentage"))==0)
+			else if (strcasecmp_P(cmd.cmd, (const char*)F("setgroupthresholdaspercentage"))==0)
 			{
 				int idx, value;
-				if (parseCommand(idx, value) && idx < MAX_NUM_PAIRS)
+				if (cmd.parseParams(idx, value) && idx < MAX_NUM_PAIRS)
 				{
 					gCtx.data.getGroupData(idx).setThresholdValueAsPercentage(value);
 				}
 			}
-			else if (strcmp_P(cmd, (const char*)F("startgroup"))==0)
+			else if (strcasecmp_P(cmd.cmd, (const char*)F("startgroup"))==0)
 			{
 				int idx;
-				if (parseCommand(idx) && idx < MAX_NUM_PAIRS)
+				if (cmd.parseParams(idx) && idx < MAX_NUM_PAIRS)
 				{
 					gCtx.data.getGroupData(idx).setRunning(true);
 				}
 			}
-			else if (strcmp_P(cmd, (const char*)F("stopgroup"))==0)
+			else if (strcasecmp_P(cmd.cmd, (const char*)F("stopgroup"))==0)
 			{
 				int idx;
-				if (parseCommand(idx) && idx < MAX_NUM_PAIRS)
+				if (cmd.parseParams(idx) && idx < MAX_NUM_PAIRS)
 				{
 					gCtx.data.getGroupData(idx).setRunning(false);
 				}
 			}
-			else if (strcmp_P(cmd, (const char*)F("logconfig"))==0)
+			else if (strcasecmp_P(cmd.cmd, (const char*)F("logconfig"))==0)
 			{
 				gCtx.data.logConfig();
 			}
-			else if (strcmp_P(cmd, (const char*)F("loggroupconfig"))==0)
+			else if (strcasecmp_P(cmd.cmd, (const char*)F("loggroupconfig"))==0)
 			{
 				int idx;
-				if (parseCommand(idx) && idx < MAX_NUM_PAIRS)
+				if (cmd.parseParams(idx) && idx < MAX_NUM_PAIRS)
 				{
 					gCtx.data.getGroupData(idx).logConfig();
 				}
 			}
-			else if (strcmp_P(cmd, (const char*)F("selectgroup"))==0)
+			else if (strcasecmp_P(cmd.cmd, (const char*)F("selectgroup"))==0)
 			{
 				int8_t idx;
-				if (parseCommand(idx) && idx < MAX_NUM_PAIRS)
+				if (cmd.parseParams(idx) && idx < MAX_NUM_PAIRS)
 				{
 					gCtx.data.trySetSelectedGroup(idx);
 				}
 			}
-			else if (strcmp_P(cmd, (const char*)F("setmocksensorerrorstatus"))==0)
+			else if (strcasecmp_P(cmd.cmd, (const char*)F("setmocksensorerrorstatus"))==0)
 			{
 				int idx, status;
-				if (parseCommand(idx, status))
+				if (cmd.parseParams(idx, status))
 				{
 					if (status>=SensorReading::Status::First && status<=SensorReading::Status::Last)
 					{
@@ -474,18 +454,18 @@ void loop()
 					}
 				}
 			}
-			else if (strcmp_P(cmd, (const char*)F("setmocksensor"))==0)
+			else if (strcasecmp_P(cmd.cmd, (const char*)F("setmocksensor"))==0)
 			{
 				int idx, value;
-				if (parseCommand(idx, value) && idx < MAX_NUM_PAIRS)
+				if (cmd.parseParams(idx, value) && idx < MAX_NUM_PAIRS)
 				{
 					Component::raiseEvent(SetMockSensorValueEvent(idx, value));
 				}
 			}
-			else if (strcmp_P(cmd, (const char*)F("setmocksensors"))==0)
+			else if (strcasecmp_P(cmd.cmd, (const char*)F("setmocksensors"))==0)
 			{
 				int value;
-				if (parseCommand(value))
+				if (cmd.parseParams(value))
 				{
 					for(int idx=0; idx<MAX_NUM_PAIRS; idx++)
 					{
@@ -493,7 +473,7 @@ void loop()
 					}
 				}
 			}
-			else if (strcmp_P(cmd, (const char*)F("save"))==0)
+			else if (strcasecmp_P(cmd.cmd, (const char*)F("save"))==0)
 			{
 				gCtx.data.save();
 
@@ -502,25 +482,25 @@ void loop()
 				prgData.load();
 				prgData.logConfig();
 			}
-			else if (strcmp_P(cmd, (const char*)F("savegroup"))==0)
+			else if (strcasecmp_P(cmd.cmd, (const char*)F("savegroup"))==0)
 			{
 				uint8_t idx;
-				if (parseCommand(idx) && idx < MAX_NUM_PAIRS)
+				if (cmd.parseParams(idx) && idx < MAX_NUM_PAIRS)
 				{
 					gCtx.data.saveGroupConfig(idx);
 				}
 			}
-			else if (strcmp_P(cmd, (const char*)F("load"))==0)
+			else if (strcasecmp_P(cmd.cmd, (const char*)F("load"))==0)
 			{
 				gCtx.data.load();
 			}
-			else if (strcmp_P(cmd, (const char*)F("setverbosity"))==0)
+			else if (strcasecmp_P(cmd.cmd, (const char*)F("setverbosity"))==0)
 			{
 				char name[30];
 				int verbosity;
 				constexpr int minVerbosity = static_cast<int>(LogVerbosity::Fatal);
 				constexpr int maxVerbosity = static_cast<int>(LogVerbosity::Verbose);
-				if (parseCommand(name, verbosity))
+				if (cmd.parseParams(name, verbosity))
 				{
 					if(LogCategoryBase* category = LogCategoryBase::find(name))
 					{
@@ -541,17 +521,17 @@ void loop()
 					}
 				}
 			}
-			else if (strcmp_P(cmd, (const char*)F("delay"))==0) // Blocks for X ms. Good to simulate a freeze to test the watchdog
+			else if (strcasecmp_P(cmd.cmd, (const char*)F("delay"))==0) // Blocks for X ms. Good to simulate a freeze to test the watchdog
 			{
 				int ms;
-				if (parseCommand(ms))
+				if (cmd.parseParams(ms))
 				{
 					CZ_LOG(logDefault, Log, "Delay(%d)", ms);
 					delay(ms);
 				}
 			}
 			#if WIFI_ENABLED
-			else if (strcmp_P(cmd, (const char*)F("logcachedmqttvalues"))==0)
+			else if (strcasecmp_P(cmd.cmd, (const char*)F("logcachedmqttvalues"))==0)
 			{
 				gAdafruitIOManager.logCache();
 			}
@@ -567,7 +547,6 @@ void loop()
 
 	{
 		unsigned long ms = static_cast<unsigned long>(countdown * 1000);
-		CZ_LOG(logDefault, Verbose, F("delay(%lu)"), ms);
 		delay(ms);
 	}
 

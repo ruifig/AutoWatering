@@ -22,7 +22,7 @@ class TemperatureAndHumiditySensor : public Component
 	//
 	// Component interface
 	//
-	virtual const char* getName() const override { return "TemperatureAndHumidity sensor"; }
+	virtual const char* getName() const override { return "TemperatureAndHumiditySensor"; }
 	virtual bool initImpl() override;
 	virtual float tick(float deltaSeconds) override;
 	virtual void onEvent(const Event& evt) override;

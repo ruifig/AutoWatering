@@ -149,6 +149,24 @@ void GroupMonitor::onEvent(const Event& evt)
 		break;
 	}
 }
+
+bool GroupMonitor::processCommand(Command& cmd)
+{
+	if (cmd.is("motoroff"))
+	{
+		turnMotorOff();
+		return true;
+	}
+	else if (cmd.is("motoron"))
+	{
+		doShot();
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
 	
 } // namespace cz
 

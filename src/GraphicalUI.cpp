@@ -669,7 +669,7 @@ float GraphicalUI::tick(float deltaSeconds)
 	//CZ_LOG(logDefault, Log, F("GraphicalUI::%s: state=%s, timeInState = %d"), __FUNCTION__, ms_stateNames[(int)m_state], (int)m_timeInState);
 	m_state->tick(deltaSeconds);
 
-	return 1.0f / 30.0f;
+	return m_touch.sleeping ? 1.0f : 1.0f / 30.0f;
 }
 
 void GraphicalUI::updateTouch(float deltaSeconds)
@@ -712,7 +712,7 @@ void GraphicalUI::updateTouch(float deltaSeconds)
 			m_touch.secondsSinceLastTouch += deltaSeconds;
 			if ((SCREEN_OFF_TIMEOUT!=0) && (m_touch.secondsSinceLastTouch > SCREEN_OFF_TIMEOUT))
 			{
-				CZ_LOG(logDefault, Log, F("Starting sleep"));
+				CZ_LOG(logDefault, Log, F("Turning off screen"));
 				m_touch.sleeping = true;
 				m_touch.currentBrightness = SCREEN_DEFAULT_BRIGHTNESS;
 			}
