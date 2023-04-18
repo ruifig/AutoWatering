@@ -63,6 +63,17 @@
  */
 #define WATCHDOG_ENABLED 1
 
+
+/**
+ * If set to 1, it will enable battery life readings
+ */
+#define BATTERY_LIFE_ENABLED 1
+
+/**
+ * If set to 1, it will enable temperature and humidity sensor readings
+*/
+#define TEMPERATURE_AND_HUMIDITY_SENSOR_ENABLED 1
+
 /**
  * How many bits to set the ADC readings to.
  * E.g: The RP2040 has a 12-bit ADC

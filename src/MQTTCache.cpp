@@ -192,8 +192,6 @@ void MQTTCache::begin(const MQTTCache::Options& options, MQTTCache::Listener* li
 	m_mqtt.client = std::make_unique<MqttClient>(
 		mqttOptions, *m_mqtt.logger, *m_mqtt.system, *m_mqtt.network,
 		*m_mqtt.sendBuffer, *m_mqtt.recvBuffer, *m_mqtt.messageHandlers);
-
-	connectToMqttBroker();
 }
 
 MQTTCache::Entry* MQTTCache::find(const char* topic, bool create, int* index)

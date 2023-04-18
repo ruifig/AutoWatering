@@ -22,4 +22,8 @@ void BatteryLife::onEvent(const Event& evt)
 {
 }
 
+#if BATTERY_LIFE_ENABLED
+BatteryLife gBatteryLife;
+#endif
+
 }

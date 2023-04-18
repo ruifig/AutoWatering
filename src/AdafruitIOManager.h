@@ -20,11 +20,15 @@ class AdafruitIOManager : public Component, public MQTTCache::Listener
 	AdafruitIOManager();
 	~AdafruitIOManager();
 
-	void begin();
-
 	void logCache() const;
 
   private:
+
+	//
+	// Component interface
+	//
+	virtual const char* getName() const override { return "AdafruitIOManager"; }
+	virtual bool initImpl() override;
 	virtual float tick(float deltaSeconds) override;
 	virtual void onEvent(const Event& evt) override;
 
@@ -37,7 +41,6 @@ class AdafruitIOManager : public Component, public MQTTCache::Listener
 	void printWifiStatus();
 	bool connectToWifi(bool systemRestOnFail);
 	bool isWiFiConnected();
-	void printSeparationLine();
 
 	//
 	// @param ignoreCached
@@ -95,6 +98,10 @@ class AdafruitIOManager : public Component, public MQTTCache::Listener
 	MQTTCache m_cache;
 	static AdafruitIOManager* ms_instance;
 };
+
+#if WIFI_ENABLED
+extern AdafruitIOManager gAdafruitIOManager;
+#endif
 
 } // namespace cz
 

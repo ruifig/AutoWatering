@@ -6,6 +6,7 @@
 #include "crazygaze/micromuc/StringUtils.h"
 #include <Arduino.h>
 #include <algorithm>
+#include <crazygaze/micromuc/StringUtils.h>
 
 namespace cz
 {
@@ -28,9 +29,15 @@ RealSoilMoistureSensor::RealSoilMoistureSensor(uint8_t index, IOExpanderPinInsta
 {
 }
 
-void RealSoilMoistureSensor::begin()
+const char* RealSoilMoistureSensor::getName() const
+{
+	return formatString("SoilMoistureSensor%d", m_index);
+}
+
+bool RealSoilMoistureSensor::initImpl()
 {
 	onEnterState();
+	return true;
 }
 
 void RealSoilMoistureSensor::tryEnterReadingState()
@@ -227,13 +234,17 @@ void RealSoilMoistureSensor::onEnterState()
 // MockSoilMoistureSensor
 //////////////////////////////////////////////////////////////////////////
 
-void MockSoilMoistureSensor::begin()
+bool MockSoilMoistureSensor::initImpl()
 {
-	RealSoilMoistureSensor::begin();
+	if (!RealSoilMoistureSensor::initImpl())
+	{
+		return false;
+	}
 
 	m_mock.dryValue = random(540,590);
 	m_mock.waterValue = random(160, 210);
 	m_mock.targetValue = m_mock.currentValue = random(m_mock.waterValue, m_mock.dryValue);
+	return true;
 }
 
 float MockSoilMoistureSensor::tick(float deltaSeconds)

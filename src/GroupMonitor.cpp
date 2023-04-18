@@ -1,5 +1,6 @@
 #include "GroupMonitor.h"
 #include "Context.h"
+#include <crazygaze/micromuc/StringUtils.h>
 
 namespace cz
 {
@@ -14,10 +15,16 @@ GroupMonitor::GroupMonitor(uint8_t index, IOExpanderPinInstance motorPin)
 {
 }
 
-void GroupMonitor::begin()
+const char* GroupMonitor::getName() const
+{
+	return formatString("GroupMonitor%d", m_index);
+}
+
+bool GroupMonitor::initImpl()
 {
 	m_motorPin.pinMode(OUTPUT);
 	m_motorPin.digitalWrite(LOW);
+	return true;
 }
 
 void GroupMonitor::doShot()

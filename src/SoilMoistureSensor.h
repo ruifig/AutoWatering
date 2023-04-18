@@ -35,11 +35,16 @@ class RealSoilMoistureSensor : public Component
 	RealSoilMoistureSensor(const RealSoilMoistureSensor&) = delete;
 	const RealSoilMoistureSensor& operator=(const RealSoilMoistureSensor&) = delete;
 
-	virtual void begin();
+  protected:
+
+	//
+	// Component interface
+	//
+	virtual const char* getName() const override;
+	virtual bool initImpl() override;
 	virtual float tick(float deltaSeconds) override;
 	virtual void onEvent(const Event& evt) override;
 
-  protected:
 	enum class State : uint8_t
 	{
 		Initializing,
@@ -79,7 +84,10 @@ class MockSoilMoistureSensor : public RealSoilMoistureSensor
 public:
 	using RealSoilMoistureSensor::RealSoilMoistureSensor;
 
-	virtual void begin() override;
+	//
+	// Component interface
+	//
+	virtual bool initImpl() override;
 	virtual float tick(float deltaSeconds) override;
 	virtual void onEvent(const Event& evt) override;
 

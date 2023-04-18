@@ -10,10 +10,16 @@ class Watchdog : public Component
 public:
 	Watchdog();
 	virtual ~Watchdog();
+	void heartbeat();
 
+private:
+	virtual const char* getName() const override { return "RP2040 Hardware Watchdog"; }
+	virtual bool initImpl() override;
 	virtual float tick(float deltaSeconds) override;
 	virtual void onEvent(const Event& evt) override;
-private:
+
+	void start();
+
 	bool m_started = false;
 };
 

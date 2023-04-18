@@ -17,15 +17,15 @@ class TemperatureAndHumiditySensor : public Component
   public:
 	TemperatureAndHumiditySensor();
 
-	void begin();
+  private:
 
 	//
 	// Component interface
 	//
+	virtual const char* getName() const override { return "TemperatureAndHumidity sensor"; }
+	virtual bool initImpl() override;
 	virtual float tick(float deltaSeconds) override;
 	virtual void onEvent(const Event& evt) override;
-
-  private:
 
 	enum class State : uint8_t
 	{

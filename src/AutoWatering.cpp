@@ -5,11 +5,9 @@
 #endif
 
 #include "Context.h"
-#include "TemperatureAndHumiditySensor.h"
 #include "SoilMoistureSensor.h"
 #include "GroupMonitor.h"
-#include "BatteryLife.h"
-#include "DisplayTFT.h"
+#include "GraphicalUI.h"
 #include "AdafruitIOManager.h"
 #include "Timer.h"
 #include "crazygaze/micromuc/Logging.h"
@@ -70,8 +68,6 @@ void MySemaphoreGive(bool& sem, const char* file, int line)
 	--gSem.counter;
 	sem = false;
 }
-
-TemperatureAndHumiditySensor gTempAndHumiditySensor;
 
 #define SOILMOISTURE_TICKER(index, boardIndex, POWER_PIN, MUXPIN) \
 	 {index, IOExpanderPinInstance(gCtx.m_i2cBoards[boardIndex].ioExpander, POWER_PIN), MuxPinInstance(gCtx.m_i2cBoards[boardIndex].mux, MUXPIN)}
@@ -168,12 +164,6 @@ GroupMonitor gGroupMonitors[MAX_NUM_PAIRS] =
 #endif
 };
 
-BatteryLife gBatteryLife;
-
-#if WIFI_ENABLED
-AdafruitIOManager gAdafruitIOManager;
-#endif
-
 namespace cz
 {
 	MyDisplay1 gScreen;
@@ -222,8 +212,6 @@ namespace
 	cz::SerialStringReader<> gSerialStringReader;
 #endif
 }
-
-DisplayTFT gDisplay;
 
 void doGroupShot(uint8_t index)
 {
@@ -300,23 +288,8 @@ void setup()
 	}
 
 	gCtx.begin();
-	gDisplay.begin();
-
-	gTempAndHumiditySensor.begin();
-
-	for(auto&& ticker : gSoilMoistureSensors)
-	{
-		ticker.begin();
-	}
-
-	for(auto&& ticker : gGroupMonitors)
-	{
-		ticker.begin();
-	}
-
 	gTimer.begin();
-
-	gAdafruitIOManager.begin();
+	Component::initAll();
 
 	CZ_LOG(logDefault, Log, "Finished setup()");
 }
@@ -378,7 +351,7 @@ void loop()
 				int inc;
 				if (parseCommand(inc))
 				{
-					gDisplay.scrollSlots(inc);
+					gGraphicalUI.scrollSlots(inc);
 				}
 			}
 			else if (strcmp_P(cmd, (const char*)F("motoroff"))==0)

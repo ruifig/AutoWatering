@@ -13,22 +13,26 @@
 namespace cz
 {
 
-class DisplayTFT : public Component
+class GraphicalUI : public Component
 {
   public:
-	DisplayTFT();
+	GraphicalUI();
 	
 	// Disable copying
-	DisplayTFT(const DisplayTFT&) = delete;
-	DisplayTFT& operator=(const DisplayTFT&) = delete;
-
-	void begin();
-	virtual float tick(float deltaSeconds) override;
-	virtual void onEvent(const Event& evt) override;
+	GraphicalUI(const GraphicalUI&) = delete;
+	GraphicalUI& operator=(const GraphicalUI&) = delete;
 
 	void scrollSlots(int inc);
 
   private:
+
+	//
+	// Component interface
+	//
+	virtual const char* getName() const override { return "GraphicalUI"; }
+	virtual bool initImpl() override;
+	virtual float tick(float deltaSeconds) override;
+	virtual void onEvent(const Event& evt) override;
 
 	//
 	// DisplayState
@@ -36,7 +40,7 @@ class DisplayTFT : public Component
 	class DisplayState
 	{
 	public:
-		DisplayState(DisplayTFT& outer) : m_outer(outer) {}
+		DisplayState(GraphicalUI& outer) : m_outer(outer) {}
 		virtual ~DisplayState() {}
 	#if CZ_LOG_ENABLED
 		virtual const char* getName() const = 0;
@@ -47,7 +51,7 @@ class DisplayTFT : public Component
 		virtual void onLeave() = 0;
 		virtual void onEvent(const Event& evt) {}
 	protected:
-		DisplayTFT& m_outer;
+		GraphicalUI& m_outer;
 	};
 
 	//
@@ -109,7 +113,7 @@ class DisplayTFT : public Component
 	class OverviewState : public DisplayState
 	{
 	public:
-		OverviewState(DisplayTFT& outer);
+		OverviewState(GraphicalUI& outer);
 	#if CZ_LOG_ENABLED
 		virtual const char* getName() const { return "Overview"; }
 	#endif
@@ -149,7 +153,7 @@ class DisplayTFT : public Component
 
 	struct States
 	{
-		States(DisplayTFT& outer)
+		States(GraphicalUI& outer)
 			: initialize(outer)
 			, intro(outer)
 			, bootMenu(outer)
@@ -185,7 +189,8 @@ class DisplayTFT : public Component
 
 	void updateTouch(float deltaSeconds);
 };
-	
+
+extern GraphicalUI gGraphicalUI;
 	
 } // namespace cz
 

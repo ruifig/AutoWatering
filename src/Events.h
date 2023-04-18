@@ -23,7 +23,8 @@ struct Event
 		GroupOnOff,
 		GroupSelected,
 		Motor,
-		
+		Wifi,
+
 		// Only used for mocking components
 		SetMockSensorValue,
 		SetMockSensorErrorStatus
@@ -212,6 +213,22 @@ struct MotorEvent : public Event
 	
 	uint8_t index;
 	bool started;
+};
+
+struct WifiEvent : public Event
+{
+	explicit WifiEvent(bool connected)
+		: Event(Event::Wifi)
+		, connected(connected)
+	{
+	}
+
+	virtual void log() const override
+	{
+		CZ_LOG(logEvents, Log, F("WifiEvent(%s)"), connected ? "true" : "false");
+	}
+	
+	bool connected;
 };
 
 struct SetMockSensorValueEvent : public Event

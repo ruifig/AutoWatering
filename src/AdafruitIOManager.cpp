@@ -70,12 +70,13 @@ AdafruitIOManager::~AdafruitIOManager()
 	ms_instance = nullptr;;
 }
 
-void AdafruitIOManager::begin()
+bool AdafruitIOManager::initImpl()
 {
 	m_multi.addAP(WIFI_SSID, WIFI_PASSWORD);
 
 	MQTTCache::Options options;
 	m_cache.begin(options, this);
+	return true;
 }
 
 float AdafruitIOManager::tick(float deltaSeconds)
@@ -173,16 +174,17 @@ bool AdafruitIOManager::connectToWifi(bool systemResetOnFail)
 		{
 			//CZ_LOG(logMQTT, Log, "Wifi connected. IP %s", m_wifiClient.localIP().toString().c_str());
 			printWifiStatus();
-			return true;
+			break;
 		}
 
 		if (numTries > MAX_NUM_WIFI_CONNECT_TRIES_PER_LOOP)
 		{
+			Component::raiseEvent(WifiEvent(false));
 			// Restart for Portenta as something is very wrong
 			CZ_LOG(logMQTT, Error, "Can't connect to any WiFi. Resetting");
 			cz::LogOutput::flush();
-			delay(3000);
-			NVIC_SystemReset();
+			delay(1000);
+			rp2040.reboot();
 			return false;
 		}
 		else
@@ -191,6 +193,7 @@ bool AdafruitIOManager::connectToWifi(bool systemResetOnFail)
 		}
 	}
 
+	Component::raiseEvent(WifiEvent(true));
 	return true;
 }
 
@@ -209,14 +212,13 @@ bool AdafruitIOManager::isWiFiConnected()
 	return false;
 }
 
-void AdafruitIOManager::printSeparationLine()
-{
-	CZ_LOG(logMQTT, Log, "************************************************");
-}
-
 void AdafruitIOManager::logCache() const
 {
 	m_cache.logState();
 }
+
+#if WIFI_ENABLED
+AdafruitIOManager gAdafruitIOManager;
+#endif
 
 } // namespace cz
