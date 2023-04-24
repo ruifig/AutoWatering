@@ -63,45 +63,6 @@ bool CommandConsole::processCommand(const Command& cmd)
 		       rp2040.getFreeHeap());
 		return true;
 	}
-	else if (cmd.is("setmuxenabled"))
-	{
-		int boardIdx;
-		bool enabled;
-		if (cmd.parseParams(boardIdx, enabled))
-		{
-			if (boardIdx >= 0 && boardIdx < MAX_NUM_I2C_BOARDS)
-			{
-				gCtx.m_i2cBoards[boardIdx].mux.setEnabled(enabled);
-				return true;
-			}
-			else
-			{
-				CZ_LOG(logDefault, Error, F("Invalid board index (%d)"), boardIdx);
-			}
-		}
-	}
-	else if (cmd.is("setmuxchannel"))
-	{
-		int boardIdx;
-		int muxpin;
-		if (cmd.parseParams(boardIdx, muxpin))
-		{
-			if (boardIdx < 0 && boardIdx >= MAX_NUM_I2C_BOARDS)
-			{
-				CZ_LOG(logDefault, Error, F("Invalid board index (%d)"), boardIdx);
-				return false;
-			}
-
-			if (muxpin < 0 || muxpin >= 8)
-			{
-				CZ_LOG(logDefault, Error, F("Invalid mux channel (%d)"), muxpin);
-				return false;
-			}
-
-			gCtx.m_i2cBoards[boardIdx].mux.setChannel(MultiplexerPin(muxpin));
-			return true;
-		}
-	}
 	else if (cmd.is("setgroupthreshold"))
 	{
 		int idx, value;
