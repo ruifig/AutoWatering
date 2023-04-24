@@ -13,3 +13,7 @@
 /atmelstudio_lib/ArduinoCore/Development/
 *.componentinfo.xml
 
+
+src/Config/MySecrets.h
+compile_commands.json
+

@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 #include <assert.h>
-#include "Config.h"
+#include "Config/Config.h"
 #include "Component.h"
 #include <Adafruit_HTU21DF.h>
 
@@ -17,15 +17,15 @@ class TemperatureAndHumiditySensor : public Component
   public:
 	TemperatureAndHumiditySensor();
 
-	void begin();
+  private:
 
 	//
 	// Component interface
 	//
+	virtual const char* getName() const override { return "TemperatureAndHumiditySensor"; }
+	virtual bool initImpl() override;
 	virtual float tick(float deltaSeconds) override;
 	virtual void onEvent(const Event& evt) override;
-
-  private:
 
 	enum class State : uint8_t
 	{

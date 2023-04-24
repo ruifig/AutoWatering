@@ -5,13 +5,6 @@
 #include <Arduino.h>
 #include <type_traits>
 
-
-auto test()
-{
-	std::chrono::seconds secs;
-	return secs;
-}
-
 namespace cz
 {
 
@@ -521,14 +514,28 @@ GroupData& ProgramData::getGroupData(uint8_t index)
 
 void ProgramData::setTemperatureReading(float temperatureC)
 {
-	m_temperature = temperatureC;
-	Component::raiseEvent(TemperatureSensorReadingEvent(m_temperature));
+	// Temperature is rounded to XXX.X , so we can ignore repeated readings with the same value and thus
+	// not raise events when nothing changed
+	temperatureC = static_cast<int>(temperatureC * 10) / 10.0f;
+
+	if (!cz::isNearlyEqual(m_temperature, temperatureC))
+	{
+		m_temperature = temperatureC;
+		Component::raiseEvent(TemperatureSensorReadingEvent(m_temperature));
+	}
 }
 
 void ProgramData::setHumidityReading(float humidity)
 {
-	m_humidity = humidity;
-	Component::raiseEvent(HumiditySensorReadingEvent(m_humidity));
+	// Humidity is rounded to XXX.X , so we can ignore repeated readings with the same value and thus
+	// not raise events when nothing changed
+	humidity = static_cast<int>(humidity*10) / 10.0f;
+
+	if (!cz::isNearlyEqual(m_humidity, humidity))
+	{
+		m_humidity = humidity;
+		Component::raiseEvent(HumiditySensorReadingEvent(m_humidity));
+	}
 }
 
 void ProgramData::save() const

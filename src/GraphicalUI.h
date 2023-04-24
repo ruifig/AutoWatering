@@ -1,10 +1,10 @@
 #pragma once
 
+#include "Config/Config.h"
 #include "Component.h"
-#include "Config.h"
 #include "GroupGraph.h"
 #include "gfx/MyDisplay1.h"
-#include "gfx/MyXPT2046.h"
+#include "crazygaze/TouchController/XPT2046.h"
 
 #include "SettingsMenu.h"
 #include "MainMenu.h"
@@ -13,22 +13,27 @@
 namespace cz
 {
 
-class DisplayTFT : public Component
+class GraphicalUI : public Component
 {
   public:
-	DisplayTFT();
+	GraphicalUI();
 	
 	// Disable copying
-	DisplayTFT(const DisplayTFT&) = delete;
-	DisplayTFT& operator=(const DisplayTFT&) = delete;
-
-	void begin();
-	virtual float tick(float deltaSeconds) override;
-	virtual void onEvent(const Event& evt) override;
+	GraphicalUI(const GraphicalUI&) = delete;
+	GraphicalUI& operator=(const GraphicalUI&) = delete;
 
 	void scrollSlots(int inc);
 
   private:
+
+	//
+	// Component interface
+	//
+	virtual const char* getName() const override { return "GraphicalUI"; }
+	virtual bool initImpl() override;
+	virtual float tick(float deltaSeconds) override;
+	virtual void onEvent(const Event& evt) override;
+	virtual bool processCommand(const Command& cmd) override;
 
 	//
 	// DisplayState
@@ -36,7 +41,7 @@ class DisplayTFT : public Component
 	class DisplayState
 	{
 	public:
-		DisplayState(DisplayTFT& outer) : m_outer(outer) {}
+		DisplayState(GraphicalUI& outer) : m_outer(outer) {}
 		virtual ~DisplayState() {}
 	#if CZ_LOG_ENABLED
 		virtual const char* getName() const = 0;
@@ -47,7 +52,7 @@ class DisplayTFT : public Component
 		virtual void onLeave() = 0;
 		virtual void onEvent(const Event& evt) {}
 	protected:
-		DisplayTFT& m_outer;
+		GraphicalUI& m_outer;
 	};
 
 	//
@@ -109,7 +114,7 @@ class DisplayTFT : public Component
 	class OverviewState : public DisplayState
 	{
 	public:
-		OverviewState(DisplayTFT& outer);
+		OverviewState(GraphicalUI& outer);
 	#if CZ_LOG_ENABLED
 		virtual const char* getName() const { return "Overview"; }
 	#endif
@@ -149,7 +154,7 @@ class DisplayTFT : public Component
 
 	struct States
 	{
-		States(DisplayTFT& outer)
+		States(GraphicalUI& outer)
 			: initialize(outer)
 			, intro(outer)
 			, bootMenu(outer)
@@ -169,11 +174,10 @@ class DisplayTFT : public Component
 
 	struct
 	{
+		// A touch&release happened, and we should process it
 		bool pressed = false;
-		Pos pos;
-		// A "press" condition requires us to touch and untouch the screen, so we need to hold the previous value
-		// to compare against in the next tick
-		TouchPoint tmp;
+		Pos pos; // Position to process as clicked
+
 		// This is set to true when we want to sleep and we set turn off the screen backlight.
 		// When a touch is process, if this is true, that one touch will be ignored, and we wake up/turn on the backlight
 		bool sleeping = false;
@@ -186,10 +190,8 @@ class DisplayTFT : public Component
 
 	void updateTouch(float deltaSeconds);
 };
-	
+
+extern GraphicalUI gGraphicalUI;
 	
 } // namespace cz
-
-
-
 

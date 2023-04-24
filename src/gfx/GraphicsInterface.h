@@ -2,9 +2,9 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wignored-qualifiers"
-	#include "Adafruit_GFX.h"
 #pragma GCC diagnostic pop
 
+#include "TFT_eSPI.h"
 #include "Colour.h"
 #include "GFXUtils.h"
 
@@ -15,8 +15,8 @@ class GraphicsInterface
 {
   public:
 
-	virtual int16_t height() const = 0;
-	virtual int16_t width() const = 0;
+	virtual int16_t height() = 0;
+	virtual int16_t width() = 0;
 
 	virtual void writePixel(int16_t x, int16_t y, Colour color) = 0;
 	virtual void startWrite() = 0;
@@ -80,13 +80,6 @@ class GraphicsInterface
 	 * @param  s  Desired text size. 1 is default 6x8, 2 is 12x16, 3 is 18x24, etc
 	 */
 	virtual void setTextSize(uint8_t s) = 0;
-
-	/**
-	 * @brief   Set text 'magnification' size. Each increase in s makes 1 pixel that much bigger.
-	 * @param  s_x  Desired text width magnification level in X-axis. 1 is default
-	 * @param  s_y  Desired text width magnification level in Y-axis. 1 is default
-	 */
-	virtual void setTextSize(uint8_t s_x, uint8_t s_y) = 0;
 
 	/**
 	 * \param font Font to use, or NULL to use built in font

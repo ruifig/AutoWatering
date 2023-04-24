@@ -1,6 +1,7 @@
 
 #include <USB/PluggableUSBDevice.h>
 
+#if 0
 //
 // To fix "undefined reference to vtable for X" when building Arduino Core
 // See https://gcc.gnu.org/wiki/VerboseDiagnostics#undefined_reference_to_vtable_for_X
@@ -18,3 +19,4 @@ namespace arduino
 		const uint8_t* PluggableUSBModule::string_iinterface_desc() { return nullptr; }
 	}
 }
+#endif

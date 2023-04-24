@@ -1,4 +1,4 @@
-#include "DisplayTFT.h"
+#include "GraphicalUI.h"
 #include "Context.h"
 #include "crazygaze/micromuc/Logging.h"
 #include "crazygaze/micromuc/StringUtils.h"
@@ -20,7 +20,7 @@ namespace cz
 {
 
 extern MyDisplay1 gScreen;
-extern MyXPT2046 gTs;
+extern XPT2046 gTs;
 extern Timer gTimer;
 
 using namespace gfx;
@@ -29,17 +29,17 @@ using namespace gfx;
 // InitializeState
 //////////////////////////////////////////////////////////////////////////
 
-void DisplayTFT::InitializeState::tick(float deltaSeconds)
+void GraphicalUI::InitializeState::tick(float deltaSeconds)
 {
 	m_outer.changeToState(m_outer.m_states.intro);
 }
 
-void DisplayTFT::InitializeState::onEnter()
+void GraphicalUI::InitializeState::onEnter()
 {
 	gScreen.fillScreen(Colour_Black);
 }
 
-void DisplayTFT::InitializeState::onLeave()
+void GraphicalUI::InitializeState::onLeave()
 {
 }
 
@@ -94,7 +94,7 @@ const StaticLabelData introLabel3_P PROGMEM =
 } } // namespace Intro
 
 
-void DisplayTFT::IntroState::tick(float deltaSeconds)
+void GraphicalUI::IntroState::tick(float deltaSeconds)
 {
 	if (m_outer.m_timeInState >= INTRO_DURATION)
 	{
@@ -102,14 +102,14 @@ void DisplayTFT::IntroState::tick(float deltaSeconds)
 	}
 }
 
-void DisplayTFT::IntroState::onEnter()
+void GraphicalUI::IntroState::onEnter()
 {
 	StaticLabel(&Intro::introLabel1_P).draw();
 	StaticLabel(&Intro::introLabel2_P).draw();
 	StaticLabel(&Intro::introLabel3_P).draw();
 }
 
-void DisplayTFT::IntroState::onLeave()
+void GraphicalUI::IntroState::onLeave()
 {
 }
 
@@ -133,11 +133,11 @@ namespace { namespace BootMenu {
 
 } }
 
-void DisplayTFT::BootMenuState::init()
+void GraphicalUI::BootMenuState::init()
 {
 }
 
-void DisplayTFT::BootMenuState::tick(float deltaSeconds)
+void GraphicalUI::BootMenuState::tick(float deltaSeconds)
 {
 	m_defaultConfigCountdown -= deltaSeconds;
 
@@ -200,7 +200,7 @@ void DisplayTFT::BootMenuState::tick(float deltaSeconds)
 
 }
 
-void DisplayTFT::BootMenuState::onEnter()
+void GraphicalUI::BootMenuState::onEnter()
 {
 	gScreen.setTextColor(Colour_Yellow, Colour_Black);
 	printAligned(
@@ -219,7 +219,7 @@ void DisplayTFT::BootMenuState::onEnter()
 
 }
 
-void DisplayTFT::BootMenuState::onLeave()
+void GraphicalUI::BootMenuState::onLeave()
 {
 }
 
@@ -290,9 +290,10 @@ NumLabel<true> sensorLabels[VISIBLE_NUM_PAIRS][3] =
 #endif
 };
 
+
 const LabelData humidityLabelData PROGMEM = \
 { \
-	LayoutHelper::getStatusBarCells(STATUS_BAR_DIVISIONS-4, 4), \
+	LayoutHelper::getStatusBarCells(STATUS_BAR_DIVISIONS-3, 3), \
 	HAlign::Center, VAlign::Center, \
 	SMALL_FONT, \
 	HUMIDITY_LABEL_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
@@ -304,7 +305,7 @@ FixedLabel<> humidityLabel(&humidityLabelData, F("---.-%"));
 
 const LabelData temperatureLabelData PROGMEM = \
 { \
-	LayoutHelper::getStatusBarCells(STATUS_BAR_DIVISIONS-8, 4), \
+	LayoutHelper::getStatusBarCells(STATUS_BAR_DIVISIONS-6, 3), \
 	HAlign::Center, VAlign::Center, \
 	SMALL_FONT, \
 	TEMPERATURE_LABEL_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
@@ -315,7 +316,7 @@ FixedLabel<> temperatureLabel(&temperatureLabelData, F("---.-C"));
 
 const LabelData runningTimeLabelData PROGMEM = \
 { \
-	LayoutHelper::getStatusBarCells(STATUS_BAR_DIVISIONS-16, 8), \
+	LayoutHelper::getStatusBarCells(STATUS_BAR_DIVISIONS-14, 8), \
 	HAlign::Center, VAlign::Center, \
 	SMALL_FONT, \
 	RUNNINGTIME_LABEL_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
@@ -324,14 +325,25 @@ const LabelData runningTimeLabelData PROGMEM = \
 
 FixedLabel<14> runningTimeLabel(&runningTimeLabelData, F("---d--h--m--s"));
 
+const LabelData batteryLabelData PROGMEM = \
+{ \
+	LayoutHelper::getStatusBarCells(0, 6), \
+	HAlign::Center, VAlign::Center, \
+	SMALL_FONT, \
+	BATTERYLEVEL_LABEL_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
+	WidgetFlag::EraseBkg | WidgetFlag::DrawBorder \
+};
+
+FixedLabel<12> batteryLabel(&batteryLabelData, F("---% -.---v"));
+
 } } // namespace Overview
 
-DisplayTFT::OverviewState::OverviewState(DisplayTFT& outer)
+GraphicalUI::OverviewState::OverviewState(GraphicalUI& outer)
 	: DisplayState(outer)
 {
 }
 
-void DisplayTFT::OverviewState::init()
+void GraphicalUI::OverviewState::init()
 {
 	m_topSlotPairIndex = 0;
 	scrollSlots(0);
@@ -341,7 +353,7 @@ void DisplayTFT::OverviewState::init()
 	m_shotConfirmationMenu.init();
 }
 
-void DisplayTFT::OverviewState::tick(float deltaSeconds)
+void GraphicalUI::OverviewState::tick(float deltaSeconds)
 {
 	// process touch
 	if (m_outer.m_touch.pressed)
@@ -425,7 +437,7 @@ void DisplayTFT::OverviewState::tick(float deltaSeconds)
 	draw();
 }
 
-DisplayTFT::OverviewState::Group* DisplayTFT::OverviewState::tryGetGroupByPairIndex(int8_t pairIndex)
+GraphicalUI::OverviewState::Group* GraphicalUI::OverviewState::tryGetGroupByPairIndex(int8_t pairIndex)
 {
 	int8_t screenSlot = pairIndex - m_topSlotPairIndex;
 	if (screenSlot>=0 && screenSlot<VISIBLE_NUM_PAIRS)
@@ -438,14 +450,14 @@ DisplayTFT::OverviewState::Group* DisplayTFT::OverviewState::tryGetGroupByPairIn
 	}
 }
 
-DisplayTFT::OverviewState::Group& DisplayTFT::OverviewState::getGroupByPairIndex(int8_t pairIndex)
+GraphicalUI::OverviewState::Group& GraphicalUI::OverviewState::getGroupByPairIndex(int8_t pairIndex)
 {
 	Group* g = tryGetGroupByPairIndex(pairIndex);
 	CZ_ASSERT(g!=nullptr);
 	return *g;
 }
 
-void DisplayTFT::OverviewState::drawGroupNumbers()
+void GraphicalUI::OverviewState::drawGroupNumbers()
 {
 	gScreen.setTextColor(GRAPH_VALUES_TEXT_COLOUR, Colour_VeryDarkGrey);
 	gScreen.setFont(TINY_FONT);
@@ -464,7 +476,7 @@ void DisplayTFT::OverviewState::drawGroupNumbers()
 	}
 }
 
-void DisplayTFT::OverviewState::onEnter()
+void GraphicalUI::OverviewState::onEnter()
 {
 	m_forceRedraw = true;
 	m_currentMenu = &m_sensorMainMenu;
@@ -481,12 +493,12 @@ void DisplayTFT::OverviewState::onEnter()
 	drawGroupNumbers();
 }
 
-void DisplayTFT::OverviewState::onLeave()
+void GraphicalUI::OverviewState::onLeave()
 {
 }
 
 
-void DisplayTFT::OverviewState::scrollSlots(int inc)
+void GraphicalUI::OverviewState::scrollSlots(int inc)
 {
 	m_topSlotPairIndex = clamp(m_topSlotPairIndex+inc, 0, MAX_NUM_PAIRS - VISIBLE_NUM_PAIRS);
 
@@ -511,7 +523,7 @@ void DisplayTFT::OverviewState::scrollSlots(int inc)
 
 }
 
-void DisplayTFT::OverviewState::onEvent(const Event& evt)
+void GraphicalUI::OverviewState::onEvent(const Event& evt)
 {
 	m_currentMenu->onEvent(evt);
 	
@@ -569,13 +581,20 @@ void DisplayTFT::OverviewState::onEvent(const Event& evt)
 			Overview::humidityLabel.setText(formatString(F("%3.1f%%"), gCtx.data.getHumidityReading()));
 		break;
 
+		case Event::BatteryLifeReading:
+		{
+			const BatteryLifeReadingEvent& e = static_cast<const BatteryLifeReadingEvent&>(evt);
+			Overview::batteryLabel.setText(formatString(F("%d%% %1.3fv"), e.percentage, e.voltage));
+		}
+		break;
+
 		default:
 		break;
 	}
 	
 }
 
-void DisplayTFT::OverviewState::draw()
+void GraphicalUI::OverviewState::draw()
 {
 	PROFILE_SCOPE(F("OverviewState::draw"));
 
@@ -614,57 +633,57 @@ void DisplayTFT::OverviewState::draw()
 		Overview::temperatureLabel.draw(m_forceRedraw);
 		Overview::humidityLabel.draw(m_forceRedraw);
 		Overview::runningTimeLabel.draw(m_forceRedraw);
+		Overview::batteryLabel.draw(m_forceRedraw);
 	}
 
 	m_forceRedraw = false;
 }
 
 //////////////////////////////////////////////////////////////////////////
-// DisplayTFT
+// GraphicalUI
 //////////////////////////////////////////////////////////////////////////
 
-DisplayTFT::DisplayTFT()
+GraphicalUI::GraphicalUI()
 	: m_states(*this)
 {
 }
 
-void DisplayTFT::begin()
+bool GraphicalUI::initImpl()
 {
 	m_states.initialize.init();
 	m_states.intro.init();
 	m_states.bootMenu.init();
 	m_states.overview.init();
 	changeToState(m_states.initialize);
+	return true;
 }
 
-float DisplayTFT::tick(float deltaSeconds)
+float GraphicalUI::tick(float deltaSeconds)
 {
-	PROFILE_SCOPE(F("DisplayTFT::tick"));
+	PROFILE_SCOPE(F("GraphicalUI::tick"));
 
 	m_timeInState += deltaSeconds;
 
 	updateTouch(deltaSeconds);
 
-	//CZ_LOG(logDefault, Log, F("DisplayTFT::%s: state=%s, timeInState = %d"), __FUNCTION__, ms_stateNames[(int)m_state], (int)m_timeInState);
+	//CZ_LOG(logDefault, Log, F("GraphicalUI::%s: state=%s, timeInState = %d"), __FUNCTION__, ms_stateNames[(int)m_state], (int)m_timeInState);
 	m_state->tick(deltaSeconds);
 
-	return 1.0f / 30.0f;
+	return m_touch.sleeping ? 1.0f : 0.250f / 30.0f;
 }
 
-void DisplayTFT::updateTouch(float deltaSeconds)
+void GraphicalUI::updateTouch(float deltaSeconds)
 {
+	gTs.updateState();
+
+	TouchState touchState = gTs.getState();
+	m_touch.pressed = false;
 	TouchPoint p = gTs.getPoint();
 
-	if (p.z > TS_MIN_PRESSURE)
-	{
-		//CZ_LOG(logDefault, Log, F("Touch=(%3d,%3d,%3d)"), p.x, p.y, p.z);
-	}
-
-	m_touch.pressed = false;
-	// If we are not touching right now, but were in the previous call, that means we have a press event
-	if (p.z < TS_MIN_PRESSURE && m_touch.tmp.z >= TS_MIN_PRESSURE)
+	if (touchState == TouchState::Released)
 	{
 		m_touch.secondsSinceLastTouch = 0;
+		// If we are currently sleeping, we wake up the screen and ignore this Release
 		if (m_touch.sleeping)
 		{
 			CZ_LOG(logDefault, Log, F("Waking up"));
@@ -693,31 +712,44 @@ void DisplayTFT::updateTouch(float deltaSeconds)
 			m_touch.secondsSinceLastTouch += deltaSeconds;
 			if ((SCREEN_OFF_TIMEOUT!=0) && (m_touch.secondsSinceLastTouch > SCREEN_OFF_TIMEOUT))
 			{
-				CZ_LOG(logDefault, Log, F("Starting sleep"));
+				CZ_LOG(logDefault, Log, F("Turning off screen"));
 				m_touch.sleeping = true;
 				m_touch.currentBrightness = SCREEN_DEFAULT_BRIGHTNESS;
 			}
 		}
 	}
-
-	m_touch.tmp = p;
 }
 	
-void DisplayTFT::onEvent(const Event& evt)
+void GraphicalUI::onEvent(const Event& evt)
 {
 	m_state->onEvent(evt);	
 }
 
-void DisplayTFT::scrollSlots(int inc)
+bool GraphicalUI::processCommand(const Command& cmd)
+{
+	if (cmd.is("scroll"))
+	{
+		int inc;
+		if (cmd.parseParams(inc))
+		{
+			scrollSlots(inc);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void GraphicalUI::scrollSlots(int inc)
 {
 	m_states.overview.scrollSlots(inc);
 }
 
-void DisplayTFT::changeToState(DisplayState& newState)
+void GraphicalUI::changeToState(DisplayState& newState)
 {
 	// NOTE: We need to take into account m_state will not be yet set if we are starting up
 #if CZ_LOG_ENABLED
-	CZ_LOG(logDefault, Log, F("DisplayTFT::%s %ssec %s->%s")
+	CZ_LOG(logDefault, Log, F("GraphicalUI::%s %ssec %s->%s")
 		, __FUNCTION__
 		, *FloatToString(m_timeInState)
 		, m_state ? m_state->getName() : "NONE"
@@ -734,5 +766,7 @@ void DisplayTFT::changeToState(DisplayState& newState)
     m_timeInState = 0.0f;
 	m_state->onEnter();
 }
+
+GraphicalUI gGraphicalUI;
 
 } // namespace cz

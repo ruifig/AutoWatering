@@ -1,5 +1,5 @@
 #include "Button.h"
-#include "../Config.h"
+#include "../Config/Config.h"
 #include "MyDisplay1.h"
 
 namespace cz
@@ -157,8 +157,7 @@ void TextButton::init(uint8_t id, const GFXfont* font, const Rect& pos, Colour b
 	BaseButton::initHelper(id, pos, bkgColour);
 	m_outlineColour = outlineColour;
 	m_textColour = textColour;
-	m_textMagX = textMagnification;
-	m_textMagY = textMagnification;
+	m_textMag = textMagnification;
 	m_font = font;
 	strncpy(m_text, text, sizeof(m_text));
 	m_text[sizeof(m_text)-1] = 0;
@@ -188,7 +187,7 @@ void TextButton::draw(bool forceDraw)
 	gScreen.drawRoundRect(m_pos.x, m_pos.y, m_pos.width, m_pos.height, r, m_outlineColour);
 
 	// set the button's text size first, it 's used by getTextBounds()
-	gScreen.setTextSize(m_textMagX, m_textMagY);
+	gScreen.setTextSize(m_textMag);
 
 	gScreen.setFont(m_font);
 
@@ -205,8 +204,8 @@ void TextButton::draw(bool forceDraw)
 	else
 	{
 		// Default font
-		gScreen.setCursor(m_pos.x + (m_pos.width/2) - (strlen(m_text) * 3 * m_textMagX),
-		m_pos.y + (m_pos.height/2) - (4 * m_textMagY));
+		gScreen.setCursor(m_pos.x + (m_pos.width/2) - (strlen(m_text) * 3 * m_textMag),
+		m_pos.y + (m_pos.height/2) - (4 * m_textMag));
 	}
 	gScreen.setTextColor(textColour);
 	gScreen.print(m_text);

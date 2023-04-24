@@ -1,5 +1,8 @@
 #pragma once
 
+// Dummy so other headers can detect if Config.h was include first
+#define CONFIG_H
+
 #include <Arduino.h>
 #include "crazygaze/micromuc/czmicromuc.h"
 #include "utility/PinTypes.h"
@@ -14,12 +17,27 @@
 #endif
 
 /**
+ * If 1, it will consider we are using the Raspberry Pi Debug Probe, and setup logging to use Serial1
+ * If 0, it will use the default Serial object
+*/
+#define CZ_USE_PROBE_SERIAL 1
+
+#if CZ_USE_PROBE_SERIAL
+	#define MySerial Serial1
+	#define MySerial_RXPin 17
+	#define MySerial_TXPin 16
+#else
+	#define MySerial Serial
+#endif
+
+/**
  * What pin to as CS/SS for the SD card reader
  */
 //#define SD_CARD_SS_PIN 53
 
 /**
  * If 1, it will log to a file in the sd card
+ * WARNING: SD card logging is untested. It was working a long time ago when I was using an Arduino Mega 2560, but hasn't been tested for a very long time.
  */
 #if CZ_LOG_ENABLED
 	#define SD_CARD_LOGGING 0
@@ -27,30 +45,39 @@
 	#define SD_CARD_LOGGING 0
 #endif
 
-#ifndef CONSOLE_COMMANDS
-	#if CZ_DEBUG
-		#define CONSOLE_COMMANDS 1
-	#else
-		#define CONSOLE_COMMANDS 0
-	#endif
+#if CZ_DEBUG
+	#define COMMAND_CONSOLE_ENABLED 1
+#else
+	#define COMMAND_CONSOLE_ENABLED 1
 #endif
 
+/**
+ * Set this to 0 to disable Wifi or 1 to enable
+ * If set to 1, make sure you provide your network details. See Config/Secrets.h for more information
+ */
+#define WIFI_ENABLED 1
 
 /**
- * Display pins
+ * If set to 1, it will enable the RP2040 watchdog timer. See https://arduino-pico.readthedocs.io/en/latest/rp2040.html#hardware-watchdog
  */
-#define TFT_PIN_DC cz::MCUPin(9) // DC - Data/Command
-#define TFT_PIN_CS cz::MCUPin(10) // CS - Chip Select
-#define TFT_PIN_BACKLIGHT cz::MCUPin(4) // Backlight control. This needs to be PWM pin, so it can be used with analogWrite(...).
+#define WATCHDOG_ENABLED 1
+
 
 /**
- * Touch controller pins
+ * If set to 1, it will enable battery life readings
  */
-#define TOUCH_PIN_CS cz::MCUPin(2) // CS - Chip Select
-// Pin used to signal an interrupt when touching the screen.
-// This is not strictily necessary and can be left undefined, in which case the touch libray will use non-irq mod
-// IRQ mode is faster, because no SPI calls are made unless a touch was detected
-#define TOUCH_PIN_IRQ cz::MCUPin(3)
+#define BATTERY_LIFE_ENABLED 1
+
+/**
+ * If set to 1, it will enable temperature and humidity sensor readings
+*/
+#define TEMPERATURE_AND_HUMIDITY_SENSOR_ENABLED 1
+
+/**
+ * How many bits to set the ADC readings to.
+ * E.g: The RP2040 has a 12-bit ADC
+ */
+#define ADC_NUM_BITS 12
 
 /**
  * Note. Internally it adds 0x20, which is the base address
@@ -62,7 +89,13 @@
  * Also known as the multiplexer Z pin
  * This needs to be an analog capable pin (to use with analogRead(...)), so we can do sensor readings
  */
-#define MCU_TO_MUX_ZPIN cz::MCUPin(16)
+#define MCU_TO_MUX_ZPIN cz::MCUPin(28)
+
+
+/**
+ * What pin to use for battery voltage readings
+ */
+#define BATTERY_LIFE_PIN cz::MCUPin(26)
 
 /**
  * Pins of the IO expander to use to set the s0..s2 pins of the mux
@@ -181,9 +214,9 @@
 
 // Temperature/humidity sensor sampling interval in seconds.
 #if FASTER_ITERATION
-	#define TEMPSENSOR_DEFAULT_SAMPLINGINTERVAL 10.0f
-#else
 	#define TEMPSENSOR_DEFAULT_SAMPLINGINTERVAL 60.0f
+#else
+	#define TEMPSENSOR_DEFAULT_SAMPLINGINTERVAL 120.0f
 #endif
 
 /**
@@ -261,6 +294,7 @@
 #define HUMIDITY_LABEL_TEXT_COLOUR Colour_Cyan
 #define RUNNINGTIME_LABEL_TEXT_COLOUR Colour_Yellow
 
+#define BATTERYLEVEL_LABEL_TEXT_COLOUR Colour_White
 
 //
 // * Top line is used for the motor on/off info
@@ -277,3 +311,5 @@ static_assert(1<<GRAPH_POINT_NUM_BITS < GRAPH_HEIGHT, "Reduce number of bits, or
 // When a sensor is connected, but not getting power, it will consistently report very low values
 // Any value below this, and we consider that the sensor is not getting power
 #define MOISTURESENSOR_ACCEPTABLE_MIN_VALUE 100
+
+#include "Secrets.h"

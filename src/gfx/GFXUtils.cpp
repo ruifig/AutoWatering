@@ -90,46 +90,49 @@ void drawRGBBitmapDisabled_P(const Rect& area, const uint16_t *bitmap_P, const u
 template<typename T>
 void printAlignedImpl(const Rect& area, HAlign halign, VAlign valign, const T* txt, bool eraseBackground)
 {
-	gScreen.setTextSize(0,0);
-	Rect bounds;
-	gScreen.getTextBounds(txt, 0,0, &bounds.x, &bounds.y, &bounds.width, &bounds.height);
-
 	if (eraseBackground)
 	{
 		fillRect(area, gScreen.getTextBkgColor());
 	}
 
-	int x = area.x;
-	int y = area.y;
-	
-	switch(halign)
-	{
-	case HAlign::Left:
-		x = area.x - bounds.x/2;
-		break;
-	case HAlign::Center:
-		x = (area.x + area.width/2) - (bounds.width/2) - (bounds.x/2);
-		break;
-	case HAlign::Right:
-		x = area.x + area.width - bounds.width - bounds.x;
-		break;
-	}
-
+	Pos p;
+	int datum;
 	switch(valign)
 	{
-	case VAlign::Top:
-		y = area.y - bounds.y;
-		break;
-	case VAlign::Center:
-		y = (area.y + area.height/2) - (bounds.height/2) - bounds.y;
-		break;
-	case VAlign::Bottom:
-		y = area.y + area.height - (bounds.height + bounds.y);
-		break;
+		case VAlign::Top:
+			p.y = area.y;
+			datum = 0;
+			break;
+		case VAlign::Center:
+			p.y = area.y + area.height/2;
+			datum = 1;
+			break;
+		case VAlign::Bottom:
+			p.y = area.y + area.height-1;
+			datum = 2;
+			break;
 	}
 
-	gScreen.setCursor(x,y);
-	gScreen.print(txt);
+	datum *= 3;
+
+	switch(halign)
+	{
+		case HAlign::Left:
+			p.x = area.x;
+			datum += 0;
+			break;
+		case HAlign::Center:
+			p.x = area.x + area.width/2;
+			datum += 1;
+			break;
+		case HAlign::Right:
+			p.x = area.x + area.width-1;
+			datum += 2;
+			break;
+	}
+
+	gScreen.getTFT_eSPI().setTextDatum(datum);
+	gScreen.getTFT_eSPI().drawString(txt, p.x, p.y);
 }
 
 void printAligned(const Rect& area, HAlign halign, VAlign valign, const char* txt, bool eraseBackground)

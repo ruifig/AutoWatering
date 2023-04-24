@@ -6,11 +6,12 @@
 #include "crazygaze/micromuc/StringUtils.h"
 #include <Arduino.h>
 #include <algorithm>
+#include <crazygaze/micromuc/StringUtils.h>
 
 namespace cz
 {
 
-const char* const SoilMoistureSensor::ms_stateNames[3] =
+const char* const RealSoilMoistureSensor::ms_stateNames[3] =
 {
 	"Initializing",
 	"PoweredDown",
@@ -18,9 +19,9 @@ const char* const SoilMoistureSensor::ms_stateNames[3] =
 	"Reading"
 };
 
-SoilMoistureSensor::SemaphoreQueue SoilMoistureSensor::ms_semaphoreQueue;
+RealSoilMoistureSensor::SemaphoreQueue RealSoilMoistureSensor::ms_semaphoreQueue;
 
-SoilMoistureSensor::SoilMoistureSensor(uint8_t index, IOExpanderPinInstance vinPin, MuxPinInstance dataPin)
+RealSoilMoistureSensor::RealSoilMoistureSensor(uint8_t index, IOExpanderPinInstance vinPin, MuxPinInstance dataPin)
 	: m_index(index)
 	, m_vinPin(vinPin)
 	, m_dataPin(dataPin)
@@ -28,12 +29,18 @@ SoilMoistureSensor::SoilMoistureSensor(uint8_t index, IOExpanderPinInstance vinP
 {
 }
 
-void SoilMoistureSensor::begin()
+const char* RealSoilMoistureSensor::getName() const
 {
-	onEnterState();
+	return formatString("SoilMoistureSensor%d", m_index);
 }
 
-void SoilMoistureSensor::tryEnterReadingState()
+bool RealSoilMoistureSensor::initImpl()
+{
+	onEnterState();
+	return true;
+}
+
+void RealSoilMoistureSensor::tryEnterReadingState()
 {
 	if (m_queueHandle.tryAcquire(true))
 	{
@@ -45,7 +52,7 @@ void SoilMoistureSensor::tryEnterReadingState()
 	}
 }
 
-float SoilMoistureSensor::tick(float deltaSeconds)
+float RealSoilMoistureSensor::tick(float deltaSeconds)
 {
 	PROFILE_SCOPE(F("MoistureSensor"));
 
@@ -103,7 +110,7 @@ float SoilMoistureSensor::tick(float deltaSeconds)
 	return m_nextTickWait;
 }
 
-SensorReading SoilMoistureSensor::readSensor()
+SensorReading RealSoilMoistureSensor::readSensor()
 {
 	unsigned long startMicros = micros();
 	constexpr int numSamples = 30;
@@ -137,7 +144,7 @@ SensorReading SoilMoistureSensor::readSensor()
 	return sample;
 }
 
-void SoilMoistureSensor::onEvent(const Event& evt)
+void RealSoilMoistureSensor::onEvent(const Event& evt)
 {
 	switch(evt.type)
 	{
@@ -152,7 +159,7 @@ void SoilMoistureSensor::onEvent(const Event& evt)
 	}
 }
 
-void SoilMoistureSensor::changeToState(State newState)
+void RealSoilMoistureSensor::changeToState(State newState)
 {
 	CZ_LOG(logDefault, Verbose, F("SoilMoistureSensor(%d)::%s: %ssec %s->%s")
 		, (int)m_index
@@ -167,7 +174,7 @@ void SoilMoistureSensor::changeToState(State newState)
 	onEnterState();
 }
 
-void SoilMoistureSensor::onLeaveState()
+void RealSoilMoistureSensor::onLeaveState()
 {
 	switch (m_state)
 	{
@@ -192,7 +199,7 @@ void SoilMoistureSensor::onLeaveState()
 	}
 }
 
-void SoilMoistureSensor::onEnterState()
+void RealSoilMoistureSensor::onEnterState()
 {
 	switch (m_state)
 	{
@@ -227,18 +234,22 @@ void SoilMoistureSensor::onEnterState()
 // MockSoilMoistureSensor
 //////////////////////////////////////////////////////////////////////////
 
-void MockSoilMoistureSensor::begin()
+bool MockSoilMoistureSensor::initImpl()
 {
-	SoilMoistureSensor::begin();
+	if (!RealSoilMoistureSensor::initImpl())
+	{
+		return false;
+	}
 
 	m_mock.dryValue = random(540,590);
 	m_mock.waterValue = random(160, 210);
 	m_mock.targetValue = m_mock.currentValue = random(m_mock.waterValue, m_mock.dryValue);
+	return true;
 }
 
 float MockSoilMoistureSensor::tick(float deltaSeconds)
 {
-	float tickResult = SoilMoistureSensor::tick(deltaSeconds);
+	float tickResult = RealSoilMoistureSensor::tick(deltaSeconds);
 
 	// Note: The target value needs to be updated before the current value, so that once the motor is off and things stabilize
 	// the current value and target value will match at the end fo the tick
@@ -278,7 +289,7 @@ float MockSoilMoistureSensor::tick(float deltaSeconds)
 
 void MockSoilMoistureSensor::onEvent(const Event& evt)
 {
-	SoilMoistureSensor::onEvent(evt);
+	RealSoilMoistureSensor::onEvent(evt);
 
 	if (evt.type == Event::Motor)
 	{

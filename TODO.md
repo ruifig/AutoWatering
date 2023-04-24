@@ -1,3 +1,9 @@
+* Go through the console commands list and cleanup/remove what's should not be there, like test stuff I left behind. - DONE
+
+* Add watchdog timer component - DONE
+
+* Add date/time reading from https://learn.adafruit.com/adafruit-magtag/getting-the-date-time
+
 * GroupMonitor should make use of a mutex style thing like the sensors, to keep maximum current usage low. - DONE
 	* Make sure the mutex is released when turning off the motor - DONE
 
@@ -35,19 +41,9 @@
 CLEAN UP
 ========
 
-* Delete lib\Adafruit_DHT-sensor-library if not used
-* Remove the "setmuxenabled" and "setmuxchannel"
+* Delete lib\Adafruit_DHT-sensor-library if not used - DONE
+* Remove the "setmuxenabled" and "setmuxchannel" - DONE
 
 
 BUGS
 ====
-
-* Motor will turn on before time. Repro steps:
-	1. Set a sensor interval to say 2minutes and save.
-	2. Open the settings for the group again, and open the calibration menu
-	3. Squeeze the sensor so it goes over the threshold.
-	4. Close the settings without saving.
-	5. The motor will turn on as soon as we close the settings menu.
-* The history plot line draws red dots inconsistently 
-	* Repro: Start and stop a group while getting stable readings of say 30%
-	* When restarting a group, and the plot starts moving, spots with red dots will move to the left as expected, but without properly erasing the ones on the right, causing a read line to incorrectly grow in the plot

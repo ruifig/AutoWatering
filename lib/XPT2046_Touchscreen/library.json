@@ -1,0 +1,13 @@
+{
+  "name": "XPT2046_Touchscreen",
+  "keywords": "display, tft, lcd, graphics, spi, touchscreen",
+  "description": "Simple XPT2046 arduino library based on https://github.com/PaulStoffregen/XPT2046_Touchscreen",
+  "exclude": "doc",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/ruifig/XPT2046_Touchscreen.git"
+  },
+  "frameworks": "arduino",
+  "platforms": "*"
+}

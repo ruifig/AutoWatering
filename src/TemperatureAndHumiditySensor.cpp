@@ -21,9 +21,11 @@ TemperatureAndHumiditySensor::TemperatureAndHumiditySensor()
 {
 }
 
-void TemperatureAndHumiditySensor::begin()
+bool TemperatureAndHumiditySensor::initImpl()
 {
+	CZ_LOG(logDefault, Log, "Initializing the temperature/humidity sensor");
 	onEnterState();
+	return true;
 }
 
 float TemperatureAndHumiditySensor::tick(float deltaSeconds)
@@ -131,7 +133,6 @@ void TemperatureAndHumiditySensor::onEnterState()
 {
 	switch (m_state)
 	{
-	
 	case State::Initializing:
 		if (!m_htu.begin())
 		{
@@ -153,5 +154,9 @@ void TemperatureAndHumiditySensor::onEnterState()
 void TemperatureAndHumiditySensor::onEvent(const Event& evt)
 {
 }
+
+#if TEMPERATURE_AND_HUMIDITY_SENSOR_ENABLED
+TemperatureAndHumiditySensor gTempAndHumiditySensor;
+#endif
 
 } // namespace cz

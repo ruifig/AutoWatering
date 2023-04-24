@@ -2,17 +2,17 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wignored-qualifiers"
-	#include "Adafruit_GFX.h"
+	#include "TFT_eSPI.h"
 #pragma GCC diagnostic pop
 
 #include "crazygaze/micromuc/czmicromuc.h"
 #include "crazygaze/micromuc/StringUtils.h"
 #include "Colour.h"
 
-#include <Fonts/FreeSans9pt7b.h>
-#include <Fonts/FreeSans12pt7b.h>
-#include <Fonts/Org_01.h>
-#include "FreeDefaultFonts.h"
+//#include "Fonts/FreeSans9pt7b.h"
+//#include "Fonts/FreeSans12pt7b.h"
+#include "Fonts/Org_01.h"
+#include "Fonts/FreeDefaultFonts.h"
 
 #define TINY_FONT &Org_01
 #define SMALL_FONT &FreeSmallFont

@@ -1,56 +1,168 @@
 #include "Component.h"
+#include <string.h>
+#include <crazygaze/micromuc/Logging.h>
 
 namespace cz
 {
 
-Component* Component::ms_first = nullptr;
-Component* Component::ms_last = nullptr;
-
-Component::Component()
+//
+// Command
+//
+bool Command::parseCmd()
 {
-	m_next = nullptr;
-	if (ms_last)
+	parse(src, fullCmd);
+	CZ_LOG(logDefault, Log, "Trying to process command: %s", fullCmd);
+	cmd = fullCmd;
+
+	// Check if the command is int he form of COMPONENT.COMMAND
+	detail::skipToAfter(cmd, '.');
+	if (*cmd != 0 && cmd != fullCmd)
 	{
-		ms_last->m_next = this;
-		m_previous = ms_last;
-		ms_last = this;
+		int componentNameLen = cmd - fullCmd - 1;
+		CZ_LOG(logDefault, Log, "name length = %d", componentNameLen);
+		char componentName[componentNameLen + 1];
+		memcpy(componentName, fullCmd, componentNameLen);
+		componentName[componentNameLen] = 0;
+
+		targetComponent = Component::getByName(componentName);
+		if (!targetComponent)
+		{
+			CZ_LOG(logDefault, Error, "No component with name '%s' found", componentName);
+			return false;
+		}
+		CZ_LOG(logDefault, Log, "Component '%s', command '%s'", targetComponent ? targetComponent->getName() : "", cmd);
 	}
 	else
 	{
-		ms_last = ms_first = this;
-		m_previous = nullptr;
+		cmd = fullCmd;
+		CZ_LOG(logDefault, Log, "Command '%s'", cmd);
+	}
+
+	return true;
+}
+
+
+
+namespace
+{
+	DoublyLinkedList<Component> gComponents;
+}
+
+//
+// Component
+//
+
+Component::Component(Component::ListInsertionPosition insertPos)
+	: m_ticker(this)
+{
+	if (insertPos == Component::ListInsertionPosition::Front)
+	{
+		gComponents.pushFront(this);
+	}
+	else
+	{
+		gComponents.pushBack(this);
 	}
 }
 
 Component::~Component()
 {
-	if (m_next)
+	gComponents.remove(this);
+}
+
+bool Component::init()
+{
+	if (m_initialized)
 	{
-		m_next->m_previous = m_previous;
+		return true;
 	}
 	else
 	{
-		ms_last = m_previous;
+		CZ_LOG(logDefault, Log, "Initializing component '%s' ...", getName());
+		m_initialized = initImpl();
+		CZ_LOG(logDefault, Log, "        %s", m_initialized ? "DONE" : "DELAYED");
+		return m_initialized;
+	}
+}
+
+Component* Component::getByName(const char* name)
+{
+	for(auto&& component : gComponents)
+	{
+		if (strcasecmp(component->getName(), name) == 0)
+		{
+			return component;
+		}
 	}
 
-	if (m_previous)
+	return nullptr;
+}
+
+void Component::initAll()
+{
+	int loopCount = 0;
+
+	//
+	// Loop through all components until all are initialized or we detect we've tried too often
+	//
+	while(true)
 	{
-		m_previous->m_next = m_next;
+		loopCount++;
+		bool repeat = false;
+		int componentCount;
+		for(auto&& component : gComponents)
+		{
+			componentCount++;
+			if(!component->init())
+			{
+				repeat = true;
+			}
+		}
+
+		if (repeat)
+		{
+			if (loopCount >= componentCount)
+			{
+				CZ_LOG(logDefault, Error, "Failed to initialize all components. Restarting in 10 seconds");
+				delay(10000);
+				rp2040.reboot();
+			}
+		}
+		else
+		{
+			return;
+		}
 	}
-	else
+}
+
+float Component::tickAll(float deltaSeconds)
+{
+	float countdown = 60*60;
+	Component* lowestCountdownCulprit = nullptr;
+	for(auto&& component : gComponents)
 	{
-		ms_first = m_next;
+		float componentCountdown = component->m_ticker.tick(deltaSeconds);
+		if (componentCountdown < countdown)
+		{
+			lowestCountdownCulprit = component;	
+			countdown = componentCountdown;
+		}
 	}
+
+	if (lowestCountdownCulprit)
+	{
+		CZ_LOG(logDefault, Verbose, "Component causing fastest tick rate: %s. Ticking in %d ms", lowestCountdownCulprit->getName(), static_cast<int>(countdown * 1000));
+	}
+
+	return countdown;
 }
 
 void Component::raiseEvent(const Event& evt)
 {
 	evt.log();
-	Component* obj = ms_first;
-	while(obj)
+	for(auto&& component : gComponents)
 	{
-		obj->onEvent(evt);
-		obj = obj->m_next;
+		component->onEvent(evt);
 	}
 }
 

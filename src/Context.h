@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Config.h"
+#include "Config/Config.h"
 #include "utility/MCP23017Wrapper.h"
 #include "utility/MuxNChannels.h"
 #include <crazygaze/micromuc/Queue.h>
-#include "utility/AT24C.h"
+#include "AT24C.h"
 #include "crazygaze/micromuc/MathUtils.h"
 
 namespace cz
@@ -450,10 +450,9 @@ public:
 	int8_t m_selectedGroup = -1;
 
 	// Temperature in Celcius
-	float m_temperature;
+	float m_temperature = -100.0f;
 	// Relative humiditity
-	float m_humidity;
-
+	float m_humidity = -100.0f;
 };
 
 struct Context

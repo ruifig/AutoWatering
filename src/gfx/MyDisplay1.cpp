@@ -1,32 +1,56 @@
 #include "MyDisplay1.h"
 #include "crazygaze/micromuc/Logging.h"
-#include "../Config.h"
+#include "../Config/Config.h"
 
 namespace cz
 {
 
-MyDisplay1::MyDisplay1( MCUPin displayCS, MCUPin displayDC, MCUPin displayBacklight)
-	: m_bkpin(displayBacklight)
-	, m_tft(displayCS.raw, displayDC.raw)
+MyDisplay1::MyDisplay1()
+	: m_bkpin(TFT_BL)
+	, m_tft()
 {
 }
-
-void MyDisplay1::begin()
+bool MyDisplay1::begin()
 {
-	// Which begin to use?
-	m_tft.begin(42000000);
-	//gTft.begin(30000000); // Stayed running for a very long time
+	m_tft.init();
+	delay(150);
+	// Reset.
+	// This will make the screen go "white" but we can still read registers
+	digitalWrite(TFT_RST, LOW);
+	delay(10);
+	digitalWrite(TFT_RST, HIGH);
+	delay(10);
+	uint32_t id = readRegister(ILI9341_RDDID, 3, 1);
+	if (id != 0x00804E0F)
+	{
+		return false;
+	}
+	delay(10);
+	m_tft.init();
+	//logProperties();
 
+	m_tft.setRotation(3);
 	pinMode(m_bkpin, OUTPUT);
-
 	setBacklightBrightness(SCREEN_DEFAULT_BRIGHTNESS);
-
-	fillScreen(Colour_Green);
-	m_tft.setRotation(1);
-
+	fillScreen(Colour_White);
 	setTextColor(Colour_White);
+	return true;
+}
 
-	logProperties();
+uint32_t MyDisplay1::readRegister(uint8_t reg, int16_t bytes, uint8_t index)
+{
+	uint32_t data = 0;
+
+	while (bytes > 0)
+	{
+		bytes--;
+		data = (data << 8) | m_tft.readcommand8(reg, index);
+		index++;
+	}
+
+	CZ_LOG(logDefault, Log, "Display Register 0x%X: 0x%X", reg, data);
+
+	return data;
 }
 
 void MyDisplay1::setBacklightBrightness(uint8_t brightness)
@@ -34,23 +58,64 @@ void MyDisplay1::setBacklightBrightness(uint8_t brightness)
 	analogWrite(m_bkpin, map(brightness, 0, 100, 0, 255));
 }
 
+
 /**
  * This doesn't seem to work correctly. I suspect it might be Adafruit's code not doing the right thing reading data from these commands
  */
 void MyDisplay1::logProperties()
 {
-	// read diagnostics (optional but can help debug problems)
-	CZ_LOG(logDefault, Log, "Display properties (possibly not working as it should):")
-	int x = m_tft.readcommand8(ILI9341_RDMODE);
-	CZ_LOG(logDefault, Log, "Display Power Mode: 0x%x", x);
-	x = m_tft.readcommand8(ILI9341_RDMADCTL);
-	CZ_LOG(logDefault, Log, "MADCTL Mode: 0x%x", x);
-	x = m_tft.readcommand8(ILI9341_RDPIXFMT);
-	CZ_LOG(logDefault, Log, "Pixel Format: 0x%x", x);
-	x = m_tft.readcommand8(ILI9341_RDIMGFMT);
-	CZ_LOG(logDefault, Log, "Image Format: 0x%x", x);
-	x = m_tft.readcommand8(ILI9341_RDSELFDIAG);
-	CZ_LOG(logDefault, Log, "Self Diagnostic: 0x%x", x);
+	digitalWrite(TFT_RST, LOW);
+	delay(10);
+	digitalWrite(TFT_RST, HIGH);
+	delay(10);
+
+	auto readRegister = [&](uint8_t reg, int16_t bytes, uint8_t index) -> uint32_t
+	{
+		uint32_t  data = 0;
+
+		while (bytes > 0) {
+			bytes--;
+			data = (data << 8) | m_tft.readcommand8(reg, index);
+			index++;
+		}
+
+		MySerial.print("Register 0x");
+		if (reg < 0x10) MySerial.print("0");
+		MySerial.print(reg , HEX);
+
+		MySerial.print(": 0x");
+
+		// Add leading zeros as needed
+		uint32_t mask = 0x1 << 28;
+		while (data < mask && mask > 0x1) {
+			MySerial.print("0");
+			mask = mask >> 4;
+		}
+
+		MySerial.println(data, HEX);
+
+		return data;
+	};
+
+	auto printSubset = [&]()
+	{
+		MySerial.println();  MySerial.println();
+		readRegister(ILI9341_RDDID, 3, 1);
+		readRegister(ILI9341_RDDST, 4, 1);
+		readRegister(ILI9341_RDMODE, 1, 1);
+		readRegister(ILI9341_RDMADCTL, 1, 1);
+		readRegister(ILI9341_RDPIXFMT, 1, 1);
+		readRegister(ILI9341_RDSELFDIAG, 1, 1);
+		readRegister(ILI9341_RAMRD, 3, 1);
+
+		readRegister(ILI9341_RDID1, 1, 1);
+		readRegister(ILI9341_RDID2, 1, 1);
+		readRegister(ILI9341_RDID3, 1, 1);
+		readRegister(ILI9341_RDIDX, 1, 1); // ?
+		readRegister(ILI9341_RDID4, 3, 1);  // ID
+	};
+
+	printSubset();
 }
 
 } // namespace cz

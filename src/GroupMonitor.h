@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Config.h"
+#include "Config/Config.h"
 #include "Component.h"
 #include "SemaphoreQueue.h"
 
@@ -12,10 +12,6 @@ class GroupMonitor : public Component
   public:
 	GroupMonitor(uint8_t index, IOExpanderPinInstance motorPin);
 
-	void begin();
-	virtual float tick(float deltaSeconds) override;
-	virtual void onEvent(const Event& evt) override;
-
 	// Initiates an explicit shot
 	// If the motor is already running, it does nothing
 	void doShot();
@@ -24,6 +20,15 @@ class GroupMonitor : public Component
 	void turnMotorOff();
 	
   protected:
+
+	//
+	// Component interface
+	//
+	virtual const char* getName() const override;
+	virtual bool initImpl() override;
+	virtual float tick(float deltaSeconds) override;
+	virtual void onEvent(const Event& evt) override;
+	virtual bool processCommand(const Command& cmd) override;
 
 	/**
 	 * Tries to turn the motor on
