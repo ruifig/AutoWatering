@@ -2,8 +2,6 @@
 #include "Watchdog.h"
 #include <crazygaze/micromuc/MathUtils.h>
 
-// Check connection every 1s
-// #TODO : Is this being used?
 #define MQTT_CHECK_INTERVAL_MS 1000
 
 #define MQTT_HOST "io.adafruit.com"
@@ -87,7 +85,7 @@ float AdafruitIOManager::tick(float deltaSeconds)
 	// Tick publishing queue
 	m_cache.tick(deltaSeconds);
 
-	return MQTT_CHECK_INTERVAL_MS/1000.0f;
+	return 0.250f;
 }
 
 void AdafruitIOManager::publish(const char* topic, const char* value, uint8_t qos)
