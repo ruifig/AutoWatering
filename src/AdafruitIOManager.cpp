@@ -1,4 +1,5 @@
 #include "AdafruitIOManager.h"
+#include "Watchdog.h"
 #include <crazygaze/micromuc/MathUtils.h>
 
 // Check connection every 1s
@@ -140,10 +141,17 @@ bool AdafruitIOManager::processCommand(const Command& cmd)
 	if (cmd.is("logcachedmqttvalues"))
 	{
 		logCache();
-		return true;
 	}
-
-	return false;
+	else if (cmd.is("wifidisconnect"))
+	{
+		WiFi.disconnect();
+	}
+	else
+	{
+		return false;
+	}
+	
+	return true;
 }
 
 void AdafruitIOManager::onCacheReceived(const MQTTCache::Entry* entry)
@@ -181,7 +189,15 @@ bool AdafruitIOManager::connectToWifi(bool systemResetOnFail)
 	{
 		numTries++;
 		CZ_LOG(logMQTT, Log, "Connecting to %s (Attempt %d)", WIFI_SSID, numTries);
-		if (m_multi.run() == WL_CONNECTED)
+
+		// Disable the watchdog ONLY for as long as we need
+		uint8_t runRes;
+		{
+			WatchdogPauseScope wtdPause;
+			runRes = m_multi.run();
+		}
+
+		if (runRes == WL_CONNECTED)
 		{
 			//CZ_LOG(logMQTT, Log, "Wifi connected. IP %s", m_wifiClient.localIP().toString().c_str());
 			printWifiStatus();
