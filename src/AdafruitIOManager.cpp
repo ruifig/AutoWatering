@@ -136,17 +136,13 @@ void AdafruitIOManager::onEvent(const Event& evt)
 
 bool AdafruitIOManager::processCommand(const Command& cmd)
 {
-	if (cmd.is("logcachedmqttvalues"))
-	{
-		logCache();
-	}
-	else if (cmd.is("wifidisconnect"))
+	if (cmd.is("wifidisconnect"))
 	{
 		WiFi.disconnect();
 	}
 	else
 	{
-		return false;
+		return m_cache.processCommand(cmd);
 	}
 	
 	return true;
@@ -235,11 +231,6 @@ bool AdafruitIOManager::isWiFiConnected()
 	}
 
 	return false;
-}
-
-void AdafruitIOManager::logCache() const
-{
-	m_cache.logState();
 }
 
 #if WIFI_ENABLED

@@ -20,8 +20,6 @@ class AdafruitIOManager : public Component, public MQTTCache::Listener
 	AdafruitIOManager();
 	~AdafruitIOManager();
 
-	void logCache() const;
-
   private:
 
 	//

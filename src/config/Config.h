@@ -58,6 +58,18 @@
 #define WIFI_ENABLED 1
 
 /**
+ * How long to wait between attempts to reconnect to the mqtt broker
+*/
+#define MQTT_CONNECTION_RETRY_INTERVAL 5.0f
+
+/**
+ * At the time of writting, I've noticed that sometimes even if Wifi is supposed to be connected, establishing TCP connections fails, and never recovers.
+ * Setting this to 0 means no disconnect/reconnect is done
+ * Setting this to N (where N>0), will perform a wifi disconnect/reconnect after failing to establish the TCP connection N times.
+ */
+#define MQTT_WIFI_DISCONNECT_AND_RECONNECT 5
+
+/**
  * If set to 1, it will enable the RP2040 watchdog timer. See https://arduino-pico.readthedocs.io/en/latest/rp2040.html#hardware-watchdog
  */
 #define WATCHDOG_ENABLED 1

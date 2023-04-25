@@ -1,8 +1,10 @@
 #include "MQTTCache.h"
 #include <crazygaze/micromuc/FNVHash.h>
 #include <crazygaze/micromuc/StringUtils.h>
+#include <crazygaze/micromuc/ScopeGuard.h>
 
 #include "MqttClient.h"
+#include "Component.h"
 
 CZ_DEFINE_LOG_CATEGORY(logMQTTCache);
 
@@ -397,7 +399,7 @@ void MQTTCache::tick(float deltaSeconds)
 {
 	if (!isConnected())
 	{
-		if (!connectToMqttBroker())
+		if (!connectToMqttBroker(deltaSeconds))
 		{
 			return;
 		}
@@ -478,7 +480,7 @@ bool MQTTCache::isConnected() const
 	return m_mqtt.client->isConnected();
 }
 
-bool MQTTCache::connectToMqttBroker()
+bool MQTTCache::connectToMqttBroker(float deltaSeconds)
 {
 	if (isConnected() && WiFi.status() == WL_CONNECTED)
 	{
@@ -486,21 +488,45 @@ bool MQTTCache::connectToMqttBroker()
 	}
 	else
 	{
+		m_connectToMqttBrokerCountdown -= deltaSeconds;
+		if (m_connectToMqttBrokerCountdown > 0)
+		{
+			return false;
+		}
+		m_connectToMqttBrokerCountdown = MQTT_CONNECTION_RETRY_INTERVAL;
+
 		if (WiFi.status() != WL_CONNECTED)
 		{
 			CZ_LOG(logMQTTCache, Error, "Can't connect to MQTT broker because WiFi is not connected");
 			return false;
 		}
+		
+		auto incrementFailCount = [this]
+		{
+			#if MQTT_WIFI_DISCONNECT_AND_RECONNECT
+				m_conFailCount++;
+				if (m_conFailCount >= MQTT_WIFI_DISCONNECT_AND_RECONNECT)
+				{
+					m_conFailCount = 0;
+					m_simulateTCPFail = false;
+					CZ_LOG(logMQTTCache, Log, "Too many connection attempts. Disconnecting/reconnecting wifi to try and fix it");
+					// NOTE: The reconnect is done in AdafruitIOManager once it detects Wifi has disconnected
+					WiFi.disconnect();
+				}
+			#endif
+		};
 
 		// Close connection if exists
 		m_wifiClient.stop();
 
 		// Re-establish TCP connection with MQTT broker
-		CZ_LOG(logMQTTCache, Log, "Creating TCP connection to %s:%u...", m_cfg.host.c_str(), static_cast<unsigned int>(m_cfg.port));
-		m_wifiClient.connect(m_cfg.host.c_str(), m_cfg.port);
+		const char* host = m_simulateTCPFail ? "hopefully-this-url-doesnt-exist.com" : m_cfg.host.c_str();
+		CZ_LOG(logMQTTCache, Log, "Creating TCP connection to %s:%u...", host , static_cast<unsigned int>(m_cfg.port));
+		m_wifiClient.connect(host, m_cfg.port);
 		if (!m_wifiClient.connected())
 		{
-			CZ_LOG(logMQTTCache, Error, "Can't establish the TCP connection to %s:%d", m_cfg.host.c_str(), static_cast<unsigned int>(m_cfg.port));
+			CZ_LOG(logMQTTCache, Error, "Can't establish the TCP connection to %s:%d", host, static_cast<unsigned int>(m_cfg.port));
+			incrementFailCount();
 			return false;
 		}
 		else
@@ -523,6 +549,7 @@ bool MQTTCache::connectToMqttBroker()
 			if (rc != MqttClient::Error::SUCCESS)
 			{
 				CZ_LOG(logMQTTCache, Error, "MQTT Session start error: %i", rc);
+				incrementFailCount();
 				return false;
 			}
 			else
@@ -538,6 +565,32 @@ bool MQTTCache::connectToMqttBroker()
 
 		return true;
 	}
+}
+
+bool MQTTCache::processCommand(const Command& cmd)
+{
+	if (cmd.is("logcachedmqttvalues"))
+	{
+		logState();
+	}
+	else if(cmd.is("testtcpfail"))
+	{
+		if (!cmd.parseParams(m_simulateTCPFail))
+		{
+			return false;
+		}
+
+		if (m_simulateTCPFail)
+		{
+			m_wifiClient.stop();
+		}
+	}
+	else
+	{
+		return false;
+	}
+
+	return true;
 }
 
 }

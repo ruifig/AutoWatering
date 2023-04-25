@@ -6,6 +6,7 @@
 
 #include "Config/Config.h"
 #include <crazygaze/micromuc/Logging.h>
+#include <crazygaze/micromuc/Ticker.h>
 
 #define MQTT_LOG_ENABLED 1
 #include "MqttClient.h"
@@ -128,6 +129,8 @@ class MQTTCache
 
 	bool isConnected() const;
 
+	bool processCommand(const struct Command& cmd);
+
   private:
 
 	void doRemove(int index);
@@ -173,7 +176,14 @@ class MQTTCache
 		std::unique_ptr<MqttClient> client;
 	} m_mqtt;
 
-	bool connectToMqttBroker();
+
+	bool connectToMqttBroker(float deltaSeconds);
+	float m_connectToMqttBrokerCountdown = 0;
+
+#if MQTT_WIFI_DISCONNECT_AND_RECONNECT
+	int m_conFailCount = 0;
+	bool m_simulateTCPFail = false; 
+#endif
 };
 
 } // namespace cz
