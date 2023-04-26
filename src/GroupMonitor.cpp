@@ -7,7 +7,7 @@ namespace cz
 
 GroupMonitor::SemaphoreQueue GroupMonitor::ms_semaphoreQueue;
 
-GroupMonitor::GroupMonitor(uint8_t index, IOExpanderPinInstance motorPin)
+GroupMonitor::GroupMonitor(uint8_t index, DigitalOutputPin& motorPin)
 	: m_index(index)
 	, m_motorPin(motorPin)
 	, m_sensorValidReadingSinceLastShot(0)
@@ -22,8 +22,7 @@ const char* GroupMonitor::getName() const
 
 bool GroupMonitor::initImpl()
 {
-	m_motorPin.pinMode(OUTPUT);
-	m_motorPin.digitalWrite(LOW);
+	m_motorPin.write(PinStatus::LOW);
 	return true;
 }
 
@@ -52,7 +51,7 @@ bool GroupMonitor::tryTurnMotorOn(bool registerInterest)
 
 	if (m_queueHandle.tryAcquire(registerInterest))
 	{
-		m_motorPin.digitalWrite(HIGH);
+		m_motorPin.write(PinStatus::HIGH);
 		data.setMotorState(true);
 		m_motorOffCountdown = data.getShotDuration();
 		m_sensorValidReadingSinceLastShot = false;
@@ -70,7 +69,7 @@ bool GroupMonitor::tryTurnMotorOn(bool registerInterest)
 
 void GroupMonitor::turnMotorOff()
 {
-	m_motorPin.digitalWrite(LOW);
+	m_motorPin.write(PinStatus::LOW);
 	GroupData& data = gCtx.data.getGroupData(m_index);
 	data.setMotorState(false);
 	m_queueHandle.release();

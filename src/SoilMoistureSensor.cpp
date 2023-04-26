@@ -21,7 +21,7 @@ const char* const RealSoilMoistureSensor::ms_stateNames[3] =
 
 RealSoilMoistureSensor::SemaphoreQueue RealSoilMoistureSensor::ms_semaphoreQueue;
 
-RealSoilMoistureSensor::RealSoilMoistureSensor(uint8_t index, IOExpanderPinInstance vinPin, MuxPinInstance dataPin)
+RealSoilMoistureSensor::RealSoilMoistureSensor(uint8_t index, DigitalOutputPin& vinPin, AnalogInputPin& dataPin)
 	: m_index(index)
 	, m_vinPin(vinPin)
 	, m_dataPin(dataPin)
@@ -118,7 +118,7 @@ SensorReading RealSoilMoistureSensor::readSensor()
 
 	for(auto&& s : samples)
 	{
-		s = m_dataPin.analogRead();
+		s = m_dataPin.read();
 	}
 
 	StandardDeviation res = calcStandardDeviation(samples, numSamples);
@@ -189,9 +189,9 @@ void RealSoilMoistureSensor::onLeaveState()
 
 	case State::Reading:
 		//  Turn power off
-		m_vinPin.digitalWrite(LOW);
-		// Disable the required mux, so other sensors on other i2c boards can share the same MCU's analog pin
-		m_dataPin.getMux().setEnabled(false);
+		m_vinPin.write(PinStatus::LOW);
+		// Done using the pin, so disable it. This is necessary so muxed pins work when a single MCU analog pin is muxed with multiple muxes
+		m_dataPin.disable();
 		break;
 
 	default:
@@ -204,9 +204,8 @@ void RealSoilMoistureSensor::onEnterState()
 	switch (m_state)
 	{
 	case State::Initializing:
-		m_vinPin.pinMode(OUTPUT);
 		// Switch the sensor off
-		m_vinPin.digitalWrite(LOW);
+		m_vinPin.write(PinStatus::LOW);
 		break;
 
 	case State::PoweredDown:
@@ -218,10 +217,10 @@ void RealSoilMoistureSensor::onEnterState()
 		break;
 
 	case State::Reading:
-		// Enable the required mux
-		m_dataPin.getMux().setEnabled(true);
+		// Enable the pin before reading This is necessary so muxed pins work when a single MCU analog pin is muxed with multiple muxes
+		m_dataPin.enable();
 		//  To take a measurement, we turn the sensor ON, wait a bit, then switch it off
-		m_vinPin.digitalWrite(HIGH);
+		m_vinPin.write(PinStatus::HIGH);
 		m_nextTickWait = MOISTURESENSOR_POWERUP_WAIT;
 		break;
 

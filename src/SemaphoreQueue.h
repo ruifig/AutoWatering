@@ -61,6 +61,11 @@ class TSemaphoreQueue
 			return m_state == State::Active;
 		}
 
+		bool isQueued() const
+		{
+			return m_state == State::Queued;
+		}
+
 		bool isActiveOrQueued() const
 		{
 			return m_state==State::Queued || m_state==State::Active ? true : false;

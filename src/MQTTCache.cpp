@@ -27,7 +27,7 @@ namespace
 
 		virtual void println(const char* msg) override
 		{
-			CZ_LOG(logMQTTCache, Log, "MQTTCLIENT: %s", msg);
+			CZ_LOG(logMQTTCache, Verbose, "MQTTCLIENT: %s", msg);
 		}
 	};
 

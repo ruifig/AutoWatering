@@ -17,6 +17,8 @@
 #include "crazygaze/micromuc/Profiler.h"
 #include "gfx/MyDisplay1.h"
 #include "crazygaze/TouchController/XPT2046.h"
+#include <memory>
+#include <vector>
 
 using namespace cz;
 
@@ -25,100 +27,67 @@ using namespace cz;
 	SDLogOutput gSdLogOutput;
 #endif
 
-#define SOILMOISTURE_TICKER(index, boardIndex, POWER_PIN, MUXPIN) \
-	 {index, IOExpanderPinInstance(gCtx.m_i2cBoards[boardIndex].ioExpander, POWER_PIN), MuxPinInstance(gCtx.m_i2cBoards[boardIndex].mux, MUXPIN)}
 
-SoilMoistureSensor gSoilMoistureSensors[MAX_NUM_PAIRS] =
+constexpr int sensorsPerBoard = 6;
+SoilMoistureSensor* gSoilMoistureSensors[MAX_NUM_PAIRS];
+void createSoilMoistureSensors()
 {
-	//
-	// First i2c board
-	//
-	 //{true, 0, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_VPIN_SENSOR0), MuxPinInstance(gCtx.m_i2cBoards[0].mux, MUX_MOISTURE_SENSOR0)}
-	 SOILMOISTURE_TICKER(0, 0, IO_EXPANDER_VPIN_SENSOR0, MUX_MOISTURE_SENSOR0)
-#if MAX_NUM_PAIRS>1
-	,SOILMOISTURE_TICKER(1, 0, IO_EXPANDER_VPIN_SENSOR1, MUX_MOISTURE_SENSOR1)
-#endif
-#if MAX_NUM_PAIRS>2
-	,SOILMOISTURE_TICKER(2, 0, IO_EXPANDER_VPIN_SENSOR2, MUX_MOISTURE_SENSOR2)
-#endif
-#if MAX_NUM_PAIRS>3
-	,SOILMOISTURE_TICKER(3, 0, IO_EXPANDER_VPIN_SENSOR3, MUX_MOISTURE_SENSOR3)
-#endif
-#if MAX_NUM_PAIRS>4
-	,SOILMOISTURE_TICKER(4, 0, IO_EXPANDER_VPIN_SENSOR4, MUX_MOISTURE_SENSOR4)
-#endif
-#if MAX_NUM_PAIRS>5
-	,SOILMOISTURE_TICKER(5, 0, IO_EXPANDER_VPIN_SENSOR5, MUX_MOISTURE_SENSOR5)
-#endif
+	CZ_LOG(logDefault, Log, "Creating soil moisture sensor components");
+	static IOExpanderPin vinPins[sensorsPerBoard] = 
+	{
+		IO_EXPANDER_VPIN_SENSOR0,
+		IO_EXPANDER_VPIN_SENSOR1,
+		IO_EXPANDER_VPIN_SENSOR2,
+		IO_EXPANDER_VPIN_SENSOR3,
+		IO_EXPANDER_VPIN_SENSOR4,
+		IO_EXPANDER_VPIN_SENSOR5
+	};
+	
+	static MultiplexerPin dataPins[sensorsPerBoard] =
+	{
+		MUX_MOISTURE_SENSOR0,
+		MUX_MOISTURE_SENSOR1,
+		MUX_MOISTURE_SENSOR2,
+		MUX_MOISTURE_SENSOR3,
+		MUX_MOISTURE_SENSOR4,
+		MUX_MOISTURE_SENSOR5
+	};
 
-	//
-	// Second i2c board
-	//
-#if MAX_NUM_PAIRS>6
-	,SOILMOISTURE_TICKER(6, 1, IO_EXPANDER_VPIN_SENSOR0, MUX_MOISTURE_SENSOR0)
-#endif
-#if MAX_NUM_PAIRS>7
-	,SOILMOISTURE_TICKER(7, 1, IO_EXPANDER_VPIN_SENSOR1, MUX_MOISTURE_SENSOR1)
-#endif
-#if MAX_NUM_PAIRS>8
-	,SOILMOISTURE_TICKER(8, 1, IO_EXPANDER_VPIN_SENSOR2, MUX_MOISTURE_SENSOR2)
-#endif
-#if MAX_NUM_PAIRS>9
-	,SOILMOISTURE_TICKER(9, 1, IO_EXPANDER_VPIN_SENSOR3, MUX_MOISTURE_SENSOR3)
-#endif
-#if MAX_NUM_PAIRS>10
-	,SOILMOISTURE_TICKER(10, 1, IO_EXPANDER_VPIN_SENSOR4, MUX_MOISTURE_SENSOR4)
-#endif
-#if MAX_NUM_PAIRS>11
-	,SOILMOISTURE_TICKER(11, 1, IO_EXPANDER_VPIN_SENSOR5, MUX_MOISTURE_SENSOR5)
-#endif
+	for(int i=0; i<MAX_NUM_PAIRS; i++)
+	{
+		MuxInterface& mux = gCtx.m_i2cBoards[i < sensorsPerBoard ? 0 : 1].mux;
+		DigitalOutputPin* vinPin = new MCP23xxxOutputPin(
+			gCtx.m_i2cBoards[i / sensorsPerBoard].ioExpander,
+			vinPins[i % sensorsPerBoard].raw);
+		MuxAnalogInputPin* dataPin = new MuxAnalogInputPin(
+			gCtx.m_i2cBoards[i / sensorsPerBoard].mux,
+			dataPins[i % sensorsPerBoard].raw);
+		gSoilMoistureSensors[i] = new SoilMoistureSensor(i, *vinPin, *dataPin);
+	}
+}
 
-};
-
-GroupMonitor gGroupMonitors[MAX_NUM_PAIRS] =
+GroupMonitor* gGroupMonitors[MAX_NUM_PAIRS];
+void createGroupMonitors()
 {
-	//
-	// First i2c board
-	//
-	 {0, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR0)}
-#if MAX_NUM_PAIRS>1
-	,{1, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR1)}
-#endif
-#if MAX_NUM_PAIRS>2
-	,{2, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR2)}
-#endif
-#if MAX_NUM_PAIRS>3
-	,{3, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR3)}
-#endif
-#if MAX_NUM_PAIRS>4
-	,{4, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR4)}
-#endif
-#if MAX_NUM_PAIRS>5
-	,{5, IOExpanderPinInstance(gCtx.m_i2cBoards[0].ioExpander, IO_EXPANDER_MOTOR5)}
-#endif
+	CZ_LOG(logDefault, Log, "Creating group monitor components");
+	static IOExpanderPin motorPins[sensorsPerBoard] = 
+	{
+		IO_EXPANDER_MOTOR0,
+		IO_EXPANDER_MOTOR1,
+		IO_EXPANDER_MOTOR2,
+		IO_EXPANDER_MOTOR3,
+		IO_EXPANDER_MOTOR4,
+		IO_EXPANDER_MOTOR5
+	};
 
-//
-// Second i2c board
-//
-#if MAX_NUM_PAIRS>6
-	,{ 6, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR0)}
-#endif
-#if MAX_NUM_PAIRS>7
-	,{ 7, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR1)}
-#endif
-#if MAX_NUM_PAIRS>8
-	,{ 8, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR2)}
-#endif
-#if MAX_NUM_PAIRS>9
-	,{ 9, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR3)}
-#endif
-#if MAX_NUM_PAIRS>10
-	,{ 10, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR4)}
-#endif
-#if MAX_NUM_PAIRS>11
-	,{ 11, IOExpanderPinInstance(gCtx.m_i2cBoards[1].ioExpander, IO_EXPANDER_MOTOR5)}
-#endif
-};
+	for(int i=0; i<MAX_NUM_PAIRS; i++)
+	{
+		DigitalOutputPin* pin = new MCP23xxxOutputPin(
+			gCtx.m_i2cBoards[i / sensorsPerBoard].ioExpander,
+			motorPins[i % sensorsPerBoard].raw);
+		gGroupMonitors[i] = new GroupMonitor(i, *pin);
+	}
+}
 
 namespace cz
 {
@@ -171,7 +140,7 @@ namespace
 
 void doGroupShot(uint8_t index)
 {
-	gGroupMonitors[index].doShot();
+	gGroupMonitors[index]->doShot();
 }
 
 void setup()
@@ -246,6 +215,10 @@ void setup()
 
 	gCtx.begin();
 	gTimer.begin();
+
+	createSoilMoistureSensors();
+	createGroupMonitors();
+
 	Component::initAll();
 
 	CZ_LOG(logDefault, Log, "Finished setup()");

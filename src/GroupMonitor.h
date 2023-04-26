@@ -10,9 +10,12 @@ namespace cz
 class GroupMonitor : public Component
 {
   public:
-	GroupMonitor(uint8_t index, IOExpanderPinInstance motorPin);
+	GroupMonitor(const GroupMonitor&) = delete;
+	GroupMonitor& operator=(const GroupMonitor&) = delete;
+	explicit GroupMonitor(uint8_t index, DigitalOutputPin& motorPin);
 
 	// Initiates an explicit shot
+	// If there are too many motors on already, it will queue up
 	// If the motor is already running, it does nothing
 	void doShot();
 
@@ -38,7 +41,7 @@ class GroupMonitor : public Component
 	bool tryTurnMotorOn(bool registerInterest);
 
 	uint8_t m_index;
-	IOExpanderPinInstance m_motorPin;
+	DigitalOutputPin& m_motorPin;
 
 	// Tells if there was a valid sensor reading since the last watering.
 	// This is used to make sure we don't turn on the motor unless there was a recent sensor reading
@@ -48,7 +51,7 @@ class GroupMonitor : public Component
 	// This serves two purposes
 	// * If >0 then it means the motor is ON and we're counting down to turn it off
 	// * If <= 0 then it means the motor is OFF, and...
-	//		* If <= (-MINIMUM_TIME_BETWEEN_MOTOR_ON) then we can do another sensor sheck
+	//		* If <= (-MINIMUM_TIME_BETWEEN_MOTOR_ON) then we can do another sensor check
 	float m_motorOffCountdown = -MINIMUM_TIME_BETWEEN_MOTOR_ON;
 
 	using SemaphoreQueue = TSemaphoreQueue<uint8_t, MAX_NUM_PAIRS, MAX_SIMULTANEOUS_MOTORS>;
