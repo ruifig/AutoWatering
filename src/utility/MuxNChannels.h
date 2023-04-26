@@ -160,30 +160,38 @@ class Mux16Channels : public detail::BaseMux<4>
   public:
 };
 
-class MuxPinInstance
+class MuxAnalogInputPin : public AnalogInputPin
 {
   public:
-	MuxPinInstance(MuxInterface& mux, MultiplexerPin pin)
-		: m_mux(mux)
+	MuxAnalogInputPin(const MuxAnalogInputPin&) = delete;
+	MuxAnalogInputPin& operator=(const MuxAnalogInputPin&) = delete;
+	MuxAnalogInputPin(MuxInterface& outer, uint8_t pin)
+		: m_outer(outer)
 		, m_pin(pin)
 	{
 	}
 
-	MuxPinInstance(const MuxPinInstance&) = default;
-
-	int analogRead(PinMode zPinMode = INPUT)
+	//
+	// AnalogInputPin
+	//
+	virtual void enable() override
 	{
-		return m_mux.analogRead(m_pin, zPinMode);
+		m_outer.setEnabled(true);
 	}
 
-	MuxInterface& getMux()
+	virtual int read() override
 	{
-		return m_mux;
+		return m_outer.analogRead(MultiplexerPin(m_pin), PinMode::INPUT);
+	}
+
+	virtual void disable() override
+	{
+		m_outer.setEnabled(false);
 	}
 
   private:
-	MuxInterface& m_mux;
-	MultiplexerPin m_pin;
+	MuxInterface& m_outer;
+	uint8_t m_pin;
 };
 
 } // namespace cz

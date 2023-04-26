@@ -98,30 +98,28 @@ public:
 	}
 };
 
-class IOExpanderPinInstance
+class MCP23xxxOutputPin : public DigitalOutputPin
 {
   public:
-	IOExpanderPinInstance(MCP23017WrapperInterface& ioExpander, IOExpanderPin pin)
-		: m_ioExpander(ioExpander)
+	MCP23xxxOutputPin(const MCP23xxxOutputPin&) = delete;
+	MCP23xxxOutputPin& operator=(const MCP23xxxOutputPin&) = delete;
+	explicit MCP23xxxOutputPin(MCP23017WrapperInterface& outer, uint8_t pin)
+		: m_outer(outer)
 		, m_pin(pin)
 	{
+		m_outer.pinMode(IOExpanderPin(m_pin), PinMode::OUTPUT);
 	}
 
-	IOExpanderPinInstance(const IOExpanderPinInstance&) = default;
-
-	void pinMode(uint8_t d)
+	//
+	// DigitalOutputPin interface
+	virtual void write(PinStatus status) override
 	{
-		m_ioExpander.pinMode(m_pin, d);
-	}
-
-	void digitalWrite(uint8_t d)
-	{
-		m_ioExpander.digitalWrite(m_pin, d);
+		m_outer.digitalWrite(IOExpanderPin(m_pin), status);
 	}
 
   private:
-	MCP23017WrapperInterface& m_ioExpander;
-	IOExpanderPin m_pin;
+	MCP23017WrapperInterface& m_outer;
+	uint8_t m_pin;
 };
 
 }  // namespace cz

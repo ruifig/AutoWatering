@@ -9,7 +9,6 @@
 namespace cz
 {
 
-
 /**
  * Capacitive Soil Moisture Sensor: https://www.amazon.co.uk/gp/product/B08GC5KT4T
  *
@@ -26,10 +25,10 @@ class RealSoilMoistureSensor : public Component
 
 	/**
 	 * @param index Sensor's index within the program data
-	 * @param vinPin What io expander pin we are using to power this sensor
+	 * @param vinPin Pin used to control power to the sensor. If power is always on, you can use a DummyDigitalPin instance
 	 * @param dataPin What multiplexer pin we are using to read the sensor
 	 */
-	RealSoilMoistureSensor(uint8_t index, IOExpanderPinInstance vinPin, MuxPinInstance dataPin);
+	RealSoilMoistureSensor(uint8_t index, DigitalOutputPin& vinPin, AnalogInputPin& dataPin);
 
 	// Disable copying
 	RealSoilMoistureSensor(const RealSoilMoistureSensor&) = delete;
@@ -64,8 +63,10 @@ class RealSoilMoistureSensor : public Component
 	float m_nextTickWait = 0;
 	State m_state = State::Initializing;
 	uint8_t m_index;
-	IOExpanderPinInstance m_vinPin;
-	MuxPinInstance m_dataPin;
+
+	// Pin used to control power
+	DigitalOutputPin& m_vinPin;
+	AnalogInputPin& m_dataPin;
 
 	using SemaphoreQueue = TSemaphoreQueue<uint8_t, MAX_NUM_PAIRS, MAX_SIMULTANEOUS_SENSORS>;
 	static SemaphoreQueue ms_semaphoreQueue;
