@@ -11,6 +11,10 @@ CZ_DEFINE_LOG_CATEGORY(logMQTTCache);
 namespace cz
 {
 
+#if WIFI_ENABLED
+	MQTTCache gMQTTCache;
+#endif
+
 namespace
 {
 	class MyMqttSystem : public MqttClient::System
@@ -170,7 +174,7 @@ MQTTCache::~MQTTCache()
 	ms_instance = nullptr;
 }
 
-void MQTTCache::begin(const MQTTCache::Options& options, MQTTCache::Listener* listener)
+void MQTTCache::setOptions(const MQTTCache::Options& options)
 {
 	m_cfg.host = options.host;
 	m_cfg.port = options.port;
@@ -179,7 +183,7 @@ void MQTTCache::begin(const MQTTCache::Options& options, MQTTCache::Listener* li
 	m_cfg.password = options.password;
 	m_cfg.publishInterval = options.publishInterval;
 
-	m_listener = listener;
+	//m_listener = listener;
 
 	m_mqtt.system = std::make_unique<MyMqttSystem>();
 	m_mqtt.logger = std::make_unique<MyMqttLogger>();
@@ -352,7 +356,7 @@ void MQTTCache::onMqttMessage(MqttClient::MessageData& md)
 	{
 		entry->value = payload;
 		CZ_LOG(logMQTTCache, Log, "onCacheReceived: %s", toLogString(entry));
-		m_listener->onCacheReceived(entry);
+		//m_listener->onCacheReceived(entry);
 	}
 }
 
@@ -379,7 +383,7 @@ void MQTTCache::onMqttPublish(uint16_t packetId)
 	entry->state == MQTTCache::State::Synced;
 
 	CZ_LOG(logMQTTCache, Log, "onCacheSent: %s", toLogString(entry));
-	m_listener->onCacheSent(entry);
+	//m_listener->onCacheSent(entry);
 
 	entry->packetId = 0;
 	if (entry->pendingRemoval)
@@ -395,13 +399,26 @@ void MQTTCache::onMqttPublishCallback(uint16_t packetId)
 	ms_instance->onMqttPublish(packetId);
 }
 
-void MQTTCache::tick(float deltaSeconds)
+bool MQTTCache::initImpl()
 {
+	// Set default options, if not set yet
+	if (m_cfg.host.length()==0)
+	{
+		Options options;
+		setOptions(options);
+	}
+
+	return true;
+}
+
+float MQTTCache::tick(float deltaSeconds)
+{
+	constexpr float tickInterval = 0.25f;
 	if (!isConnected())
 	{
 		if (!connectToMqttBroker(deltaSeconds))
 		{
-			return;
+			return tickInterval;
 		}
 	}
 
@@ -410,7 +427,7 @@ void MQTTCache::tick(float deltaSeconds)
 	m_publishCountdown -= deltaSeconds;
 	if (m_publishCountdown > 0 || m_sendQueue.size() == 0)
 	{
-		return;
+		return tickInterval;
 	}
 
 	auto entry = m_sendQueue.front();
@@ -422,7 +439,7 @@ void MQTTCache::tick(float deltaSeconds)
 
 	CZ_ASSERT(entry->state == MQTTCache::State::QueuedForSend);
 	CZ_LOG(logMQTTCache, Log, "Publishing...");
-	MySerial.flush();
+	AW_CUSTOM_SERIAL.flush();
 
 	{
 		//entry->packetId = m_mqttClient->publish(entry->topic.c_str(), entry->qos, true, entry->value.c_str());
@@ -446,11 +463,51 @@ void MQTTCache::tick(float deltaSeconds)
 	}
 
 	CZ_LOG(logMQTTCache, Log, "... done");
-	MySerial.flush();
+	AW_CUSTOM_SERIAL.flush();
 	// If sending with qos 0, we are not receiving any confirmation, so we set the state to Synced
 	entry->state = entry->qos == 0 ? MQTTCache::State::Synced : MQTTCache::State::SentAndWaitingForAck;
 	CZ_LOG(logMQTTCache, Log, "tick:publish(AFTER): %s", toLogString(entry));
 	m_publishCountdown = m_cfg.publishInterval;
+	return tickInterval;
+}
+
+void MQTTCache::onEvent(const Event& evt)
+{
+	switch(evt.type)
+	{
+		case Event::Type::Wifi:
+		{
+			auto&& e = static_cast<const WifiEvent&>(evt);
+			//
+		}
+		break;
+	}
+}
+
+bool MQTTCache::processCommand(const Command& cmd)
+{
+	if (cmd.is("log"))
+	{
+		logState();
+	}
+	else if(cmd.is("testtcpfail"))
+	{
+		if (!cmd.parseParams(m_simulateTCPFail))
+		{
+			return false;
+		}
+
+		if (m_simulateTCPFail)
+		{
+			m_wifiClient.stop();
+		}
+	}
+	else
+	{
+		return false;
+	}
+
+	return true;
 }
 
 const char* MQTTCache::toLogString(const MQTTCache::Entry* e) const
@@ -567,30 +624,6 @@ bool MQTTCache::connectToMqttBroker(float deltaSeconds)
 	}
 }
 
-bool MQTTCache::processCommand(const Command& cmd)
-{
-	if (cmd.is("logcachedmqttvalues"))
-	{
-		logState();
-	}
-	else if(cmd.is("testtcpfail"))
-	{
-		if (!cmd.parseParams(m_simulateTCPFail))
-		{
-			return false;
-		}
 
-		if (m_simulateTCPFail)
-		{
-			m_wifiClient.stop();
-		}
-	}
-	else
-	{
-		return false;
-	}
-
-	return true;
-}
 
 }

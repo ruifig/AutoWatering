@@ -7,28 +7,8 @@
 #include "crazygaze/micromuc/czmicromuc.h"
 #include "utility/PinTypes.h"
 
-// FASTER_ITERATION
-#ifndef FASTER_ITERATION
-	#define FASTER_ITERATION 1
-#endif
 
-#ifndef MOCK_COMPONENTS
-	#define MOCK_COMPONENTS 0
-#endif
-
-/**
- * If 1, it will consider we are using the Raspberry Pi Debug Probe, and setup logging to use Serial1
- * If 0, it will use the default Serial object
-*/
-#define CZ_USE_PROBE_SERIAL 1
-
-#if CZ_USE_PROBE_SERIAL
-	#define MySerial Serial1
-	#define MySerial_RXPin 17
-	#define MySerial_TXPin 16
-#else
-	#define MySerial Serial
-#endif
+#include "PreConfig.h"
 
 /**
  * What pin to as CS/SS for the SD card reader
@@ -325,3 +305,5 @@ static_assert(1<<GRAPH_POINT_NUM_BITS < GRAPH_HEIGHT, "Reduce number of bits, or
 #define MOISTURESENSOR_ACCEPTABLE_MIN_VALUE 100
 
 #include "Secrets.h"
+
+#include "PostConfig.h"

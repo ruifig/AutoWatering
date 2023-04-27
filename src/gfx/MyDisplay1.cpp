@@ -79,27 +79,27 @@ void MyDisplay1::logProperties()
 			index++;
 		}
 
-		MySerial.print("Register 0x");
-		if (reg < 0x10) MySerial.print("0");
-		MySerial.print(reg , HEX);
+		AW_CUSTOM_SERIAL.print("Register 0x");
+		if (reg < 0x10) AW_CUSTOM_SERIAL.print("0");
+		AW_CUSTOM_SERIAL.print(reg , HEX);
 
-		MySerial.print(": 0x");
+		AW_CUSTOM_SERIAL.print(": 0x");
 
 		// Add leading zeros as needed
 		uint32_t mask = 0x1 << 28;
 		while (data < mask && mask > 0x1) {
-			MySerial.print("0");
+			AW_CUSTOM_SERIAL.print("0");
 			mask = mask >> 4;
 		}
 
-		MySerial.println(data, HEX);
+		AW_CUSTOM_SERIAL.println(data, HEX);
 
 		return data;
 	};
 
 	auto printSubset = [&]()
 	{
-		MySerial.println();  MySerial.println();
+		AW_CUSTOM_SERIAL.println();  AW_CUSTOM_SERIAL.println();
 		readRegister(ILI9341_RDDID, 3, 1);
 		readRegister(ILI9341_RDDST, 4, 1);
 		readRegister(ILI9341_RDMODE, 1, 1);

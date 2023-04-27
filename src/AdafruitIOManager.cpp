@@ -1,6 +1,7 @@
 #include "AdafruitIOManager.h"
 #include "Watchdog.h"
 #include <crazygaze/micromuc/MathUtils.h>
+#include "MQTTCache.h"
 
 #define MQTT_CHECK_INTERVAL_MS 1000
 
@@ -32,25 +33,6 @@ namespace
 			return cz::formatString(ADAFRUIT_IO_USERNAME "/feeds/" TOPIC_GROUP "pair%d-moisturethreshold", index);
 		}
 	}
-
-	class MyMqttSystem : public MqttClient::System
-	{
-	public:
-		virtual unsigned long millis() const override {
-			return ::millis();
-		}
-	};
-
-	class MyMqttLogger : public MqttClient::Logger
-	{
-	public:
-
-		virtual void println(const char* msg) override
-		{
-			CZ_LOG(logMQTT, Log, "MQTTCLIENT: %s", msg);
-		}
-	};
-
 }
 
 namespace cz
@@ -71,26 +53,17 @@ AdafruitIOManager::~AdafruitIOManager()
 
 bool AdafruitIOManager::initImpl()
 {
-	m_multi.addAP(WIFI_SSID, WIFI_PASSWORD);
-
-	MQTTCache::Options options;
-	m_cache.begin(options, this);
 	return true;
 }
 
 float AdafruitIOManager::tick(float deltaSeconds)
 {
-	connectToWifi(true);
-
-	// Tick publishing queue
-	m_cache.tick(deltaSeconds);
-
 	return 0.250f;
 }
 
 void AdafruitIOManager::publish(const char* topic, const char* value, uint8_t qos)
 {
-	m_cache.set(topic, value, qos, true);
+	gMQTTCache.set(topic, value, qos, true);
 }
 
 void AdafruitIOManager::onEvent(const Event& evt)
@@ -136,100 +109,6 @@ void AdafruitIOManager::onEvent(const Event& evt)
 
 bool AdafruitIOManager::processCommand(const Command& cmd)
 {
-	if (cmd.is("wifidisconnect"))
-	{
-		WiFi.disconnect();
-	}
-	else
-	{
-		return m_cache.processCommand(cmd);
-	}
-	
-	return true;
-}
-
-void AdafruitIOManager::onCacheReceived(const MQTTCache::Entry* entry)
-{
-}
-
-void AdafruitIOManager::onCacheSent(const MQTTCache::Entry* entry)
-{
-}
-
-void AdafruitIOManager::printWifiStatus()
-{
-	// print the SSID of the network you're attached to:
-	CZ_LOG(logMQTT, Log, "Connected to SSID: %s", WiFi.SSID().c_str());
-
-	// print your board's IP address:
-	IPAddress ip = WiFi.localIP();
-	CZ_LOG(logMQTT, Log, "Local IP Address: %s", ip.toString().c_str());
-
-	// print the received signal strength:
-	int rssi = WiFi.RSSI();
-	CZ_LOG(logMQTT, Log, "Signal strenght (RSSI): %d dBm", rssi)
-}
-
-bool AdafruitIOManager::connectToWifi(bool systemResetOnFail)
-{
-	if (WiFi.status() == WL_CONNECTED)
-	{
-		return true;
-	}
-
-	#define MAX_NUM_WIFI_CONNECT_TRIES_PER_LOOP 20
-	int numTries = 0;
-	while(WiFi.status() != WL_CONNECTED)
-	{
-		numTries++;
-		CZ_LOG(logMQTT, Log, "Connecting to %s (Attempt %d)", WIFI_SSID, numTries);
-
-		// Disable the watchdog ONLY for as long as we need
-		uint8_t runRes;
-		{
-			WatchdogPauseScope wtdPause;
-			runRes = m_multi.run();
-		}
-
-		if (runRes == WL_CONNECTED)
-		{
-			//CZ_LOG(logMQTT, Log, "Wifi connected. IP %s", m_wifiClient.localIP().toString().c_str());
-			printWifiStatus();
-			break;
-		}
-
-		if (numTries > MAX_NUM_WIFI_CONNECT_TRIES_PER_LOOP)
-		{
-			Component::raiseEvent(WifiEvent(false));
-			// Restart for Portenta as something is very wrong
-			CZ_LOG(logMQTT, Error, "Can't connect to any WiFi. Resetting");
-			cz::LogOutput::flush();
-			delay(1000);
-			rp2040.reboot();
-			return false;
-		}
-		else
-		{
-			delay(200);
-		}
-	}
-
-	Component::raiseEvent(WifiEvent(true));
-	return true;
-}
-
-bool AdafruitIOManager::isWiFiConnected()
-{
-	// You can change longer or shorter depending on your network response
-	// Shorter => more responsive, but more ping traffic
-	static uint8_t theTTL = 10;
-
-	// Use ping() to test TCP connections
-	if (WiFi.ping(WiFi.gatewayIP(), theTTL) == theTTL)
-	{
-		return true;
-	}
-
 	return false;
 }
 

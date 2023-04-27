@@ -8,6 +8,8 @@
 #include <crazygaze/micromuc/Logging.h>
 #include <crazygaze/micromuc/Ticker.h>
 
+#include "Component.h"
+
 #define MQTT_LOG_ENABLED 1
 #include "MqttClient.h"
 #include "WiFi.h"
@@ -23,7 +25,7 @@ namespace cz
  *
  * Any Entry objects passed to the user are guaranteed to exist until until a call to remove is made.
  */
-class MQTTCache
+class MQTTCache : public Component
 {
   public:
 	MQTTCache();
@@ -95,11 +97,9 @@ class MQTTCache
 	};
 
 	/**
-	 * @param mqttClient MQTT client to use
-	 * @param listener Listener object
-	 * @param publishInterval How long to wait (in seconds) between sends. This is for rate limiting
-	 */
-	void begin(const Options& options, Listener* listener);
+	 * This should be called before the Component::initAll to override any of the default options
+	*/
+	void setOptions(const Options& options);
 
 	/**
 	 * Sets a cache entry to the specified value.
@@ -122,14 +122,17 @@ class MQTTCache
 	 */
 	void remove(const char* topic);
 	void remove(const Entry* entry);
-
-	void tick(float deltaSeconds);
-
 	void logState() const;
-
 	bool isConnected() const;
 
-	bool processCommand(const struct Command& cmd);
+	//
+	// Component interface
+	//
+	virtual const char* getName() const override { return "MQTTCache"; }
+	virtual bool initImpl() override;
+	virtual float tick(float deltaSeconds) override;
+	virtual void onEvent(const Event& evt) override;
+	virtual bool processCommand(const Command& cmd) override;
 
   private:
 
@@ -152,7 +155,7 @@ class MQTTCache
 	std::vector<std::unique_ptr<Entry>> m_cache;
 	std::queue<Entry*> m_sendQueue;
 	float m_publishCountdown = 0;
-	Listener* m_listener;
+	//Listener* m_listener;
 	WiFiClient m_wifiClient;
 
 	struct Config
@@ -185,6 +188,10 @@ class MQTTCache
 	bool m_simulateTCPFail = false; 
 #endif
 };
+
+#if WIFI_ENABLED
+	extern MQTTCache gMQTTCache;
+#endif
 
 } // namespace cz
 

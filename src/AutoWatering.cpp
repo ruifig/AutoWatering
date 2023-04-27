@@ -149,13 +149,13 @@ void setup()
 
 	// We need to increase the uart queue size so CommandConsole works with long commands.
 	// Couldn't pinpoint the exact reason, but at the time of writting, SerialStringReader would messe up when trying to read long commands
-	MySerial.setFIFOSize(256);
+	AW_CUSTOM_SERIAL.setFIFOSize(256);
 
-	#if CZ_USE_PROBE_SERIAL
-		MySerial.setRX(MySerial_RXPin);
-		MySerial.setTX(MySerial_TXPin);
+	#if defined(AW_CUSTOM_SERIAL_RXPIN) || defined(AW_CUSTOM_SERIAL_TXPIN)
+		AW_CUSTOM_SERIAL.setRX(AW_CUSTOM_SERIAL_RXPIN);
+		AW_CUSTOM_SERIAL.setTX(AW_CUSTOM_SERIAL_TXPIN);
 	#endif
-	gSerialLogOutput.begin(MySerial, 115200);
+	gSerialLogOutput.begin(AW_CUSTOM_SERIAL, 115200);
 #endif
 
 	CZ_LOG(logDefault, Log, "");

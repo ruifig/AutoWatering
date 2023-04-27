@@ -13,7 +13,7 @@ CommandConsole::CommandConsole()
 
 bool CommandConsole::initImpl()
 {
-	m_serialStringReader.begin(MySerial);
+	m_serialStringReader.begin(AW_CUSTOM_SERIAL);
 	return true;
 }
 

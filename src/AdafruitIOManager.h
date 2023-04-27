@@ -5,7 +5,6 @@
 #include <WiFi.h>
 #include <crazygaze/micromuc/Logging.h>
 #include <crazygaze/micromuc/StringUtils.h>
-#include "MQTTCache.h"
 #include <memory>
 
 namespace cz
@@ -14,7 +13,7 @@ namespace cz
 /**
  * 
 */
-class AdafruitIOManager : public Component, public MQTTCache::Listener
+class AdafruitIOManager : public Component
 {
   public:
 	AdafruitIOManager();
@@ -30,16 +29,6 @@ class AdafruitIOManager : public Component, public MQTTCache::Listener
 	virtual float tick(float deltaSeconds) override;
 	virtual void onEvent(const Event& evt) override;
 	virtual bool processCommand(const Command& cmd) override;
-
-	//
-	// MQTTCache::Listener interface
-	//
-	virtual void onCacheReceived(const MQTTCache::Entry* entry) override;
-	virtual void onCacheSent(const MQTTCache::Entry* entry) override;
-
-	void printWifiStatus();
-	bool connectToWifi(bool systemRestOnFail);
-	bool isWiFiConnected();
 
 	//
 	// @param ignoreCached
@@ -93,8 +82,6 @@ class AdafruitIOManager : public Component, public MQTTCache::Listener
 		}
 	}
 
-	WiFiMulti m_multi;
-	MQTTCache m_cache;
 	static AdafruitIOManager* ms_instance;
 };
 
