@@ -291,3 +291,19 @@ Sensor sampling interval in seconds while in the calibration menu. Needs to be a
 #ifndef AW_MOISTURESENSOR_CALIBRATION_SAMPLINGINTERVAL
 	#define AW_MOISTURESENSOR_CALIBRATION_SAMPLINGINTERVAL 1
 #endif
+
+/*
+Maximum acceptable value for standard deviation.
+Anything above is considered too random and means the sensor is probably not connected
+*/
+#ifndef AW_MOISTURESENSOR_ACCEPTABLE_STANDARD_DEVIATION
+	#define AW_MOISTURESENSOR_ACCEPTABLE_STANDARD_DEVIATION 10
+#endif
+
+/*
+When a sensor is connected, but not getting power, it will consistently report very low values
+Any value below this, and we consider that the sensor is not getting power
+*/
+#ifndef AW_MOISTURESENSOR_ACCEPTABLE_MIN_VALUE
+	#define AW_MOISTURESENSOR_ACCEPTABLE_MIN_VALUE 100
+#endif

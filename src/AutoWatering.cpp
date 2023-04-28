@@ -6,7 +6,7 @@
 
 #include "Context.h"
 #include "SoilMoistureSensor.h"
-#include "GroupMonitor.h"
+#include "PumpMonitor.h"
 #include "Timer.h"
 #include "crazygaze/micromuc/Logging.h"
 #include <algorithm>
@@ -66,8 +66,8 @@ void createSoilMoistureSensors()
 	}
 }
 
-GroupMonitor* gGroupMonitors[MAX_NUM_PAIRS];
-void createGroupMonitors()
+PumpMonitor* gPumpMonitors[MAX_NUM_PAIRS];
+void createPumpMonitors()
 {
 	CZ_LOG(logDefault, Log, "Creating group monitor components");
 	static IOExpanderPin motorPins[sensorsPerBoard] = 
@@ -85,7 +85,7 @@ void createGroupMonitors()
 		DigitalOutputPin* pin = new MCP23xxxOutputPin(
 			gCtx.m_i2cBoards[i / sensorsPerBoard].ioExpander,
 			motorPins[i % sensorsPerBoard].raw);
-		gGroupMonitors[i] = new GroupMonitor(i, *pin);
+		gPumpMonitors[i] = new PumpMonitor(i, *pin);
 	}
 }
 
@@ -140,7 +140,7 @@ namespace
 
 void doGroupShot(uint8_t index)
 {
-	gGroupMonitors[index]->doShot();
+	gPumpMonitors[index]->doShot();
 }
 
 void setup()
@@ -217,7 +217,7 @@ void setup()
 	gTimer.begin();
 
 	createSoilMoistureSensors();
-	createGroupMonitors();
+	createPumpMonitors();
 
 	Component::initAll();
 

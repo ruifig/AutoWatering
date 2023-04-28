@@ -768,10 +768,10 @@
     <Compile Include="src\GroupGraph.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\GroupMonitor.cpp">
+    <Compile Include="src\PumpMonitor.cpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\GroupMonitor.h">
+    <Compile Include="src\PumpMonitor.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\Icons.h">

@@ -7,7 +7,7 @@
 
 * Add date/time reading from https://learn.adafruit.com/adafruit-magtag/getting-the-date-time
 
-* GroupMonitor should make use of a mutex style thing like the sensors, to keep maximum current usage low. - DONE
+* PumpMonitor should make use of a mutex style thing like the sensors, to keep maximum current usage low. - DONE
 	* Make sure the mutex is released when turning off the motor - DONE
 
 * Instead of the threshold little marker, use a grey horizontal line across the entire graph - DONE
@@ -35,10 +35,10 @@
 	* This helps knowing when the board is trying telling the motor to turn on, and for some reason it is NOT turning on
 
 
-* GroupMonitor:
+* PumpMonitor:
 	* DONE - Need to put the active slot "release" somewhere. As-in, every time we call tryAcquire, we need to remember that and make sure "release" is called when we are no longer trying to acquire (or the motor is turned off)
-	* DONE - Manual shots (and the console command shots) need to go through the GroupMonitor::tick function, so it respects the allowed number of active motors
-		* Probably need another field (e.g: bool m_doExplicitShot) in GroupMonitor, and then in the tick function where we check the last sensor reading, we also check that bool
+	* DONE - Manual shots (and the console command shots) need to go through the PumpMonitor::tick function, so it respects the allowed number of active motors
+		* Probably need another field (e.g: bool m_doExplicitShot) in PumpMonitor, and then in the tick function where we check the last sensor reading, we also check that bool
 
 
 CLEAN UP

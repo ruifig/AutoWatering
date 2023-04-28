@@ -1,13 +1,13 @@
-#include "GroupMonitor.h"
+#include "PumpMonitor.h"
 #include "Context.h"
 #include <crazygaze/micromuc/StringUtils.h>
 
 namespace cz
 {
 
-GroupMonitor::SemaphoreQueue GroupMonitor::ms_semaphoreQueue;
+PumpMonitor::SemaphoreQueue PumpMonitor::ms_semaphoreQueue;
 
-GroupMonitor::GroupMonitor(uint8_t index, DigitalOutputPin& motorPin)
+PumpMonitor::PumpMonitor(uint8_t index, DigitalOutputPin& motorPin)
 	: m_index(index)
 	, m_motorPin(motorPin)
 	, m_sensorValidReadingSinceLastShot(0)
@@ -15,18 +15,18 @@ GroupMonitor::GroupMonitor(uint8_t index, DigitalOutputPin& motorPin)
 {
 }
 
-const char* GroupMonitor::getName() const
+const char* PumpMonitor::getName() const
 {
-	return formatString("GroupMonitor%d", m_index);
+	return formatString("PumpMonitor%d", m_index);
 }
 
-bool GroupMonitor::initImpl()
+bool PumpMonitor::initImpl()
 {
 	m_motorPin.write(PinStatus::LOW);
 	return true;
 }
 
-void GroupMonitor::doShot()
+void PumpMonitor::doShot()
 {
 	CZ_LOG(logDefault, Log, F("Initiating user requested shot for group %d"), m_index);
 	// If we are already trying to turn the motor on (it's waiting in queue), then do nothing
@@ -40,7 +40,7 @@ void GroupMonitor::doShot()
 	}
 }
 
-bool GroupMonitor::tryTurnMotorOn(bool registerInterest)
+bool PumpMonitor::tryTurnMotorOn(bool registerInterest)
 {
 	GroupData& data = gCtx.data.getGroupData(m_index);
 	if (data.isMotorOn())
@@ -67,7 +67,7 @@ bool GroupMonitor::tryTurnMotorOn(bool registerInterest)
 	}
 }
 
-void GroupMonitor::turnMotorOff()
+void PumpMonitor::turnMotorOff()
 {
 	m_motorPin.write(PinStatus::LOW);
 	GroupData& data = gCtx.data.getGroupData(m_index);
@@ -75,7 +75,7 @@ void GroupMonitor::turnMotorOff()
 	m_queueHandle.release();
 }
 
-float GroupMonitor::tick(float deltaSeconds)
+float PumpMonitor::tick(float deltaSeconds)
 {
 	GroupData& data = gCtx.data.getGroupData(m_index);
 
@@ -114,7 +114,7 @@ float GroupMonitor::tick(float deltaSeconds)
 	return 0.2f;
 }
 
-void GroupMonitor::onEvent(const Event& evt)
+void PumpMonitor::onEvent(const Event& evt)
 {
 	switch(evt.type)
 	{
@@ -149,7 +149,7 @@ void GroupMonitor::onEvent(const Event& evt)
 	}
 }
 
-bool GroupMonitor::processCommand(const Command& cmd)
+bool PumpMonitor::processCommand(const Command& cmd)
 {
 	if (cmd.is("motoroff"))
 	{

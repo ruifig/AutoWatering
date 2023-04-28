@@ -190,14 +190,6 @@
 static_assert(1<<GRAPH_POINT_NUM_BITS < GRAPH_HEIGHT, "Reduce number of bits, or increase graph height");
 #define GRAPH_POINT_MAXVAL ((1<<GRAPH_POINT_NUM_BITS) - 1)
 
-// Maximum acceptable value for standard deviation.
-// Anything above is considered too random and means the sensor is probably not connected
-#define AW_MOISTURESENSOR_ACCEPTABLE_STANDARD_DEVIATION 10
-
-// When a sensor is connected, but not getting power, it will consistently report very low values
-// Any value below this, and we consider that the sensor is not getting power
-#define AW_MOISTURESENSOR_ACCEPTABLE_MIN_VALUE 100
-
 #include "Secrets.h"
 
 #include "PostConfig.h"

@@ -7,12 +7,12 @@
 namespace cz
 {
 
-class GroupMonitor : public Component
+class PumpMonitor : public Component
 {
   public:
-	GroupMonitor(const GroupMonitor&) = delete;
-	GroupMonitor& operator=(const GroupMonitor&) = delete;
-	explicit GroupMonitor(uint8_t index, DigitalOutputPin& motorPin);
+	PumpMonitor(const PumpMonitor&) = delete;
+	PumpMonitor& operator=(const PumpMonitor&) = delete;
+	explicit PumpMonitor(uint8_t index, DigitalOutputPin& motorPin);
 
 	// Initiates an explicit shot
 	// If there are too many motors on already, it will queue up
