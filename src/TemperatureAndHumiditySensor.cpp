@@ -44,7 +44,7 @@ float TemperatureAndHumiditySensor::tick(float deltaSeconds)
 		break;
 
 	case State::Idle:
-		if (m_timeSinceLastRead >= TEMPSENSOR_DEFAULT_SAMPLINGINTERVAL)
+		if (m_timeSinceLastRead >= AW_THSENSOR_DEFAULT_SAMPLINGINTERVAL)
 		{
 			changeToState(State::Reading);
 		}
@@ -83,7 +83,7 @@ float TemperatureAndHumiditySensor::tick(float deltaSeconds)
 
 void TemperatureAndHumiditySensor::readSensor(float& temperature, float& humidity)
 {
-#if MOCK_COMPONENTS
+#if AW_MOCK_COMPONENTS
 	static int counter = 0;
 	counter = (counter+1) % 10;
 	temperature = 20.0f + counter / 10.0f;
@@ -155,8 +155,8 @@ void TemperatureAndHumiditySensor::onEvent(const Event& evt)
 {
 }
 
-#if TEMPERATURE_AND_HUMIDITY_SENSOR_ENABLED
-TemperatureAndHumiditySensor gTempAndHumiditySensor;
+#if AW_THSENSOR_SENSOR_ENABLED
+	TemperatureAndHumiditySensor gTempAndHumiditySensor;
 #endif
 
 } // namespace cz

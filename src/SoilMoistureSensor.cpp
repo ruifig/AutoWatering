@@ -61,7 +61,7 @@ float RealSoilMoistureSensor::tick(float deltaSeconds)
 	GroupData& data = gCtx.data.getGroupData(m_index);
 	bool isSelectedGroup = gCtx.data.getSelectedGroup() == &data ? true : false;
 
-#if FASTER_ITERATION
+#if AW_FASTER_ITERATION
 	m_nextTickWait = 0.05f;
 #else
 	m_nextTickWait = 0.2f;
@@ -76,7 +76,7 @@ float RealSoilMoistureSensor::tick(float deltaSeconds)
 	case State::PoweredDown:
 		if (data.isRunning() || data.isInConfigMenu())
 		{
-			float samplingInterval = data.isInConfigMenu() ? MOISTURESENSOR_CALIBRATION_SAMPLINGINTERVAL : data.getSamplingInterval();
+			float samplingInterval = data.isInConfigMenu() ? AW_MOISTURESENSOR_CALIBRATION_SAMPLINGINTERVAL : data.getSamplingInterval();
 			if (m_timeSinceLastRead >= samplingInterval)
 			{
 				tryEnterReadingState();
@@ -92,7 +92,7 @@ float RealSoilMoistureSensor::tick(float deltaSeconds)
 
 	case State::Reading:
 		{
-			if (m_timeInState >= MOISTURESENSOR_POWERUP_WAIT)
+			if (m_timeInState >= AW_MOISTURESENSOR_POWERUP_WAIT)
 			{
 				// Using a function to read the sensor, so we can provide a mock value when using the mock version
 				SensorReading sample = readSensor();
@@ -221,7 +221,7 @@ void RealSoilMoistureSensor::onEnterState()
 		m_dataPin.enable();
 		//  To take a measurement, we turn the sensor ON, wait a bit, then switch it off
 		m_vinPin.write(PinStatus::HIGH);
-		m_nextTickWait = MOISTURESENSOR_POWERUP_WAIT;
+		m_nextTickWait = AW_MOISTURESENSOR_POWERUP_WAIT;
 		break;
 
 	default:
@@ -340,11 +340,11 @@ SensorReading MockSoilMoistureSensor::readSensor()
 		SensorReading res;
 		if (m_mock.status == SensorReading::Status::NoSensor)
 		{
-			res = SensorReading(random(260, 530), MOISTURESENSOR_ACCEPTABLE_STANDARD_DEVIATION + 1);
+			res = SensorReading(random(260, 530), AW_MOISTURESENSOR_ACCEPTABLE_STANDARD_DEVIATION + 1);
 		}
 		else
 		{
-			res = SensorReading(random(10,MOISTURESENSOR_ACCEPTABLE_MIN_VALUE-1), 5);
+			res = SensorReading(random(10,AW_MOISTURESENSOR_ACCEPTABLE_MIN_VALUE-1), 5);
 		}
 
 		CZ_LOG(logDefault, Verbose, F("MockSoilMoistureSensor(%d) : ERROR-%s"), m_index, res.getStatusText());

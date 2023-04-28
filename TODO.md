@@ -1,3 +1,6 @@
+* Create a "LEDStatus" component
+	* This will allow some feedback of what's going on when there isn't a screen connected
+
 * Go through the console commands list and cleanup/remove what's should not be there, like test stuff I left behind. - DONE
 
 * Add watchdog timer component - DONE

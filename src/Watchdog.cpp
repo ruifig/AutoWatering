@@ -1,7 +1,7 @@
 #include "Watchdog.h"
 #include <Arduino.h>
 
-#if WATCHDOG_PAUSE_SUPPORT
+#if AW_WATCHDOG_PAUSE_SUPPORT
 	#include <FreeRTOS.h>
 	#include <task.h>
 
@@ -29,7 +29,7 @@ Watchdog::Watchdog()
 
 Watchdog::~Watchdog()
 {
-#if WATCHDOG_PAUSE_SUPPORT
+#if AW_WATCHDOG_PAUSE_SUPPORT
 	if (m_autoResetTaskHandle)
 	{
 		vTaskDelete(m_autoResetTaskHandle);
@@ -54,7 +54,7 @@ void Watchdog::start()
 
 bool Watchdog::initImpl()
 {
-#if WATCHDOG_PAUSE_SUPPORT
+#if AW_WATCHDOG_PAUSE_SUPPORT
 	start();
 	CZ_LOG(logDefault, Log, "Creating watchdog auto reset task (to support pause/resume)");
 	xTaskCreate(
@@ -68,7 +68,7 @@ bool Watchdog::initImpl()
 
 	vTaskSuspend(m_autoResetTaskHandle);
 #else
-	if constexpr(WIFI_ENABLED)
+	if constexpr(AW_WIFI_ENABLED)
 	{
 		// If we are using WIFI, we need to wait until we either connect or fail to connect.
 		// This is because connecting to Wifi can take over the 8.3 secs limit of the watchdog. :(
@@ -84,7 +84,7 @@ bool Watchdog::initImpl()
 	return true;
 }
 
-#if WATCHDOG_PAUSE_SUPPORT
+#if AW_WATCHDOG_PAUSE_SUPPORT
 void Watchdog::pause()
 {
 	if (m_pauseCount==0)
@@ -124,9 +124,9 @@ void Watchdog::onEvent(const Event& evt)
 {
 	switch(evt.type)
 	{
-		case Event::Type::Wifi:
+		case Event::Type::WifiStatus:
 		{
-			auto&& e = static_cast<const WifiEvent&>(evt);
+			auto&& e = static_cast<const WifiStatusEvent&>(evt);
 			start();
 		}
 		break;
@@ -145,7 +145,7 @@ bool Watchdog::processCommand(const Command& cmd)
 			return true;
 		}
 	}
-#if WATCHDOG_PAUSE_SUPPORT
+#if AW_WATCHDOG_PAUSE_SUPPORT
 	else if (cmd.is("pause"))
 	{
 		pause();
@@ -161,7 +161,7 @@ bool Watchdog::processCommand(const Command& cmd)
 	return false;
 }
 
-#if WATCHDOG_ENABLED
+#if AW_WATCHDOG_ENABLED
 	Watchdog gWatchdog;
 #endif
 

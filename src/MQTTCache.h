@@ -183,13 +183,13 @@ class MQTTCache : public Component
 	bool connectToMqttBroker(float deltaSeconds);
 	float m_connectToMqttBrokerCountdown = 0;
 
-#if MQTT_WIFI_DISCONNECT_AND_RECONNECT
+#if AW_MQTT_WIFI_RECONNECT
 	int m_conFailCount = 0;
 	bool m_simulateTCPFail = false; 
 #endif
 };
 
-#if WIFI_ENABLED
+#if AW_WIFI_ENABLED
 	extern MQTTCache gMQTTCache;
 #endif
 

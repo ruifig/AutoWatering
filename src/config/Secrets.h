@@ -19,7 +19,7 @@
 */
 
 // If wifi use is enabled, then make sure all required defines exist
-#if WIFI_ENABLED
+#if AW_WIFI_ENABLED
 	#ifndef WIFI_SSID
 		#error WIFI_SSID not defined.
 	#endif

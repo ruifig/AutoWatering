@@ -10,60 +10,6 @@
 
 #include "PreConfig.h"
 
-/**
- * What pin to as CS/SS for the SD card reader
- */
-//#define SD_CARD_SS_PIN 53
-
-/**
- * If 1, it will log to a file in the sd card
- * WARNING: SD card logging is untested. It was working a long time ago when I was using an Arduino Mega 2560, but hasn't been tested for a very long time.
- */
-#if CZ_LOG_ENABLED
-	#define SD_CARD_LOGGING 0
-#else
-	#define SD_CARD_LOGGING 0
-#endif
-
-#if CZ_DEBUG
-	#define COMMAND_CONSOLE_ENABLED 1
-#else
-	#define COMMAND_CONSOLE_ENABLED 1
-#endif
-
-/**
- * Set this to 0 to disable Wifi or 1 to enable
- * If set to 1, make sure you provide your network details. See Config/Secrets.h for more information
- */
-#define WIFI_ENABLED 1
-
-/**
- * How long to wait between attempts to reconnect to the mqtt broker
-*/
-#define MQTT_CONNECTION_RETRY_INTERVAL 5.0f
-
-/**
- * At the time of writting, I've noticed that sometimes even if Wifi is supposed to be connected, establishing TCP connections fails, and never recovers.
- * Setting this to 0 means no disconnect/reconnect is done
- * Setting this to N (where N>0), will perform a wifi disconnect/reconnect after failing to establish the TCP connection N times.
- */
-#define MQTT_WIFI_DISCONNECT_AND_RECONNECT 5
-
-/**
- * If set to 1, it will enable the RP2040 watchdog timer. See https://arduino-pico.readthedocs.io/en/latest/rp2040.html#hardware-watchdog
- */
-#define WATCHDOG_ENABLED 1
-
-
-/**
- * If set to 1, it will enable battery life readings
- */
-#define BATTERY_LIFE_ENABLED 1
-
-/**
- * If set to 1, it will enable temperature and humidity sensor readings
-*/
-#define TEMPERATURE_AND_HUMIDITY_SENSOR_ENABLED 1
 
 /**
  * How many bits to set the ADC readings to.
@@ -84,10 +30,6 @@
 #define MCU_TO_MUX_ZPIN cz::MCUPin(28)
 
 
-/**
- * What pin to use for battery voltage readings
- */
-#define BATTERY_LIFE_PIN cz::MCUPin(26)
 
 /**
  * Pins of the IO expander to use to set the s0..s2 pins of the mux
@@ -151,48 +93,7 @@
  * How many motors can be active at one given time
  * This is to control the peak power usage, depending on what power supply it is being used
  */
-#define MAX_SIMULTANEOUS_MOTORS 3
-
-/**
- * How many sensors can be active at one given time
- * This should be always 1, because we are sharing a single Arduino pin for the analog reads
- */
-#define MAX_SIMULTANEOUS_SENSORS 1
-
-/**
- * When we want to take a moisture reading, we enable power to the the sensor and need to wait a bit before doing the
- * actual reading.
- * This specifies how many seconds to wait before doing the reading
- */
-#if FASTER_ITERATION
-	#define MOISTURESENSOR_POWERUP_WAIT 0.20f
-#else
-	#define MOISTURESENSOR_POWERUP_WAIT 0.20f
-#endif
-
-/**
- * Default sensor sampling interval in seconds. Needs to be integer number.
- * Note that internally the sampling interval is tracked in seconds, but the UI shows it in minutes. This is because
- * allowing it in seconds is easier for development since we can have the sensor reacting fast, BUT showing the settings UI in seconds
- * would be cumbersome since the user will probably want big intervals between samplings (intervals in minutes probably)
- */
-#if FASTER_ITERATION
-	#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 1
-#else
-	#define MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL 60
-#endif
-
-/**
- * Maximum sampling interval allowed in seconds (integer number)
- * This also limits the the maximum value the UI will allow and show.
- * Please note that the UI shows sampling intervals in minutes, but the internal code uses
- */
-#define MOISTURESENSOR_MAX_SAMPLINGINTERVAL (99*60)
-
-/**
- * Sensor sampling interval while in the calibration menu. Needs to be an integer number
- */
-#define MOISTURESENSOR_CALIBRATION_SAMPLINGINTERVAL 1
+#define AW_MAX_SIMULTANEOUS_MOTORS 3
 
 /**
  * Water shot duration in seconds. Need to be an integer number
@@ -203,13 +104,6 @@
  * Maximum allowed value for water shots (in seconds). Needs to be an integer number
  */
 #define SHOT_MAX_DURATION 99
-
-// Temperature/humidity sensor sampling interval in seconds.
-#if FASTER_ITERATION
-	#define TEMPSENSOR_DEFAULT_SAMPLINGINTERVAL 60.0f
-#else
-	#define TEMPSENSOR_DEFAULT_SAMPLINGINTERVAL 120.0f
-#endif
 
 /**
  * Minimum time required to pass (in seconds) before a group turns the motor ON again.
@@ -229,7 +123,7 @@
 /**
  * How long to show the intro for when powering up
  */
-#if FASTER_ITERATION
+#if AW_FASTER_ITERATION
 	#define INTRO_DURATION 0.25f
 #else
 	#define INTRO_DURATION 1.0f
@@ -298,11 +192,11 @@ static_assert(1<<GRAPH_POINT_NUM_BITS < GRAPH_HEIGHT, "Reduce number of bits, or
 
 // Maximum acceptable value for standard deviation.
 // Anything above is considered too random and means the sensor is probably not connected
-#define MOISTURESENSOR_ACCEPTABLE_STANDARD_DEVIATION 10
+#define AW_MOISTURESENSOR_ACCEPTABLE_STANDARD_DEVIATION 10
 
 // When a sensor is connected, but not getting power, it will consistently report very low values
 // Any value below this, and we consider that the sensor is not getting power
-#define MOISTURESENSOR_ACCEPTABLE_MIN_VALUE 100
+#define AW_MOISTURESENSOR_ACCEPTABLE_MIN_VALUE 100
 
 #include "Secrets.h"
 

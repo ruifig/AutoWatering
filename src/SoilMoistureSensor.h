@@ -48,7 +48,7 @@ class RealSoilMoistureSensor : public Component
 	{
 		Initializing,
 		PoweredDown,
-		QueuedForReading, // Sensor needs a reading, and it's waiting its turn, to respect MAX_SIMULTANEOUS_SENSORS
+		QueuedForReading, // Sensor needs a reading, and it's waiting its turn, to respect AW_MAX_SIMULTANEOUS_MOISTURESENSORS
 		Reading // Sensor is powering up to perform a read
 	};
 
@@ -68,7 +68,7 @@ class RealSoilMoistureSensor : public Component
 	DigitalOutputPin& m_vinPin;
 	AnalogInputPin& m_dataPin;
 
-	using SemaphoreQueue = TSemaphoreQueue<uint8_t, MAX_NUM_PAIRS, MAX_SIMULTANEOUS_SENSORS>;
+	using SemaphoreQueue = TSemaphoreQueue<uint8_t, MAX_NUM_PAIRS, AW_MAX_SIMULTANEOUS_MOISTURESENSORS>;
 	static SemaphoreQueue ms_semaphoreQueue;
 	SemaphoreQueue::Handle m_queueHandle;
 
@@ -127,7 +127,7 @@ protected:
 	} m_mock;
 };
 
-#if MOCK_COMPONENTS
+#if AW_MOCK_COMPONENTS
 	using SoilMoistureSensor  = MockSoilMoistureSensor;
 #else
 	using SoilMoistureSensor  = RealSoilMoistureSensor;

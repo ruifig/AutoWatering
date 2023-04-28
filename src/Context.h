@@ -36,11 +36,11 @@ namespace cz
 			: meanValue(meanValue)
 			, standardDeviation(standardDeviation)
 		{
-			if (meanValue < MOISTURESENSOR_ACCEPTABLE_MIN_VALUE)
+			if (meanValue < AW_MOISTURESENSOR_ACCEPTABLE_MIN_VALUE)
 			{
 				status = Status::NoPower;
 			}
-			else if (standardDeviation > MOISTURESENSOR_ACCEPTABLE_STANDARD_DEVIATION)
+			else if (standardDeviation > AW_MOISTURESENSOR_ACCEPTABLE_STANDARD_DEVIATION)
 			{
 				status = Status::NoSensor;
 			}
@@ -104,7 +104,7 @@ namespace cz
 			// Tells if this group is currently running
 			bool running = false;
 			// Sensor sampling interval in seconds
-			unsigned int samplingInterval = MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL;
+			unsigned int samplingInterval = AW_MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL;
 			// Motor shot duration in seconds
 			unsigned int shotDuration = SHOT_DEFAULT_DURATION;
 
@@ -350,7 +350,7 @@ namespace cz
 
 		// Sets this group as being configured or not at the moment.
 		// When set to being configured, the following happens:
-		//		* Sampling interval is temporarily set to MOISTURESENSOR_CALIBRATION_SAMPLINGINTERVAL
+		//		* Sampling interval is temporarily set to AW_MOISTURESENSOR_CALIBRATION_SAMPLINGINTERVAL
 		//		* Temporarily switches to raising SoilMoistureSensorCalibration_XXX events, instead of SoilMoistureSensor_XXX events
 		void setInConfigMenu(bool inMenu)
 		{
@@ -467,7 +467,7 @@ struct Context
 
 	struct I2CBoard
 	{
-	#if MOCK_COMPONENTS
+	#if AW_MOCK_COMPONENTS
 		MockMCP23017Wrapper ioExpander;
 	#else
 		MCP23017Wrapper ioExpander;

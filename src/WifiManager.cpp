@@ -7,7 +7,7 @@ CZ_DEFINE_LOG_CATEGORY(logWifi);
 namespace cz
 {
 
-#if WIFI_ENABLED
+#if AW_WIFI_ENABLED
 	WifiManager gWifiManager;
 #endif
 
@@ -20,6 +20,18 @@ WifiManager::~WifiManager()
 {
 }
 
+bool WifiManager::isConnected()
+{
+	return WiFi.status() == WL_CONNECTED;
+}
+
+void WifiManager::disconnect(bool reconnect)
+{
+	m_reconnect = reconnect;
+	WiFi.disconnect();
+	Component::raiseEvent(WifiStatusEvent(false));
+}
+
 bool WifiManager::initImpl()
 {
 	m_multi.addAP(WIFI_SSID, WIFI_PASSWORD);
@@ -28,7 +40,7 @@ bool WifiManager::initImpl()
 
 float WifiManager::tick(float deltaSeconds)
 {
-	connect(true);
+	checkConnection(true);
 	return 0.25f;
 }
 
@@ -40,7 +52,7 @@ bool WifiManager::processCommand(const Command& cmd)
 {
 	if (cmd.is("disconnect"))
 	{
-		WiFi.disconnect();
+		disconnect(true);
 	}
 	else
 	{
@@ -50,17 +62,27 @@ bool WifiManager::processCommand(const Command& cmd)
 	return true;
 }
 
-bool WifiManager::connect(bool systemResetOnFail)
+void WifiManager::checkConnection(bool systemResetOnFail)
 {
 	if (WiFi.status() == WL_CONNECTED)
 	{
-		return true;
+		return;
+	}
+
+	if (!m_reconnect)
+	{
+		return;
 	}
 
 	#define MAX_NUM_WIFI_CONNECT_TRIES_PER_LOOP 20
 	int numTries = 0;
 	while(WiFi.status() != WL_CONNECTED)
 	{
+		if (numTries == 0)
+		{
+			Component::raiseEvent(WifiConnectingEvent());
+		}
+
 		numTries++;
 		CZ_LOG(logWifi, Log, "Connecting to %s (Attempt %d)", WIFI_SSID, numTries);
 
@@ -80,13 +102,13 @@ bool WifiManager::connect(bool systemResetOnFail)
 
 		if (numTries > MAX_NUM_WIFI_CONNECT_TRIES_PER_LOOP)
 		{
-			Component::raiseEvent(WifiEvent(false));
+			Component::raiseEvent(WifiStatusEvent(false));
 			// Restart for Portenta as something is very wrong
 			CZ_LOG(logWifi, Error, "Can't connect to any WiFi. Resetting");
 			cz::LogOutput::flush();
 			delay(1000);
 			rp2040.reboot();
-			return false;
+			return;
 		}
 		else
 		{
@@ -94,8 +116,7 @@ bool WifiManager::connect(bool systemResetOnFail)
 		}
 	}
 
-	Component::raiseEvent(WifiEvent(true));
-	return true;
+	Component::raiseEvent(WifiStatusEvent(true));
 }
 
 void WifiManager::printWifiStatus()

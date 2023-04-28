@@ -5,13 +5,14 @@
 
 #include "MqttClient.h"
 #include "Component.h"
+#include "WifiManager.h"
 
 CZ_DEFINE_LOG_CATEGORY(logMQTTCache);
 
 namespace cz
 {
 
-#if WIFI_ENABLED
+#if AW_WIFI_ENABLED
 	MQTTCache gMQTTCache;
 #endif
 
@@ -475,9 +476,9 @@ void MQTTCache::onEvent(const Event& evt)
 {
 	switch(evt.type)
 	{
-		case Event::Type::Wifi:
+		case Event::Type::WifiStatus:
 		{
-			auto&& e = static_cast<const WifiEvent&>(evt);
+			auto&& e = static_cast<const WifiStatusEvent&>(evt);
 			//
 		}
 		break;
@@ -539,7 +540,7 @@ bool MQTTCache::isConnected() const
 
 bool MQTTCache::connectToMqttBroker(float deltaSeconds)
 {
-	if (isConnected() && WiFi.status() == WL_CONNECTED)
+	if (isConnected() && gWifiManager.isConnected())
 	{
 		return true;
 	}
@@ -550,9 +551,9 @@ bool MQTTCache::connectToMqttBroker(float deltaSeconds)
 		{
 			return false;
 		}
-		m_connectToMqttBrokerCountdown = MQTT_CONNECTION_RETRY_INTERVAL;
+		m_connectToMqttBrokerCountdown = AW_MQTT_CONNECTION_RETRY_INTERVAL;
 
-		if (WiFi.status() != WL_CONNECTED)
+		if (!gWifiManager.isConnected())
 		{
 			CZ_LOG(logMQTTCache, Error, "Can't connect to MQTT broker because WiFi is not connected");
 			return false;
@@ -560,15 +561,15 @@ bool MQTTCache::connectToMqttBroker(float deltaSeconds)
 		
 		auto incrementFailCount = [this]
 		{
-			#if MQTT_WIFI_DISCONNECT_AND_RECONNECT
+			#if AW_MQTT_WIFI_RECONNECT
 				m_conFailCount++;
-				if (m_conFailCount >= MQTT_WIFI_DISCONNECT_AND_RECONNECT)
+				if (m_conFailCount >= AW_MQTT_WIFI_RECONNECT)
 				{
 					m_conFailCount = 0;
 					m_simulateTCPFail = false;
 					CZ_LOG(logMQTTCache, Log, "Too many connection attempts. Disconnecting/reconnecting wifi to try and fix it");
 					// NOTE: The reconnect is done in AdafruitIOManager once it detects Wifi has disconnected
-					WiFi.disconnect();
+					gWifiManager.disconnect(true);
 				}
 			#endif
 		};

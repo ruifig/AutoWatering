@@ -82,7 +82,7 @@ namespace detail
 
 			setChannelImpl(channel);
 
-		#if MOCK_COMPONENTS
+		#if AW_MOCK_COMPONENTS
 			return 0;
 		#else
 			return ::analogRead(m_zPin.raw);

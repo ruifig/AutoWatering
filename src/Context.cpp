@@ -221,7 +221,7 @@ unsigned int GroupConfig::getSamplingIntervalInMinutes() const
 
 void GroupConfig::setSamplingInterval(unsigned int value_)
 {
-	unsigned int value = cz::clamp<unsigned int>(value_, 1, MOISTURESENSOR_MAX_SAMPLINGINTERVAL);
+	unsigned int value = cz::clamp<unsigned int>(value_, 1, AW_MOISTURESENSOR_MAX_SAMPLINGINTERVAL);
 	if (value != m_data.samplingInterval)
 	{
 		m_isDirty = true;
@@ -298,7 +298,7 @@ void GroupData::begin(uint8_t index)
 	m_index = index;
 
 // Fill the history with some values, for testing purposes
-#if FASTER_ITERATION && 0
+#if AW_FASTER_ITERATION && 0
 	for(int i=0; i<20; i++)
 	{
 		m_history.push({GRAPH_POINT_MAXVAL, false});
