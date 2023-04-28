@@ -5,6 +5,7 @@
 #include "crazygaze/micromuc/Ticker.h"
 #include "Events.h"
 #include <crazygaze/micromuc/StringUtils.h>
+#include <Arduino.h>
 
 namespace cz
 {

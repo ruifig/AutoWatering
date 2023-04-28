@@ -1,6 +1,7 @@
 #include "WifiManager.h"
 #include <Arduino.h>
 #include "Watchdog.h"
+#include <crazygaze/micromuc/Profiler.h>
 
 CZ_DEFINE_LOG_CATEGORY(logWifi);
 
@@ -40,6 +41,8 @@ bool WifiManager::initImpl()
 
 float WifiManager::tick(float deltaSeconds)
 {
+	PROFILE_SCOPE(F("WifiManager"));
+
 	checkConnection(true);
 	return 0.25f;
 }

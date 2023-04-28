@@ -1,5 +1,6 @@
 #include "Watchdog.h"
 #include <Arduino.h>
+#include <crazygaze/micromuc/Profiler.h>
 
 #if AW_WATCHDOG_PAUSE_SUPPORT
 	#include <FreeRTOS.h>
@@ -116,6 +117,8 @@ void Watchdog::heartbeat()
 
 float Watchdog::tick(float deltaSeconds)
 {
+	PROFILE_SCOPE(F("Watchdog"));
+
 	heartbeat();
 	return 0.250f;
 }

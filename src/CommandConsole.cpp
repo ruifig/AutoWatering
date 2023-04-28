@@ -19,6 +19,8 @@ bool CommandConsole::initImpl()
 
 float CommandConsole::tick(float deltaSeconds)
 {
+	PROFILE_SCOPE(F("CommandConsole::tick"));
+
 	//CZ_LOG(logDefault, Log, "CommandConsole::tick");
 	while (m_serialStringReader.tryRead())
 	{
@@ -45,11 +47,14 @@ float CommandConsole::tick(float deltaSeconds)
 }
 
 
+volatile int gProfilerCount = 0;
 bool CommandConsole::processCommand(const Command& cmd)
 {
 	if (cmd.is("profiler_log"))
 	{
+		gProfilerCount++; 
 		PROFILER_LOG();
+		gProfilerCount--; 
 		return true;
 	}
 	else if (cmd.is("profiler_reset"))

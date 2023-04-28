@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Arduino.h>
 #include "Config/Config.h"
 #include "utility/MCP23017Wrapper.h"
 #include "utility/MuxNChannels.h"

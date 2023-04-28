@@ -3,10 +3,9 @@
 // Dummy so other headers can detect if Config.h was include first
 #define CONFIG_H
 
-#include <Arduino.h>
-#include "crazygaze/micromuc/czmicromuc.h"
-#include "utility/PinTypes.h"
-
+//#include <Arduino.h>
+//#include "crazygaze/micromuc/czmicromuc.h"
+//#include "utility/PinTypes.h"
 
 #include "PreConfig.h"
 

@@ -1,6 +1,7 @@
 #include "AdafruitIOManager.h"
 #include "Watchdog.h"
 #include <crazygaze/micromuc/MathUtils.h>
+#include <crazygaze/micromuc/Profiler.h>
 #include "MQTTCache.h"
 
 #define MQTT_CHECK_INTERVAL_MS 1000
@@ -58,6 +59,7 @@ bool AdafruitIOManager::initImpl()
 
 float AdafruitIOManager::tick(float deltaSeconds)
 {
+	PROFILE_SCOPE(F("AdafruitIOManager::tick"));
 	return 0.250f;
 }
 

@@ -1,6 +1,7 @@
 #include "MainMenu.h"
 #include "DisplayCommon.h"
 #include "Icons.h"
+#include <crazygaze/micromuc/Profiler.h>
 
 namespace cz
 {
@@ -37,6 +38,8 @@ void MainMenu::init()
 
 void MainMenu::tick(float deltaSeconds)
 {
+	PROFILE_SCOPE(F("MainMenu"));
+
 	draw();
 }
 

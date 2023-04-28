@@ -2,6 +2,7 @@
 #include <crazygaze/micromuc/FNVHash.h>
 #include <crazygaze/micromuc/StringUtils.h>
 #include <crazygaze/micromuc/ScopeGuard.h>
+#include <crazygaze/micromuc/Profiler.h>
 
 #include "MqttClient.h"
 #include "Component.h"
@@ -414,6 +415,8 @@ bool MQTTCache::initImpl()
 
 float MQTTCache::tick(float deltaSeconds)
 {
+	PROFILE_SCOPE(F("MQTTCache"));
+
 	constexpr float tickInterval = 0.25f;
 	if (!isConnected())
 	{

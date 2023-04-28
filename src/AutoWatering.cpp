@@ -238,7 +238,6 @@ void loop()
 
 	float countdown = 60*60;
 	{
-		PROFILE_SCOPE(F("TickAll"));
 		countdown = std::min(Component::tickAll(deltaSeconds), countdown);
 	}
 

@@ -1,6 +1,7 @@
 #include "PumpMonitor.h"
 #include "Context.h"
 #include <crazygaze/micromuc/StringUtils.h>
+#include "crazygaze/micromuc/Profiler.h"
 
 namespace cz
 {
@@ -77,6 +78,8 @@ void PumpMonitor::turnMotorOff()
 
 float PumpMonitor::tick(float deltaSeconds)
 {
+	PROFILE_SCOPE(F("PumpMonitor"));
+
 	GroupData& data = gCtx.data.getGroupData(m_index);
 
 	//

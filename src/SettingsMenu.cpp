@@ -2,6 +2,7 @@
 #include "Icons.h"
 #include "DisplayCommon.h"
 #include "Timer.h"
+#include <crazygaze/micromuc/Profiler.h>
 
 extern uint32_t gTickCount;
 
@@ -96,6 +97,8 @@ void SettingsMenu::init()
 
 void SettingsMenu::tick(float deltaSeconds)
 {
+	PROFILE_SCOPE(F("SettingsMenu"));
+
 	draw();
 }
 

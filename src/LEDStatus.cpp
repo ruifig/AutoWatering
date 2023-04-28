@@ -1,5 +1,6 @@
 #include "LEDStatus.h"
 #include <Arduino.h>
+#include <crazygaze/micromuc/Profiler.h>
 
 namespace cz
 {
@@ -41,6 +42,8 @@ void LEDStatus::set(bool on)
 
 float LEDStatus::tick(float deltaSeconds)
 {
+	PROFILE_SCOPE(F("LEDStatus"));
+
 	bool v = m_pattern[m_patternIndex];
 	m_patternIndex = (m_patternIndex + 1) % 6;
 	set(v);

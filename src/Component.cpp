@@ -1,6 +1,7 @@
 #include "Component.h"
 #include <string.h>
 #include <crazygaze/micromuc/Logging.h>
+#include <crazygaze/micromuc/Profiler.h>
 
 namespace cz
 {
@@ -137,6 +138,8 @@ void Component::initAll()
 
 float Component::tickAll(float deltaSeconds)
 {
+	PROFILE_SCOPE(F("Component::tickAll"));
+
 	float countdown = 60*60;
 	Component* lowestCountdownCulprit = nullptr;
 	for(auto&& component : gComponents)

@@ -1,6 +1,7 @@
 #include "ShotConfirmationMenu.h"
 #include "DisplayCommon.h"
 #include "Icons.h"
+#include <crazygaze/micromuc/Profiler.h>
 
 void doGroupShot(uint8_t index);
 
@@ -38,6 +39,8 @@ void ShotConfirmationMenu::init()
 
 void ShotConfirmationMenu::tick(float deltaSeconds)
 {
+	PROFILE_SCOPE(F("ShotConfirmationMenu"));
+
 	draw();
 }
 

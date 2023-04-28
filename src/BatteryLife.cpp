@@ -1,11 +1,14 @@
 #include "BatteryLife.h"
 #include "utility/BatteryLifeCalculator.h"
+#include <crazygaze/micromuc/Profiler.h>
 
 namespace cz
 {
 
 float BatteryLife::tick(float deltaSeconds)
 {
+	PROFILE_SCOPE(F("BatteryLife::tick"));
+
 	BatteryLifeCalculator batteryLifeCalculator(
 		AW_BATTERYLIFE_PIN,
 		AW_BATTERYLIFE_R1_VALUE,
