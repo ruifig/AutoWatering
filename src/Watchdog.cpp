@@ -145,6 +145,11 @@ bool Watchdog::processCommand(const Command& cmd)
 			return true;
 		}
 	}
+	else if (cmd.is("reboot"))
+	{
+		rp2040.reboot();
+		return true;
+	}
 #if AW_WATCHDOG_PAUSE_SUPPORT
 	else if (cmd.is("pause"))
 	{
