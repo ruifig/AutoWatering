@@ -20,7 +20,7 @@ GroupGraph::~GroupGraph()
 void GroupGraph::setAssociation(int8_t screenSlot, int8_t pairIndex)
 {
 	CZ_ASSERT(pairIndex >=-1 && pairIndex < MAX_NUM_PAIRS);
-	CZ_ASSERT(screenSlot >= 0 && screenSlot < VISIBLE_NUM_PAIRS);
+	CZ_ASSERT(screenSlot >= 0 && screenSlot < AW_VISIBLE_NUM_PAIRS);
 	m_pairIndex = pairIndex;
 	m_screenSlot = screenSlot;
 	m_sensorUpdates = 0;
@@ -150,7 +150,7 @@ void GroupGraph::draw(bool forceDraw)
 			PROFILE_SCOPE(F("notRunning"));
 
 			gScreen.setFont(MEDIUM_FONT);
-			gScreen.setTextColor(GRAPH_NOTRUNNING_TEXT_COLOUR);
+			gScreen.setTextColor(AW_GRAPH_NOTRUNNING_TEXT_COLOUR);
 			printAligned(getScreenSlotRect(), HAlign::Center, VAlign::Center, F("Not Running"));
 		}
 	}
@@ -162,14 +162,14 @@ void GroupGraph::plotHistory()
 {
 	PROFILE_SCOPE(F("GroupGraph::plotHistory"));
 
-	constexpr int h = GRAPH_HEIGHT;
+	constexpr int h = AW_GRAPH_HEIGHT;
 	Rect rect = getScreenSlotRect();
 	int bottomY = rect.bottom();
 	GroupData& data = gCtx.data.getGroupData(m_pairIndex);
 	const HistoryQueue& history = data.getHistory();
 
 	unsigned int thresholdPercentage = data.getThresholdValueAsPercentage();
-	int16_t thresholdMarkerY = bottomY - map(thresholdPercentage, 0, 100, 0, GRAPH_POINT_MAXVAL);
+	int16_t thresholdMarkerY = bottomY - map(thresholdPercentage, 0, 100, 0, AW_GRAPH_POINT_MAXVAL);
 
 	const int count = history.size();
 	
@@ -194,7 +194,7 @@ void GroupGraph::plotHistory()
 		if (redraw)
 		{
 			// erase vertical line
-			gScreen.drawFastVLine(xx, rect.y, h, GRAPH_BKG_COLOUR);
+			gScreen.drawFastVLine(xx, rect.y, h, AW_GRAPH_BKG_COLOUR);
 			drawMotor = true;
 			drawLevel = true;
 		}
@@ -210,7 +210,7 @@ void GroupGraph::plotHistory()
 			if (oldp.val != p.val)
 			{
 				// Erase previous moisture level point
-				gScreen.drawPixel(xx, bottomY - oldp.val, GRAPH_BKG_COLOUR);
+				gScreen.drawPixel(xx, bottomY - oldp.val, AW_GRAPH_BKG_COLOUR);
 				drawLevel = true;
 			}
 		}
@@ -218,7 +218,7 @@ void GroupGraph::plotHistory()
 		if (drawMotor)
 		{
 			// draw new motor on/off
-			gScreen.drawPixel(xx, rect.y, p.motorOn ? GRAPH_MOTOR_ON_COLOUR : GRAPH_MOTOR_OFF_COLOUR);
+			gScreen.drawPixel(xx, rect.y, p.motorOn ? AW_GRAPH_MOTOR_ON_COLOUR : AW_GRAPH_MOTOR_OFF_COLOUR);
 		}
 
 		if (drawLevel)
@@ -226,13 +226,13 @@ void GroupGraph::plotHistory()
 			// 0 means it's not set yet
 			if (m_previousThresholdMarkerY != 0)
 			{
-				gScreen.drawPixel(xx, m_previousThresholdMarkerY, GRAPH_BKG_COLOUR);
+				gScreen.drawPixel(xx, m_previousThresholdMarkerY, AW_GRAPH_BKG_COLOUR);
 			}
 
-			gScreen.drawPixel(xx, thresholdMarkerY, GRAPH_THRESHOLDMARKER_COLOUR);
+			gScreen.drawPixel(xx, thresholdMarkerY, AW_GRAPH_THRESHOLDMARKER_COLOUR);
 
 			// Draw new moisture level
-			gScreen.drawPixel(xx, bottomY - p.val, p.status==SensorReading::Status::Valid ? GRAPH_MOISTURELEVEL_COLOUR : GRAPH_MOISTURELEVEL_ERROR_COLOUR);
+			gScreen.drawPixel(xx, bottomY - p.val, p.status==SensorReading::Status::Valid ? AW_GRAPH_MOISTURELEVEL_COLOUR : AW_GRAPH_MOISTURELEVEL_ERROR_COLOUR);
 		}
 	}
 
@@ -253,28 +253,28 @@ void GroupGraph::drawOuterBox()
 	
 	Rect historyRect = getScreenSlotRect();
 	Rect historyOuterBox = historyRect.expand(1);
-	Rect groupOuterBox = {0, historyOuterBox.top(), SCREEN_WIDTH, historyOuterBox.height};
+	Rect groupOuterBox = {0, historyOuterBox.top(), AW_SCREEN_WIDTH, historyOuterBox.height};
 
 	if (m_selected)
 	{
-		drawRect(groupOuterBox, GRAPH_SELECTED_BORDER_COLOUR);
+		drawRect(groupOuterBox, AW_GRAPH_SELECTED_BORDER_COLOUR);
 	}
 	else
 	{
 		// If the group is not selected, we need to erase the selection box
-		drawRect(groupOuterBox, GRAPH_BKG_COLOUR);
+		drawRect(groupOuterBox, AW_GRAPH_BKG_COLOUR);
 		// Draw the outer box around the history plot
-		drawRect(historyOuterBox, GRAPH_BORDER_COLOUR);
+		drawRect(historyOuterBox, AW_GRAPH_BORDER_COLOUR);
 	}
 
-	constexpr int16_t h = GRAPH_HEIGHT;
+	constexpr int16_t h = AW_GRAPH_HEIGHT;
 	int bottomY = historyRect.bottom();
-	gScreen.drawFastHLine(GROUP_NUM_WIDTH+0, bottomY - map(0, 0, 100, 0, h - 1),   2, GRAPH_BORDER_COLOUR);
-	gScreen.drawFastHLine(GROUP_NUM_WIDTH+0, bottomY - map(20, 0, 100, 0, h - 1),  2, GRAPH_BORDER_COLOUR);
-	gScreen.drawFastHLine(GROUP_NUM_WIDTH+0, bottomY - map(40, 0, 100, 0, h - 1),  2, GRAPH_BORDER_COLOUR);
-	gScreen.drawFastHLine(GROUP_NUM_WIDTH+0, bottomY - map(60, 0, 100, 0, h - 1),  2, GRAPH_BORDER_COLOUR);
-	gScreen.drawFastHLine(GROUP_NUM_WIDTH+0, bottomY - map(80, 0, 100, 0, h - 1),  2, GRAPH_BORDER_COLOUR);
-	gScreen.drawFastHLine(GROUP_NUM_WIDTH+0, bottomY - map(100, 0, 100, 0, h - 1), 2, GRAPH_BORDER_COLOUR);
+	gScreen.drawFastHLine(AW_GROUP_NUM_WIDTH+0, bottomY - map(0, 0, 100, 0, h - 1),   2, AW_GRAPH_BORDER_COLOUR);
+	gScreen.drawFastHLine(AW_GROUP_NUM_WIDTH+0, bottomY - map(20, 0, 100, 0, h - 1),  2, AW_GRAPH_BORDER_COLOUR);
+	gScreen.drawFastHLine(AW_GROUP_NUM_WIDTH+0, bottomY - map(40, 0, 100, 0, h - 1),  2, AW_GRAPH_BORDER_COLOUR);
+	gScreen.drawFastHLine(AW_GROUP_NUM_WIDTH+0, bottomY - map(60, 0, 100, 0, h - 1),  2, AW_GRAPH_BORDER_COLOUR);
+	gScreen.drawFastHLine(AW_GROUP_NUM_WIDTH+0, bottomY - map(80, 0, 100, 0, h - 1),  2, AW_GRAPH_BORDER_COLOUR);
+	gScreen.drawFastHLine(AW_GROUP_NUM_WIDTH+0, bottomY - map(100, 0, 100, 0, h - 1), 2, AW_GRAPH_BORDER_COLOUR);
 
 	m_redrawOuterBox = false;
 }

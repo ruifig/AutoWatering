@@ -103,7 +103,7 @@ class GraphicalUI : public Component
 		virtual void onLeave() override;
 	  protected:
 
-		float m_defaultConfigCountdown = BOOTMENU_COUNTDOWN;
+		float m_defaultConfigCountdown = AW_BOOTMENU_COUNTDOWN;
 		bool m_waitingResetConfirmation = false;
 	};
 
@@ -136,7 +136,7 @@ class GraphicalUI : public Component
 			bool sensorUpdates = false;
 		};
 
-		Group m_groups[VISIBLE_NUM_PAIRS];
+		Group m_groups[AW_VISIBLE_NUM_PAIRS];
 		Group* tryGetGroupByPairIndex(int8_t pairIndex);
 		Group& getGroupByPairIndex(int8_t pairIndex);
 

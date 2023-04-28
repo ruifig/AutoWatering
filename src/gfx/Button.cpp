@@ -99,7 +99,7 @@ void BaseButton::move(int16_t x, int16_t y, bool eraseCurrentPosition)
 	{
 		if (m_enabled)
 		{
-			fillRect(m_pos, SCREEN_BKG_COLOUR );
+			fillRect(m_pos, AW_SCREEN_BKG_COLOUR );
 		}
 	}
 
@@ -133,16 +133,16 @@ void ImageButton::draw(bool forceDraw)
 	{
 		if (m_clearWhenHidden)
 		{
-			fillRect(m_pos, SCREEN_BKG_COLOUR );
+			fillRect(m_pos, AW_SCREEN_BKG_COLOUR );
 		}
 	}
 	else if (m_enabled)
 	{
-		drawRGBBitmap_P(m_pos.x, m_pos.y, m_img.bmp, m_img.mask, m_img.width, m_img.height, SCREEN_BKG_COLOUR);
+		drawRGBBitmap_P(m_pos.x, m_pos.y, m_img.bmp, m_img.mask, m_img.width, m_img.height, AW_SCREEN_BKG_COLOUR);
 	}
 	else
 	{
-		drawRGBBitmapDisabled_P(m_pos.x, m_pos.y, m_img.bmp, m_img.mask, m_img.width, m_img.height, SCREEN_BKG_COLOUR);
+		drawRGBBitmapDisabled_P(m_pos.x, m_pos.y, m_img.bmp, m_img.mask, m_img.width, m_img.height, AW_SCREEN_BKG_COLOUR);
 	}
 
 	m_needsRedraw = false;

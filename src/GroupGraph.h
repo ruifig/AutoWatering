@@ -43,7 +43,7 @@ private:
 	int8_t m_pairIndex = -1;
 
 	// Where int the screen to display it.
-	// The screen is arranged to accomodate up to VISIBLE_NUM_PAIRS. This tells in what slot this group
+	// The screen is arranged to accomodate up to AW_VISIBLE_NUM_PAIRS. This tells in what slot this group
 	// is on
 	int8_t m_screenSlot = -1;
 

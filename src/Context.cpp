@@ -301,7 +301,7 @@ void GroupData::begin(uint8_t index)
 #if AW_FASTER_ITERATION && 0
 	for(int i=0; i<20; i++)
 	{
-		m_history.push({GRAPH_POINT_MAXVAL, false});
+		m_history.push({AW_GRAPH_POINT_MAXVAL, false});
 	}
 
 	for(int i=0; i<20; i++)
@@ -311,32 +311,32 @@ void GroupData::begin(uint8_t index)
 
 	for(int i=0; i<20; i++)
 	{
-		m_history.push({GRAPH_POINT_MAXVAL/4, true});
+		m_history.push({AW_GRAPH_POINT_MAXVAL/4, true});
 	}
 
 	for(int i=0; i<20; i++)
 	{
-		m_history.push({GRAPH_POINT_MAXVAL/2 -1, false});
+		m_history.push({AW_GRAPH_POINT_MAXVAL/2 -1, false});
 	}
 
 	for(int i=0; i<20; i++)
 	{
-		m_history.push({GRAPH_POINT_MAXVAL/2, true});
+		m_history.push({AW_GRAPH_POINT_MAXVAL/2, true});
 	}
 
 	for(int i=0; i<20; i++)
 	{
-		m_history.push({(GRAPH_POINT_MAXVAL*3)/4, false});
+		m_history.push({(AW_GRAPH_POINT_MAXVAL*3)/4, false});
 	}
 
 	for(int i=0; i<20; i++)
 	{
-		m_history.push({GRAPH_POINT_MAXVAL, true});
+		m_history.push({AW_GRAPH_POINT_MAXVAL, true});
 	}
 
 	while(!m_history.isFull())
 	{
-		m_history.push({GRAPH_POINT_MAXVAL/3, false});
+		m_history.push({AW_GRAPH_POINT_MAXVAL/3, false});
 	}
 
 	m_cfg.running = index==2;
@@ -360,7 +360,7 @@ void GroupData::setMoistureSensorValues(const SensorReading& sample)
 		m_cfg.setSensorValue(sample.meanValue, false);
 
 		GraphPoint point = {0, 0, sample.status};
-		point.val = map(m_cfg.getCurrentValue(), m_cfg.getAirValue(), m_cfg.getWaterValue(), 0, GRAPH_POINT_MAXVAL);
+		point.val = map(m_cfg.getCurrentValue(), m_cfg.getAirValue(), m_cfg.getWaterValue(), 0, AW_GRAPH_POINT_MAXVAL);
 
 		// Since a motor can be turned on then off without a sensor reading in between, we use
 		// m_pendingMotorPoint as a reminder there was a motor event, and so we'll draw that motor plot

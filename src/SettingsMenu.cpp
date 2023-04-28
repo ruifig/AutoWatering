@@ -16,10 +16,10 @@ namespace
 	#define DEFINE_SENSOR_CALIBRATION_LABEL_LINE(COL, LINE, SUBLINE, FLAGS) \
 	const LabelData sensorCalibrationSettings##COL##LINE##SUBLINE PROGMEM = \
 	{ \
-		{LayoutHelper::getMenuButtonPos(COL, LINE).x, LayoutHelper::getMenuButtonPos(COL,LINE).y + (SUBLINE * (GRAPH_HEIGHT/3)), 32, GRAPH_HEIGHT/3}, \
+		{LayoutHelper::getMenuButtonPos(COL, LINE).x, LayoutHelper::getMenuButtonPos(COL,LINE).y + (SUBLINE * (AW_GRAPH_HEIGHT/3)), 32, AW_GRAPH_HEIGHT/3}, \
 		HAlign::Center, VAlign::Center, \
 		TINY_FONT, \
-		GRAPH_VALUES_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
+		AW_GRAPH_VALUES_TEXT_COLOUR, AW_GRAPH_VALUES_BKG_COLOUR, \
 		WidgetFlag::EraseBkg | FLAGS \
 	};
 
@@ -32,10 +32,10 @@ namespace
 	#define DEFINE_LABEL_LINE2(COL, name, CELL_LINE, FLAGS) \
 	const LabelData labelData_##name##_##CELL_LINE PROGMEM = \
 	{ \
-		{LayoutHelper::getMenuButtonPos(1+COL, 1).x, LayoutHelper::getMenuButtonPos(1+COL,1).y + (CELL_LINE * (GRAPH_HEIGHT/2)), 32, GRAPH_HEIGHT/2}, \
+		{LayoutHelper::getMenuButtonPos(1+COL, 1).x, LayoutHelper::getMenuButtonPos(1+COL,1).y + (CELL_LINE * (AW_GRAPH_HEIGHT/2)), 32, AW_GRAPH_HEIGHT/2}, \
 		HAlign::Center, VAlign::Center, \
 		TINY_FONT, \
-		GRAPH_VALUES_TEXT_COLOUR, GRAPH_VALUES_BKG_COLOUR, \
+		AW_GRAPH_VALUES_TEXT_COLOUR, AW_GRAPH_VALUES_BKG_COLOUR, \
 		WidgetFlag::EraseBkg | FLAGS \
 	};
 
@@ -79,18 +79,18 @@ void SettingsMenu::init()
 	};
 
 	// First line
-	initButton(ButtonId::CloseAndSave, LayoutHelper::getMenuButtonPos(0,0), SCREEN_BKG_COLOUR, img_Save);
-	initButton(ButtonId::Calibrate, LayoutHelper::getMenuButtonPos(CALIBRATE_BTN_COL,0), SCREEN_BKG_COLOUR, img_Ruler);
-	initButton(ButtonId::SensorInterval, LayoutHelper::getMenuButtonPos(SENSORINTERVAL_BTN_COL,0), SCREEN_BKG_COLOUR, img_SetSensorInterval);
-	initButton(ButtonId::ShotDuration, LayoutHelper::getMenuButtonPos(SHOTDURATION_BTN_COL,0), SCREEN_BKG_COLOUR, img_SetWateringDuration);
+	initButton(ButtonId::CloseAndSave, LayoutHelper::getMenuButtonPos(0,0), AW_SCREEN_BKG_COLOUR, img_Save);
+	initButton(ButtonId::Calibrate, LayoutHelper::getMenuButtonPos(CALIBRATE_BTN_COL,0), AW_SCREEN_BKG_COLOUR, img_Ruler);
+	initButton(ButtonId::SensorInterval, LayoutHelper::getMenuButtonPos(SENSORINTERVAL_BTN_COL,0), AW_SCREEN_BKG_COLOUR, img_SetSensorInterval);
+	initButton(ButtonId::ShotDuration, LayoutHelper::getMenuButtonPos(SHOTDURATION_BTN_COL,0), AW_SCREEN_BKG_COLOUR, img_SetWateringDuration);
 	// Leaving one empty grid space intentionally, so the CloseAndIgnore button is spaced away from the others
-	initButton(ButtonId::CloseAndIgnore, LayoutHelper::getMenuButtonPos(5,0), SCREEN_BKG_COLOUR, img_Close);
+	initButton(ButtonId::CloseAndIgnore, LayoutHelper::getMenuButtonPos(5,0), AW_SCREEN_BKG_COLOUR, img_Close);
 
 	// Second line
-	initButton(ButtonId::ResetRange, LayoutHelper::getMenuButtonPos(CALIBRATE_BTN_COL-1,1), SCREEN_BKG_COLOUR, img_Eraser).setClearWhenHidden(false);
-	initButton(ButtonId::SetThreshold, LayoutHelper::getMenuButtonPos(CALIBRATE_BTN_COL+1,1), SCREEN_BKG_COLOUR, img_SetThreshold).setClearWhenHidden(false);
-	initButton(ButtonId::Minus, LayoutHelper::getMenuButtonPos(0,1), SCREEN_BKG_COLOUR, img_Remove).setClearWhenHidden(false);
-	initButton(ButtonId::Plus, LayoutHelper::getMenuButtonPos(0,1), SCREEN_BKG_COLOUR, img_Add).setClearWhenHidden(false);
+	initButton(ButtonId::ResetRange, LayoutHelper::getMenuButtonPos(CALIBRATE_BTN_COL-1,1), AW_SCREEN_BKG_COLOUR, img_Eraser).setClearWhenHidden(false);
+	initButton(ButtonId::SetThreshold, LayoutHelper::getMenuButtonPos(CALIBRATE_BTN_COL+1,1), AW_SCREEN_BKG_COLOUR, img_SetThreshold).setClearWhenHidden(false);
+	initButton(ButtonId::Minus, LayoutHelper::getMenuButtonPos(0,1), AW_SCREEN_BKG_COLOUR, img_Remove).setClearWhenHidden(false);
+	initButton(ButtonId::Plus, LayoutHelper::getMenuButtonPos(0,1), AW_SCREEN_BKG_COLOUR, img_Add).setClearWhenHidden(false);
 
 }
 
@@ -360,7 +360,7 @@ void SettingsMenu::draw()
 	if (m_clearMenuSecondLine)
 	{
 		m_clearMenuSecondLine = false;
-		fillRect(LayoutHelper::getMenuLineArea(1), SCREEN_BKG_COLOUR);
+		fillRect(LayoutHelper::getMenuLineArea(1), AW_SCREEN_BKG_COLOUR);
 	}
 
 	if (data)

@@ -356,7 +356,167 @@ If set to 1, it will enable the GraphicalUI component.
 At the time of writing, only 320x240 SPI, (ILI9341 + XPT2046) screens are supported
 This is the one I'm using:
 https://www.amazon.co.uk/gp/product/B07QJW73M3/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1
+
+Also, disabling this component means no UI and therefore no UI code using the CPU, but it doesn't completely remove
+all the UI or TouchController code. That's something that I still need to improve to remove the firmware size.
+
+Some more notes:
+	- Disabling this component doesn't complete remove UI and Touch controller code. That code won't run, but the linker somehow still thinks it's needed
+		- I should fix that in the future
+	- Lots of these macros have carefuly planned values to aligh UI, etc, so changing their values might break things.
 */
 #ifndef AW_GRAPHICALUI_ENABLED
-	#define AW_GRAPHICALUI_ENABLED 0
+	#define AW_GRAPHICALUI_ENABLED 1
 #endif
+
+// At the moment these are fixed
+#define AW_SCREEN_WIDTH 320
+#define AW_SCREEN_HEIGHT 240
+
+/*
+How long to show the intro for when powering up
+*/
+#ifndef AW_INTRO_DURATION
+	#if AW_FASTER_ITERATION
+		#define AW_INTRO_DURATION 0.25f
+	#else
+		#define AW_INTRO_DURATION 1.0f
+	#endif
+#endif
+
+/*
+How long the boot menu should stay up before defaulting to "Load"
+*/
+#ifndef AW_BOOTMENU_COUNTDOWN
+	#define AW_BOOTMENU_COUNTDOWN 2.0f
+#endif
+
+/*
+Default screen: 0..100.
+Actual screen classes scale this accordingly to whatever range they use 
+*/
+#ifndef AW_SCREEN_DEFAULT_BRIGHTNESS
+	#define AW_SCREEN_DEFAULT_BRIGHTNESS 100
+#endif
+
+/**
+ * How long to wait (in seconds) until turning off the screen backlight, if there are no touch events detected
+ * If 0, screen timeout is considered disabled (as-in, screen is always on)
+ */
+#ifndef AW_SCREEN_OFF_TIMEOUT
+	#define AW_SCREEN_OFF_TIMEOUT 30
+#endif
+
+/*
+How fast to dim the screen to 0.
+This is in percentiles per second. E.g: a value of 10 means the brightness will go down at 10% per second
+*/
+#ifndef AW_SCREEN_OFF_DIM_SPEED
+	#define AW_SCREEN_OFF_DIM_SPEED 10
+#endif
+
+/*
+How many sensor/motor pairs fit on the screen
+*/
+#ifndef AW_VISIBLE_NUM_PAIRS
+	#define AW_VISIBLE_NUM_PAIRS 4
+#endif
+
+//
+// Some colours
+//
+#ifndef AW_SCREEN_BKG_COLOUR
+	#define AW_SCREEN_BKG_COLOUR Colour_Black
+#endif
+
+#ifndef AW_INTRO_TEXT_COLOUR
+	#define AW_INTRO_TEXT_COLOUR Colour_Green
+#endif
+
+// Width in pixels for the group number label (shown left of the group history plot)
+#ifndef AW_GROUP_NUM_WIDTH
+	#define AW_GROUP_NUM_WIDTH 16
+#endif
+
+#ifndef AW_GRAPH_NUMPOINTS
+	#define AW_GRAPH_NUMPOINTS (AW_SCREEN_WIDTH-AW_GROUP_NUM_WIDTH-32-2)
+#endif
+
+#ifndef AW_GRAPH_VALUES_TEXT_COLOUR
+	#define AW_GRAPH_VALUES_TEXT_COLOUR Colour_LightGrey
+#endif
+
+#ifndef AW_GRAPH_VALUES_BKG_COLOUR
+	#define AW_GRAPH_VALUES_BKG_COLOUR Colour_Black
+#endif
+
+#ifndef AW_GRAPH_BORDER_COLOUR
+	#define AW_GRAPH_BORDER_COLOUR Colour_LightGrey
+#endif
+
+#ifndef AW_GRAPH_SELECTED_BORDER_COLOUR
+	#define AW_GRAPH_SELECTED_BORDER_COLOUR Colour_Green
+#endif
+
+#ifndef AW_GRAPH_NOTSELECTED_BORDER_COLOUR
+	#define AW_GRAPH_NOTSELECTED_BORDER_COLOUR Colour_Black
+#endif
+
+#ifndef AW_GRAPH_BKG_COLOUR
+	#define AW_GRAPH_BKG_COLOUR Colour_Black
+#endif
+
+#ifndef AW_GRAPH_NOTRUNNING_TEXT_COLOUR
+	#define AW_GRAPH_NOTRUNNING_TEXT_COLOUR Colour_Red
+#endif
+
+#ifndef AW_GRAPH_MOTOR_ON_COLOUR
+	#define AW_GRAPH_MOTOR_ON_COLOUR Colour_Yellow
+#endif
+
+#ifndef AW_GRAPH_MOTOR_OFF_COLOUR
+	#define AW_GRAPH_MOTOR_OFF_COLOUR Colour_Black
+#endif
+
+#ifndef AW_GRAPH_MOISTURELEVEL_COLOUR
+	#define AW_GRAPH_MOISTURELEVEL_COLOUR Colour_Cyan
+#endif
+
+#ifndef AW_GRAPH_MOISTURELEVEL_ERROR_COLOUR
+	#define AW_GRAPH_MOISTURELEVEL_ERROR_COLOUR Colour_Red
+#endif
+
+#ifndef AW_GRAPH_THRESHOLDMARKER_COLOUR
+	#define AW_GRAPH_THRESHOLDMARKER_COLOUR Colour(0x52ab)
+#endif
+
+#ifndef AW_TEMPERATURE_LABEL_TEXT_COLOUR
+	#define AW_TEMPERATURE_LABEL_TEXT_COLOUR Colour_Yellow
+#endif
+
+#ifndef AW_HUMIDITY_LABEL_TEXT_COLOUR
+	#define AW_HUMIDITY_LABEL_TEXT_COLOUR Colour_Cyan
+#endif
+
+#ifndef AW_RUNNINGTIME_LABEL_TEXT_COLOUR
+	#define AW_RUNNINGTIME_LABEL_TEXT_COLOUR Colour_Yellow
+#endif
+
+#ifndef AW_BATTERYLEVEL_LABEL_TEXT_COLOUR
+	#define AW_BATTERYLEVEL_LABEL_TEXT_COLOUR Colour_White
+#endif
+
+//
+// * Top line is used for the motor on/off info
+// * Rest of the lines are for the moisture level
+#ifndef AW_GRAPH_HEIGHT
+	#define AW_GRAPH_HEIGHT (1+32)
+#endif
+
+// These is actually a data format option, and not really an UI option
+// It's recommend you don't change this
+#ifndef AW_GRAPH_POINT_NUM_BITS
+	#define AW_GRAPH_POINT_NUM_BITS 5
+#endif
+static_assert(1<<AW_GRAPH_POINT_NUM_BITS < AW_GRAPH_HEIGHT, "Reduce number of bits, or increase graph height");
+#define AW_GRAPH_POINT_MAXVAL ((1<<AW_GRAPH_POINT_NUM_BITS) - 1)

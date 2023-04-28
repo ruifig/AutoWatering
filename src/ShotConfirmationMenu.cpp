@@ -16,7 +16,7 @@ namespace
 		LayoutHelper::getMenuButtonRect(1, 1),
 		HAlign::Center, VAlign::Center,
 		TINY_FONT,
-		GRAPH_VALUES_TEXT_COLOUR, SCREEN_BKG_COLOUR,
+		AW_GRAPH_VALUES_TEXT_COLOUR, AW_SCREEN_BKG_COLOUR,
 		WidgetFlag::EraseBkg
 	};
 }
@@ -32,8 +32,8 @@ ShotConfirmationMenu::~ShotConfirmationMenu()
 
 void ShotConfirmationMenu::init()
 {
-	m_buttons[(int)ButtonId::Yes].init((int)ButtonId::Yes, LayoutHelper::getMenuButtonPos(2,1), SCREEN_BKG_COLOUR, img_SetThreshold);
-	m_buttons[(int)ButtonId::No].init((int)ButtonId::No, LayoutHelper::getMenuButtonPos(3,1), SCREEN_BKG_COLOUR, img_Close);
+	m_buttons[(int)ButtonId::Yes].init((int)ButtonId::Yes, LayoutHelper::getMenuButtonPos(2,1), AW_SCREEN_BKG_COLOUR, img_SetThreshold);
+	m_buttons[(int)ButtonId::No].init((int)ButtonId::No, LayoutHelper::getMenuButtonPos(3,1), AW_SCREEN_BKG_COLOUR, img_Close);
 }
 
 void ShotConfirmationMenu::tick(float deltaSeconds)
