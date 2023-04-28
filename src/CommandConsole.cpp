@@ -217,7 +217,7 @@ bool CommandConsole::processCommand(const Command& cmd)
 	return false;
 }
 
-#if COMMAND_CONSOLE_ENABLED
+#if AW_COMMAND_CONSOLE_ENABLED
 	CommandConsole gCommandConsole;
 #endif
 

@@ -25,11 +25,11 @@ private:
 	SerialStringReader<> m_serialStringReader;
 };
 
-#if COMMAND_CONSOLE_ENABLED
+#if AW_COMMAND_CONSOLE_ENABLED
 	extern CommandConsole gCommandConsole;
 
 	#if !(CZ_LOG_ENABLED && CZ_SERIAL_LOG_ENABLED)
-		#error CZ_LOG_ENABLED and CZ_SERIAL_LOG_ENABLED must be set to 1 to be able to set COMMAND_CONSOLE_ENABLED
+		#error CZ_LOG_ENABLED and CZ_SERIAL_LOG_ENABLED must be set to 1 to be able to set AW_COMMAND_CONSOLE_ENABLED
 	#endif
 #endif
 
