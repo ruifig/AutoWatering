@@ -85,7 +85,7 @@ class AdafruitIOManager : public Component
 	static AdafruitIOManager* ms_instance;
 };
 
-#if WIFI_ENABLED
+#if AW_WIFI_ENABLED
 extern AdafruitIOManager gAdafruitIOManager;
 #endif
 

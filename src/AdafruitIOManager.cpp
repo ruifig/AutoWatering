@@ -112,7 +112,7 @@ bool AdafruitIOManager::processCommand(const Command& cmd)
 	return false;
 }
 
-#if WIFI_ENABLED
+#if AW_WIFI_ENABLED
 AdafruitIOManager gAdafruitIOManager;
 #endif
 

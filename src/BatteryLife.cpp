@@ -6,7 +6,14 @@ namespace cz
 
 float BatteryLife::tick(float deltaSeconds)
 {
-	BatteryLifeCalculator batteryLifeCalculator(BATTERY_LIFE_PIN, 267200, 459600, 2.5f, 4.2f, 1.07f);
+	BatteryLifeCalculator batteryLifeCalculator(
+		AW_BATTERYLIFE_PIN,
+		AW_BATTERYLIFE_R1_VALUE,
+		AW_BATTERYLIFE_R2_VALUE,
+		AW_BATTERYLIFE_VBAT_0,
+		AW_BATTERYLIFE_VBAT_100,
+		AW_BATTERYLIFE_VBAT_ADJUSTMENT);
+
 	float voltage = 0;
 	int newPerc = batteryLifeCalculator.readBatteryLife(&voltage);
 	if (newPerc != m_lastPercentageValue)
@@ -22,7 +29,7 @@ void BatteryLife::onEvent(const Event& evt)
 {
 }
 
-#if BATTERY_LIFE_ENABLED
+#if AW_BATTERYLIFE_ENABLED
 BatteryLife gBatteryLife;
 #endif
 

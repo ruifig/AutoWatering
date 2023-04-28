@@ -121,7 +121,7 @@
             <Value>USB_VID=0x2341</Value>
             <Value>USB_PID=0x0010</Value>
             <Value>USB_MANUFACTURER="\"Arduino LLC\""</Value>
-            <Value>FASTER_ITERATION=1</Value>
+            <Value>AW_FASTER_ITERATION=1</Value>
             <Value>NDEBUG</Value>
             <Value>CZ_LOG_ENABLED=0</Value>
             <Value>CZ_SERIAL_LOG_ENABLED=0</Value>
@@ -224,7 +224,7 @@
             <Value>USB_VID=0x2341</Value>
             <Value>USB_PID=0x0010</Value>
             <Value>USB_MANUFACTURER="\"Arduino LLC\""</Value>
-            <Value>FASTER_ITERATION=1</Value>
+            <Value>AW_FASTER_ITERATION=1</Value>
             <Value>DEBUG</Value>
             <Value>_DEBUG</Value>
             <Value>CZ_LOG_ENABLED=1</Value>
@@ -330,7 +330,7 @@
             <Value>USB_VID=0x2341</Value>
             <Value>USB_PID=0x0010</Value>
             <Value>USB_MANUFACTURER="\"Arduino LLC\""</Value>
-            <Value>FASTER_ITERATION=1</Value>
+            <Value>AW_FASTER_ITERATION=1</Value>
             <Value>NDEBUG</Value>
             <Value>CZ_LOG_ENABLED=1</Value>
             <Value>CZ_SERIAL_LOG_ENABLED=1</Value>

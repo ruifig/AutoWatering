@@ -22,7 +22,7 @@
 
 using namespace cz;
 
-#if SD_CARD_LOGGING
+#if AW_SD_CARD_LOGGING
 	SDCardHelper gSDCard;
 	SDLogOutput gSdLogOutput;
 #endif
@@ -181,7 +181,7 @@ void setup()
 	// AT24C256 : 400kHz at 2.7v, 2.5v
 	Wire.setClock(400000);
 
-	#if MOCK_COMPONENTS
+	#if AW_MOCK_COMPONENTS
 		randomSeed(micros());
 	#endif
 
