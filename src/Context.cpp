@@ -236,7 +236,7 @@ unsigned int GroupConfig::getShotDuration() const
 
 void GroupConfig::setShotDuration(unsigned int value_)
 {
-	unsigned int value = cz::clamp<unsigned int>(value_, 1, SHOT_MAX_DURATION);
+	unsigned int value = cz::clamp<unsigned int>(value_, 1, AW_SHOT_MAX_DURATION);
 	if (value != m_data.shotDuration)
 	{
 		m_isDirty = true;

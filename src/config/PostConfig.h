@@ -307,3 +307,56 @@ Any value below this, and we consider that the sensor is not getting power
 #ifndef AW_MOISTURESENSOR_ACCEPTABLE_MIN_VALUE
 	#define AW_MOISTURESENSOR_ACCEPTABLE_MIN_VALUE 100
 #endif
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                               WATER PUMP COMPONENT OPTIONS
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*
+How many motors can be active at one given time
+This is to control the peak power usage, depending on what power supply it is being used
+*/
+#ifndef AW_MAX_SIMULTANEOUS_PUMPS
+	#define AW_MAX_SIMULTANEOUS_PUMPS 3
+#endif
+
+/*
+Maximum allowed value for water shots (in seconds). Needs to be an integer number
+*/
+#ifndef AW_SHOT_MAX_DURATION
+	#define AW_SHOT_MAX_DURATION 99
+#endif
+
+/*
+One-off shot duration in seconds. Need to be an integer number
+*/
+#ifndef AW_SHOT_DEFAULT_DURATION
+	#define AW_SHOT_DEFAULT_DURATION 5
+#endif
+#if AW_SHOT_DEFAULT_DURATION>AW_SHOT_MAX_DURATION
+	#error Invalid values
+#endif
+
+/*
+Minimum time required to pass (in seconds) before a group turns the motor ON again.
+This is useful so a group doesn't keep giving motor shots before the sensor reacts properly. It forces a minimum wait
+before automated shots.
+This does NOT affect manual shots.
+*/
+#ifndef AW_MINIMUM_TIME_BETWEEN_MOTOR_ON
+	#define AW_MINIMUM_TIME_BETWEEN_MOTOR_ON (AW_SHOT_DEFAULT_DURATION*2.0f)
+#endif
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                               GRAPHICAL UI COMPONENT OPTIONS
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*
+If set to 1, it will enable the GraphicalUI component.
+At the time of writing, only 320x240 SPI, (ILI9341 + XPT2046) screens are supported
+This is the one I'm using:
+https://www.amazon.co.uk/gp/product/B07QJW73M3/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1
+*/
+#ifndef AW_GRAPHICALUI_ENABLED
+	#define AW_GRAPHICALUI_ENABLED 0
+#endif

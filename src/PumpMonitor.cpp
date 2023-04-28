@@ -92,7 +92,7 @@ float PumpMonitor::tick(float deltaSeconds)
 			turnMotorOff();
 		}
 	}
-	else if (m_motorOffCountdown <= -MINIMUM_TIME_BETWEEN_MOTOR_ON)
+	else if (m_motorOffCountdown <= -AW_MINIMUM_TIME_BETWEEN_MOTOR_ON)
 	{
 		if (data.isRunning() && m_sensorValidReadingSinceLastShot && m_lastValidReading.meanValue > data.getThresholdValue())
 		{
@@ -105,9 +105,9 @@ float PumpMonitor::tick(float deltaSeconds)
 			m_queueHandle.release();
 		}
 	}
-	else // m_motorOffCountdown is in the ]-MINIMUM_TIME_BETWEEN_MOTOR_ON, 0] range
+	else // m_motorOffCountdown is in the ]-AW_MINIMUM_TIME_BETWEEN_MOTOR_ON, 0] range
 	{
-		// keep counting down until we get to <= -MINIMUM_TIME_BETWEEN_MOTOR_ON
+		// keep counting down until we get to <= -AW_MINIMUM_TIME_BETWEEN_MOTOR_ON
 		m_motorOffCountdown -= deltaSeconds;
 	}
 

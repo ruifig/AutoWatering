@@ -106,7 +106,7 @@ namespace cz
 			// Sensor sampling interval in seconds
 			unsigned int samplingInterval = AW_MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL;
 			// Motor shot duration in seconds
-			unsigned int shotDuration = SHOT_DEFAULT_DURATION;
+			unsigned int shotDuration = AW_SHOT_DEFAULT_DURATION;
 
 			// The sensor values decreases as moisture increases. (High Value = Dry, Low Value = Wet)
 			// Air and water values are calculated automatically as sensor values are provided. This means the user wipe clean the sensor

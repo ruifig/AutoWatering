@@ -1,4 +1,8 @@
-* Create a "LEDStatus" component
+
+* Make the graphical UI optional
+	* Introduce a AW_GRAPHICALUI_ENABLED macro
+
+* Create a "LEDStatus" component - DONE
 	* This will allow some feedback of what's going on when there isn't a screen connected
 
 * Go through the console commands list and cleanup/remove what's should not be there, like test stuff I left behind. - DONE

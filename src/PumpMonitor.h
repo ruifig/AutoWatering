@@ -51,10 +51,10 @@ class PumpMonitor : public Component
 	// This serves two purposes
 	// * If >0 then it means the motor is ON and we're counting down to turn it off
 	// * If <= 0 then it means the motor is OFF, and...
-	//		* If <= (-MINIMUM_TIME_BETWEEN_MOTOR_ON) then we can do another sensor check
-	float m_motorOffCountdown = -MINIMUM_TIME_BETWEEN_MOTOR_ON;
+	//		* If <= (-AW_MINIMUM_TIME_BETWEEN_MOTOR_ON) then we can do another sensor check
+	float m_motorOffCountdown = -AW_MINIMUM_TIME_BETWEEN_MOTOR_ON;
 
-	using SemaphoreQueue = TSemaphoreQueue<uint8_t, MAX_NUM_PAIRS, AW_MAX_SIMULTANEOUS_MOTORS>;
+	using SemaphoreQueue = TSemaphoreQueue<uint8_t, MAX_NUM_PAIRS, AW_MAX_SIMULTANEOUS_PUMPS>;
 	static SemaphoreQueue ms_semaphoreQueue;
 	SemaphoreQueue::Handle m_queueHandle;
 };

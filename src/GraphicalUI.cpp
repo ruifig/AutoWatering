@@ -21,6 +21,7 @@ namespace cz
 
 extern MyDisplay1 gScreen;
 extern XPT2046 gTs;
+
 extern Timer gTimer;
 
 using namespace gfx;
@@ -767,6 +768,8 @@ void GraphicalUI::changeToState(DisplayState& newState)
 	m_state->onEnter();
 }
 
-GraphicalUI gGraphicalUI;
+#if AW_GRAPHICALUI_ENABLED
+	GraphicalUI gGraphicalUI;
+#endif
 
 } // namespace cz

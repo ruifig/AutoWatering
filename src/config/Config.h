@@ -90,30 +90,6 @@
 #define VISIBLE_NUM_PAIRS 4
 
 /**
- * How many motors can be active at one given time
- * This is to control the peak power usage, depending on what power supply it is being used
- */
-#define AW_MAX_SIMULTANEOUS_MOTORS 3
-
-/**
- * Water shot duration in seconds. Need to be an integer number
- */
-#define SHOT_DEFAULT_DURATION 5
-
-/**
- * Maximum allowed value for water shots (in seconds). Needs to be an integer number
- */
-#define SHOT_MAX_DURATION 99
-
-/**
- * Minimum time required to pass (in seconds) before a group turns the motor ON again.
- * This is useful so a group doesn't keep giving motor shots before the sensor reacts properly. It forces a minimum wait
- * before automated shots.
- * This does NOT affect manual shots.
- */
-#define MINIMUM_TIME_BETWEEN_MOTOR_ON (SHOT_DEFAULT_DURATION*2.0f)
-
-/**
  * Time in seconds for the program to revert to normal operating mode if no buttons are press
  * This is so that if for example the user leaves the system in the menu, after a while it will revert to running normally
  */

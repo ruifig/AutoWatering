@@ -191,7 +191,9 @@ class GraphicalUI : public Component
 	void updateTouch(float deltaSeconds);
 };
 
-extern GraphicalUI gGraphicalUI;
+#if AW_GRAPHICALUI_ENABLED
+	extern GraphicalUI gGraphicalUI;
+#endif
 	
 } // namespace cz
 
