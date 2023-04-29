@@ -453,7 +453,7 @@ void SettingsMenu::setSensorLabels()
 void SettingsMenu::changeThresholdValue(int direction)
 {
 	int currentValue = (int)m_dummyCfg.getThresholdValue();
-	int newValue = cz::clamp<int>(currentValue + (direction * m_dummyCfg.getThresholdValueOnePercent()), 0, 1023);
+	int newValue = cz::clamp<int>(currentValue + (direction * m_dummyCfg.getThresholdValueOnePercent()), 0, (1<<ADC_NUM_BITS)-1);
 	m_dummyCfg.setThresholdValue(newValue);
 	CZ_LOG(logDefault, Log, F("%s(%d): %d -> %d"), __FUNCTION__, direction, currentValue, newValue);
 }
