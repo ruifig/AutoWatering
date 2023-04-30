@@ -12,7 +12,7 @@
 /atmelstudio_lib/ArduinoCore/Release/
 /atmelstudio_lib/ArduinoCore/Development/
 *.componentinfo.xml
-
+/Temp
 
 src/Config/MySecrets.h
 compile_commands.json
