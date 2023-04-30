@@ -1,11 +1,11 @@
 #pragma once
 
-#ifndef CONFIG_H
-	#error Config.h needs to be include first. You should include only Config.h , since that already includes Secrets.h
+#ifndef AW_CONFIG_DONE
+	#error Secrets.h should only be included from PostConfig.h. Refer to the documentation to see how to create configurations.
 #endif
 
-#if __has_include("MySecrets.h")
-	#include "MySecrets.h"
+#if __has_include("sensitive/MySecrets.h")
+	#include "sensitive/MySecrets.h"
 #else
 	#error "MySecrets.h not found. Read Secrets.h for more information."
 #endif

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Config/Config.h"
 #include "Component.h"
 #include "GroupGraph.h"
 #include "gfx/MyDisplay1.h"

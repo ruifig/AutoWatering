@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Config/Config.h"
 #include "Component.h"
 #include <WiFi.h>
 #include <crazygaze/micromuc/Logging.h>

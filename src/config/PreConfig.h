@@ -29,3 +29,9 @@ This hasn't been used for a while, so not sure if working
 #ifndef AW_MOCK_COMPONENTS
 	#define AW_MOCK_COMPONENTS 0
 #endif
+
+/**
+ * How many bits to set the ADC readings to.
+ * E.g: The RP2040 has a 12-bit ADC
+ */
+#define AW_ADC_NUM_BITS 12

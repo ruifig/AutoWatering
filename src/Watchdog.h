@@ -27,6 +27,7 @@ public:
 #endif
 
 private:
+	// Component interface
 	virtual const char* getName() const override { return "Watchdog"; }
 	virtual bool initImpl() override;
 	virtual float tick(float deltaSeconds) override;

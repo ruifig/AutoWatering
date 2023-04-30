@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Arduino.h>
-#include "Config/Config.h"
 #include <assert.h>
 #include "Component.h"
 #include "SemaphoreQueue.h"
@@ -53,6 +52,8 @@ class RealSoilMoistureSensor : public Component
 	};
 
 	static const char* const ms_stateNames[3];
+
+	String m_name;
 
 	// Seconds since last sensor read.
 	// Keeping this separate from m_timeInState, so pausing the group or entering a menu doesn't cause the sensor reading timer

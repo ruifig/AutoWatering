@@ -1,5 +1,3 @@
-#include "Config/Config.h"
-
 #if __MBED__
 	#include "utility/PluggableUSBDevice_fix.h"
 #endif
@@ -161,8 +159,8 @@ void setup()
 	CZ_LOG(logDefault, Log, "");
 	CZ_LOG(logDefault, Log, "Autowatering, %s", __TIMESTAMP__);
 
-	CZ_LOG(logDefault, Log, "Setting ADC reporting to %d bits", ADC_NUM_BITS);
-	analogReadResolution(ADC_NUM_BITS);
+	CZ_LOG(logDefault, Log, "Setting ADC reporting to %d bits", AW_ADC_NUM_BITS);
+	analogReadResolution(AW_ADC_NUM_BITS);
 
 	CZ_LOG(logDefault, Log, "Initializing I2C");
 	// MCP23017 : 400kHz at 3.3v

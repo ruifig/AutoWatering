@@ -4,7 +4,6 @@
 #include <queue>
 #include <memory>
 
-#include "Config/Config.h"
 #include <crazygaze/micromuc/Logging.h>
 #include <crazygaze/micromuc/Ticker.h>
 
@@ -114,6 +113,12 @@ class MQTTCache : public Component
 	 */
 	const Entry* set(const char* topic, const char* value, uint8_t qos, bool forceSync = false);
 	const Entry* set(const Entry* entry, const char* value, uint8_t qos, bool forceSync = false);
+
+	/**
+	 * Finds the specified cache entry.
+	 * Returns the entry or NULL if it doesn't exist
+	*/
+	const Entry* get(const char* topic);
 
 	/**
 	 * Removes the specified entry from the cache.

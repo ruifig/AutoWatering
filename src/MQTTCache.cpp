@@ -286,6 +286,11 @@ const MQTTCache::Entry* MQTTCache::set(const MQTTCache::Entry* inEntry, const ch
 	return entry;
 }
 
+const MQTTCache::Entry* MQTTCache::get(const char* topic)
+{
+	return find(topic, false);
+}
+
 void MQTTCache::remove(const char* topic)
 {
 	int index;

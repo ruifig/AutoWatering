@@ -27,11 +27,12 @@ RealSoilMoistureSensor::RealSoilMoistureSensor(uint8_t index, DigitalOutputPin& 
 	, m_dataPin(dataPin)
 	, m_queueHandle(ms_semaphoreQueue.createHandle())
 {
+	m_name = formatString("soilmoisturesensor%d", m_index);
 }
 
 const char* RealSoilMoistureSensor::getName() const
 {
-	return formatString("SoilMoistureSensor%d", m_index);
+	return m_name.c_str();
 }
 
 bool RealSoilMoistureSensor::initImpl()

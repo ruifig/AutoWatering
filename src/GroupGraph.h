@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Config/Config.h"
 #include "gfx/Widget.h"
 #include "Events.h"
 

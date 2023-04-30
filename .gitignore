@@ -14,6 +14,6 @@
 *.componentinfo.xml
 /Temp
 
-src/Config/MySecrets.h
+src/config/sensitive/MySecrets.h
 compile_commands.json
 

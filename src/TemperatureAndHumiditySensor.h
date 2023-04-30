@@ -2,7 +2,6 @@
 
 #include <Arduino.h>
 #include <assert.h>
-#include "Config/Config.h"
 #include "Component.h"
 #include <Adafruit_HTU21DF.h>
 
