@@ -391,6 +391,77 @@ Some more notes:
 #define AW_SCREEN_WIDTH 320
 #define AW_SCREEN_HEIGHT 240
 
+//
+// TFT_eSPI defines
+//
+// If this is set, User_Setup_Select.h file will not load the user setting header files
+#ifndef USER_SETUP_LOADED
+	#define USER_SETUP_LOADED 1
+#endif
+// Define the TFT driver, pins etc here:
+#ifndef ILI9341_DRIVER
+	#define ILI9341_DRIVER 1
+#endif
+#ifndef TFT_MISO
+	#define TFT_MISO 4
+#endif
+#ifndef TFT_SCLK
+	#define TFT_SCLK 6
+#endif
+#ifndef TFT_MOSI
+	#define TFT_MOSI 7
+#endif
+#ifndef TFT_RST
+	#define TFT_RST 8
+#endif
+#ifndef TFT_DC
+	#define TFT_DC 9
+#endif
+#ifndef TFT_BL
+	#define TFT_BL 10
+#endif
+#ifndef TFT_CS
+	#define TFT_CS 11
+#endif
+// TFT_eSPI expects us to set TOUCH_CS if we want it to implement touch screen support.
+// But since it doesn't automatically make use of interrupts out of the box, I'm using a separate library that does.
+// Therefore, I'm not calling this TOUCH_CS but TOUCH_MY_CS so it doesn't get picked up by TFT_eSPI.
+#ifndef TOUCH_MY_CS
+	#define TOUCH_MY_CS 12
+#endif
+#ifndef TOUCH_MY_IRQ
+	#define TOUCH_MY_IRQ 13
+#endif
+//Other settings
+#ifndef LOAD_GLCD
+	#define LOAD_GLCD 1
+#endif
+#ifndef LOAD_FONT2
+	#define LOAD_FONT2 1
+#endif
+#ifndef LOAD_FONT4
+	#define LOAD_FONT4 1
+#endif
+#ifndef LOAD_FONT6
+	#define LOAD_FONT6 1
+#endif
+#ifndef LOAD_FONT7
+	#define LOAD_FONT7 1
+#endif
+#ifndef LOAD_FONT8
+	#define LOAD_FONT8 1
+#endif
+#ifndef LOAD_GFXFF
+	#define LOAD_GFXFF 1
+#endif
+#ifndef SMOOTH_FONT
+	#define SMOOTH_FONT 1
+#endif
+#ifndef SPI_FREQUENCY
+	#define SPI_FREQUENCY 27000000
+#endif
+
+
 /*
 How long to show the intro for when powering up
 */
