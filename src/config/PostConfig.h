@@ -536,5 +536,8 @@ How many sensor/motor pairs fit on the screen
 #ifndef AW_GRAPH_POINT_NUM_BITS
 	#define AW_GRAPH_POINT_NUM_BITS 5
 #endif
-static_assert(1<<AW_GRAPH_POINT_NUM_BITS < AW_GRAPH_HEIGHT, "Reduce number of bits, or increase graph height");
+// This file is included for every single C++ or C file, and static_assert is a C++ only feature
+#ifdef __cplusplus 
+	static_assert((1<<AW_GRAPH_POINT_NUM_BITS) < AW_GRAPH_HEIGHT, "Reduce number of bits, or increase graph height");
+#endif
 #define AW_GRAPH_POINT_MAXVAL ((1<<AW_GRAPH_POINT_NUM_BITS) - 1)

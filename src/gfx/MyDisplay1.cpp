@@ -12,6 +12,10 @@ MyDisplay1::MyDisplay1()
 }
 bool MyDisplay1::begin()
 {
+
+	// Seems like I can't figure out how to reliably detect if a screen is attached.
+	// This works in a Debug build but not Release. Not sure why, so disabling it this code for now
+	#if 0
 	m_tft.init();
 	delay(150);
 	// Reset.
@@ -25,6 +29,8 @@ bool MyDisplay1::begin()
 	{
 		return false;
 	}
+	#endif
+
 	delay(10);
 	m_tft.init();
 	//logProperties();

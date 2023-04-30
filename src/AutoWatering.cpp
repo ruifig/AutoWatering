@@ -194,6 +194,9 @@ void setup()
 #endif
 
 	CZ_LOG(logDefault, Log, "Initialing screen");
+
+	// Screen detection is not reliable, so disabling it for now
+#if 0
 	if (gScreen.begin())
 	{
 		gScreenDetected = true;
@@ -204,6 +207,10 @@ void setup()
 		gScreenDetected = false;
 		CZ_LOG(logDefault, Warning, "*** SCREEN NOT DETECTED ***");
 	}
+#else
+	gScreen.begin();
+	gScreenDetected = true;
+#endif
 
 	if (gScreenDetected)
 	{
