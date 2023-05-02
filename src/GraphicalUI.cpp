@@ -7,8 +7,6 @@
 #include "DisplayCommon.h"
 #include "Timer.h"
 
-void doGroupShot(uint8_t index);
-
 #define YP A3  // must be an analog pin, use "An" notation!
 #define XM A2  // must be an analog pin, use "An" notation!
 #define YM 9   // can be a digital pin

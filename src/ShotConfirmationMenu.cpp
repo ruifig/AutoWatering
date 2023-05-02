@@ -2,6 +2,7 @@
 #include "DisplayCommon.h"
 #include "Icons.h"
 #include <crazygaze/micromuc/Profiler.h>
+#include "PumpMonitor.h"
 
 void doGroupShot(uint8_t index);
 
@@ -67,7 +68,7 @@ bool ShotConfirmationMenu::processTouch(const Pos& pos)
 	{
 		CZ_ASSERT(gCtx.data.hasGroupSelected());
 		GroupData* data = gCtx.data.getSelectedGroup();
-		doGroupShot(data->getIndex());
+		gSetup->getPumpMonitor(data->getIndex())->doShot();
 		m_close = true;
 	}
 	else if (checkButtonPressed(ButtonId::No))

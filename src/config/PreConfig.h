@@ -35,25 +35,3 @@ This hasn't been used for a while, so not sure if working
  * E.g: The RP2040 has a 12-bit ADC
  */
 #define AW_ADC_NUM_BITS 12
-
-#ifdef __cplusplus
-	namespace cz
-	{
-		class SoilMoistureSensor;
-		class PumpMonitor;
-
-		/*
-		A custom setup must implement this interface
-		*/
-		class Setup
-		{
-		  public:
-			// Called for each sensor+motor pair
-			virtual void begin() = 0;
-			virtual SoilMoistureSensor* createSoilMoistureSensor(int index) = 0;
-			virtual PumpMonitor* createPumpMonitor(int index) = 0;
-		};
-
-	} // namespace cz
-
-#endif

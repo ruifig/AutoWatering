@@ -640,6 +640,43 @@ How many sensor/motor pairs fit on the screen
 #ifdef __cplusplus 
 namespace cz
 {
+	class SoilMoistureSensor;
+	class PumpMonitor;
+
+	/*
+	A custom setup must implement this interface
+	*/
+	class Setup
+	{
+	  public:
+
+		virtual void begin() = 0;
+
+		/*
+		 * Name that will identify this AutoWatering device.
+		 * 
+		 * IMPORTANT: This will be used to group the feeds in Adafruit IO if using MQTT, so make sure that no two devices share the same name.
+		 */
+		virtual const char* getName() const = 0;
+
+		// Called for each sensor+motor pair
+		virtual SoilMoistureSensor* createSoilMoistureSensor(int index) = 0;
+		virtual PumpMonitor* createPumpMonitor(int index) = 0;
+
+		// These are called by setup() after calling gSetup->begin()
+		void createSoilMoistureSensors();
+		void createPumpMonitors();
+
+		PumpMonitor* getPumpMonitor(int index)
+		{
+			return m_pumpMonitors[index];
+		}
+
+	  protected:
+		SoilMoistureSensor* m_soilMoistureSensors[AW_MAX_NUM_PAIRS];
+		PumpMonitor* m_pumpMonitors[AW_MAX_NUM_PAIRS];
+	};
+
 	extern Setup* gSetup;
 }
 #endif

@@ -31,26 +31,6 @@ namespace cz
 	Setup* gSetup;
 }
 
-SoilMoistureSensor* gSoilMoistureSensors[AW_MAX_NUM_PAIRS];
-void createSoilMoistureSensors()
-{
-	CZ_LOG(logDefault, Log, "Creating soil moisture sensor components");
-	for(int i=0; i<AW_MAX_NUM_PAIRS; i++)
-	{
-		gSoilMoistureSensors[i] = gSetup->createSoilMoistureSensor(i);
-	}
-}
-
-PumpMonitor* gPumpMonitors[AW_MAX_NUM_PAIRS];
-void createPumpMonitors()
-{
-	CZ_LOG(logDefault, Log, "Creating group monitor components");
-	for(int i=0; i<AW_MAX_NUM_PAIRS; i++)
-	{
-		gPumpMonitors[i] = gSetup->createPumpMonitor(i);
-	}
-}
-
 namespace cz
 {
 	MyDisplay1 gScreen;
@@ -98,11 +78,6 @@ namespace
 #if CONSOLE_COMMANDS_ENABLED
 	cz::SerialStringReader<> gSerialStringReader;
 #endif
-}
-
-void doGroupShot(uint8_t index)
-{
-	gPumpMonitors[index]->doShot();
 }
 
 void setup()
@@ -187,8 +162,8 @@ void setup()
 
 	gSetup = createSetupObject();
 	gSetup->begin();
-	createSoilMoistureSensors();
-	createPumpMonitors();
+	gSetup->createSoilMoistureSensors();
+	gSetup->createPumpMonitors();
 
 	Component::initAll();
 

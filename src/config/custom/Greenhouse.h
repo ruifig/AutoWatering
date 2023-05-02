@@ -17,8 +17,8 @@
 #ifdef __cplusplus
 	namespace cz
 	{
-		Setup* createSetupObject_GreenHouse();
-		inline Setup* createSetupObject()
+		class Setup* createSetupObject_GreenHouse();
+		inline class Setup* createSetupObject()
 		{
 			return createSetupObject_GreenHouse();
 		}

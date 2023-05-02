@@ -1,4 +1,7 @@
 
+* Get the latest value of a feed (see https://io.adafruit.com/api/docs/mqtt.html#mqtt-retain)
+
+
 * Make the graphical UI optional
 	* Introduce a AW_GRAPHICALUI_ENABLED macro
 
