@@ -445,7 +445,7 @@ public:
 	
   private:
 	Context& m_outer;
-	GroupData m_group[MAX_NUM_PAIRS];
+	GroupData m_group[AW_MAX_NUM_PAIRS];
 	bool m_muxMutex = false;
 	int8_t m_selectedGroup = -1;
 
@@ -464,16 +464,6 @@ struct Context
 	}
 
 	void begin();
-
-	struct I2CBoard
-	{
-	#if AW_MOCK_COMPONENTS
-		MockMCP23017Wrapper ioExpander;
-	#else
-		MCP23017Wrapper ioExpander;
-	#endif
-		Mux8Channels mux;
-	} m_i2cBoards[MAX_NUM_I2C_BOARDS];
 
 	ProgramData data;
 	AT24C256 eeprom;

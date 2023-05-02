@@ -621,5 +621,25 @@ How many sensor/motor pairs fit on the screen
 #define AW_GRAPH_POINT_MAXVAL ((1<<AW_GRAPH_POINT_NUM_BITS) - 1)
 
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                               Make sure the user config defined mandatory things
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// This needs to be defined by the user config
+// It specifies how many sensor+motor pairs the setup supports
+#ifndef AW_MAX_NUM_PAIRS
+	#error AW_MAX_NUM_PAIRS must be defined by the user config
+#endif
+
 #define AW_CONFIG_DONE
 #include "Secrets.h"
+
+//
+// IMPORTANT:
+// The user config header must typedef "Setup" to the actual setup class
+#ifdef __cplusplus 
+namespace cz
+{
+	extern Setup* gSetup;
+}
+#endif

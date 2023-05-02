@@ -17,7 +17,7 @@ public:
 	 * 
 	 * \param screenSlot What screen slot use (where to draw)
 	 * \param pairIndex
-	 * 		If [0..MAX_NUM_PAIRS[ it associates with that sensor/motor pair
+	 * 		If [0..AW_MAX_NUM_PAIRS[ it associates with that sensor/motor pair
 	 * 		If -1, then it means no association	
 	 */
 	void setAssociation(int8_t screenSlot, int8_t pairIndex);

@@ -71,7 +71,7 @@ bool CommandConsole::processCommand(const Command& cmd)
 	else if (cmd.is("setgroupthreshold"))
 	{
 		int idx, value;
-		if (cmd.parseParams(idx, value) && idx < MAX_NUM_PAIRS)
+		if (cmd.parseParams(idx, value) && idx < AW_MAX_NUM_PAIRS)
 		{
 			gCtx.data.getGroupData(idx).setThresholdValue(value);
 			return true;
@@ -80,7 +80,7 @@ bool CommandConsole::processCommand(const Command& cmd)
 	else if (cmd.is("setgroupthresholdaspercentage"))
 	{
 		int idx, value;
-		if (cmd.parseParams(idx, value) && idx < MAX_NUM_PAIRS)
+		if (cmd.parseParams(idx, value) && idx < AW_MAX_NUM_PAIRS)
 		{
 			gCtx.data.getGroupData(idx).setThresholdValueAsPercentage(value);
 			return true;
@@ -89,7 +89,7 @@ bool CommandConsole::processCommand(const Command& cmd)
 	else if (cmd.is("startgroup"))
 	{
 		int idx;
-		if (cmd.parseParams(idx) && idx < MAX_NUM_PAIRS)
+		if (cmd.parseParams(idx) && idx < AW_MAX_NUM_PAIRS)
 		{
 			gCtx.data.getGroupData(idx).setRunning(true);
 			return true;
@@ -98,7 +98,7 @@ bool CommandConsole::processCommand(const Command& cmd)
 	else if (cmd.is("stopgroup"))
 	{
 		int idx;
-		if (cmd.parseParams(idx) && idx < MAX_NUM_PAIRS)
+		if (cmd.parseParams(idx) && idx < AW_MAX_NUM_PAIRS)
 		{
 			gCtx.data.getGroupData(idx).setRunning(false);
 			return true;
@@ -112,7 +112,7 @@ bool CommandConsole::processCommand(const Command& cmd)
 	else if (cmd.is("loggroupconfig"))
 	{
 		int idx;
-		if (cmd.parseParams(idx) && idx < MAX_NUM_PAIRS)
+		if (cmd.parseParams(idx) && idx < AW_MAX_NUM_PAIRS)
 		{
 			gCtx.data.getGroupData(idx).logConfig();
 			return true;
@@ -121,7 +121,7 @@ bool CommandConsole::processCommand(const Command& cmd)
 	else if (cmd.is("selectgroup"))
 	{
 		int8_t idx;
-		if (cmd.parseParams(idx) && idx < MAX_NUM_PAIRS)
+		if (cmd.parseParams(idx) && idx < AW_MAX_NUM_PAIRS)
 		{
 			gCtx.data.trySetSelectedGroup(idx);
 			return true;
@@ -146,7 +146,7 @@ bool CommandConsole::processCommand(const Command& cmd)
 	else if (cmd.is("setmocksensor"))
 	{
 		int idx, value;
-		if (cmd.parseParams(idx, value) && idx < MAX_NUM_PAIRS)
+		if (cmd.parseParams(idx, value) && idx < AW_MAX_NUM_PAIRS)
 		{
 			Component::raiseEvent(SetMockSensorValueEvent(idx, value));
 			return true;
@@ -157,7 +157,7 @@ bool CommandConsole::processCommand(const Command& cmd)
 		int value;
 		if (cmd.parseParams(value))
 		{
-			for (int idx = 0; idx < MAX_NUM_PAIRS; idx++)
+			for (int idx = 0; idx < AW_MAX_NUM_PAIRS; idx++)
 			{
 				Component::raiseEvent(SetMockSensorValueEvent(idx, value));
 			}
@@ -177,7 +177,7 @@ bool CommandConsole::processCommand(const Command& cmd)
 	else if (cmd.is("savegroup"))
 	{
 		uint8_t idx;
-		if (cmd.parseParams(idx) && idx < MAX_NUM_PAIRS)
+		if (cmd.parseParams(idx) && idx < AW_MAX_NUM_PAIRS)
 		{
 			gCtx.data.saveGroupConfig(idx);
 			return true;

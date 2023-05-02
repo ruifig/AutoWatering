@@ -26,64 +26,28 @@ using namespace cz;
 #endif
 
 
-constexpr int sensorsPerBoard = 6;
-SoilMoistureSensor* gSoilMoistureSensors[MAX_NUM_PAIRS];
+namespace cz
+{
+	Setup* gSetup;
+}
+
+SoilMoistureSensor* gSoilMoistureSensors[AW_MAX_NUM_PAIRS];
 void createSoilMoistureSensors()
 {
 	CZ_LOG(logDefault, Log, "Creating soil moisture sensor components");
-	static IOExpanderPin vinPins[sensorsPerBoard] = 
+	for(int i=0; i<AW_MAX_NUM_PAIRS; i++)
 	{
-		IO_EXPANDER_VPIN_SENSOR0,
-		IO_EXPANDER_VPIN_SENSOR1,
-		IO_EXPANDER_VPIN_SENSOR2,
-		IO_EXPANDER_VPIN_SENSOR3,
-		IO_EXPANDER_VPIN_SENSOR4,
-		IO_EXPANDER_VPIN_SENSOR5
-	};
-	
-	static MultiplexerPin dataPins[sensorsPerBoard] =
-	{
-		MUX_MOISTURE_SENSOR0,
-		MUX_MOISTURE_SENSOR1,
-		MUX_MOISTURE_SENSOR2,
-		MUX_MOISTURE_SENSOR3,
-		MUX_MOISTURE_SENSOR4,
-		MUX_MOISTURE_SENSOR5
-	};
-
-	for(int i=0; i<MAX_NUM_PAIRS; i++)
-	{
-		MuxInterface& mux = gCtx.m_i2cBoards[i < sensorsPerBoard ? 0 : 1].mux;
-		DigitalOutputPin* vinPin = new MCP23xxxOutputPin(
-			gCtx.m_i2cBoards[i / sensorsPerBoard].ioExpander,
-			vinPins[i % sensorsPerBoard].raw);
-		MuxAnalogInputPin* dataPin = new MuxAnalogInputPin(
-			gCtx.m_i2cBoards[i / sensorsPerBoard].mux,
-			dataPins[i % sensorsPerBoard].raw);
-		gSoilMoistureSensors[i] = new SoilMoistureSensor(i, *vinPin, *dataPin);
+		gSoilMoistureSensors[i] = gSetup->createSoilMoistureSensor(i);
 	}
 }
 
-PumpMonitor* gPumpMonitors[MAX_NUM_PAIRS];
+PumpMonitor* gPumpMonitors[AW_MAX_NUM_PAIRS];
 void createPumpMonitors()
 {
 	CZ_LOG(logDefault, Log, "Creating group monitor components");
-	static IOExpanderPin motorPins[sensorsPerBoard] = 
+	for(int i=0; i<AW_MAX_NUM_PAIRS; i++)
 	{
-		IO_EXPANDER_MOTOR0,
-		IO_EXPANDER_MOTOR1,
-		IO_EXPANDER_MOTOR2,
-		IO_EXPANDER_MOTOR3,
-		IO_EXPANDER_MOTOR4,
-		IO_EXPANDER_MOTOR5
-	};
-
-	for(int i=0; i<MAX_NUM_PAIRS; i++)
-	{
-		DigitalOutputPin* pin = new MCP23xxxOutputPin(
-			gCtx.m_i2cBoards[i / sensorsPerBoard].ioExpander,
-			motorPins[i % sensorsPerBoard].raw);
-		gPumpMonitors[i] = new PumpMonitor(i, *pin);
+		gPumpMonitors[i] = gSetup->createPumpMonitor(i);
 	}
 }
 
@@ -177,7 +141,7 @@ void setup()
 	Wire.begin();
 	// MCP23017 : 400kHz at 3.3v
 	// AT24C256 : 400kHz at 2.7v, 2.5v
-	Wire.setClock(400000);
+	//Wire.setClock(400000);
 
 	#if AW_MOCK_COMPONENTS
 		randomSeed(micros());
@@ -221,6 +185,8 @@ void setup()
 	gCtx.begin();
 	gTimer.begin();
 
+	gSetup = createSetupObject();
+	gSetup->begin();
 	createSoilMoistureSensors();
 	createPumpMonitors();
 

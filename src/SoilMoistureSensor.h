@@ -70,7 +70,7 @@ class RealSoilMoistureSensor : public Component
 	DigitalOutputPin& m_vinPin;
 	AnalogInputPin& m_dataPin;
 
-	using SemaphoreQueue = TSemaphoreQueue<uint8_t, MAX_NUM_PAIRS, AW_MAX_SIMULTANEOUS_MOISTURESENSORS>;
+	using SemaphoreQueue = TSemaphoreQueue<uint8_t, AW_MAX_NUM_PAIRS, AW_MAX_SIMULTANEOUS_MOISTURESENSORS>;
 	static SemaphoreQueue ms_semaphoreQueue;
 	SemaphoreQueue::Handle m_queueHandle;
 
@@ -130,9 +130,15 @@ protected:
 };
 
 #if AW_MOCK_COMPONENTS
-	using SoilMoistureSensor  = MockSoilMoistureSensor;
+	class SoilMoistureSensor : public MockSoilMoistureSensor
+	{
+		using MockSoilMoistureSensor::MockSoilMoistureSensor;
+	};
 #else
-	using SoilMoistureSensor  = RealSoilMoistureSensor;
+	class SoilMoistureSensor : public RealSoilMoistureSensor
+	{
+		using RealSoilMoistureSensor::RealSoilMoistureSensor;
+	};
 #endif
 
 }  // namespace cz

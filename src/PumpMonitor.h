@@ -53,7 +53,7 @@ class PumpMonitor : public Component
 	//		* If <= (-AW_MINIMUM_TIME_BETWEEN_MOTOR_ON) then we can do another sensor check
 	float m_motorOffCountdown = -AW_MINIMUM_TIME_BETWEEN_MOTOR_ON;
 
-	using SemaphoreQueue = TSemaphoreQueue<uint8_t, MAX_NUM_PAIRS, AW_MAX_SIMULTANEOUS_PUMPS>;
+	using SemaphoreQueue = TSemaphoreQueue<uint8_t, AW_MAX_NUM_PAIRS, AW_MAX_SIMULTANEOUS_PUMPS>;
 	static SemaphoreQueue ms_semaphoreQueue;
 	SemaphoreQueue::Handle m_queueHandle;
 };

@@ -465,7 +465,7 @@ void GraphicalUI::OverviewState::drawGroupNumbers()
 	for(int i=0; i<AW_VISIBLE_NUM_PAIRS; i++)
 	{
 		int pairIndex = i + m_topSlotPairIndex;
-		if (pairIndex < MAX_NUM_PAIRS)
+		if (pairIndex < AW_MAX_NUM_PAIRS)
 		{
 			printAligned(
 				{{0, LayoutHelper::getHistoryPlotRect(i).top()}, AW_GROUP_NUM_WIDTH, LayoutHelper::getHistoryPlotRect(i).height},
@@ -501,7 +501,7 @@ void GraphicalUI::OverviewState::onLeave()
 
 void GraphicalUI::OverviewState::scrollSlots(int inc)
 {
-	m_topSlotPairIndex = clamp(m_topSlotPairIndex+inc, 0, MAX_NUM_PAIRS - AW_VISIBLE_NUM_PAIRS);
+	m_topSlotPairIndex = clamp(m_topSlotPairIndex+inc, 0, AW_MAX_NUM_PAIRS - AW_VISIBLE_NUM_PAIRS);
 
 	// If for some reason we can't unselect the selected group, then we don't perform any scrolling
 	if (!gCtx.data.trySetSelectedGroup(-1))
@@ -515,7 +515,7 @@ void GraphicalUI::OverviewState::scrollSlots(int inc)
 	{
 		int pairIndex = idx + m_topSlotPairIndex;
 		// Pass pairIndex as -1 if it's an empty screen slot
-		m_groups[idx].graph.setAssociation(idx, (pairIndex<MAX_NUM_PAIRS) ? pairIndex : -1);
+		m_groups[idx].graph.setAssociation(idx, (pairIndex<AW_MAX_NUM_PAIRS) ? pairIndex : -1);
 		m_groups[idx].sensorUpdates = true;
 		Overview::sensorLabels[idx][0].clearValue();
 		Overview::sensorLabels[idx][1].clearValue();

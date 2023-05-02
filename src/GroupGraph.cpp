@@ -19,7 +19,7 @@ GroupGraph::~GroupGraph()
 
 void GroupGraph::setAssociation(int8_t screenSlot, int8_t pairIndex)
 {
-	CZ_ASSERT(pairIndex >=-1 && pairIndex < MAX_NUM_PAIRS);
+	CZ_ASSERT(pairIndex >=-1 && pairIndex < AW_MAX_NUM_PAIRS);
 	CZ_ASSERT(screenSlot >= 0 && screenSlot < AW_VISIBLE_NUM_PAIRS);
 	m_pairIndex = pairIndex;
 	m_screenSlot = screenSlot;

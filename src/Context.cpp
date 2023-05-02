@@ -78,23 +78,6 @@ void load(AT24C::Ptr& src, TFixedCapacityQueue<T>& v)
 
 void Context::begin()
 {
-	static_assert(IO_EXPANDER_ADDR>=0x0 && IO_EXPANDER_ADDR<=0x7, "Wrong macro value");
-
-	// Initialize the i2c boards
-	for(int i = 0; i< MAX_NUM_I2C_BOARDS; i++)
-	{
-		I2CBoard& board = m_i2cBoards[i];
-		board.ioExpander.begin(IO_EXPANDER_ADDR + i);
-		board.mux.begin(
-			board.ioExpander,
-			IO_EXPANDER_TO_MUX_S0,
-			IO_EXPANDER_TO_MUX_S1,
-			IO_EXPANDER_TO_MUX_S2,
-			MCU_TO_MUX_ZPIN,
-			IO_EXPANDER_TO_MUX_ENABLE);
-
-	}
-
 	data.begin();
 }
 
@@ -508,7 +491,7 @@ bool ProgramData::trySetSelectedGroup(int8_t index)
 
 GroupData& ProgramData::getGroupData(uint8_t index)
 {
-	CZ_ASSERT(index < MAX_NUM_PAIRS);
+	CZ_ASSERT(index < AW_MAX_NUM_PAIRS);
 	return m_group[index];
 }
 
