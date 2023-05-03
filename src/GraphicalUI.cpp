@@ -6,6 +6,7 @@
 #include "Icons.h"
 #include "DisplayCommon.h"
 #include "Timer.h"
+#include "gfx/TouchKeyboard.h"
 
 #define YP A3  // must be an analog pin, use "An" notation!
 #define XM A2  // must be an analog pin, use "An" notation!
@@ -103,6 +104,11 @@ void GraphicalUI::IntroState::tick(float deltaSeconds)
 
 void GraphicalUI::IntroState::onEnter()
 {
+			TouchKeyboard keyboard;
+			keyboard.init();
+			keyboard.draw(true);
+			while(true) {}
+
 	StaticLabel(&Intro::introLabel1_P).draw();
 	StaticLabel(&Intro::introLabel2_P).draw();
 	StaticLabel(&Intro::introLabel3_P).draw();

@@ -128,6 +128,17 @@ struct Rect
 			};
 	}
 
+	// Returns a Rect contracted the number of specified pixels in all 4 directions (top/bottom/left/right)
+	constexpr Rect contract(int16_t pixels) const
+	{
+		return {
+			static_cast<int16_t>(x + pixels),
+			static_cast<int16_t>(y + pixels),
+			static_cast<uint16_t>(width - pixels*2),
+			static_cast<uint16_t>(height - pixels*2)
+			};
+	}
+
 	constexpr int16_t left() const
 	{
 		return x;
