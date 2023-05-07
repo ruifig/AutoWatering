@@ -103,11 +103,6 @@ class GreenhouseSetup : public Setup
 {
   public:
 
-	virtual const char* getName() const override
-	{
-		return "greenhouse";
-	}
-
 	virtual void begin() override
 	{
 		static_assert(IO_EXPANDER_ADDR>=0x0 && IO_EXPANDER_ADDR<=0x7, "Wrong macro value");

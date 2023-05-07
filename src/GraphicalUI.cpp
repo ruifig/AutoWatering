@@ -104,11 +104,6 @@ void GraphicalUI::IntroState::tick(float deltaSeconds)
 
 void GraphicalUI::IntroState::onEnter()
 {
-			TouchKeyboard keyboard;
-			keyboard.init();
-			keyboard.draw(true);
-			while(true) {}
-
 	StaticLabel(&Intro::introLabel1_P).draw();
 	StaticLabel(&Intro::introLabel2_P).draw();
 	StaticLabel(&Intro::introLabel3_P).draw();

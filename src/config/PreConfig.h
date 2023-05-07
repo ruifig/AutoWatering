@@ -35,3 +35,8 @@ This hasn't been used for a while, so not sure if working
  * E.g: The RP2040 has a 12-bit ADC
  */
 #define AW_ADC_NUM_BITS 12
+
+/**
+ * How many characters long can the device name be
+*/
+#define AW_DEVICENAME_MAX_LEN 31

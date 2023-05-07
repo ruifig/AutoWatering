@@ -653,11 +653,23 @@ namespace cz
 		virtual void begin() = 0;
 
 		/*
-		 * Name that will identify this AutoWatering device.
+		 * When booting a fresh Autowatering device that was never configured, it will use this as the feed group when connecting
+		 * to Adafruit IO.
 		 * 
-		 * IMPORTANT: This will be used to group the feeds in Adafruit IO if using MQTT, so make sure that no two devices share the same name.
+		 * The first thing you need to do for a new device is to go to the Adafruit IO and add a new entry to the "/feeds/aw_unnamed.name"
+		 * feed with the new device name.
+		 * The device will pick up the change, save the name to the EEPROM and reboot. Once it boots and you see the new feed group was
+		 * created, you can delete the "aw_unnamed" group.
+		 * 
+		 * If you don't plan to build more than 1 device, you can just override this in your custom setup to return the actual name you
+		 * want to use
+		 * 
+		 * WARNING: The name should not be longer than AW_DEVICENAME_MAX_LEN-1
 		 */
-		virtual const char* getName() const = 0;
+		virtual const char* getDefaultName() const
+		{
+			return "aw_unnamed";
+		}
 
 		// Called for each sensor+motor pair
 		virtual SoilMoistureSensor* createSoilMoistureSensor(int index) = 0;
@@ -666,6 +678,11 @@ namespace cz
 		// These are called by setup() after calling gSetup->begin()
 		void createSoilMoistureSensors();
 		void createPumpMonitors();
+
+		SoilMoistureSensor* getSoilMoistureSensor(int index)
+		{
+			return m_soilMoistureSensors[index];
+		}
 
 		PumpMonitor* getPumpMonitor(int index)
 		{

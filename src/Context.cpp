@@ -31,6 +31,16 @@ void readEEPROM(AT24C::Ptr& src, uint8_t* dst, unsigned int size)
 	}
 }
 
+void updateEEPROM(AT24C::Ptr& dst, const char* src, unsigned int size)
+{
+	updateEEPROM(dst, reinterpret_cast<const uint8_t*>(src), size);
+}
+
+void readEEPROM(AT24C::Ptr& src, char* dst, unsigned int size)
+{
+	readEEPROM(src, reinterpret_cast<uint8_t*>(dst), size);
+}
+
 template<typename T, typename = std::enable_if_t<
 	std::is_arithmetic_v<T> ||
 	std::is_same_v<T, GraphPoint>
@@ -457,10 +467,33 @@ void ProgramData::begin()
 
 void ProgramData::logConfig() const
 {
+	CZ_LOG(logDefault, Log, F("DeviceName: %s"), m_devicename[0] ? m_devicename : formatString("NOT SET (using '%s')", gSetup->getDefaultName()));
 	for(const GroupData& g : m_group)
 	{
 		g.logConfig();
 	}
+}
+
+void ProgramData::setDeviceName(const char* name)
+{
+	// If no change, then nothing to do, so we don't spend time trying to save
+	if (strcmp(m_devicename, name)==0)
+	{
+		return;
+	}
+
+	strncpy(m_devicename, name, AW_DEVICENAME_MAX_LEN);
+	m_devicename[AW_DEVICENAME_MAX_LEN] = 0;
+	constexpr int rebootDelay = 5000;
+	save();
+	CZ_LOG(logDefault, Log, "DeviceName set to '%s'. Rebooting in %d ms", m_devicename, rebootDelay);
+	delay(rebootDelay);
+	rp2040.reboot();
+}
+
+const char* ProgramData::getDeviceName()
+{
+	return m_devicename[0] ? m_devicename : gSetup->getDefaultName();
 }
 
 GroupData* ProgramData::getSelectedGroup()
@@ -526,6 +559,8 @@ void ProgramData::save() const
 	unsigned long startTime = micros();
 	AT24C::Ptr ptr = m_outer.eeprom.at(0);
 
+	updateEEPROM(ptr, m_devicename, sizeof(m_devicename));
+
 	// We save the configs first because they are fixed size, and so we can load/save groups individually when coming
 	// out of the configuration menu
 	for(const GroupData& g : m_group)
@@ -547,6 +582,7 @@ void ProgramData::saveGroupConfig(uint8_t index)
 {
 	unsigned long startTime = micros();
 	AT24C::Ptr ptr = m_outer.eeprom.at(0);
+	ptr += sizeof(m_devicename);
 
 	for(uint8_t idx = 0; idx<index; ++idx)
 	{
@@ -568,6 +604,8 @@ void ProgramData::load()
 {
 	unsigned long startTime = micros();
 	AT24C::Ptr ptr = m_outer.eeprom.at(0);
+
+	readEEPROM(ptr, m_devicename, sizeof(m_devicename));
 
 	for(GroupData& g : m_group)
 	{

@@ -13,6 +13,11 @@
 #include "MqttClient.h"
 #include "WiFi.h"
 
+// When using Adafruit IO, we can get the current value of a feed by publishing to to a special feed (Feed+"/get")
+// See https://io.adafruit.com/api/docs/mqtt.html#mqtt-retain
+#define USE_ADAFRUITIO_GET 1
+
+
 namespace cz
 {
 
@@ -30,10 +35,13 @@ class MQTTCache : public Component
 	MQTTCache();
 	~MQTTCache();
 
+	static MQTTCache* getInstance();
+
 	enum class State : uint8_t
 	{
 		New,
 		QueuedForSend, // Marked for publishing. This normally means publish is delayed because of rate limiting
+		//QueuedForGet, // This only applies if USE_ADAFRUITIO_GET is set to 1
 		SentAndWaitingForAck, // message passed to the mqtt client object, and we are waiting for confirmation the broker got it (if using qos 1 or 2)
 		Synced // Synched with the mqtt broker. If the publishing was made with qos 0, then this doesn't necessarily mean the MQTT broker got this current value
 	};
@@ -49,7 +57,6 @@ class MQTTCache : public Component
 		// If a publish is needed or is in progress, this is the desired qos
 		uint8_t qos = 1;
 		bool pendingRemoval = false;
-
 		bool isUpdating() const
 		{
 			return (state == State::QueuedForSend || state == State::SentAndWaitingForAck) ? true : false;
@@ -85,13 +92,13 @@ class MQTTCache : public Component
 		/**
 		 * Called when a new message is received, and caused an entry to change value
 		 */
-		virtual void onCacheReceived(const Entry* entry) = 0;
+		virtual void onMqttValueReceived(const Entry* entry) = 0;
 
 		/**
 		 * Called once when the mqtt client confirms an entry as as received by the broker.
 		 * If qos 0 was used for sending, this doesn't necessariy mean the broker got it.
 		*/
-		virtual void onCacheSent(const Entry* entry) = 0;
+		virtual void onMqttValueSent(const Entry* entry) = 0;
 
 	};
 
@@ -99,6 +106,11 @@ class MQTTCache : public Component
 	 * This should be called before the Component::initAll to override any of the default options
 	*/
 	void setOptions(const Options& options);
+
+	void setListener(Listener& listener)
+	{
+		m_listener = &listener;
+	}
 
 	/**
 	 * Sets a cache entry to the specified value.
@@ -113,6 +125,30 @@ class MQTTCache : public Component
 	 */
 	const Entry* set(const char* topic, const char* value, uint8_t qos, bool forceSync = false);
 	const Entry* set(const Entry* entry, const char* value, uint8_t qos, bool forceSync = false);
+
+	template<int Precision>
+	const Entry* set(const char* topic, float value, uint8_t qos, bool forceSync = false)
+	{
+		return set(topic, *FloatToString<20,0,Precision>(value), qos, forceSync);
+	}
+
+	template<int Precision>
+	const Entry* set(const Entry* entry, float value, uint8_t qos, bool forceSync = false)
+	{
+		return set(entry, *FloatToString<20,0,Precision>(value), qos, forceSync);
+	}
+
+#if 0
+	// Creates the given entry, but doesn't set any values. It will retrieve the latest value from the MQTT broker
+	// If the topic already exists, it simply returns the entry without doing anything
+	const Entry* create(const char* topic, uint8_t qos);
+#endif
+
+	/**
+	 * Subscribes to the given topic (can include wildcards)
+	 * A new Entry is created for any feed updates received.
+	*/
+	void subscribe(const char* topic);
 
 	/**
 	 * Finds the specified cache entry.
@@ -159,8 +195,16 @@ class MQTTCache : public Component
 	static MQTTCache* ms_instance;
 	std::vector<std::unique_ptr<Entry>> m_cache;
 	std::queue<Entry*> m_sendQueue;
+
+	struct Subscription
+	{
+		String topic;
+		bool newSubscription = false;
+	};
+	std::vector<Subscription> m_subscriptions;
+	bool m_hasNewSubscriptions = false;
 	float m_publishCountdown = 0;
-	//Listener* m_listener;
+	Listener* m_listener;
 	WiFiClient m_wifiClient;
 
 	struct Config
@@ -184,8 +228,8 @@ class MQTTCache : public Component
 		std::unique_ptr<MqttClient> client;
 	} m_mqtt;
 
-
 	bool connectToMqttBroker(float deltaSeconds);
+	void doSubscribe(const char* topic);
 	float m_connectToMqttBrokerCountdown = 0;
 
 #if AW_MQTT_WIFI_RECONNECT

@@ -4,6 +4,7 @@
 #include <crazygaze/micromuc/ScopeGuard.h>
 #include <crazygaze/micromuc/Profiler.h>
 
+#include <ArduinoJson.h>
 #include "MqttClient.h"
 #include "Component.h"
 #include "WifiManager.h"
@@ -176,6 +177,11 @@ MQTTCache::~MQTTCache()
 	ms_instance = nullptr;
 }
 
+MQTTCache* MQTTCache::getInstance()
+{
+	return ms_instance;
+}
+
 void MQTTCache::setOptions(const MQTTCache::Options& options)
 {
 	m_cfg.host = options.host;
@@ -286,6 +292,34 @@ const MQTTCache::Entry* MQTTCache::set(const MQTTCache::Entry* inEntry, const ch
 	return entry;
 }
 
+#if 0
+const MQTTCache::Entry* MQTTCache::create(const char* topic, uint8_t qos)
+{
+	MQTTCache::Entry* entry = find(topic, true);
+
+	// If the entry already exists, then do nothing
+	if (entry->state != MQTTCache::State::New)
+	{
+		return entry;
+	}
+
+	entry->doGetLatest = true;
+	entry->state = MQTTCache::State::Synced;
+}
+#endif
+
+void MQTTCache::subscribe(const char* topic)
+{
+	for(auto&& subscription : m_subscriptions )
+	{
+		if (subscription.topic == topic)
+			return;
+	}
+
+	m_subscriptions.push_back({formatString("%s/json",topic), true});
+	m_hasNewSubscriptions = true;
+}
+
 const MQTTCache::Entry* MQTTCache::get(const char* topic)
 {
 	return find(topic, false);
@@ -332,39 +366,85 @@ void MQTTCache::onMqttMessage(MqttClient::MessageData& md)
 {
 	const MqttClient::Message &msg = md.message;
 	char payload[msg.payloadLen + 1];
+	char topic[md.topicName.lenstring.len + 1];
+
+	// copy payload
 	memcpy(payload, msg.payload, msg.payloadLen);
 	payload[msg.payloadLen] = '\0';
+
+	// copy topic name
+	memcpy(topic, md.topicName.lenstring.data, md.topicName.lenstring.len);
+	topic[md.topicName.lenstring.len] = 0;
+
 	CZ_LOG(logMQTTCache, Log,
-		   "Message arrived: qos %d, retained %d, dup %d, packetid %d, payload:[%s]",
-		   msg.qos, msg.retained, msg.dup, msg.id, payload);
+		   "Message arrived: qos %d, retained %d, dup %d, packetid %d, topic:[%s], payload:[%s]",
+		   msg.qos, msg.retained, msg.dup, msg.id, topic, payload);
 
-	const char* topic = md.topicName.cstring;
-	auto entry = find(topic, false);
 
-	// We only accept entries that are registered
-	if (!entry)
+	auto processSingle = [this](const char* topic, const char* value)
 	{
-		CZ_LOG(logMQTTCache, Log, "onMqttMessage: '%s'. Ignoring because not present in cache", topic);
-		return;
+		auto entry = find(topic, true);
+
+	#if 0
+		// We only accept entries that are registered
+		if (!entry)
+		{
+			CZ_LOG(logMQTTCache, Log, "onMqttMessage: '%s'. Ignoring because not present in cache", topic);
+			return;
+		}
+	#endif
+
+		CZ_LOG(logMQTTCache, Log, "onMqttMessage: (%s), message='%s'", toLogString(entry), value);
+		// If we have a value in the cache queued up for sending, then it's easier to just ignore the message
+		// This means the cache will keep the value we have queued up for sending
+		if (entry->isUpdating())
+		{
+			CZ_LOG(logMQTTCache, Log, "onMqttMessage: Ignoring message because entry is in update status");
+			return;
+		}
+
+		entry->state = MQTTCache::State::Synced;
+		if (entry->value != value)
+		{
+			entry->value = value;
+			CZ_LOG(logMQTTCache, Log, "onMqttValueReceived: %s", toLogString(entry));
+			m_listener->onMqttValueReceived(entry);
+		}
+	};
+
+
+	// Check if it's an individual feed or a group
+	if (strstr(topic, ADAFRUIT_IO_USERNAME"/feeds"))
+	{
+		processSingle(topic, payload);
+	}
+	else
+	{
+		DynamicJsonDocument doc(1024);
+		DeserializationError error = deserializeJson(doc, payload);
+		if (error)
+		{
+			CZ_LOG(logMQTTCache, Error, "onMqttMessage: Error deserializing message: %s", error.c_str());
+			return;
+		}
+
+		JsonObject feeds = doc["feeds"];
+		if (!feeds.isNull())
+		{
+			for(JsonPair feed : feeds)
+			{
+				processSingle(
+					formatString("%s/feeds/%s.%s", ADAFRUIT_IO_USERNAME, gCtx.data.getDeviceName(), feed.key().c_str()),
+					feed.value().as<const char*>());
+			}
+		}
+		else
+		{
+			CZ_LOG(logMQTTCache, Warning, "onMqttMessage: No feeds found int the payload.");
+		}
+
 	}
 
-	CZ_LOG(logMQTTCache, Log, "onMqttMessage: (%s), message='%s'", toLogString(entry), payload);
-
-	// If we have a value in the cache queued up for sending, then it's easier to just ignore the message
-	// This means the cache will keep the value we have queued up for sending
-	if (entry->isUpdating())
-	{
-		CZ_LOG(logMQTTCache, Log, "onMqttMessage: Ignoring message because entry is in update status");
-		return;
-	}
-
-	entry->state = MQTTCache::State::Synced;
-	if (entry->value != payload)
-	{
-		entry->value = payload;
-		CZ_LOG(logMQTTCache, Log, "onCacheReceived: %s", toLogString(entry));
-		//m_listener->onCacheReceived(entry);
-	}
 }
 
 void MQTTCache::onMqttMessageCallback(MqttClient::MessageData& md)
@@ -429,6 +509,19 @@ float MQTTCache::tick(float deltaSeconds)
 		{
 			return tickInterval;
 		}
+	}
+
+	if (m_hasNewSubscriptions)
+	{
+		for(auto&& subscription : m_subscriptions)
+		{
+			if (subscription.newSubscription)
+			{
+				doSubscribe(subscription.topic.c_str());
+				subscription.newSubscription = false;
+			}
+		}
+		m_hasNewSubscriptions = false;
 	}
 
 	m_mqtt.client->yield(1);
@@ -625,14 +718,43 @@ bool MQTTCache::connectToMqttBroker(float deltaSeconds)
 		}
 
 		// Subscribe
+		for(auto&& subscription : m_subscriptions)
 		{
-			// #TODO : Add/Re-add subscriptions
+			doSubscribe(subscription.topic.c_str());
 		}
 
 		return true;
 	}
 }
 
+void MQTTCache::doSubscribe(const char* topic)
+{
+	CZ_LOG(logMQTTCache, Log, "Subscribing to '%s'", topic);
+	MqttClient::Error::type rc = m_mqtt.client->subscribe(topic, MqttClient::QOS1, onMqttMessageCallback); 
+	if (rc != MqttClient::Error::SUCCESS)
+	{
+		CZ_LOG(logMQTTCache, Error, "Failed to subscribe to '%s'. Error %i", topic, rc);
+		return;
+	}
+
+	//
+	// Send a /get so Adafruit IO returns the latest values
+#if USE_ADAFRUITIO_GET
+	MqttClient::Message msg;
+	msg.qos = MqttClient::QOS1;
+	msg.retained = false;
+	msg.dup = false;
+	msg.payload = (void*)"";
+	msg.payloadLen = 0;
+	const char* getTopic = formatString("%s/get", topic);
+	CZ_LOG(logMQTTCache, Log, "Publishing to '%s' to get the latest value.", getTopic);
+	rc = m_mqtt.client->publish(getTopic, msg);
+	if (rc != MqttClient::Error::SUCCESS)
+	{
+		CZ_LOG(logMQTTCache, Error, "Failed to publish: %i", rc);
+	}
+#endif
+}
 
 
 }

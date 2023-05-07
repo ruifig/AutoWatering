@@ -398,6 +398,9 @@ class ProgramData
 public:
 	ProgramData(Context& outer);
 
+	void setDeviceName(const char* name);
+	const char* getDeviceName();
+
 	GroupData& getGroupData(uint8_t index);
 
 	// We only allow 1 sensor to be active at one give time, so we use this as a kind of mutex
@@ -445,6 +448,8 @@ public:
 	
   private:
 	Context& m_outer;
+
+	char m_devicename[AW_DEVICENAME_MAX_LEN+1] = {0};
 	GroupData m_group[AW_MAX_NUM_PAIRS];
 	bool m_muxMutex = false;
 	int8_t m_selectedGroup = -1;

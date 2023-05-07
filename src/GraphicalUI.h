@@ -107,6 +107,37 @@ class GraphicalUI : public Component
 	};
 
 
+	// #TODO : Remove this if not used
+#if 0
+	//
+	// Wifi and device name config
+	//
+	class WifiAndDeviceNameSetupState : public DisplayState
+	{
+	  public:
+	  	using DisplayState::DisplayState;
+	#if CZ_LOG_ENABLED
+		virtual const char* getName() const { return "WifiAndDeviceNameSetup"; }
+	#endif
+
+		virtual void init() override;
+		virtual void tick(float deltaSeconds) override;
+		virtual void onEnter() override;
+		virtual void onLeave() override;
+
+	  protected:
+		enum class State : uint8_t
+		{
+			Menu, // Menu where it asks to what to do (Configure Wifi, Change device name, etc)
+			ChangingDeviceName
+		};
+
+		State m_state = State::Menu;
+	};
+#endif
+
+
+
 	//
 	// OverviewState
 	//

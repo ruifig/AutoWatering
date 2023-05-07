@@ -33,12 +33,13 @@ class RealSoilMoistureSensor : public Component
 	RealSoilMoistureSensor(const RealSoilMoistureSensor&) = delete;
 	const RealSoilMoistureSensor& operator=(const RealSoilMoistureSensor&) = delete;
 
-  protected:
 
 	//
 	// Component interface
 	//
+  public:
 	virtual const char* getName() const override;
+  protected:
 	virtual bool initImpl() override;
 	virtual float tick(float deltaSeconds) override;
 	virtual void onEvent(const Event& evt) override;

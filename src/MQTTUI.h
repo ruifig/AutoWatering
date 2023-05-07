@@ -1,11 +1,12 @@
 #pragma once
 
 #include "Component.h"
+#include "MQTTCache.h"
 
 namespace cz
 {
 
-class MQTTUI : public Component
+class MQTTUI : public Component, public MQTTCache::Listener
 {
   public:
 
@@ -19,6 +20,14 @@ class MQTTUI : public Component
 	virtual float tick(float deltaSeconds) override;
 	virtual void onEvent(const Event& evt) override;
 	virtual bool processCommand(const Command& cmd) override;
+
+	// MQTTCache::Listener interface
+	virtual void onMqttValueReceived(const MQTTCache::Entry* entry) override {}
+	virtual void onMqttValueSent(const MQTTCache::Entry* entry) override {}
+
+	bool m_subscribed = false;
 };
 
 } // namespace cz
+
+CZ_DECLARE_LOG_CATEGORY(logMQTTUI, Log, Verbose)

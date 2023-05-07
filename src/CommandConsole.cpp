@@ -50,7 +50,16 @@ float CommandConsole::tick(float deltaSeconds)
 volatile int gProfilerCount = 0;
 bool CommandConsole::processCommand(const Command& cmd)
 {
-	if (cmd.is("profiler_log"))
+	if (cmd.is("setdevicename"))
+	{
+		char deviceName[AW_DEVICENAME_MAX_LEN+1];
+		if (cmd.parseParams(deviceName))
+		{
+			gCtx.data.setDeviceName(deviceName);
+			return true;
+		}
+	}
+	else if (cmd.is("profiler_log"))
 	{
 		gProfilerCount++; 
 		PROFILER_LOG();
