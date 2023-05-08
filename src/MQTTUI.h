@@ -22,10 +22,12 @@ class MQTTUI : public Component, public MQTTCache::Listener
 	virtual bool processCommand(const Command& cmd) override;
 
 	// MQTTCache::Listener interface
-	virtual void onMqttValueReceived(const MQTTCache::Entry* entry) override {}
-	virtual void onMqttValueSent(const MQTTCache::Entry* entry) override {}
+	virtual void onMqttValueReceived(const MQTTCache::Entry* entry) override;
+	//virtual void onMqttValueSent(const MQTTCache::Entry* entry) override {}
 
 	bool m_subscribed = false;
+
+	const MQTTCache::Entry* m_deviceNameValue = nullptr;
 };
 
 } // namespace cz

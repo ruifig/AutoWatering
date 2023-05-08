@@ -456,27 +456,25 @@ void MQTTCache::onMqttMessageCallback(MqttClient::MessageData& md)
 void MQTTCache::onMqttPublish(uint16_t packetId)
 {
 	CZ_LOG(logMQTTCache, Log, "onMqttPublish: packetId=%u", static_cast<unsigned int>(packetId));
-	int index;
-	auto entry = findByPacketId(packetId, &index);
+	auto entry = findByPacketId(packetId);
+	onMqttPublish(entry);
+}
+
+void MQTTCache::onMqttPublish(Entry* entry)
+{
 	if (!entry)
 	{
 		CZ_LOG(logMQTTCache, Log, "onMqttPublish: No entry found. Ignoring.");
 		return;
 	}
 
-	CZ_LOG(logMQTTCache, Log, "onMqttPublish: %s", toLogString(entry));
-
 	CZ_ASSERT(entry->state == MQTTCache::State::SentAndWaitingForAck);
-	entry->state == MQTTCache::State::Synced;
-
-	CZ_LOG(logMQTTCache, Log, "onCacheSent: %s", toLogString(entry));
-	//m_listener->onCacheSent(entry);
+	entry->state = MQTTCache::State::Synced;
 
 	entry->packetId = 0;
 	if (entry->pendingRemoval)
 	{
-		doRemove(index);
-		return;
+		remove(entry);
 	}
 }
 
@@ -534,17 +532,11 @@ float MQTTCache::tick(float deltaSeconds)
 
 	auto entry = m_sendQueue.front();
 	m_sendQueue.pop();
-	CZ_LOG(logMQTTCache, Log, "tick:publish(BEFORE): %s", toLogString(entry));
-
-	// #TODO : Remove this
-	CZ_LOG(logMQTTCache, Log,"HEAP INFO: size=%d, used=%d, free=%d", rp2040.getTotalHeap(), rp2040.getUsedHeap(), rp2040.getFreeHeap());
 
 	CZ_ASSERT(entry->state == MQTTCache::State::QueuedForSend);
-	CZ_LOG(logMQTTCache, Log, "Publishing...");
-	AW_CUSTOM_SERIAL.flush();
+	CZ_LOG(logMQTTCache, Log, "Publishing to '%s', value '%s'", entry->topic.c_str(), entry->value.c_str());
 
 	{
-		//entry->packetId = m_mqttClient->publish(entry->topic.c_str(), entry->qos, true, entry->value.c_str());
 		MqttClient::Message msg;
 		msg.qos = static_cast<MqttClient::QoS>(entry->qos);
 		msg.retained = true;
@@ -556,19 +548,28 @@ float MQTTCache::tick(float deltaSeconds)
 		auto endPublish = millis();
 		if (rc != MqttClient::Error::SUCCESS)
 		{
-			CZ_LOG(logMQTTCache, Error, "Failed to publish: %i", rc);
+			CZ_LOG(logMQTTCache, Error, "Failed to publish: %i. Will retry.", rc);
+			// put back in the queue to try and publish again
+			m_sendQueue.push(entry);
 		}
 		else
 		{
 			CZ_LOG(logMQTTCache, Log, "Publish time: %u ms", endPublish - startPublish);
+			// If sending with qos 0, we are not receiving any confirmation, so we set the state to Synced
+			if (entry->qos == 0)
+			{
+				entry->state = MQTTCache::State::Synced;
+			}
+			else
+			{
+				entry->state = MQTTCache::State::SentAndWaitingForAck;
+				#if HAS_BLOCKING_PUBLISH
+				onMqttPublish(entry);
+				#endif
+			}
 		}
 	}
 
-	CZ_LOG(logMQTTCache, Log, "... done");
-	AW_CUSTOM_SERIAL.flush();
-	// If sending with qos 0, we are not receiving any confirmation, so we set the state to Synced
-	entry->state = entry->qos == 0 ? MQTTCache::State::Synced : MQTTCache::State::SentAndWaitingForAck;
-	CZ_LOG(logMQTTCache, Log, "tick:publish(AFTER): %s", toLogString(entry));
 	m_publishCountdown = m_cfg.publishInterval;
 	return tickInterval;
 }

@@ -31,6 +31,16 @@ float MQTTUI::tick(float deltaSeconds)
 	return 0.1f;
 }
 
+const char* buildFeedName(const char* part1, const char* part2)
+{
+	return formatString(ADAFRUIT_IO_USERNAME"/feeds/%s.%s-%s", gCtx.data.getDeviceName(), part1, part2);
+}
+
+const char* buildFeedName(const char* part1)
+{
+	return formatString(ADAFRUIT_IO_USERNAME"/feeds/%s.%s", gCtx.data.getDeviceName(), part1);
+}
+
 void MQTTUI::onEvent(const Event& evt)
 {
 	switch(evt.type)
@@ -42,6 +52,8 @@ void MQTTUI::onEvent(const Event& evt)
 				m_subscribed = true;
 				MQTTCache::getInstance()->subscribe(formatString("%s/groups/%s", ADAFRUIT_IO_USERNAME, gCtx.data.getDeviceName()));
 				MQTTCache::getInstance()->setListener(*this);
+
+				m_deviceNameValue = MQTTCache::getInstance()->set(buildFeedName("devicename"), gCtx.data.getDeviceName(), 2, false);
 			}
 		}
 		break;
@@ -49,14 +61,14 @@ void MQTTUI::onEvent(const Event& evt)
 		case Event::TemperatureSensorReading:
 		{
 			auto&& e = static_cast<const TemperatureSensorReadingEvent&>(evt);
-			MQTTCache::getInstance()->set<1>(formatString(ADAFRUIT_IO_USERNAME"/feeds/%s.temperature", gCtx.data.getDeviceName()), e.temperatureC, 2, false);
+			MQTTCache::getInstance()->set<1>(buildFeedName("temperature"), e.temperatureC, 2, false);
 		}
 		break;
 
 		case Event::HumiditySensorReading:
 		{
 			auto&& e = static_cast<const HumiditySensorReadingEvent&>(evt);
-			MQTTCache::getInstance()->set<1>(formatString(ADAFRUIT_IO_USERNAME"/feeds/%s.humidity", gCtx.data.getDeviceName()), e.humidity, 2, false);
+			MQTTCache::getInstance()->set<1>(buildFeedName("humidity"), e.humidity, 2, false);
 		}
 		break;
 
@@ -67,12 +79,12 @@ void MQTTUI::onEvent(const Event& evt)
 			SoilMoistureSensor* sensor = gSetup->getSoilMoistureSensor(e.index);
 			if (e.reading.isValid())
 			{
-				MQTTCache::getInstance()->set<1>(
-					formatString(ADAFRUIT_IO_USERNAME"/feeds/%s.%s-value", gCtx.data.getDeviceName(), sensor->getName()),
+				MQTTCache::getInstance()->set<0>(
+					buildFeedName(sensor->getName(), "value"),
 					data.getCurrentValueAsPercentage(), 2, false);
 
-				MQTTCache::getInstance()->set<1>(
-					formatString(ADAFRUIT_IO_USERNAME"/feeds/%s.%s-threshold", gCtx.data.getDeviceName(), sensor->getName()),
+				MQTTCache::getInstance()->set<0>(
+					buildFeedName(sensor->getName(), "threshold"),
 					data.getThresholdValueAsPercentage(), 2, false);
 			}
 			else
@@ -85,6 +97,14 @@ void MQTTUI::onEvent(const Event& evt)
 
 	}
 } 
+
+void MQTTUI::onMqttValueReceived(const MQTTCache::Entry* entry)
+{
+	if (entry == m_deviceNameValue)
+	{
+		gCtx.data.setDeviceName(entry->value.c_str());
+	}
+}
 
 bool MQTTUI::processCommand(const Command& cmd)
 {

@@ -17,6 +17,8 @@
 // See https://io.adafruit.com/api/docs/mqtt.html#mqtt-retain
 #define USE_ADAFRUITIO_GET 1
 
+// The MQTT library I'm currently using has blocking publish
+#define HAS_BLOCKING_PUBLISH 1
 
 namespace cz
 {
@@ -98,7 +100,7 @@ class MQTTCache : public Component
 		 * Called once when the mqtt client confirms an entry as as received by the broker.
 		 * If qos 0 was used for sending, this doesn't necessariy mean the broker got it.
 		*/
-		virtual void onMqttValueSent(const Entry* entry) = 0;
+		//virtual void onMqttValueSent(const Entry* entry) = 0;
 
 	};
 
@@ -189,8 +191,14 @@ class MQTTCache : public Component
 	void onMqttMessage(MqttClient::MessageData& md);
 	static void onMqttMessageCallback(MqttClient::MessageData& md);
 
+	/**
+	 * NOTE: These callbacks were being used with other mqtt libraries I've tried, which actually had async publish.
+	 * The MQTT client library I'm using at the moment does blocking publishes, so this is called synchronously
+	 * right after the publish
+	*/
 	void onMqttPublish(uint16_t packetId);
 	static void onMqttPublishCallback(uint16_t packetId);
+	void onMqttPublish(Entry* entry);
 
 	static MQTTCache* ms_instance;
 	std::vector<std::unique_ptr<Entry>> m_cache;
