@@ -13,6 +13,7 @@ struct Event
 {
 	enum Type
 	{
+		ConfigReady,
 		ConfigLoad,
 		ConfigSave,
 		SoilMoistureSensorReading,
@@ -35,6 +36,22 @@ struct Event
 	virtual void log() const = 0;
 
 	Type type;
+};
+
+
+//
+// Raised the first time the config is loaded or saved
+struct ConfigReadyEvent : public Event
+{
+	ConfigReadyEvent()
+		: Event(Event::ConfigReady)
+	{
+	}
+	
+	virtual void log() const override
+	{
+		CZ_LOG(logEvents, Log, F("ConfigReady"));
+	}
 };
 
 struct ConfigLoadEvent : public Event

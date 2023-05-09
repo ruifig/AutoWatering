@@ -5,6 +5,12 @@
 namespace cz
 {
 
+BatteryLife::BatteryLife()
+{
+	// We only start ticking when we ready a ConfigReady event
+	stopTicking();
+}
+
 float BatteryLife::tick(float deltaSeconds)
 {
 	PROFILE_SCOPE(F("BatteryLife::tick"));
@@ -25,11 +31,19 @@ float BatteryLife::tick(float deltaSeconds)
 		Component::raiseEvent(BatteryLifeReadingEvent(newPerc, voltage));
 	}
 
-	return 10.0f;
+	return 60.0f;
 }
 
 void BatteryLife::onEvent(const Event& evt)
 {
+	switch (evt.type)
+	{
+		case Event::ConfigReady:
+		{
+			startTicking();
+		}
+		break;
+	}
 }
 
 #if AW_BATTERYLIFE_ENABLED

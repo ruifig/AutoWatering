@@ -28,6 +28,8 @@ RealSoilMoistureSensor::RealSoilMoistureSensor(uint8_t index, DigitalOutputPin& 
 	, m_queueHandle(ms_semaphoreQueue.createHandle())
 {
 	m_name = formatString("soilmoisturesensor%d", m_index);
+	// We only start ticking when we ready a ConfigReady event
+	stopTicking();
 }
 
 const char* RealSoilMoistureSensor::getName() const
@@ -149,13 +151,20 @@ void RealSoilMoistureSensor::onEvent(const Event& evt)
 {
 	switch(evt.type)
 	{
+		case Event::ConfigReady:
+		{
+			startTicking();
+		}
+		break;
+
 		case Event::ConfigLoad:
 		case Event::GroupOnOff:
+		{
 			if (!gCtx.data.getGroupData(m_index).isRunning())
 			{
 				changeToState(State::PoweredDown);
 			}
-			break;
+		}
 		break;
 	}
 }

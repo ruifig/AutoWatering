@@ -128,6 +128,11 @@ class MQTTCache : public Component
 	const Entry* set(const char* topic, const char* value, uint8_t qos, bool forceSync = false);
 	const Entry* set(const Entry* entry, const char* value, uint8_t qos, bool forceSync = false);
 
+	const Entry* set(const char* topic, int value, uint8_t qos, bool forceSync = false)
+	{
+		return set(topic, *IntToString(value), qos, forceSync);
+	}
+
 	template<int Precision>
 	const Entry* set(const char* topic, float value, uint8_t qos, bool forceSync = false)
 	{

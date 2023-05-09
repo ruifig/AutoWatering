@@ -433,6 +433,15 @@ public:
 		return m_selectedGroup;
 	}
 
+	// Returns true if the config was loaded or saved at least once.
+	// We need to consider it as ready for both a load and save because of the way the UI works.
+	// When booting, the UI can either load the current config, or reset (which saves a default config).
+	// Once the config is ready, then other components that depend on the config being ready can they proceed
+	bool isReady() const
+	{
+		return m_isReady;
+	}
+
 	// Tries to sets the selected group
 	// Depending on the state of the program, it might fail, such as if we are in menus
 	// -1 means no group selected
@@ -458,6 +467,7 @@ public:
 	float m_temperature = -100.0f;
 	// Relative humiditity
 	float m_humidity = -100.0f;
+	mutable bool m_isReady = false;
 };
 
 struct Context

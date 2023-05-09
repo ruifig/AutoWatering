@@ -14,6 +14,8 @@ PumpMonitor::PumpMonitor(uint8_t index, DigitalOutputPin& motorPin)
 	, m_sensorValidReadingSinceLastShot(0)
 	, m_queueHandle(ms_semaphoreQueue.createHandle())
 {
+	// We only start ticking when we get a ConfigReady event
+	stopTicking();
 }
 
 const char* PumpMonitor::getName() const
@@ -121,7 +123,8 @@ void PumpMonitor::onEvent(const Event& evt)
 {
 	switch(evt.type)
 	{
-		case Event::ConfigLoad:
+		case Event::ConfigReady:
+			startTicking();
 		break;
 
 		case Event::SoilMoistureSensorReading:

@@ -31,6 +31,11 @@ float MQTTUI::tick(float deltaSeconds)
 	return 0.1f;
 }
 
+const char* buildFeedName(const char* part1, int index, const char* part2)
+{
+	return formatString(ADAFRUIT_IO_USERNAME"/feeds/%s.%s%d-%s", gCtx.data.getDeviceName(), part1, index, part2);
+}
+
 const char* buildFeedName(const char* part1, const char* part2)
 {
 	return formatString(ADAFRUIT_IO_USERNAME"/feeds/%s.%s-%s", gCtx.data.getDeviceName(), part1, part2);
@@ -45,7 +50,7 @@ void MQTTUI::onEvent(const Event& evt)
 {
 	switch(evt.type)
 	{
-		case Event::Type::ConfigLoad:
+		case Event::Type::ConfigReady:
 		{
 			if (!m_subscribed)
 			{
@@ -80,11 +85,11 @@ void MQTTUI::onEvent(const Event& evt)
 			if (e.reading.isValid())
 			{
 				MQTTCache::getInstance()->set<0>(
-					buildFeedName(sensor->getName(), "value"),
+					buildFeedName("sms", e.index, "value"),
 					data.getCurrentValueAsPercentage(), 2, false);
 
 				MQTTCache::getInstance()->set<0>(
-					buildFeedName(sensor->getName(), "threshold"),
+					buildFeedName("sms", e.index, "threshold"),
 					data.getThresholdValueAsPercentage(), 2, false);
 			}
 			else
@@ -95,6 +100,17 @@ void MQTTUI::onEvent(const Event& evt)
 		}
 		break;
 
+		case Event::BatteryLifeReading:
+		{
+			auto&& e = static_cast<const BatteryLifeReadingEvent&>(evt);
+			MQTTCache::getInstance()->set(
+				buildFeedName("battery", "perc"),
+				e.percentage, 2, false);
+			MQTTCache::getInstance()->set<2>(
+				buildFeedName("battery", "voltage"),
+				e.voltage, 2, false);
+		}
+		break;
 	}
 } 
 

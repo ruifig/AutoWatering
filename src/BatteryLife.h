@@ -8,7 +8,7 @@ namespace cz
 class BatteryLife : public Component
 {
   public:
-	BatteryLife() {}
+	BatteryLife();
 
   private:
 	virtual const char* getName() const override { return "BatteryLife"; }

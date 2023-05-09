@@ -712,12 +712,17 @@ void GraphicalUI::updateTouch(float deltaSeconds)
 			m_touch.secondsSinceLastTouch += deltaSeconds;
 			if ((AW_SCREEN_OFF_TIMEOUT!=0) && (m_touch.secondsSinceLastTouch > AW_SCREEN_OFF_TIMEOUT))
 			{
-				CZ_LOG(logDefault, Log, F("Turning off screen"));
-				m_touch.sleeping = true;
-				m_touch.currentBrightness = AW_SCREEN_DEFAULT_BRIGHTNESS;
+				turnOffLED();
 			}
 		}
 	}
+}
+
+void GraphicalUI::turnOffLED()
+{
+	CZ_LOG(logDefault, Log, F("Turning off screen"));
+	m_touch.sleeping = true;
+	m_touch.currentBrightness = AW_SCREEN_DEFAULT_BRIGHTNESS;
 }
 	
 void GraphicalUI::onEvent(const Event& evt)
@@ -735,6 +740,11 @@ bool GraphicalUI::processCommand(const Command& cmd)
 			scrollSlots(inc);
 			return true;
 		}
+	}
+	else if (cmd.is("turnoffled"))
+	{
+		turnOffLED();
+		return true;
 	}
 
 	return false;

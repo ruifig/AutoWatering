@@ -54,8 +54,12 @@ public:
 	static void initAll();
 	static float tickAll(float deltaSeconds);
 	static int getCount();
+protected:
+	void stopTicking();
+	void startTicking();
 private:
 	virtual bool initImpl() = 0;
+
 
 	TTicker<Component*, float> m_ticker;
 	bool m_initialized = false;

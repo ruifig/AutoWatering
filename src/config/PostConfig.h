@@ -253,9 +253,9 @@ At the moment, only the HTU21D sensor is supported
 
 // Default sampling interval, in seconds
 #if AW_FASTER_ITERATION
-	#define AW_THSENSOR_DEFAULT_SAMPLINGINTERVAL 60.0f
+	#define AW_THSENSOR_SAMPLINGINTERVAL 120.0f
 #else
-	#define AW_THSENSOR_DEFAULT_SAMPLINGINTERVAL 120.0f
+	#define AW_THSENSOR_SAMPLINGINTERVAL 300.0f
 #endif
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

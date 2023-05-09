@@ -59,8 +59,8 @@ class RealSoilMoistureSensor : public Component
 	// Seconds since last sensor read.
 	// Keeping this separate from m_timeInState, so pausing the group or entering a menu doesn't cause the sensor reading timer
 	// to reset
-	// Setting this initially to FLT_MAX, so we do a reading for all sensors once we boot up.
-	float m_timeSinceLastRead = __FLT_MAX__;
+	// Setting this initially to a really high value, so we do a reading for all sensors once we boot up.
+	float m_timeSinceLastRead = __FLT_MAX__/2;
 
 	float m_timeInState = 0;
 	float m_nextTickWait = 0;

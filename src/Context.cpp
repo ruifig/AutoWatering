@@ -575,6 +575,13 @@ void ProgramData::save() const
 	
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
 	CZ_LOG(logDefault, Log, F("Saving full config to EEPROM, Took %u ms"), elapsedMs);
+	bool wasReady = m_isReady;
+	m_isReady = true;
+	if (!wasReady)
+	{
+		Component::raiseEvent(ConfigReadyEvent());
+	}
+
 	Component::raiseEvent(ConfigSaveEvent());
 }
 
@@ -619,6 +626,13 @@ void ProgramData::load()
 	
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
 	CZ_LOG(logDefault, Log, F("Loading full config from EEPROM took %u ms"), elapsedMs);
+	bool wasReady = m_isReady;
+	m_isReady = true;
+	if (!wasReady)
+	{
+		Component::raiseEvent(ConfigReadyEvent());
+	}
+
 	Component::raiseEvent(ConfigLoadEvent());
 }
 

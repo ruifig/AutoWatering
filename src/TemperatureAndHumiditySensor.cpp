@@ -19,6 +19,8 @@ const char* const TemperatureAndHumiditySensor::ms_stateNames[3] =
 
 TemperatureAndHumiditySensor::TemperatureAndHumiditySensor()
 {
+	// We only start ticking once we receive a ConfigReady event
+	stopTicking();
 }
 
 bool TemperatureAndHumiditySensor::initImpl()
@@ -44,7 +46,7 @@ float TemperatureAndHumiditySensor::tick(float deltaSeconds)
 		break;
 
 	case State::Idle:
-		if (m_timeSinceLastRead >= AW_THSENSOR_DEFAULT_SAMPLINGINTERVAL)
+		if (m_timeSinceLastRead >= AW_THSENSOR_SAMPLINGINTERVAL)
 		{
 			changeToState(State::Reading);
 		}
@@ -153,6 +155,12 @@ void TemperatureAndHumiditySensor::onEnterState()
 
 void TemperatureAndHumiditySensor::onEvent(const Event& evt)
 {
+	switch(evt.type)
+	{
+		case Event::ConfigReady:
+			startTicking();
+		break;
+	}
 }
 
 #if AW_THSENSOR_SENSOR_ENABLED

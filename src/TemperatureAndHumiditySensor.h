@@ -44,7 +44,8 @@ class TemperatureAndHumiditySensor : public Component
 
 	float m_timeInState;
 	float m_nextTickWait = 0;
-	float m_timeSinceLastRead = 0;
+	// Setting to a high value, so we do a reading at powerup
+	float m_timeSinceLastRead = __FLT_MAX__/2;
 	State m_state = State::Initializing;
 	Adafruit_HTU21DF m_htu;
 };

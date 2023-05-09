@@ -25,6 +25,8 @@ class GraphicalUI : public Component
 
   private:
 
+	void turnOffLED();
+
 	//
 	// Component interface
 	//

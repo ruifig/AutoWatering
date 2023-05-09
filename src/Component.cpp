@@ -169,5 +169,15 @@ void Component::raiseEvent(const Event& evt)
 	}
 }
 
+void Component::stopTicking()
+{
+	m_ticker.stop();
+}
+
+void Component::startTicking()
+{
+	m_ticker.start(1.0f);
+}
+
 } // namespace cz
 
