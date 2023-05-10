@@ -12,6 +12,7 @@
 #define MQTT_LOG_ENABLED 1
 #include "MqttClient.h"
 #include "WiFi.h"
+#include <ArduinoJson.h>
 
 // When using Adafruit IO, we can get the current value of a feed by publishing to to a special feed (Feed+"/get")
 // See https://io.adafruit.com/api/docs/mqtt.html#mqtt-retain
@@ -81,8 +82,12 @@ class MQTTCache : public Component
 		*/
 		float publishInterval = 2.0f;
 
-		int sendBufferSize = 1024;
-		int recvBufferSize = 1024;
+		int sendBufferSize = 1024*2;
+		// The biggest message we need to receive from the MQTT broker is the initial message with the entire group.
+		// Therefore we make the recv size a function of AW_MAX_NUM_PAIR. It's not 100% accurate, since there is some other overhead like
+		// the feeds that are not part of a sensor/motor pair, but given some slack it should be fine.
+		// At the time of writting, 512 bytes for the non-pair fields and 512 bytes per sensor/motor pair seems plenty
+		int recvBufferSize = 512 + AW_MAX_NUM_PAIRS * 512;
 		int maxNumSubscriptions = 5;
 
 		// Passed to the ArduinoMqtt library's Options.commandTimeoutMs
@@ -244,6 +249,14 @@ class MQTTCache : public Component
 	bool connectToMqttBroker(float deltaSeconds);
 	void doSubscribe(const char* topic);
 	float m_connectToMqttBrokerCountdown = 0;
+
+	// To avoid reallocating memory every time we receive a message (and possibly reduce fragmentation) we reuse the object
+	// See https://arduinojson.org/v6/how-to/reuse-a-json-document/
+	std::unique_ptr<DynamicJsonDocument> m_jsondoc;
+
+	// Used to copy over a received payload.
+	// Since a payload can be big if there are lots of sensor/motor pairs, I prefer to put in the heap instead of stack
+	std::unique_ptr<char[]> m_payloadBuffer;
 
 #if AW_MQTT_WIFI_RECONNECT
 	int m_conFailCount = 0;

@@ -4,7 +4,6 @@
 #include <crazygaze/micromuc/ScopeGuard.h>
 #include <crazygaze/micromuc/Profiler.h>
 
-#include <ArduinoJson.h>
 #include "MqttClient.h"
 #include "Component.h"
 #include "WifiManager.h"
@@ -198,8 +197,14 @@ void MQTTCache::setOptions(const MQTTCache::Options& options)
 	m_mqtt.network = std::make_unique<MqttClient::NetworkClientImpl<WiFiClient>>(m_wifiClient, *m_mqtt.system);
 	m_mqtt.sendBuffer = std::make_unique<MyBuffer>(options.sendBufferSize);
 	m_mqtt.recvBuffer = std::make_unique<MyBuffer>(options.recvBufferSize);
-	// Allow up to X subscriptions simultaneously
 
+	// Since ArduinoJson uses zero-copy (it build the document pointing to the input buffer), we can get away
+	// with using just half the memory for the json pool. This seems to be enough.
+	m_jsondoc = std::make_unique<DynamicJsonDocument>(options.recvBufferSize / 2);
+
+	m_payloadBuffer = std::make_unique<char[]>(options.recvBufferSize);
+
+	// Allow up to X subscriptions simultaneously
 	m_mqtt.messageHandlers = std::make_unique<MyMessageHandlers>(options.maxNumSubscriptions);
 	MqttClient::Options mqttOptions;
 	mqttOptions.commandTimeoutMs = options.commandTimeoutMs;
@@ -365,20 +370,20 @@ void MQTTCache::doRemove(int index)
 void MQTTCache::onMqttMessage(MqttClient::MessageData& md)
 {
 	const MqttClient::Message &msg = md.message;
-	char payload[msg.payloadLen + 1];
 	char topic[md.topicName.lenstring.len + 1];
 
 	// copy payload
-	memcpy(payload, msg.payload, msg.payloadLen);
-	payload[msg.payloadLen] = '\0';
+	memcpy(m_payloadBuffer.get(), msg.payload, msg.payloadLen);
+	m_payloadBuffer[msg.payloadLen] = '\0';
+	char* payload = m_payloadBuffer.get();
 
 	// copy topic name
 	memcpy(topic, md.topicName.lenstring.data, md.topicName.lenstring.len);
 	topic[md.topicName.lenstring.len] = 0;
 
 	CZ_LOG(logMQTTCache, Log,
-		   "Message arrived: qos %d, retained %d, dup %d, packetid %d, topic:[%s], payload:[%s]",
-		   msg.qos, msg.retained, msg.dup, msg.id, topic, payload);
+		   "Message arrived: qos %d, retained %d, dup %d, packetid %d, topic:[%s], payload size:[%d], payload:[%s]",
+		   msg.qos, msg.retained, msg.dup, msg.id, topic, msg.payloadLen, payload);
 
 
 	auto processSingle = [this](const char* topic, const char* value)
@@ -420,22 +425,51 @@ void MQTTCache::onMqttMessage(MqttClient::MessageData& md)
 	}
 	else
 	{
-		DynamicJsonDocument doc(1024);
-		DeserializationError error = deserializeJson(doc, payload);
+		// See https://arduinojson.org/v6/api/json/deserializejson/ and https://arduinojson.org/v6/api/dynamicjsondocument/
+		//
+		// - If the input to deserializeJson is writeable, then JsonDocument uses zero-copy, since it points to the input buffer instead of copying the data
+		// - DynamicJsonDocument is fixed size (we need to initialize it with the maximum memory we think we need)
+		DeserializationError error = deserializeJson(*m_jsondoc, payload);
+		CZ_LOG(logDefault, Log, "DynamicJsonDocument memory usage: %u bytes out of %u", m_jsondoc->memoryUsage(), m_jsondoc->capacity());
 		if (error)
 		{
 			CZ_LOG(logMQTTCache, Error, "onMqttMessage: Error deserializing message: %s", error.c_str());
 			return;
 		}
 
-		JsonObject feeds = doc["feeds"];
+		// Seems like Adafruit IO sends us messages with inconsistent formats.
+		// For example, if I susbscribe to "ruifig/groups/greenhouse/json", then do a "/get" (according to https://io.adafruit.com/api/docs/mqtt.html#adafruit-io-39-s-limitations),
+		// the message I get has the following format:
+		// ---
+		// topic:[ruifig/groups/greenhouse/json]
+		// payload:[{"feeds":{"greenhouse.devicename":"greenhouse","greenhouse.sms0-value":"7","greenhouse.sms0-threshold":"35","greenhouse.temperature":"22.0","greenhouse.humidity":"49.4","greenhouse.battery-perc":"84","greenhouse.battery-voltage":"4.05"}}]
+		// ---
+		//
+		// But when I change/add a value to a feed from Adafruit IO's website, I get this:
+		// ---
+		// topic:[ruifig/groups/greenhouse/json]
+		// payload:[{"feeds":{"sms0-threshold":"31"}}]
+		// ---
+		//
+		
+		// If this is a message for the device group, then we might need to prefix the device name to each feed
+		bool isFromDeviceGroup = strstr(topic, formatString("/groups/%s", gCtx.data.getDeviceName())) != nullptr;
+		JsonObject feeds = (*m_jsondoc)["feeds"];
 		if (!feeds.isNull())
 		{
 			for(JsonPair feed : feeds)
 			{
-				processSingle(
-					formatString("%s/feeds/%s.%s", ADAFRUIT_IO_USERNAME, gCtx.data.getDeviceName(), feed.key().c_str()),
-					feed.value().as<const char*>());
+				const char* feedName;
+				// Prefix the group name if required
+				if (isFromDeviceGroup && (strstr(feed.key().c_str(), gCtx.data.getDeviceName()) != feed.key().c_str()))
+				{
+					feedName = formatString("%s/feeds/%s.%s", ADAFRUIT_IO_USERNAME, gCtx.data.getDeviceName(), feed.key().c_str());
+				}
+				else
+				{
+					feedName = formatString("%s/feeds/%s", ADAFRUIT_IO_USERNAME, feed.key().c_str());
+				}
+				processSingle(feedName, feed.value().as<const char*>());
 			}
 		}
 		else

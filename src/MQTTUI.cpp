@@ -55,10 +55,25 @@ void MQTTUI::onEvent(const Event& evt)
 			if (!m_subscribed)
 			{
 				m_subscribed = true;
-				MQTTCache::getInstance()->subscribe(formatString("%s/groups/%s", ADAFRUIT_IO_USERNAME, gCtx.data.getDeviceName()));
-				MQTTCache::getInstance()->setListener(*this);
+				MQTTCache* mqtt = MQTTCache::getInstance();
+				mqtt->subscribe(formatString("%s/groups/%s", ADAFRUIT_IO_USERNAME, gCtx.data.getDeviceName()));
+				mqtt->setListener(*this);
 
-				m_deviceNameValue = MQTTCache::getInstance()->set(buildFeedName("devicename"), gCtx.data.getDeviceName(), 2, false);
+				m_deviceNameValue = mqtt->set(buildFeedName("devicename"), gCtx.data.getDeviceName(), 2, false);
+
+				for(int i=0; i<AW_MAX_NUM_PAIRS; i++)
+				{
+					SoilMoistureSensor* sensor = gSetup->getSoilMoistureSensor(i);
+					GroupData& groupData = gCtx.data.getGroupData(i);
+					#if 0
+					mqtt->set(buildFeedName("group", i, "running"), groupData.isRunning() ? 1 : 0, 2, false);
+					mqtt->set(buildFeedName("group", i, "samplinginterval"), groupData.getSamplingInterval(), 2, false);
+					mqtt->set(buildFeedName("group", i, "shotduration"), groupData.getShotDuration(), 2, false);
+					mqtt->set(buildFeedName("group", i, "airvalue"), groupData.getAirValue(), 2, false);
+					mqtt->set(buildFeedName("group", i, "watervalue"), groupData.getWaterValue(), 2, false);
+					mqtt->set(buildFeedName("group", i, "threshold"), groupData.getThresholdValueAsPercentage(), 2, false);
+					#endif
+				}
 			}
 		}
 		break;
@@ -85,12 +100,8 @@ void MQTTUI::onEvent(const Event& evt)
 			if (e.reading.isValid())
 			{
 				MQTTCache::getInstance()->set<0>(
-					buildFeedName("sms", e.index, "value"),
+					buildFeedName("group", e.index, "value"),
 					data.getCurrentValueAsPercentage(), 2, false);
-
-				MQTTCache::getInstance()->set<0>(
-					buildFeedName("sms", e.index, "threshold"),
-					data.getThresholdValueAsPercentage(), 2, false);
 			}
 			else
 			{
