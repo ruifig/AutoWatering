@@ -10,7 +10,7 @@ class MQTTUI : public Component, public MQTTCache::Listener
 {
   public:
 
-  MQTTUI() = default;
+  MQTTUI();
   virtual ~MQTTUI() = default;
 
   private:
@@ -25,7 +25,16 @@ class MQTTUI : public Component, public MQTTCache::Listener
 	virtual void onMqttValueReceived(const MQTTCache::Entry* entry) override;
 	//virtual void onMqttValueSent(const MQTTCache::Entry* entry) override {}
 
+	void publishConfig();
 	bool m_subscribed = false;
+
+	bool m_configSent = false;
+
+	// We need this to detect the first tick after a wifi connected event
+	// This is because connecting to the Wifi can take a long time (>10 seconds), and so the first tick will
+	// have a high "deltaSeconds" which we want to discard.
+	bool m_firstTick = true;
+	float m_waitingForConfigTimeout = 0.0f;
 
 	const MQTTCache::Entry* m_deviceNameValue = nullptr;
 };

@@ -15,6 +15,8 @@ namespace cz
 
 WifiManager::WifiManager()
 {
+	// We only start ticking when we ready a ConfigReady event
+	stopTicking();
 }
 
 WifiManager::~WifiManager()
@@ -49,6 +51,14 @@ float WifiManager::tick(float deltaSeconds)
 
 void WifiManager::onEvent(const Event& evt)
 {
+	switch(evt.type)
+	{
+		case Event::Type::ConfigReady:
+		{
+			startTicking();
+		}
+		break;
+	}
 }
 
 bool WifiManager::processCommand(const Command& cmd)

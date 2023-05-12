@@ -74,7 +74,7 @@ bool Watchdog::initImpl()
 		// If we are using WIFI, we need to wait until we either connect or fail to connect.
 		// This is because connecting to Wifi can take over the 8.3 secs limit of the watchdog. :(
 		// So once we detect that Wifi connection was attempted, we initialized the watchdog
-		CZ_LOG(logDefault, Log, "Delaying watchdog start until wifi conneciton is attempted.");
+		CZ_LOG(logDefault, Log, "Delaying watchdog start until wifi connection is attempted.");
 	}
 	else
 	{

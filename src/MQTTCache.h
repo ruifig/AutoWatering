@@ -51,6 +51,10 @@ class MQTTCache : public Component
 
 	struct Entry
 	{
+		Entry()
+		{
+			pendingRemoval = false;
+		}
 		uint32_t hash = 0;
 		String topic;
 		String value;
@@ -59,7 +63,8 @@ class MQTTCache : public Component
 		uint16_t packetId = 0;
 		// If a publish is needed or is in progress, this is the desired qos
 		uint8_t qos = 1;
-		bool pendingRemoval = false;
+		bool pendingRemoval : 1;
+
 		bool isUpdating() const
 		{
 			return (state == State::QueuedForSend || state == State::SentAndWaitingForAck) ? true : false;

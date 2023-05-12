@@ -752,12 +752,6 @@ bool MQTTCache::connectToMqttBroker(float deltaSeconds)
 			}
 		}
 
-		// Subscribe
-		for(auto&& subscription : m_subscriptions)
-		{
-			doSubscribe(subscription.topic.c_str());
-		}
-
 		return true;
 	}
 }
