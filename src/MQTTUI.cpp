@@ -1,10 +1,13 @@
 #include "MQTTUI.h"
 #include "SoilMoistureSensor.h"
+#include "Timer.h"
 
 CZ_DEFINE_LOG_CATEGORY(logMQTTUI);
 
 namespace cz
 {
+
+extern Timer gTimer;
 
 #if AW_MQTTUI_ENABLED
 	MQTTUI gMQTTUI;
@@ -69,6 +72,18 @@ const char* buildFeedName(const char* part1)
 	return formatString(ADAFRUIT_IO_USERNAME"/feeds/%s.%s", gCtx.data.getDeviceName(), part1);
 }
 
+void MQTTUI::publishGroupConfig(int index)
+{
+	MQTTCache* mqtt = MQTTCache::getInstance();
+	GroupData& groupData = gCtx.data.getGroupData(index);
+	mqtt->set(buildFeedName("group", index, "running"), groupData.isRunning() ? 1 : 0, 2, false);
+	mqtt->set(buildFeedName("group", index, "samplinginterval"), groupData.getSamplingInterval(), 2, false);
+	mqtt->set(buildFeedName("group", index, "shotduration"), groupData.getShotDuration(), 2, false);
+	mqtt->set(buildFeedName("group", index, "airvalue"), groupData.getAirValue(), 2, false);
+	mqtt->set(buildFeedName("group", index, "watervalue"), groupData.getWaterValue(), 2, false);
+	mqtt->set(buildFeedName("group", index, "threshold"), groupData.getThresholdValueAsPercentage(), 2, false);
+}
+
 void MQTTUI::publishConfig()
 {
 	if (m_configSent)
@@ -82,17 +97,8 @@ void MQTTUI::publishConfig()
 
 	for (int i = 0; i < AW_MAX_NUM_PAIRS; i++)
 	{
-		SoilMoistureSensor* sensor = gSetup->getSoilMoistureSensor(i);
-		GroupData& groupData = gCtx.data.getGroupData(i);
-#if 1
-		mqtt->set(buildFeedName("group", i, "running"), groupData.isRunning() ? 1 : 0, 2, false);
-		mqtt->set(buildFeedName("group", i, "samplinginterval"), groupData.getSamplingInterval(), 2, false);
-		mqtt->set(buildFeedName("group", i, "shotduration"), groupData.getShotDuration(), 2, false);
-		mqtt->set(buildFeedName("group", i, "airvalue"), groupData.getAirValue(), 2, false);
-		mqtt->set(buildFeedName("group", i, "watervalue"), groupData.getWaterValue(), 2, false);
-		mqtt->set(buildFeedName("group", i, "threshold"), groupData.getThresholdValueAsPercentage(), 2, false);
+		publishGroupConfig(i);
 		mqtt->set(buildFeedName("group", i, "motoron"), 0, 2, false);
-#endif
 	}
 
 	m_configSent = true;
@@ -143,7 +149,7 @@ void MQTTUI::onEvent(const Event& evt)
 		{
 			auto&& e = static_cast<const TemperatureSensorReadingEvent&>(evt);
 			// We don't need to wait for Wifi to connect to set this
-			MQTTCache::getInstance()->set<1>(buildFeedName("temperature"), e.temperatureC, 2, false);
+			MQTTCache::getInstance()->set<1>(buildFeedName("temperature"), e.temperatureC, 2, AW_MQTT_SENSOR_FORCESYNC ? true : false);
 		}
 		break;
 
@@ -151,7 +157,7 @@ void MQTTUI::onEvent(const Event& evt)
 		{
 			auto&& e = static_cast<const HumiditySensorReadingEvent&>(evt);
 			// We don't need to wait for Wifi to connect to set this
-			MQTTCache::getInstance()->set<1>(buildFeedName("humidity"), e.humidity, 2, false);
+			MQTTCache::getInstance()->set<1>(buildFeedName("humidity"), e.humidity, 2, AW_MQTT_SENSOR_FORCESYNC ? true : false);
 		}
 		break;
 
@@ -163,9 +169,23 @@ void MQTTUI::onEvent(const Event& evt)
 			if (e.reading.isValid())
 			{
 				// We don't need to wait for Wifi to connect to set this
-				MQTTCache::getInstance()->set<0>(
-					buildFeedName("group", e.index, "value"),
-					data.getCurrentValueAsPercentage(), 2, false);
+				MQTTCache* mqtt = MQTTCache::getInstance();
+				const char* topicName = buildFeedName("group", e.index, "value");
+				const MQTTCache::Entry* entry = mqtt->get(topicName);
+				bool forceSync = AW_MQTT_SENSOR_FORCESYNC ? true : false;
+				// If the sensor is setup to do very fast readings, then we don't want to send all of them if the value didn't change. We send every X seconds
+				if (entry)
+				{
+					// Only publish if we enough time passed since the last publish
+					if ((gTimer.getTotalSeconds() - entry->lastSyncTime) >= AW_MQTT_MOISTURESENSOR_MININTERVAL)
+					{
+						mqtt->set<0>(entry, data.getCurrentValueAsPercentage(), 2, forceSync);
+					}
+				}
+				else
+				{
+					mqtt->set<0>(topicName, data.getCurrentValueAsPercentage(), 2, forceSync);
+				}
 			}
 			else
 			{
@@ -173,6 +193,16 @@ void MQTTUI::onEvent(const Event& evt)
 				CZ_LOG(logMQTTUI, Warning, "Soil moisture reading for pair %d is invalid (%s)", static_cast<int>(e.index), e.reading.getStatusText());
 			}
 		}
+		break;
+
+		case Event::SoilMoistureSensorCalibration:
+		{
+			auto&& e = static_cast<const SoilMoistureSensorCalibrationEvent&>(evt);
+			if (!e.started)
+			{
+				publishGroupConfig(e.index);
+			}
+	    }
 		break;
 
 		case Event::BatteryLifeReading:
@@ -191,7 +221,10 @@ void MQTTUI::onEvent(const Event& evt)
 		case Event::Motor:
 		{
 			auto&& e = static_cast<const MotorEvent&>(evt);
-			MQTTCache::getInstance()->set(buildFeedName("group", e.index, "motoron"), e.started ? 1 : 0, 2, true);
+			// NOTE: Instead of 0-1, we use 0-100.
+			// This is so that the user can setup the MQTT dashboard to show the moisture sensor value (0-100) and the motor on/off in the same chart.
+			// To make it look nicer, if using AdafruitIO, the user should enable the Line Chart's "Stepped Line".
+			MQTTCache::getInstance()->set(buildFeedName("group", e.index, "motoron"), e.started ? 100 : 0, 2, true);
 		}
 		break;
 	}

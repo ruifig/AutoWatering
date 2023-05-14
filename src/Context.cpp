@@ -275,11 +275,13 @@ void GroupConfig::startCalibration()
 	m_calibration.enabled = true;
 	m_calibration.minValue = 1024;
 	m_calibration.maxValue = 0;
+	Component::raiseEvent(SoilMoistureSensorCalibrationEvent(getIndex(), true));
 }
 
 void GroupConfig::endCalibration()
 {
 	m_calibration.enabled = false;
+	Component::raiseEvent(SoilMoistureSensorCalibrationEvent(getIndex(), false));
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -288,7 +290,8 @@ void GroupConfig::endCalibration()
 
 void GroupData::begin(uint8_t index)
 {
-	m_index = index;
+	m_cfg.begin(index);
+
 
 // Fill the history with some values, for testing purposes
 #if AW_FASTER_ITERATION && 0
@@ -346,7 +349,7 @@ void GroupData::setMoistureSensorValues(const SensorReading& sample)
 	if (m_inConfigMenu)
 	{
 		// If we are configuring this group, then we want to ignore the readings and just raise calibration events
-		Component::raiseEvent(SoilMoistureSensorCalibrationReadingEvent(m_index, sample));
+		Component::raiseEvent(SoilMoistureSensorCalibrationReadingEvent(getIndex(), sample));
 	}
 	else if (m_cfg.isRunning())
 	{
@@ -371,7 +374,7 @@ void GroupData::setMoistureSensorValues(const SensorReading& sample)
 			m_sensorErrors++;
 		}
 
-		Component::raiseEvent(SoilMoistureSensorReadingEvent(m_index, sample));
+		Component::raiseEvent(SoilMoistureSensorReadingEvent(getIndex(), sample));
 	}
 }
 
@@ -386,7 +389,7 @@ void GroupData::setMotorState(bool state)
 		m_pendingMotorPoint = true;
 	}
 
-	Component::raiseEvent(MotorEvent(m_index, m_motorIsOn));
+	Component::raiseEvent(MotorEvent(getIndex(), m_motorIsOn));
 }
 
 bool GroupData::isMotorOn() const
@@ -406,7 +409,7 @@ void GroupData::setRunning(bool state)
 	m_sensorErrors = 0;
 
 	m_cfg.setRunning(state);
-	Component::raiseEvent(GroupOnOffEvent(m_index, state));
+	Component::raiseEvent(GroupOnOffEvent(getIndex(), state));
 }
 
 void GroupData::resetHistory()
@@ -418,13 +421,13 @@ void GroupData::save(AT24C::Ptr& dst, bool saveConfig, bool saveHistory) const
 {
 	if (saveConfig)
 	{
-		CZ_LOG(logDefault, Log, F("Saving group %d config at address %u"), m_index, dst.getAddress());
+		CZ_LOG(logDefault, Log, F("Saving group %d config at address %u"), getIndex(), dst.getAddress());
 		m_cfg.save(dst);
 	}
 
 	if (saveHistory)
 	{
-		CZ_LOG(logDefault, Log, F("Saving group %d history at address %u"), m_index, dst.getAddress());
+		CZ_LOG(logDefault, Log, F("Saving group %d history at address %u"), getIndex(), dst.getAddress());
 		cz::save(dst, m_history);
 	}
 }
@@ -433,13 +436,13 @@ void GroupData::load(AT24C::Ptr& src, bool loadConfig, bool loadHistory)
 {
 	if (loadConfig)
 	{
-		CZ_LOG(logDefault, Log, F("Loading group %d config from address %u"), m_index, src.getAddress());
+		CZ_LOG(logDefault, Log, F("Loading group %d config from address %u"), getIndex(), src.getAddress());
 		m_cfg.load(src);
 	}
 
 	if (loadHistory)
 	{
-		CZ_LOG(logDefault, Log, F("Loading group %d history from address %u"), m_index, src.getAddress());
+		CZ_LOG(logDefault, Log, F("Loading group %d history from address %u"), getIndex(), src.getAddress());
 		cz::load(src, m_history);
 	}
 

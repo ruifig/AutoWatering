@@ -59,6 +59,8 @@ class MQTTCache : public Component
 		String topic;
 		String value;
 		State state = State::New;
+		// When was the last time this entry was synched (In seconds, from when the program started running)
+		float lastSyncTime = 0;
 		// If a publish is in progress, this contains the packet id
 		uint16_t packetId = 0;
 		// If a publish is needed or is in progress, this is the desired qos

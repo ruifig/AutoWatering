@@ -12,7 +12,6 @@ void Timer::update()
 	unsigned long elapsedMicros = nowMicros - m_previousMicros;
 	m_deltaSeconds = elapsedMicros / 1000000.0f;
 	m_previousMicros = nowMicros;
-	m_totalSeconds += m_deltaSeconds;
 	m_totalMicros += elapsedMicros;
 
 	//

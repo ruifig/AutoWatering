@@ -137,6 +137,8 @@ namespace cz
 		// Number of sensor readings done
 		uint32_t m_numReadings = 0;
 
+		uint8_t m_index;
+
 		struct
 		{
 			unsigned int minValue;
@@ -145,6 +147,22 @@ namespace cz
 		} m_calibration;
 		
 	  public:
+
+	  	void begin(uint8_t index)
+		{
+			m_index = index;
+		}
+
+		void setTo(const GroupConfig& other)
+		{
+			m_data = other.m_data;
+			m_isDirty = other.m_isDirty;
+		}
+
+	  	uint8_t getIndex() const
+		{
+			return m_index;
+		}
 
 		int getSaveSize() const
 		{
@@ -217,15 +235,12 @@ namespace cz
 	class GroupData
 	{
 	  public:
-		GroupData()
-		{
-		}
 		
 		void begin(uint8_t index);
 
 		void logConfig() const
 		{
-			CZ_LOG(logDefault, Log, F("Group %u config:"), (unsigned int)m_index);
+			CZ_LOG(logDefault, Log, F("Group %u config:"), (unsigned int)getIndex());
 			m_cfg.log();
 		}
 
@@ -324,7 +339,7 @@ namespace cz
 
 		uint8_t getIndex() const
 		{
-			return m_index;
+			return m_cfg.getIndex();
 		}
 
 		void resetHistory();
@@ -343,9 +358,9 @@ namespace cz
 			return m_cfg;
 		}
 
-		void setTo(GroupConfig cfg)
+		void setConfig(GroupConfig cfg)
 		{
-			m_cfg = cfg;
+			m_cfg.setTo(cfg);
 		}
 
 		// Sets this group as being configured or not at the moment.
@@ -372,9 +387,6 @@ namespace cz
 		}
 
 	  private:
-
-		// How many seconds to wait between samplings
-		uint8_t m_index;
 
 		// Data that should be saved/loaded
 		GroupConfig m_cfg;

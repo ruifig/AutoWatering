@@ -26,6 +26,7 @@ class MQTTUI : public Component, public MQTTCache::Listener
 	//virtual void onMqttValueSent(const MQTTCache::Entry* entry) override {}
 
 	void publishConfig();
+	void publishGroupConfig(int index);
 	bool m_subscribed = false;
 
 	bool m_configSent = false;

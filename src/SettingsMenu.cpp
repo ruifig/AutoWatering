@@ -104,7 +104,7 @@ void SettingsMenu::tick(float deltaSeconds)
 
 void SettingsMenu::setState(State state)
 {
-	CZ_LOG(logDefault, Log, F("%s(%d):TickCount=%u"), __FUNCTION__, (int)state, gTickCount);
+	//CZ_LOG(logDefault, Log, F("%s(%d):TickCount=%u"), __FUNCTION__, (int)state, gTickCount);
 
 	m_clearMenuSecondLine = true;
 	m_state = state;
@@ -244,8 +244,10 @@ bool SettingsMenu::processTouch(const Pos& pos)
 	{
 		if (m_dummyCfg.isDirty())
 		{
+			gCtx.data.getSelectedGroup()->setConfig(m_dummyCfg);
+			// This needs to be AFTER setConfig, so listeners can read the new config data if they need it
 			m_dummyCfg.endCalibration();
-			gCtx.data.getSelectedGroup()->setTo(m_dummyCfg);
+
 			gCtx.data.saveGroupConfig(gCtx.data.getSelectedGroupIndex());
 		}
 		return true;
@@ -420,7 +422,7 @@ void SettingsMenu::setButtonRange(ButtonId first, ButtonId last, bool enabled, b
 
 void SettingsMenu::show()
 {
-	CZ_LOG(logDefault, Log, F("%s:TickCount=%u"), __FUNCTION__, gTickCount);
+	//CZ_LOG(logDefault, Log, F("%s:TickCount=%u"), __FUNCTION__, gTickCount);
 
 	Menu::show();
 
@@ -432,7 +434,7 @@ void SettingsMenu::show()
 
 void SettingsMenu::setSensorLabels()
 {
-	CZ_LOG(logDefault, Log, F("%s:TickCount=%u"), __FUNCTION__, gTickCount);
+	//CZ_LOG(logDefault, Log, F("%s:TickCount=%u"), __FUNCTION__, gTickCount);
 	m_calibrationLabels[0].setValue(m_dummyCfg.getWaterValue());
 	if (m_state == State::CalibratingSensor)
 	{

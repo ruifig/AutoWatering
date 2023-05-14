@@ -134,12 +134,16 @@ If 1, it enables profiling code
  This will disable any features that require a network connection.
  If set to 1, make sure you provide your network details. See Config/Secrets.h for more information
  */
-#define AW_WIFI_ENABLED 1
+#ifndef AQ_WIFI_ENABLED
+	#define AW_WIFI_ENABLED 1
+#endif
 
 /*
 How long to wait between attempts to reconnect to the mqtt broker
 */
-#define AW_MQTT_CONNECTION_RETRY_INTERVAL 5.0f
+#ifndef AW_MQTT_CONNECTION_RETRY_INTERVAL
+	#define AW_MQTT_CONNECTION_RETRY_INTERVAL 5.0f
+#endif
 
 /**
 At the time of writting, I've noticed that sometimes even if Wifi is supposed to be connected, establishing TCP connections fails, and never recovers.
@@ -148,7 +152,30 @@ Setting this to N (where N>0), will perform a wifi disconnect/reconnect after fa
 
 WARNING: If the Watchdog is enabled (see AW_AW_WATCHDOG_ENABLED), then a wifi reconnect attempt will very likely trigger the watchdog.
  */
-#define AW_MQTT_WIFI_RECONNECT 5
+#ifndef AW_MQTT_WIFI_RECONNECT
+	#define AW_MQTT_WIFI_RECONNECT 5
+#endif
+
+/*
+If 1, sensor readings (e.g: temperature, humidity, and soil moisture), will be published even if their value didn't change
+*/
+#ifndef AW_MQTT_SENSOR_FORCESYNC
+	#define AW_MQTT_SENSOR_FORCESYNC 1
+#endif
+
+/*
+Minimum time to wait before publishing a new sensor reading.
+The touch UI allows setting the soil moisture sensor readings intervals to 0, which means "as fast as possible". This makes testing 
+the sensors easier since we can see the values change as fast as possible.
+But this presents a possible problem for MQTT. For example, Adafruit IO has restrictions on how fast we can publish.
+At the time of writing, a free account, allows 30 publishes per minute, while a paid account allows 60 publishes per minute. 
+To make this even worse, those restrictions are PER ACCOUNT, not per device.
+So, this macro allows specifying the mininum interval between publishes (per sensor)
+*/
+#ifndef AW_MQTT_MOISTURESENSOR_MININTERVAL
+	#define AW_MQTT_MOISTURESENSOR_MININTERVAL 20.0f
+#endif
+
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

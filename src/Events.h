@@ -17,6 +17,7 @@ struct Event
 		ConfigLoad,
 		ConfigSave,
 		SoilMoistureSensorReading,
+		SoilMoistureSensorCalibration,
 		SoilMoistureSensorCalibrationReading,
 		TemperatureSensorReading,
 		HumiditySensorReading,
@@ -106,6 +107,26 @@ struct SoilMoistureSensorReadingEvent : public Event
 
 	uint8_t index;
 	SensorReading reading;
+};
+
+
+// Signals calibration start and end
+struct SoilMoistureSensorCalibrationEvent : public Event
+{
+	SoilMoistureSensorCalibrationEvent(uint8_t index, bool started)
+		: Event(Event::SoilMoistureSensorCalibration)
+		, index(index)
+		, started(started)
+	{
+	}
+
+	virtual void log() const override
+	{
+		CZ_LOG(logEvents, Log, F("SoilMoistureSensorCalibrationEvent(%d,%s)"), (int)index, started ? "true" : "false");
+	}
+
+	uint8_t index;
+	bool started;
 };
 
 struct SoilMoistureSensorCalibrationReadingEvent : public Event

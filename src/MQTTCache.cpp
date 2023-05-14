@@ -7,11 +7,15 @@
 #include "MqttClient.h"
 #include "Component.h"
 #include "WifiManager.h"
+#include "Timer.h"
 
 CZ_DEFINE_LOG_CATEGORY(logMQTTCache);
 
+
 namespace cz
 {
+
+extern Timer gTimer;
 
 #if AW_WIFI_ENABLED
 	MQTTCache gMQTTCache;
@@ -409,6 +413,7 @@ void MQTTCache::onMqttMessage(MqttClient::MessageData& md)
 		}
 
 		entry->state = MQTTCache::State::Synced;
+		entry->lastSyncTime = gTimer.getTotalSeconds();
 		if (entry->value != value)
 		{
 			entry->value = value;
