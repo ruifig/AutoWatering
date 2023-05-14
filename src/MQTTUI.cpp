@@ -13,6 +13,66 @@ extern Timer gTimer;
 	MQTTUI gMQTTUI;
 #endif
 
+namespace
+{
+
+	struct ParsedTopic
+	{
+		// Full topic name
+		const char* fullTopicName = nullptr;
+		// If -1, then it's part of a config group
+		int index = -1;
+		bool thisDevice = false;
+		// Name of the actual entry (removing the devicename and group if in a group)
+		const char* name = nullptr; 
+	};
+
+	//
+	bool parseTopic(const char* fullTopicName, ParsedTopic& dst)
+	{
+		ParsedTopic parsed;
+		const char* dotPos = strrchr(fullTopicName, '.');
+		const char* deviceNamePos = strrchr(fullTopicName, '/');
+		if (!dotPos || !deviceNamePos)
+		{
+			return false;
+		}
+		deviceNamePos++;
+
+		parsed.fullTopicName = fullTopicName;
+		parsed.name = dotPos + 1;
+
+		if (strncmp(deviceNamePos, gCtx.data.getDeviceName(), dotPos - deviceNamePos)==0)
+		{
+			parsed.thisDevice = true;
+			if (strstr(parsed.name, "group") == parsed.name)
+			{
+				parsed.name += strlen("group");
+				parsed.index = atoi(parsed.name);
+				if (const char* dashPos = strchr(parsed.name, '-'))
+				{
+					parsed.name = dashPos + 1;
+					dst = parsed;
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+			else
+			{
+				dst = parsed;
+				return true;
+			}
+		}
+		else
+		{
+			return false;
+		}
+	}
+}
+
 MQTTUI::MQTTUI()
 {
 	// We only start ticking when we ready a ConfigReady event
@@ -198,11 +258,18 @@ void MQTTUI::onEvent(const Event& evt)
 		case Event::SoilMoistureSensorCalibration:
 		{
 			auto&& e = static_cast<const SoilMoistureSensorCalibrationEvent&>(evt);
-			if (!e.started)
+			if (!e.started) // check if we are starting or finishing the calibration
 			{
 				publishGroupConfig(e.index);
 			}
-	    }
+		}
+		break;
+
+		case Event::GroupOnOff:
+		{
+			auto&& e = static_cast<const GroupOnOffEvent&>(evt);
+			publishGroupConfig(e.index);
+		}
 		break;
 
 		case Event::BatteryLifeReading:
@@ -232,6 +299,8 @@ void MQTTUI::onEvent(const Event& evt)
 
 void MQTTUI::onMqttValueReceived(const MQTTCache::Entry* entry)
 {
+	ParsedTopic parsed;
+
 	if (entry == m_deviceNameValue)
 	{
 		gCtx.data.setDeviceName(entry->value.c_str());
@@ -243,6 +312,22 @@ void MQTTUI::onMqttValueReceived(const MQTTCache::Entry* entry)
 		if (!m_configSent)
 		{
 			m_waitingForConfigTimeout = 0.0f;
+		}
+	}
+	else if (parseTopic(entry->topic.c_str(), parsed))
+	{
+		if (parsed.index==-1) // -1 means it's not part of a sensor/motor group
+		{
+			//
+		}
+		else
+		{
+			if (strcmp(parsed.name, "running") == 0)
+			{
+				GroupData& data = gCtx.data.getGroupData(parsed.index);
+				data.setRunning(atoi(entry->value.c_str()) == 1 ? true : false);
+				gCtx.data.saveGroupConfig(data.getIndex());
+			}
 		}
 	}
 }

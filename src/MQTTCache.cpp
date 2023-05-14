@@ -386,7 +386,7 @@ void MQTTCache::onMqttMessage(MqttClient::MessageData& md)
 	topic[md.topicName.lenstring.len] = 0;
 
 	CZ_LOG(logMQTTCache, Log,
-		   "Message arrived: qos %d, retained %d, dup %d, packetid %d, topic:[%s], payload size:[%d], payload:[%s]",
+		   "onMqttMessage: Received: qos %d, retained %d, dup %d, packetid %d, topic:[%s], payload size:[%d], payload:[%s]",
 		   msg.qos, msg.retained, msg.dup, msg.id, topic, msg.payloadLen, payload);
 
 
@@ -403,12 +403,13 @@ void MQTTCache::onMqttMessage(MqttClient::MessageData& md)
 		}
 	#endif
 
-		CZ_LOG(logMQTTCache, Log, "onMqttMessage: (%s), message='%s'", toLogString(entry), value);
+		CZ_LOG(logMQTTCache, Verbose, "onMqttMessage: (%s), message='%s'", toLogString(entry), value);
+
 		// If we have a value in the cache queued up for sending, then it's easier to just ignore the message
 		// This means the cache will keep the value we have queued up for sending
 		if (entry->isUpdating())
 		{
-			CZ_LOG(logMQTTCache, Log, "onMqttMessage: Ignoring message because entry is in update status");
+			CZ_LOG(logMQTTCache, Verbose, "onMqttMessage: Ignoring message because entry is in update status");
 			return;
 		}
 
@@ -417,11 +418,10 @@ void MQTTCache::onMqttMessage(MqttClient::MessageData& md)
 		if (entry->value != value)
 		{
 			entry->value = value;
-			CZ_LOG(logMQTTCache, Log, "onMqttValueReceived: %s", toLogString(entry));
+			CZ_LOG(logMQTTCache, Log, "onMqttMessage: Value changed. Updating %s", toLogString(entry));
 			m_listener->onMqttValueReceived(entry);
 		}
 	};
-
 
 	// Check if it's an individual feed or a group
 	if (strstr(topic, ADAFRUIT_IO_USERNAME"/feeds"))
@@ -435,7 +435,7 @@ void MQTTCache::onMqttMessage(MqttClient::MessageData& md)
 		// - If the input to deserializeJson is writeable, then JsonDocument uses zero-copy, since it points to the input buffer instead of copying the data
 		// - DynamicJsonDocument is fixed size (we need to initialize it with the maximum memory we think we need)
 		DeserializationError error = deserializeJson(*m_jsondoc, payload);
-		CZ_LOG(logDefault, Log, "DynamicJsonDocument memory usage: %u bytes out of %u", m_jsondoc->memoryUsage(), m_jsondoc->capacity());
+		CZ_LOG(logDefault, Verbose, "DynamicJsonDocument memory usage: %u bytes out of %u", m_jsondoc->memoryUsage(), m_jsondoc->capacity());
 		if (error)
 		{
 			CZ_LOG(logMQTTCache, Error, "onMqttMessage: Error deserializing message: %s", error.c_str());
@@ -593,7 +593,7 @@ float MQTTCache::tick(float deltaSeconds)
 		}
 		else
 		{
-			CZ_LOG(logMQTTCache, Log, "Publish time: %u ms", endPublish - startPublish);
+			CZ_LOG(logMQTTCache, Verbose, "Publish time: %u ms", endPublish - startPublish);
 			// If sending with qos 0, we are not receiving any confirmation, so we set the state to Synced
 			if (entry->qos == 0)
 			{
