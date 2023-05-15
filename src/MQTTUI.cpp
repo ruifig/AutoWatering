@@ -1,6 +1,7 @@
 #include "MQTTUI.h"
 #include "SoilMoistureSensor.h"
 #include "Timer.h"
+#include "PumpMonitor.h"
 
 CZ_DEFINE_LOG_CATEGORY(logMQTTUI);
 
@@ -137,7 +138,7 @@ void MQTTUI::publishGroupConfig(int index)
 	MQTTCache* mqtt = MQTTCache::getInstance();
 	GroupData& groupData = gCtx.data.getGroupData(index);
 	mqtt->set(buildFeedName("group", index, "running"), groupData.isRunning() ? 1 : 0, 2, false);
-	mqtt->set(buildFeedName("group", index, "samplinginterval"), groupData.getSamplingInterval(), 2, false);
+	mqtt->set(buildFeedName("group", index, "samplinginterval"), groupData.getSamplingIntervalInMinutes(), 2, false);
 	mqtt->set(buildFeedName("group", index, "shotduration"), groupData.getShotDuration(), 2, false);
 	mqtt->set(buildFeedName("group", index, "airvalue"), groupData.getAirValue(), 2, false);
 	mqtt->set(buildFeedName("group", index, "watervalue"), groupData.getWaterValue(), 2, false);
@@ -322,10 +323,35 @@ void MQTTUI::onMqttValueReceived(const MQTTCache::Entry* entry)
 		}
 		else
 		{
+			GroupData& data = gCtx.data.getGroupData(parsed.index);
 			if (strcmp(parsed.name, "running") == 0)
 			{
-				GroupData& data = gCtx.data.getGroupData(parsed.index);
-				data.setRunning(atoi(entry->value.c_str()) == 1 ? true : false);
+				data.setRunning(atoi(entry->value.c_str()) == 0 ? false : true);
+			}
+			else if (strcmp(parsed.name, "threshold") == 0)
+			{
+				data.setThresholdValueAsPercentage(atoi(entry->value.c_str()));
+			}
+			else if (strcmp(parsed.name, "samplinginterval") == 0)
+			{
+				// NOTE: Both the touch UI and MQTT show sampling intervals in minutes, but internall it uses seconds
+				data.setSamplingInterval(atoi(entry->value.c_str())*60);
+			}
+			else if (strcmp(parsed.name, "shotduration") == 0)
+			{
+				data.setShotDuration(atoi(entry->value.c_str()));
+			}
+			else if (strcmp(parsed.name, "motoron") == 0)
+			{
+				if (atoi(entry->value.c_str()) != 0)
+				{
+					gSetup->getPumpMonitor(parsed.index)->doShot();
+				}
+			}
+
+
+			if (data.isDirty())
+			{
 				gCtx.data.saveGroupConfig(data.getIndex());
 			}
 		}
