@@ -18,10 +18,9 @@ class PumpMonitor : public Component
 	// If the motor is already running, it does nothing
 	void doShot();
 
-	// This should not be use externally except for testing
-	void turnMotorOff();
-	
   protected:
+
+	void turnMotorOff();
 
 	//
 	// Component interface

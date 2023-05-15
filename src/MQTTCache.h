@@ -87,7 +87,7 @@ class MQTTCache : public Component
 		 * In short, this implements a simple rate limiting.
 		 * NOTE: A free Adafruit IO account allows 30 publishes per minute (1 publish every 2 seconds) PER ACCOUNT, not per device, so make sure you adjust the publishInterval accordingly if you are using multiple devices.
 		*/
-		float publishInterval = 2.0f;
+		float publishInterval = AW_MQTT_PUBLISHINTERVAL;
 
 		int sendBufferSize = 1024*2;
 		// The biggest message we need to receive from the MQTT broker is the initial message with the entire group.

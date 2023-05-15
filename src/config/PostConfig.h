@@ -145,6 +145,16 @@ How long to wait between attempts to reconnect to the mqtt broker
 	#define AW_MQTT_CONNECTION_RETRY_INTERVAL 5.0f
 #endif
 
+/*
+Interval between publishes.
+This limits how fast we can publish values, since Adafruit IO has a strict limit:
+* Free account: 30 points per minute
+* Paid account: 60 points per minute
+*/
+#ifndef AW_MQTT_PUBLISHINTERVAL
+	#define AW_MQTT_PUBLISHINTERVAL 2.0f
+#endif
+
 /**
 At the time of writting, I've noticed that sometimes even if Wifi is supposed to be connected, establishing TCP connections fails, and never recovers.
 Setting this to 0 means no disconnect/reconnect is done
@@ -171,12 +181,12 @@ But this presents a possible problem for MQTT. For example, Adafruit IO has rest
 At the time of writing, a free account, allows 30 publishes per minute, while a paid account allows 60 publishes per minute. 
 To make this even worse, those restrictions are PER ACCOUNT, not per device.
 So, this macro allows specifying the mininum interval between publishes (per sensor)
+
+Note that this works in conjunction with AQ_MQTT_PUBLISHINTERVAL, which dictates the absolute cap.
 */
 #ifndef AW_MQTT_MOISTURESENSOR_MININTERVAL
-	#define AW_MQTT_MOISTURESENSOR_MININTERVAL 20.0f
+	#define AW_MQTT_MOISTURESENSOR_MININTERVAL AW_MQTT_PUBLISHINTERVAL
 #endif
-
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                               WATCHDOG COMPONENT OPTIONS

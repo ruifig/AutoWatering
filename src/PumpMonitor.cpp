@@ -72,10 +72,13 @@ bool PumpMonitor::tryTurnMotorOn(bool registerInterest)
 
 void PumpMonitor::turnMotorOff()
 {
-	m_motorPin.write(PinStatus::LOW);
 	GroupData& data = gCtx.data.getGroupData(m_index);
-	data.setMotorState(false);
-	m_queueHandle.release();
+	if (data.isMotorOn())
+	{
+		m_motorPin.write(PinStatus::LOW);
+		data.setMotorState(false);
+		m_queueHandle.release();
+	}
 }
 
 float PumpMonitor::tick(float deltaSeconds)
@@ -147,6 +150,13 @@ void PumpMonitor::onEvent(const Event& evt)
 			{
 				turnMotorOff();
 			}
+		}
+		break;
+
+		case Event::WifiConnecting:
+		{
+			// Connecting to Wifi can take a long time, so we should turn off the motors if any are on
+			turnMotorOff();
 		}
 		break;
 

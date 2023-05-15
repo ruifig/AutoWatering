@@ -377,6 +377,11 @@ namespace cz
 			return m_inConfigMenu;
 		}
 
+		bool isDirty() const
+		{
+			return m_cfg.isDirty();
+		}
+
 	protected:
 		friend class ProgramData;
 		void save(AT24C::Ptr& dst, bool saveConfig, bool saveHistory) const;
