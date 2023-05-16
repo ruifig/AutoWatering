@@ -2,7 +2,7 @@
 
 Arduino automatic plant watering.
 
-Further documentation will be provided in the future, once I have tested in my own greenhouse and I'm happy with the firmware.
+Further documentation will be provided in the future, once I have tested it in my own greenhouse and I'm happy with the firmware.
 
 Although this initially started as a Mega2650 project, it has been through a few iterations, and now it's setup for the Raspberry Pi Pico W.
 

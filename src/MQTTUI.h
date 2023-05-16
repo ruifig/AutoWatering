@@ -25,6 +25,11 @@ class MQTTUI : public Component, public MQTTCache::Listener
 	virtual void onMqttValueReceived(const MQTTCache::Entry* entry) override;
 	//virtual void onMqttValueSent(const MQTTCache::Entry* entry) override {}
 
+	void publishCalibrationInfo();
+	void startCalibration(int index);
+	void resetCalibration();
+	void cancelCalibration();
+	void saveCalibration();
 	void publishConfig();
 	void publishGroupConfig(int index);
 	bool m_subscribed = false;
@@ -38,6 +43,11 @@ class MQTTUI : public Component, public MQTTCache::Listener
 	float m_waitingForConfigTimeout = 0.0f;
 
 	const MQTTCache::Entry* m_deviceNameValue = nullptr;
+
+	// Dummy config we act on while calibrating a sensor
+	GroupConfig m_dummyCfg;
+	// What sensor are we calibrating or -1 if not calibrating any sensor
+	int m_calibratingIndex = -1;
 };
 
 } // namespace cz

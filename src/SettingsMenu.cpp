@@ -343,7 +343,7 @@ void SettingsMenu::onEvent(const Event& evt)
 	{
 		case Event::SoilMoistureSensorCalibrationReading:
 		{
-			const SoilMoistureSensorCalibrationReadingEvent& e = static_cast<const SoilMoistureSensorCalibrationReadingEvent&>(evt);
+			auto& e = static_cast<const SoilMoistureSensorCalibrationReadingEvent&>(evt);
 			if (e.index==gCtx.data.getSelectedGroupIndex() && (m_state==State::Main || m_state==State::CalibratingSensor) && e.reading.isValid())
 			{
 				// We only adjust the sensor range (air/water values) if we are in the sensor calibration menu

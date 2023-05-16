@@ -266,6 +266,20 @@ void MQTTUI::onEvent(const Event& evt)
 		}
 		break;
 
+		case Event::SoilMoistureSensorCalibrationReading:
+		{
+			auto& e = static_cast<const SoilMoistureSensorCalibrationReadingEvent&>(evt);
+			if (e.index==m_calibratingIndex)
+			{
+				if (e.reading.isValid())
+				{
+					m_dummyCfg.setSensorValue(e.reading.meanValue, true);
+					publishCalibrationInfo();
+				}
+			}
+		}
+		break;
+
 		case Event::GroupOnOff:
 		{
 			auto&& e = static_cast<const GroupOnOffEvent&>(evt);
@@ -319,7 +333,22 @@ void MQTTUI::onMqttValueReceived(const MQTTCache::Entry* entry)
 	{
 		if (parsed.index==-1) // -1 means it's not part of a sensor/motor group
 		{
-			//
+			if (strcmp(parsed.name, "calibration-reset") == 0)
+			{
+				resetCalibration();
+			}
+			else if (strcmp(parsed.name, "calibration-cancel") == 0)
+			{
+				cancelCalibration();
+			}
+			else if (strcmp(parsed.name, "calibration-save") == 0)
+			{
+				saveCalibration();
+			}
+			else if (strcmp(parsed.name, "calibration-threshold") == 0)
+			{
+				m_dummyCfg.setThresholdValueAsPercentage(atoi(entry->value.c_str()));
+			}
 		}
 		else
 		{
@@ -348,7 +377,10 @@ void MQTTUI::onMqttValueReceived(const MQTTCache::Entry* entry)
 					gSetup->getPumpMonitor(parsed.index)->doShot();
 				}
 			}
-
+			else if (strcmp(parsed.name, "calibrate") == 0)
+			{
+				startCalibration(parsed.index);
+			}
 
 			if (data.isDirty())
 			{
@@ -356,6 +388,68 @@ void MQTTUI::onMqttValueReceived(const MQTTCache::Entry* entry)
 			}
 		}
 	}
+}
+
+void MQTTUI::publishCalibrationInfo()
+{
+	MQTTCache* mqtt = MQTTCache::getInstance();
+	if (m_calibratingIndex == -1)
+	{
+		mqtt->set(buildFeedName("calibration", "info"), formatString("NO GROUP SELECTED"), 1, true);
+		mqtt->set(buildFeedName("calibration", "threshold"), 0, 1, false);
+	}
+	else
+	{
+		mqtt->set(
+			buildFeedName("calibration", "info"),
+			formatString("Group %d: Air(%d)  Reading(%d%%) Water(%d)", m_calibratingIndex, m_dummyCfg.getAirValue(), m_dummyCfg.getCurrentValueAsPercentage(), m_dummyCfg.getWaterValue()),
+			1, true);
+		mqtt->set(buildFeedName("calibration", "threshold"), m_dummyCfg.getThresholdValueAsPercentage(), 1, false);
+	}
+}
+
+void MQTTUI::startCalibration(int index)
+{
+	cancelCalibration();
+
+	m_calibratingIndex = index;
+	GroupData& data = gCtx.data.getGroupData(index);
+	m_dummyCfg = data.copyConfig();
+	data.setInConfigMenu(true);
+
+	publishCalibrationInfo();
+}
+
+void MQTTUI::resetCalibration()
+{
+	if (m_calibratingIndex == -1)
+		return;
+
+	m_dummyCfg.startCalibration();
+	publishCalibrationInfo();
+}
+
+void MQTTUI::cancelCalibration()
+{
+	if (m_calibratingIndex == -1)
+		return;
+
+	GroupData& data = gCtx.data.getGroupData(m_calibratingIndex);
+	data.setInConfigMenu(false);
+	m_calibratingIndex = -1;
+	publishCalibrationInfo();
+}
+
+void MQTTUI::saveCalibration()
+{
+	if (m_calibratingIndex == -1)
+		return;
+
+	GroupData& data = gCtx.data.getGroupData(m_calibratingIndex);
+	data.setConfig(m_dummyCfg);
+	m_dummyCfg.endCalibration();
+
+	cancelCalibration();
 }
 
 bool MQTTUI::processCommand(const Command& cmd)
