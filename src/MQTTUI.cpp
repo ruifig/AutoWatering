@@ -143,6 +143,10 @@ void MQTTUI::publishGroupConfig(int index)
 	mqtt->set(buildFeedName("group", index, "airvalue"), groupData.getAirValue(), 2, false);
 	mqtt->set(buildFeedName("group", index, "watervalue"), groupData.getWaterValue(), 2, false);
 	mqtt->set(buildFeedName("group", index, "threshold"), groupData.getThresholdValueAsPercentage(), 2, false);
+
+	// To make sure we don't leave a group marked as "calibrating", otherwise when we boot and receive a '1' for a group,
+	// it will go into calibrating mode and thus that group won't be monitoring.
+	mqtt->set(buildFeedName("group", index, "calibrate"), 0, 2, false);
 }
 
 void MQTTUI::publishConfig()
@@ -161,6 +165,8 @@ void MQTTUI::publishConfig()
 		publishGroupConfig(i);
 		mqtt->set(buildFeedName("group", i, "motoron"), 0, 2, false);
 	}
+
+	publishCalibrationInfo();
 
 	m_configSent = true;
 }
@@ -379,7 +385,10 @@ void MQTTUI::onMqttValueReceived(const MQTTCache::Entry* entry)
 			}
 			else if (strcmp(parsed.name, "calibrate") == 0)
 			{
-				startCalibration(parsed.index);
+				if (atoi(entry->value.c_str()) != 0)
+				{
+					startCalibration(parsed.index);
+				}
 			}
 
 			if (data.isDirty())
@@ -405,6 +414,9 @@ void MQTTUI::publishCalibrationInfo()
 			formatString("Group %d: Air(%d)  Reading(%d%%) Water(%d)", m_calibratingIndex, m_dummyCfg.getAirValue(), m_dummyCfg.getCurrentValueAsPercentage(), m_dummyCfg.getWaterValue()),
 			1, true);
 		mqtt->set(buildFeedName("calibration", "threshold"), m_dummyCfg.getThresholdValueAsPercentage(), 1, false);
+		// To make sure we don't leave a group marked as "calibrating", otherwise when we boot and receive a '1' for a group,
+		// it will go into calibrating mode and thus that group won't be monitoring.
+		mqtt->set(buildFeedName("group", m_calibratingIndex, "calibrate"), 0, 2, false);
 	}
 }
 
