@@ -10,33 +10,30 @@ namespace cz
 
 Context gCtx;
 
-void updateEEPROM(AT24C::Ptr& dst, const uint8_t* src, unsigned int size)
+void updateEEPROM(ConfigStoragePtr& dst, const uint8_t* src, unsigned int size)
 {
 	while(size--)
 	{
-		(*dst).update(*src);
-		//(*dst) = *src;
-		++dst;
+		dst.write(*src);
 		++src;
 	}
 }
 
-void readEEPROM(AT24C::Ptr& src, uint8_t* dst, unsigned int size)
+void readEEPROM(ConfigStoragePtr& src, uint8_t* dst, unsigned int size)
 {
 	while(size--)
 	{
-		*dst = *src; 
+		*dst = src.read();
 		++dst;
-		++src;
 	}
 }
 
-void updateEEPROM(AT24C::Ptr& dst, const char* src, unsigned int size)
+void updateEEPROM(ConfigStoragePtr& dst, const char* src, unsigned int size)
 {
 	updateEEPROM(dst, reinterpret_cast<const uint8_t*>(src), size);
 }
 
-void readEEPROM(AT24C::Ptr& src, char* dst, unsigned int size)
+void readEEPROM(ConfigStoragePtr& src, char* dst, unsigned int size)
 {
 	readEEPROM(src, reinterpret_cast<uint8_t*>(dst), size);
 }
@@ -45,7 +42,7 @@ template<typename T, typename = std::enable_if_t<
 	std::is_arithmetic_v<T> ||
 	std::is_same_v<T, GraphPoint>
 	> >
-void save(AT24C::Ptr& dst, const T& v)
+void save(ConfigStoragePtr& dst, const T& v)
 {
 	updateEEPROM(dst, reinterpret_cast<const uint8_t*>(&v), sizeof(v));
 }
@@ -54,13 +51,13 @@ template<typename T, typename = std::enable_if_t<
 	std::is_arithmetic_v<T> ||
 	std::is_same_v<T, GraphPoint>
 	> >
-void load(AT24C::Ptr& src, T& v)
+void load(ConfigStoragePtr& src, T& v)
 {
 	readEEPROM(src, reinterpret_cast<uint8_t*>(&v), sizeof(v));
 }
 
 template<typename T>
-void save(AT24C::Ptr& src, const TFixedCapacityQueue<T>& v)
+void save(ConfigStoragePtr& src, const TFixedCapacityQueue<T>& v)
 {
 	int size = v.size();
 	save(src, size);
@@ -72,7 +69,7 @@ void save(AT24C::Ptr& src, const TFixedCapacityQueue<T>& v)
 }
 
 template<typename T>
-void load(AT24C::Ptr& src, TFixedCapacityQueue<T>& v)
+void load(ConfigStoragePtr& src, TFixedCapacityQueue<T>& v)
 {
 	v.clear();
 	int size;
@@ -108,7 +105,7 @@ void GroupConfig::log() const
 	CZ_LOG(logDefault, Log, F("    m_numReadings=%u"), (unsigned int)m_numReadings);
 }
 
-void GroupConfig::save(AT24C::Ptr& dst) const
+void GroupConfig::save(ConfigStoragePtr& dst) const
 {
 	if (m_isDirty)
 	{
@@ -118,11 +115,11 @@ void GroupConfig::save(AT24C::Ptr& dst) const
 	else
 	{
 		CZ_LOG(logDefault, Log, F("Group is not dirty. Nothing to save"));
-		dst += sizeof(m_data);
+		dst.inc(sizeof(m_data));
 	}
 }
 
-void GroupConfig::load(AT24C::Ptr& src)
+void GroupConfig::load(ConfigStoragePtr& src)
 {
 	readEEPROM(src, reinterpret_cast<uint8_t*>(&m_data), sizeof(m_data));
 	m_isDirty = false;
@@ -417,7 +414,7 @@ void GroupData::resetHistory()
 	m_history.clear();
 }
 
-void GroupData::save(AT24C::Ptr& dst, bool saveConfig, bool saveHistory) const
+void GroupData::save(ConfigStoragePtr& dst, bool saveConfig, bool saveHistory) const
 {
 	if (saveConfig)
 	{
@@ -432,7 +429,7 @@ void GroupData::save(AT24C::Ptr& dst, bool saveConfig, bool saveHistory) const
 	}
 }
 
-void GroupData::load(AT24C::Ptr& src, bool loadConfig, bool loadHistory)
+void GroupData::load(ConfigStoragePtr& src, bool loadConfig, bool loadHistory)
 {
 	if (loadConfig)
 	{
@@ -560,7 +557,7 @@ void ProgramData::setHumidityReading(float humidity)
 void ProgramData::save() const
 {
 	unsigned long startTime = micros();
-	AT24C::Ptr ptr = m_outer.eeprom.at(0);
+	ConfigStoragePtr ptr = m_outer.configStorage.ptrAt(0);
 
 	CZ_LOG(logDefault, Log, F("Saving full config. DeviceName: %s"), m_devicename);
 	updateEEPROM(ptr, m_devicename, sizeof(m_devicename));
@@ -592,12 +589,13 @@ void ProgramData::save() const
 void ProgramData::saveGroupConfig(uint8_t index)
 {
 	unsigned long startTime = micros();
-	AT24C::Ptr ptr = m_outer.eeprom.at(0);
-	ptr += sizeof(m_devicename);
+	ConfigStoragePtr ptr = m_outer.configStorage.ptrAt(0);
+
+	ptr.inc(sizeof(m_devicename));
 
 	for(uint8_t idx = 0; idx<index; ++idx)
 	{
-		ptr += m_group[idx].getConfigSaveSize();
+		ptr.inc(m_group[idx].getConfigSaveSize());
 	}
 
 	uint16_t startAddress = ptr.getAddress();
@@ -614,7 +612,7 @@ void ProgramData::saveGroupConfig(uint8_t index)
 void ProgramData::load()
 {
 	unsigned long startTime = micros();
-	AT24C::Ptr ptr = m_outer.eeprom.at(0);
+	ConfigStoragePtr ptr = m_outer.configStorage.ptrAt(0);
 
 	readEEPROM(ptr, m_devicename, sizeof(m_devicename));
 	CZ_LOG(logDefault, Log, F("Loading config. DeviceName: %s"), m_devicename);

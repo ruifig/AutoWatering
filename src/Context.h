@@ -4,8 +4,8 @@
 #include "utility/MCP23017Wrapper.h"
 #include "utility/MuxNChannels.h"
 #include <crazygaze/micromuc/Queue.h>
-#include "AT24C.h"
 #include "crazygaze/micromuc/MathUtils.h"
+#include "EEPROMUtils.h"
 
 namespace cz
 {
@@ -170,8 +170,8 @@ namespace cz
 		}
 
 	  	void log() const;
-		void save(AT24C::Ptr& dst) const;
-		void load(AT24C::Ptr& src);
+		void save(ConfigStoragePtr& dst) const;
+		void load(ConfigStoragePtr& src);
 		bool isDirty() const;
 		bool isRunning() const;
 		void setRunning(bool running);
@@ -384,8 +384,8 @@ namespace cz
 
 	protected:
 		friend class ProgramData;
-		void save(AT24C::Ptr& dst, bool saveConfig, bool saveHistory) const;
-		void load(AT24C::Ptr& src, bool loadConfig, bool loadHistory);
+		void save(ConfigStoragePtr& dst, bool saveConfig, bool saveHistory) const;
+		void load(ConfigStoragePtr& src, bool loadConfig, bool loadHistory);
 		int getConfigSaveSize() const
 		{
 			return m_cfg.getSaveSize();
@@ -491,14 +491,13 @@ struct Context
 {
 	Context()
 		: data(*this)
-		, eeprom(0)
 	{
 	}
 
 	void begin();
 
 	ProgramData data;
-	AT24C256 eeprom;
+	ConfigStorageType configStorage;
 };
 
 extern Context gCtx;
