@@ -693,10 +693,10 @@ namespace cz
 		 * When booting a fresh Autowatering device that was never configured, it will use this as the feed group when connecting
 		 * to Adafruit IO.
 		 * 
-		 * The first thing you need to do for a new device is to go to the Adafruit IO and add a new entry to the "/feeds/aw_unnamed.name"
+		 * The first thing you need to do for a new device is to go to the Adafruit IO and add a new entry to the "/feeds/aw-unnamed.name"
 		 * feed with the new device name.
 		 * The device will pick up the change, save the name to the EEPROM and reboot. Once it boots and you see the new feed group was
-		 * created, you can delete the "aw_unnamed" group.
+		 * created, you can delete the "aw-unnamed" group.
 		 * 
 		 * If you don't plan to build more than 1 device, you can just override this in your custom setup to return the actual name you
 		 * want to use
@@ -705,7 +705,7 @@ namespace cz
 		 */
 		virtual const char* getDefaultName() const
 		{
-			return "aw_unnamed";
+			return "aw-unnamed";
 		}
 
 		// Called for each sensor+motor pair

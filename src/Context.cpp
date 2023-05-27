@@ -267,7 +267,7 @@ void GroupConfig::setSensorValue(unsigned int currentValue_, bool adjustRange)
 		}
 	}
 
-	m_currentValue = cz::clamp(currentValue_, m_data.waterValue, m_data.airValue);
+	m_currentValue = cz::clamp(currentValue_, static_cast<unsigned int>(m_data.waterValue), static_cast<unsigned int>(m_data.airValue));
 }
 
 void GroupConfig::startCalibration()
@@ -562,6 +562,7 @@ void ProgramData::save() const
 	unsigned long startTime = micros();
 	AT24C::Ptr ptr = m_outer.eeprom.at(0);
 
+	CZ_LOG(logDefault, Log, F("Saving full config. DeviceName: %s"), m_devicename);
 	updateEEPROM(ptr, m_devicename, sizeof(m_devicename));
 
 	// We save the configs first because they are fixed size, and so we can load/save groups individually when coming
@@ -616,6 +617,7 @@ void ProgramData::load()
 	AT24C::Ptr ptr = m_outer.eeprom.at(0);
 
 	readEEPROM(ptr, m_devicename, sizeof(m_devicename));
+	CZ_LOG(logDefault, Log, F("Loading config. DeviceName: %s"), m_devicename);
 
 	for(GroupData& g : m_group)
 	{

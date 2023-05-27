@@ -104,9 +104,9 @@ namespace cz
 			// Tells if this group is currently running
 			bool running = false;
 			// Sensor sampling interval in seconds
-			unsigned int samplingInterval = AW_MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL;
+			uint16_t samplingInterval = AW_MOISTURESENSOR_DEFAULT_SAMPLINGINTERVAL;
 			// Motor shot duration in seconds
-			unsigned int shotDuration = AW_SHOT_DEFAULT_DURATION;
+			uint16_t shotDuration = AW_SHOT_DEFAULT_DURATION;
 
 			// The sensor values decreases as moisture increases. (High Value = Dry, Low Value = Wet)
 			// Air and water values are calculated automatically as sensor values are provided. This means the user wipe clean the sensor
@@ -115,13 +115,13 @@ namespace cz
 			// sensor value is the threshold to turn on/off the motor
 			#define START_AIR_VALUE 370
 			#define START_WATER_VALUE (START_AIR_VALUE-5)
-			unsigned int airValue = START_AIR_VALUE;
-			unsigned int waterValue = START_WATER_VALUE;
+			uint16_t airValue = START_AIR_VALUE;
+			uint16_t waterValue = START_WATER_VALUE;
 
 			// Value above which irrigation should be turned on
 			// NOTE: ABOVE because higher values means drier.
 			// Using a big value as initial value, which means it will not turn on the motor until things are setup properly
-			unsigned int thresholdValue = 65535;
+			uint16_t thresholdValue = 65535;
 		} m_data;
 
 		// This needs to start as true, because:
