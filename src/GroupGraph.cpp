@@ -2,13 +2,11 @@
 #include "DisplayCommon.h"
 #include "Context.h"
 #include "crazygaze/micromuc/Profiler.h"
-#include "gfx/MyDisplay1.h"
+#include "gfx/TFTeSPIWrapper.h"
 
 namespace cz
 {
 
-extern MyDisplay1 gScreen;
-	
 GroupGraph::GroupGraph()
 {
 }
@@ -149,8 +147,8 @@ void GroupGraph::draw(bool forceDraw)
 		{
 			PROFILE_SCOPE(F("notRunning"));
 
-			gScreen.setFont(MEDIUM_FONT);
-			gScreen.setTextColor(AW_GRAPH_NOTRUNNING_TEXT_COLOUR);
+			TFTeSPIWrapper::getInstance()->setFont(MEDIUM_FONT);
+			TFTeSPIWrapper::getInstance()->setTextColor(AW_GRAPH_NOTRUNNING_TEXT_COLOUR);
 			printAligned(getScreenSlotRect(), HAlign::Center, VAlign::Center, F("Not Running"));
 		}
 	}
@@ -194,7 +192,7 @@ void GroupGraph::plotHistory()
 		if (redraw)
 		{
 			// erase vertical line
-			gScreen.drawFastVLine(xx, rect.y, h, AW_GRAPH_BKG_COLOUR);
+			TFTeSPIWrapper::getInstance()->drawFastVLine(xx, rect.y, h, AW_GRAPH_BKG_COLOUR);
 			drawMotor = true;
 			drawLevel = true;
 		}
@@ -210,7 +208,7 @@ void GroupGraph::plotHistory()
 			if (oldp.val != p.val)
 			{
 				// Erase previous moisture level point
-				gScreen.drawPixel(xx, bottomY - oldp.val, AW_GRAPH_BKG_COLOUR);
+				TFTeSPIWrapper::getInstance()->drawPixel(xx, bottomY - oldp.val, AW_GRAPH_BKG_COLOUR);
 				drawLevel = true;
 			}
 		}
@@ -218,7 +216,7 @@ void GroupGraph::plotHistory()
 		if (drawMotor)
 		{
 			// draw new motor on/off
-			gScreen.drawPixel(xx, rect.y, p.motorOn ? AW_GRAPH_MOTOR_ON_COLOUR : AW_GRAPH_MOTOR_OFF_COLOUR);
+			TFTeSPIWrapper::getInstance()->drawPixel(xx, rect.y, p.motorOn ? AW_GRAPH_MOTOR_ON_COLOUR : AW_GRAPH_MOTOR_OFF_COLOUR);
 		}
 
 		if (drawLevel)
@@ -226,20 +224,20 @@ void GroupGraph::plotHistory()
 			// 0 means it's not set yet
 			if (m_previousThresholdMarkerY != 0)
 			{
-				gScreen.drawPixel(xx, m_previousThresholdMarkerY, AW_GRAPH_BKG_COLOUR);
+				TFTeSPIWrapper::getInstance()->drawPixel(xx, m_previousThresholdMarkerY, AW_GRAPH_BKG_COLOUR);
 			}
 
-			gScreen.drawPixel(xx, thresholdMarkerY, AW_GRAPH_THRESHOLDMARKER_COLOUR);
+			TFTeSPIWrapper::getInstance()->drawPixel(xx, thresholdMarkerY, AW_GRAPH_THRESHOLDMARKER_COLOUR);
 
 			// Draw new moisture level
-			gScreen.drawPixel(xx, bottomY - p.val, p.status==SensorReading::Status::Valid ? AW_GRAPH_MOISTURELEVEL_COLOUR : AW_GRAPH_MOISTURELEVEL_ERROR_COLOUR);
+			TFTeSPIWrapper::getInstance()->drawPixel(xx, bottomY - p.val, p.status==SensorReading::Status::Valid ? AW_GRAPH_MOISTURELEVEL_COLOUR : AW_GRAPH_MOISTURELEVEL_ERROR_COLOUR);
 		}
 	}
 
 	if (data.getSensorErrorCount() !=0)
 	{
 		uint16_t size = rect.height/3;
-		gScreen.fillRoundRect(rect.left(), rect.bottom() - size, size, size, 3, Colour_Red);
+		TFTeSPIWrapper::getInstance()->fillRoundRect(rect.left(), rect.bottom() - size, size, size, 3, Colour_Red);
 	}
 
 	m_previousThresholdMarkerY = thresholdMarkerY;
@@ -269,12 +267,12 @@ void GroupGraph::drawOuterBox()
 
 	constexpr int16_t h = AW_GRAPH_HEIGHT;
 	int bottomY = historyRect.bottom();
-	gScreen.drawFastHLine(AW_GROUP_NUM_WIDTH+0, bottomY - map(0, 0, 100, 0, h - 1),   2, AW_GRAPH_BORDER_COLOUR);
-	gScreen.drawFastHLine(AW_GROUP_NUM_WIDTH+0, bottomY - map(20, 0, 100, 0, h - 1),  2, AW_GRAPH_BORDER_COLOUR);
-	gScreen.drawFastHLine(AW_GROUP_NUM_WIDTH+0, bottomY - map(40, 0, 100, 0, h - 1),  2, AW_GRAPH_BORDER_COLOUR);
-	gScreen.drawFastHLine(AW_GROUP_NUM_WIDTH+0, bottomY - map(60, 0, 100, 0, h - 1),  2, AW_GRAPH_BORDER_COLOUR);
-	gScreen.drawFastHLine(AW_GROUP_NUM_WIDTH+0, bottomY - map(80, 0, 100, 0, h - 1),  2, AW_GRAPH_BORDER_COLOUR);
-	gScreen.drawFastHLine(AW_GROUP_NUM_WIDTH+0, bottomY - map(100, 0, 100, 0, h - 1), 2, AW_GRAPH_BORDER_COLOUR);
+	TFTeSPIWrapper::getInstance()->drawFastHLine(AW_GROUP_NUM_WIDTH+0, bottomY - map(0, 0, 100, 0, h - 1),   2, AW_GRAPH_BORDER_COLOUR);
+	TFTeSPIWrapper::getInstance()->drawFastHLine(AW_GROUP_NUM_WIDTH+0, bottomY - map(20, 0, 100, 0, h - 1),  2, AW_GRAPH_BORDER_COLOUR);
+	TFTeSPIWrapper::getInstance()->drawFastHLine(AW_GROUP_NUM_WIDTH+0, bottomY - map(40, 0, 100, 0, h - 1),  2, AW_GRAPH_BORDER_COLOUR);
+	TFTeSPIWrapper::getInstance()->drawFastHLine(AW_GROUP_NUM_WIDTH+0, bottomY - map(60, 0, 100, 0, h - 1),  2, AW_GRAPH_BORDER_COLOUR);
+	TFTeSPIWrapper::getInstance()->drawFastHLine(AW_GROUP_NUM_WIDTH+0, bottomY - map(80, 0, 100, 0, h - 1),  2, AW_GRAPH_BORDER_COLOUR);
+	TFTeSPIWrapper::getInstance()->drawFastHLine(AW_GROUP_NUM_WIDTH+0, bottomY - map(100, 0, 100, 0, h - 1), 2, AW_GRAPH_BORDER_COLOUR);
 
 	m_redrawOuterBox = false;
 }

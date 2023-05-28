@@ -163,7 +163,7 @@ void TemperatureAndHumiditySensor::onEvent(const Event& evt)
 	}
 }
 
-#if AW_THSENSOR_SENSOR_ENABLED
+#if AW_THSENSOR_ENABLED
 	TemperatureAndHumiditySensor gTempAndHumiditySensor;
 #endif
 

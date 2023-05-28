@@ -18,7 +18,6 @@
 namespace cz
 {
 
-extern MyDisplay1 gScreen;
 extern XPT2046 gTs;
 
 extern Timer gTimer;
@@ -36,7 +35,7 @@ void GraphicalUI::InitializeState::tick(float deltaSeconds)
 
 void GraphicalUI::InitializeState::onEnter()
 {
-	gScreen.fillScreen(Colour_Black);
+	TFTeSPIWrapper::getInstance()->fillScreen(Colour_Black);
 }
 
 void GraphicalUI::InitializeState::onLeave()
@@ -143,7 +142,7 @@ void GraphicalUI::BootMenuState::tick(float deltaSeconds)
 
 	if (m_waitingResetConfirmation == false)
 	{
-		gScreen.setTextColor(Colour_Yellow, Colour_Black);
+		TFTeSPIWrapper::getInstance()->setTextColor(Colour_Yellow, Colour_Black);
 		printAligned(
 			{{0, BootMenu::getResetButtonPos().bottom() + 10}, AW_SCREEN_WIDTH, 40},
 			HAlign::Center, VAlign::Center,
@@ -164,7 +163,7 @@ void GraphicalUI::BootMenuState::tick(float deltaSeconds)
 		else if (m_outer.m_touch.pressed && BootMenu::getResetButtonPos().contains(m_outer.m_touch.pos))
 		{
 			m_waitingResetConfirmation = true;
-			gScreen.fillScreen(Colour_Black);
+			TFTeSPIWrapper::getInstance()->fillScreen(Colour_Black);
 
 			// We don't need anything fancy for the BootMenu, so we can draw the button once and be done with it.
 			// NOTE: We are intentionally drawing the confirm button in a different position to avoid clicking confirm by accident.
@@ -176,7 +175,7 @@ void GraphicalUI::BootMenuState::tick(float deltaSeconds)
 				"Confirm Reset");
 			btn.draw();
 
-			gScreen.setTextColor(Colour_Yellow, Colour_Black);
+			TFTeSPIWrapper::getInstance()->setTextColor(Colour_Yellow, Colour_Black);
 			printAligned(
 				{{0, BootMenu::getConfirmButtonPos().bottom() + 5}, AW_SCREEN_WIDTH, 40},
 				HAlign::Center, VAlign::Center,
@@ -202,7 +201,7 @@ void GraphicalUI::BootMenuState::tick(float deltaSeconds)
 
 void GraphicalUI::BootMenuState::onEnter()
 {
-	gScreen.setTextColor(Colour_Yellow, Colour_Black);
+	TFTeSPIWrapper::getInstance()->setTextColor(Colour_Yellow, Colour_Black);
 	printAligned(
 		{{0, BootMenu::getResetButtonPos().top() - 40}, AW_SCREEN_WIDTH, 40},
 		HAlign::Center, VAlign::Center,
@@ -459,8 +458,8 @@ GraphicalUI::OverviewState::Group& GraphicalUI::OverviewState::getGroupByPairInd
 
 void GraphicalUI::OverviewState::drawGroupNumbers()
 {
-	gScreen.setTextColor(AW_GRAPH_VALUES_TEXT_COLOUR, Colour_VeryDarkGrey);
-	gScreen.setFont(TINY_FONT);
+	TFTeSPIWrapper::getInstance()->setTextColor(AW_GRAPH_VALUES_TEXT_COLOUR, Colour_VeryDarkGrey);
+	TFTeSPIWrapper::getInstance()->setFont(TINY_FONT);
 	for(int i=0; i<AW_VISIBLE_NUM_PAIRS; i++)
 	{
 		int pairIndex = i + m_topSlotPairIndex;
@@ -688,7 +687,7 @@ void GraphicalUI::updateTouch(float deltaSeconds)
 		{
 			CZ_LOG(logDefault, Log, F("Waking up"));
 			m_touch.sleeping = false;
-			gScreen.setBacklightBrightness(AW_SCREEN_DEFAULT_BRIGHTNESS);
+			TFTeSPIWrapper::getInstance()->setBacklightBrightness(AW_SCREEN_DEFAULT_BRIGHTNESS);
 		}
 		else
 		{
@@ -704,7 +703,7 @@ void GraphicalUI::updateTouch(float deltaSeconds)
 			if (m_touch.currentBrightness>0)
 			{
 				m_touch.currentBrightness -= deltaSeconds * AW_SCREEN_OFF_DIM_SPEED;
-				gScreen.setBacklightBrightness((uint8_t)cz::clamp(m_touch.currentBrightness, 0.0f, 100.0f));
+				TFTeSPIWrapper::getInstance()->setBacklightBrightness((uint8_t)cz::clamp(m_touch.currentBrightness, 0.0f, 100.0f));
 			}
 		}
 		else
@@ -771,14 +770,10 @@ void GraphicalUI::changeToState(DisplayState& newState)
 		m_state->onLeave();
 	}
 
-	gScreen.fillScreen(AW_SCREEN_BKG_COLOUR);
+	TFTeSPIWrapper::getInstance()->fillScreen(AW_SCREEN_BKG_COLOUR);
 	m_state = &newState;
     m_timeInState = 0.0f;
 	m_state->onEnter();
 }
-
-#if AW_GRAPHICALUI_ENABLED
-	GraphicalUI gGraphicalUI;
-#endif
 
 } // namespace cz

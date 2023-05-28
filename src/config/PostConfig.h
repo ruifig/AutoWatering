@@ -134,7 +134,7 @@ If 1, it enables profiling code
  This will disable any features that require a network connection.
  If set to 1, make sure you provide your network details. See Config/Secrets.h for more information
  */
-#ifndef AQ_WIFI_ENABLED
+#ifndef AW_WIFI_ENABLED
 	#define AW_WIFI_ENABLED 1
 #endif
 
@@ -284,8 +284,8 @@ In short, it uses the builtin led to signal things so we know the board it's ali
 If set to 1, it will enable the TemperatureAndHumiditySensor component
 At the moment, only the HTU21D sensor is supported
 */
-#ifndef AW_THSENSOR_SENSOR_ENABLED
-	#define AW_THSENSOR_SENSOR_ENABLED 1
+#ifndef AW_THSENSOR_ENABLED
+	#define AW_THSENSOR_ENABLED 1
 #endif
 
 // Default sampling interval, in seconds
@@ -409,6 +409,12 @@ This does NOT affect manual shots.
 	#define AW_MQTTUI_ENABLED 1
 #endif
 
+#if AW_MQTTUI_ENABLED
+	#if !AW_WIFI_ENABLED
+		#error MQTT requires WIFI
+	#endif
+#endif
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                               GRAPHICAL UI COMPONENT OPTIONS
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -427,9 +433,12 @@ Some more notes:
 		- I should fix that in the future
 	- Lots of these macros have carefuly planned values to aligh UI, etc, so changing their values might break things.
 */
-#ifndef AW_GRAPHICALUI_ENABLED
-	#define AW_GRAPHICALUI_ENABLED 1
+#ifndef AW_TOUCHUI_ENABLED
+	#define AW_TOUCHUI_ENABLED 1
 #endif
+
+// At the moment, the only touch screen supported is SPI based, so we enable use of SPI
+#define AW_SPI_ENABLED AW_TOUCHUI_ENABLED
 
 // At the moment these are fixed
 #define AW_SCREEN_WIDTH 320
@@ -656,6 +665,41 @@ How many sensor/motor pairs fit on the screen
 	static_assert((1<<AW_GRAPH_POINT_NUM_BITS) < AW_GRAPH_HEIGHT, "Reduce number of bits, or increase graph height");
 #endif
 #define AW_GRAPH_POINT_MAXVAL ((1<<AW_GRAPH_POINT_NUM_BITS) - 1)
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                               I2C OPTIONS
+//
+// I2C support should be enabled if any components or the board design makes use of i2c
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#ifndef AW_I2C_ENABLED
+	#if AW_THSENSOR_ENABLED || AW_STORAGE_AT24C_ENABLED
+		#define AW_I2C_ENABLED 1
+	#else
+		#define AW_I2C_ENABLED 0
+	#endif
+#endif
+
+#if AW_I2C_ENABLED
+
+	// SDA pin to use
+	#ifndef AW_I2C_SDAPIN
+		#define AW_I2C_SDAPIN 0
+	#endif
+
+	// SCL pin to use
+	#ifndef AW_I2C_SCLPIN
+		#define AW_I2C_SCLPIN 1
+	#endif
+
+	// Speed (in hz) to set i2c to.
+	// This default value was picked to support the combination of components I developed the project with. E.g:
+	//		MCP23017 : 400kHz at 3.3v
+	//		AT24Cxxx : 400kHz at 2.7v, 2.5v
+	#ifndef AW_I2C_SPEEDHZ
+		#define AW_I2C_SPEEDHZ 400000
+	#endif
+#endif
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

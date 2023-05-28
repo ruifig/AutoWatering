@@ -1,15 +1,34 @@
-#include "MyDisplay1.h"
+#include "TFTeSPIWrapper.h"
 #include "crazygaze/micromuc/Logging.h"
 
 namespace cz
 {
 
-MyDisplay1::MyDisplay1()
+TFTeSPIWrapper* TFTeSPIWrapper::ms_instance = nullptr;
+
+#if AW_TOUCHUI_ENABLED
+	TFTeSPIWrapper gScreen;
+#endif
+
+TFTeSPIWrapper::TFTeSPIWrapper()
 	: m_bkpin(TFT_BL)
 	, m_tft()
 {
+	CZ_ASSERT(ms_instance == nullptr);
+	ms_instance = this;
 }
-bool MyDisplay1::begin()
+
+TFTeSPIWrapper::~TFTeSPIWrapper()
+{
+	ms_instance = nullptr;
+}
+
+TFTeSPIWrapper* TFTeSPIWrapper::getInstance()
+{
+	return ms_instance;
+}
+
+bool TFTeSPIWrapper::begin()
 {
 
 	// Seems like I can't figure out how to reliably detect if a screen is attached.
@@ -42,7 +61,7 @@ bool MyDisplay1::begin()
 	return true;
 }
 
-uint32_t MyDisplay1::readRegister(uint8_t reg, int16_t bytes, uint8_t index)
+uint32_t TFTeSPIWrapper::readRegister(uint8_t reg, int16_t bytes, uint8_t index)
 {
 	uint32_t data = 0;
 
@@ -58,7 +77,7 @@ uint32_t MyDisplay1::readRegister(uint8_t reg, int16_t bytes, uint8_t index)
 	return data;
 }
 
-void MyDisplay1::setBacklightBrightness(uint8_t brightness)
+void TFTeSPIWrapper::setBacklightBrightness(uint8_t brightness)
 {
 	analogWrite(m_bkpin, map(brightness, 0, 100, 0, 255));
 }
@@ -67,7 +86,7 @@ void MyDisplay1::setBacklightBrightness(uint8_t brightness)
 /**
  * This doesn't seem to work correctly. I suspect it might be Adafruit's code not doing the right thing reading data from these commands
  */
-void MyDisplay1::logProperties()
+void TFTeSPIWrapper::logProperties()
 {
 	digitalWrite(TFT_RST, LOW);
 	delay(10);

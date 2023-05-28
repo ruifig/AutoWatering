@@ -1,10 +1,5 @@
 #include "Label.h"
-#include "MyDisplay1.h"
-
-namespace cz
-{
-	extern MyDisplay1 gScreen;
-}
+#include "TFTeSPIWrapper.h"
 
 namespace cz::gfx
 {
@@ -24,8 +19,8 @@ void BaseLabel::drawImplHelper(const LabelData& data)
 		drawRect(data.pos, data.textColour);
 	}
 
-	gScreen.setFont(data.font);
-	gScreen.setTextColor(data.textColour);
+	TFTeSPIWrapper::getInstance()->setFont(data.font);
+	TFTeSPIWrapper::getInstance()->setTextColor(data.textColour);
 }
 
 void BaseLabel::drawImpl(const LabelData& data, const char* value)

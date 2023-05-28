@@ -556,6 +556,8 @@ void ProgramData::setHumidityReading(float humidity)
 
 void ProgramData::save() const
 {
+	m_outer.configStorage.start();
+
 	unsigned long startTime = micros();
 	ConfigStoragePtr ptr = m_outer.configStorage.ptrAt(0);
 
@@ -574,6 +576,8 @@ void ProgramData::save() const
 		g.save(ptr, false, true);
 	}
 	
+	m_outer.configStorage.end();
+
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
 	CZ_LOG(logDefault, Log, F("Saving full config to EEPROM, Took %u ms"), elapsedMs);
 	bool wasReady = m_isReady;
@@ -588,6 +592,8 @@ void ProgramData::save() const
 
 void ProgramData::saveGroupConfig(uint8_t index)
 {
+	m_outer.configStorage.start();
+
 	unsigned long startTime = micros();
 	ConfigStoragePtr ptr = m_outer.configStorage.ptrAt(0);
 
@@ -600,6 +606,9 @@ void ProgramData::saveGroupConfig(uint8_t index)
 
 	uint16_t startAddress = ptr.getAddress();
 	m_group[index].save(ptr, true, false);
+
+	m_outer.configStorage.end();
+
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
 	CZ_LOG(logDefault, Log, F("Saving group %u to EEPROM. Address %u, %u bytes. Took %u ms"),
 		(unsigned int)index,

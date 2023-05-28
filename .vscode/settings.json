@@ -65,7 +65,16 @@
         "cstring": "cpp",
         "regex": "cpp",
         "istream": "cpp",
-        "sstream": "cpp"
+        "sstream": "cpp",
+        "set": "cpp",
+        "executor": "cpp",
+        "io_context": "cpp",
+        "netfwd": "cpp",
+        "timer": "cpp",
+        "fstream": "cpp",
+        "iomanip": "cpp",
+        "iostream": "cpp",
+        "variant": "cpp"
     },
     "gitlens.advanced.blame.customArguments": [],
 
@@ -74,5 +83,6 @@
     "gitlens.codeLens.authors.enabled": false,
     "gitlens.codeLens.recentChange.enabled": false,
     "editor.tabSize": 4,
-    "cmake.configureOnOpen": false
+    "cmake.configureOnOpen": false,
+    "search.useGlobalIgnoreFiles": true
 }

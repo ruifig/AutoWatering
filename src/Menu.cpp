@@ -1,11 +1,9 @@
 #include "Menu.h"
 #include "DisplayCommon.h"
-#include "gfx/MyDisplay1.h"
+#include "gfx/TFTeSPIWrapper.h"
 
 namespace cz
 {
-
-extern MyDisplay1 gScreen;
 
 void Menu::show()
 {

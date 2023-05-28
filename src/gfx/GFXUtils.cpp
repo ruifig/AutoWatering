@@ -1,11 +1,9 @@
 #include "GFXUtils.h"
 #include "crazygaze/micromuc/Logging.h"
-#include "MyDisplay1.h"
+#include "TFTeSPIWrapper.h"
 
 namespace cz
 {
-
-extern MyDisplay1 gScreen;
 
 //////////////////////////////////////////////////////////////////////////
 // Utility drawing
@@ -13,19 +11,19 @@ extern MyDisplay1 gScreen;
 
 void fillRect(const Rect& box, Colour color)
 {
-	gScreen.fillRect(box.x, box.y, box.width, box.height, color);
+	TFTeSPIWrapper::getInstance()->fillRect(box.x, box.y, box.width, box.height, color);
 }
 
 void drawRect(const Rect& box, Colour color)
 {
-	gScreen.drawRect(box.x, box.y, box.width, box.height, color);
+	TFTeSPIWrapper::getInstance()->drawRect(box.x, box.y, box.width, box.height, color);
 }
 
 void drawRGBBitmap_P(int16_t x, int16_t y, const uint16_t *bitmap_P, const uint8_t* mask_P, int16_t w, int16_t h, Colour bkgColour)
 {
 	int16_t bw = (w + 7) / 8; // Bitmask scanline pad = whole byte
 	uint8_t byte = 0;
-	gScreen.startWrite();
+	TFTeSPIWrapper::getInstance()->startWrite();
 	for (int16_t j = 0; j < h; j++, y++) {
 		for (int16_t i = 0; i < w; i++) {
 			if (i & 7)
@@ -33,15 +31,15 @@ void drawRGBBitmap_P(int16_t x, int16_t y, const uint16_t *bitmap_P, const uint8
 			else
 				byte = pgm_read_byte(&mask_P[j * bw + i / 8]);
 			if (byte & 0x80) {
-				gScreen.writePixel(x + i, y, Colour(pgm_read_word(&bitmap_P[j * w + i])));
+				TFTeSPIWrapper::getInstance()->writePixel(x + i, y, Colour(pgm_read_word(&bitmap_P[j * w + i])));
 			}
 			else
 			{
-				gScreen.writePixel(x + i, y, bkgColour);
+				TFTeSPIWrapper::getInstance()->writePixel(x + i, y, bkgColour);
 			}
 		}
 	}
-	gScreen.endWrite();
+	TFTeSPIWrapper::getInstance()->endWrite();
 }
 
 void drawRGBBitmap_P(const Rect& area, const uint16_t *bitmap, const uint8_t* mask, Colour bkgColour)
@@ -54,7 +52,7 @@ void drawRGBBitmapDisabled_P(int16_t x, int16_t y, const uint16_t *bitmap_P, con
 	int count = 0;
 	int16_t bw = (w + 7) / 8; // Bitmask scanline pad = whole byte
 	uint8_t byte = 0;
-	gScreen.startWrite();
+	TFTeSPIWrapper::getInstance()->startWrite();
 	for (int16_t j = 0; j < h; j++, y++)
 	{
 		for (int16_t i = 0; i < w; i++)
@@ -69,17 +67,17 @@ void drawRGBBitmapDisabled_P(int16_t x, int16_t y, const uint16_t *bitmap_P, con
 			if (byte & 0x80)
 			{
 				if ((count % 2) == 0)
-					gScreen.writePixel(x + i, y, Colour_Black);
+					TFTeSPIWrapper::getInstance()->writePixel(x + i, y, Colour_Black);
 				else
-					gScreen.writePixel(x + i, y, Colour(pgm_read_word(&bitmap_P[j * w + i])).toGrey());
+					TFTeSPIWrapper::getInstance()->writePixel(x + i, y, Colour(pgm_read_word(&bitmap_P[j * w + i])).toGrey());
 			}
 			else
 			{
-				gScreen.writePixel(x + i, y, bkgColour);
+				TFTeSPIWrapper::getInstance()->writePixel(x + i, y, bkgColour);
 			}
 		}
 	}
-	gScreen.endWrite();
+	TFTeSPIWrapper::getInstance()->endWrite();
 }
 
 void drawRGBBitmapDisabled_P(const Rect& area, const uint16_t *bitmap_P, const uint8_t* mask_P, Colour bkgColour)
@@ -92,7 +90,7 @@ void printAlignedImpl(const Rect& area, HAlign halign, VAlign valign, const T* t
 {
 	if (eraseBackground)
 	{
-		fillRect(area, gScreen.getTextBkgColor());
+		fillRect(area, TFTeSPIWrapper::getInstance()->getTextBkgColor());
 	}
 
 	Pos p;
@@ -131,8 +129,8 @@ void printAlignedImpl(const Rect& area, HAlign halign, VAlign valign, const T* t
 			break;
 	}
 
-	gScreen.getTFT_eSPI().setTextDatum(datum);
-	gScreen.getTFT_eSPI().drawString(txt, p.x, p.y);
+	TFTeSPIWrapper::getInstance()->getTFT_eSPI().setTextDatum(datum);
+	TFTeSPIWrapper::getInstance()->getTFT_eSPI().drawString(txt, p.x, p.y);
 }
 
 void printAligned(const Rect& area, HAlign halign, VAlign valign, const char* txt, bool eraseBackground)

@@ -1,10 +1,5 @@
 #include "Button.h"
-#include "MyDisplay1.h"
-
-namespace cz
-{
-	extern MyDisplay1 gScreen;
-}
+#include "TFTeSPIWrapper.h"
 
 namespace cz::gfx
 {
@@ -182,32 +177,32 @@ void TextButton::draw(bool forceDraw)
 	}
 	
 	uint8_t r = min(m_pos.width, m_pos.height) / 4; // Corner radius
-	gScreen.fillRoundRect(m_pos.x, m_pos.y, m_pos.width, m_pos.height, r, fillColour);
-	gScreen.drawRoundRect(m_pos.x, m_pos.y, m_pos.width, m_pos.height, r, m_outlineColour);
+	TFTeSPIWrapper::getInstance()->fillRoundRect(m_pos.x, m_pos.y, m_pos.width, m_pos.height, r, fillColour);
+	TFTeSPIWrapper::getInstance()->drawRoundRect(m_pos.x, m_pos.y, m_pos.width, m_pos.height, r, m_outlineColour);
 
 	// set the button's text size first, it 's used by getTextBounds()
-	gScreen.setTextSize(m_textMag);
+	TFTeSPIWrapper::getInstance()->setTextSize(m_textMag);
 
-	gScreen.setFont(m_font);
+	TFTeSPIWrapper::getInstance()->setFont(m_font);
 
 	// if a custom font is used, calculate the text cursor from the
 	// font's data and the string
-	if(gScreen.getGfxFont())
+	if(TFTeSPIWrapper::getInstance()->getGfxFont())
 	{
 		// give the string and virtual cursor and get the enclosing rectangle
-		gScreen.getTextBounds(m_text, m_pos.x, m_pos.y+m_pos.height,
+		TFTeSPIWrapper::getInstance()->getTextBounds(m_text, m_pos.x, m_pos.y+m_pos.height,
 		&text_x, &text_y, &text_w, &text_h);
 		// with this rectangle set the cursor to center the text in the button
-		gScreen.setCursor((m_pos.x + ((m_pos.width - text_w) / 2) - 1), (m_pos.y + ((m_pos.height + text_h) / 2)));
+		TFTeSPIWrapper::getInstance()->setCursor((m_pos.x + ((m_pos.width - text_w) / 2) - 1), (m_pos.y + ((m_pos.height + text_h) / 2)));
 	}
 	else
 	{
 		// Default font
-		gScreen.setCursor(m_pos.x + (m_pos.width/2) - (strlen(m_text) * 3 * m_textMag),
+		TFTeSPIWrapper::getInstance()->setCursor(m_pos.x + (m_pos.width/2) - (strlen(m_text) * 3 * m_textMag),
 		m_pos.y + (m_pos.height/2) - (4 * m_textMag));
 	}
-	gScreen.setTextColor(textColour);
-	gScreen.print(m_text);
+	TFTeSPIWrapper::getInstance()->setTextColor(textColour);
+	TFTeSPIWrapper::getInstance()->print(m_text);
 }
 
 #if 0

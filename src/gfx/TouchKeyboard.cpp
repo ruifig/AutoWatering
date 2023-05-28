@@ -1,10 +1,5 @@
 #include "TouchKeyboard.h"
-#include "MyDisplay1.h"
-
-namespace cz
-{
-	extern MyDisplay1 gScreen;
-}
+#include "TFTeSPIWrapper.h"
 
 namespace cz::gfx
 {
@@ -25,14 +20,14 @@ void TouchKeyboard::KeyButton::init(uint8_t id, const Rect& pos, const KeyInfo& 
 void TouchKeyboard::KeyButton::draw(bool forceRedraw)
 {
 	uint8_t r = 1; // Corner radius
-	gScreen.fillRoundRect(m_pos.x, m_pos.y, m_pos.width, m_pos.height, r, KEY_BKG_COLOUR);
-	gScreen.drawRoundRect(m_pos.x, m_pos.y, m_pos.width, m_pos.height, r, KEY_OUTLINE_COLOUR);
-	gScreen.setTextSize(1);
-	gScreen.setTextColor(KEY_TXT_COLOUR, KEY_BKG_COLOUR);
+	TFTeSPIWrapper::getInstance()->fillRoundRect(m_pos.x, m_pos.y, m_pos.width, m_pos.height, r, KEY_BKG_COLOUR);
+	TFTeSPIWrapper::getInstance()->drawRoundRect(m_pos.x, m_pos.y, m_pos.width, m_pos.height, r, KEY_OUTLINE_COLOUR);
+	TFTeSPIWrapper::getInstance()->setTextSize(1);
+	TFTeSPIWrapper::getInstance()->setTextColor(KEY_TXT_COLOUR, KEY_BKG_COLOUR);
 
 	auto printSpecial = [this](const char* txt)
 	{
-		gScreen.setFont(m_smallFont);
+		TFTeSPIWrapper::getInstance()->setFont(m_smallFont);
 		printAligned(m_pos, HAlign::Center, VAlign::Center, txt, false);
 	};
 
@@ -53,11 +48,11 @@ void TouchKeyboard::KeyButton::draw(bool forceRedraw)
 
 			    if (m_info.ch0 < 'a' || m_info.ch0 > 'z')
 			    {
-					gScreen.setFont(m_smallFont);
+					TFTeSPIWrapper::getInstance()->setFont(m_smallFont);
 					printAligned(m_pos.contract(2), HAlign::Right, VAlign::Top, smallCh, false);
 				}
 
-				gScreen.setFont(m_bigFont);
+				TFTeSPIWrapper::getInstance()->setFont(m_bigFont);
 				printAligned(m_pos, HAlign::Center, VAlign::Center, bigCh, false);
 			}
 	    }

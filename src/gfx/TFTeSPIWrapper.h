@@ -25,10 +25,16 @@
 namespace cz
 {
 
-class MyDisplay1 : public GraphicsInterface
+/*
+* Wrapper for TFTeSPI, so I can hopefully make it easier to change to another graphics library in the future, if required.
+*/
+class TFTeSPIWrapper : public GraphicsInterface
 {
   public:
-	MyDisplay1();
+	TFTeSPIWrapper();
+	virtual ~TFTeSPIWrapper();
+
+	static TFTeSPIWrapper* getInstance();
 
 	/*
 	* Starts the display device, and returns true on success, or false if not found.
@@ -166,6 +172,8 @@ class MyDisplay1 : public GraphicsInterface
 	}
 
   private:
+
+	static TFTeSPIWrapper* ms_instance;
 
 	uint32_t readRegister(uint8_t reg, int16_t bytes, uint8_t index);
 

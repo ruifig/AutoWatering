@@ -13,7 +13,7 @@
 
 #include "crazygaze/micromuc/SDLogOutput.h"
 #include "crazygaze/micromuc/Profiler.h"
-#include "gfx/MyDisplay1.h"
+#include "gfx/TFTeSPIWrapper.h"
 #include "crazygaze/TouchController/XPT2046.h"
 #include <memory>
 #include <vector>
@@ -33,20 +33,18 @@ namespace cz
 
 namespace cz
 {
-	MyDisplay1 gScreen;
-
-	bool gScreenDetected = false;
+#if AW_TOUCHUI_ENABLED
 	const TouchCalibrationData gTsCalibrationData = {233, 3460, 349, 3547, 2};
 	// Minimal graphics interface the touch controller needs
 	class TouchControllerDisplayWrapper : public TouchScreenController_GraphicsInterface
 	{
 		public:
-		virtual int16_t width() override { return gScreen.width(); }
-		virtual int16_t height() override { return gScreen.height(); }
-		virtual void fillScreen(uint16_t colour) override { gScreen.fillScreen(Colour(colour)); }
+		virtual int16_t width() override { return TFTeSPIWrapper::getInstance()->width(); }
+		virtual int16_t height() override { return TFTeSPIWrapper::getInstance()->height(); }
+		virtual void fillScreen(uint16_t colour) override { TFTeSPIWrapper::getInstance()->fillScreen(Colour(colour)); }
 		virtual void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t colour) override
 		{
-			gScreen.drawLine(x0, y0, x1, y1, Colour(colour));
+			TFTeSPIWrapper::getInstance()->drawLine(x0, y0, x1, y1, Colour(colour));
 		}
 	};
 	TouchControllerDisplayWrapper gTsDisplayWrapper;
@@ -58,16 +56,19 @@ namespace cz
 		255  // The touch library checks for a value of 255, which means it won't try to use an irq pin
 #endif
 	XPT2046 gTs(gTsDisplayWrapper, TOUCH_MY_CS, Touch_Pin_IRQ, &gTsCalibrationData);
+#endif
 
 	Timer gTimer;
 }
 
 // TFT_espi spi object
 // Need access to this, so I can reset the frequency after using touch
+#if AW_SPI_ENABLED
 extern "C"
 {
 	extern SPIClassRP2040 spi;
 }
+#endif
 
 namespace
 {
@@ -102,21 +103,20 @@ void setup()
 	analogReadResolution(AW_ADC_NUM_BITS);
 
 	CZ_LOG(logDefault, Log, "Initializing I2C");
-	// MCP23017 : 400kHz at 3.3v
-	// AT24C256 : 400kHz at 2.7v, 2.5v
-	Wire.setSDA(0);
-	Wire.setSCL(1);
-	Wire.begin();
-	Wire.setClock(400000);
-	//
-	// Initialize I2C
-	// NOTE: The original Adafruit_MCP23017.cpp code automatically initialized IC2, but that causes some problems
-	// because I also need to set the clock before I2C is used, and also because eeprom is also using I2C.
-	// So, Adafruit_MCP23017 has a change to disable I2C initialization, and initialization is done here.
-	Wire.begin();
-	// MCP23017 : 400kHz at 3.3v
-	// AT24C256 : 400kHz at 2.7v, 2.5v
-	//Wire.setClock(400000);
+
+#if AW_I2C_ENABLED
+		Wire.setSDA(AW_I2C_SDAPIN);
+		Wire.setSCL(AW_I2C_SCLPIN);
+		Wire.begin();
+		Wire.setClock(AW_I2C_SPEEDHZ);
+		//
+		// Initialize I2C
+		// NOTE: The original Adafruit_MCP23017.cpp code automatically initialized IC2, but that causes some problems
+		// because I also need to set the clock before I2C is used, and also because eeprom is also using I2C.
+		// So, Adafruit_MCP23017 has a change to disable I2C initialization, and initialization is done here.
+		Wire.begin();
+#endif
+	
 
 	#if AW_MOCK_COMPONENTS
 		randomSeed(micros());
@@ -132,30 +132,14 @@ void setup()
 
 	CZ_LOG(logDefault, Log, "Initialing screen");
 
-	// Screen detection is not reliable, so disabling it for now
-#if 0
-	if (gScreen.begin())
-	{
-		gScreenDetected = true;
-		CZ_LOG(logDefault, Log, "Screen detected.");
-	}
-	else
-	{
-		gScreenDetected = false;
-		CZ_LOG(logDefault, Warning, "*** SCREEN NOT DETECTED ***");
-	}
-#else
-	gScreen.begin();
-	gScreenDetected = true;
-#endif
+#if AW_TOUCHUI_ENABLED
+	TFTeSPIWrapper::getInstance()->begin();
 
-	if (gScreenDetected)
-	{
-		CZ_LOG(logDefault, Log, "Initializing touchscreen");
-		gTs.begin(spi);
-		CZ_LOG(logDefault, Log, "Finished initializing touchscreen");
-		//gTs.calibrate();
-	}
+	CZ_LOG(logDefault, Log, "Initializing touchscreen");
+	gTs.begin(spi);
+	CZ_LOG(logDefault, Log, "Finished initializing touchscreen");
+	//gTs.calibrate();
+#endif
 
 	gCtx.begin();
 	gTimer.begin();

@@ -2,7 +2,7 @@
 
 #include "Component.h"
 #include "GroupGraph.h"
-#include "gfx/MyDisplay1.h"
+#include "gfx/TFTeSPIWrapper.h"
 #include "crazygaze/TouchController/XPT2046.h"
 
 #include "SettingsMenu.h"
@@ -223,7 +223,7 @@ class GraphicalUI : public Component
 	void updateTouch(float deltaSeconds);
 };
 
-#if AW_GRAPHICALUI_ENABLED
+#if AW_TOUCHUI_ENABLED
 	extern GraphicalUI gGraphicalUI;
 #endif
 	
