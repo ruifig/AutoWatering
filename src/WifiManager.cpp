@@ -13,14 +13,24 @@ namespace cz
 #endif
 
 
+WifiManager* WifiManager::ms_instance;
+
 WifiManager::WifiManager()
 {
+	CZ_ASSERT(ms_instance == nullptr);
+	ms_instance = this;
 	// We only start ticking when we ready a ConfigReady event
 	stopTicking();
 }
 
 WifiManager::~WifiManager()
 {
+	ms_instance = nullptr;
+}
+
+WifiManager* WifiManager::getInstance()
+{
+	return ms_instance;
 }
 
 bool WifiManager::isConnected()

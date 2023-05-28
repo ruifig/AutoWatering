@@ -13,6 +13,8 @@ class WifiManager : public Component
 	WifiManager();
 	virtual ~WifiManager();
 
+	static WifiManager* getInstance();
+
 	bool isConnected();
 
 	/**
@@ -21,6 +23,8 @@ class WifiManager : public Component
 	*/
 	void disconnect(bool reconnect);
   private:
+
+	static WifiManager* ms_instance;
 
 	// Component interface
 	virtual const char* getName() const override { return "WifiManager"; }
@@ -35,10 +39,6 @@ class WifiManager : public Component
 	WiFiMulti m_multi;
 	bool m_reconnect = true;
 };
-
-#if AW_WIFI_ENABLED
-	extern WifiManager gWifiManager;
-#endif
 
 } // namespace cz
 
