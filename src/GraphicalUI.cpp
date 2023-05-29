@@ -18,6 +18,11 @@
 namespace cz
 {
 
+#if AW_TOUCHUI_ENABLED
+	GraphicalUI gGraphicalUI;
+#endif
+	
+
 extern XPT2046 gTs;
 
 extern Timer gTimer;
