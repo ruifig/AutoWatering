@@ -415,6 +415,17 @@ This does NOT affect manual shots.
 	#endif
 #endif
 
+/*
+Time in seconds to wait until we trigger a local config save when we receive a change from the MQTT broker
+This avoids saving to flash/EEPROM every time we receive an update.
+It allows the user to fiddle with the MQTT UI to adjust settings without every single change being saved.
+For every change, the delay is reset to this value, and once the delay reaches zero, the saving occurs.
+*/
+#ifndef AW_MQTTUI_SAVEDELAY
+	#define AW_MQTTUI_SAVEDELAY 5.0f
+#endif
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                               GRAPHICAL UI COMPONENT OPTIONS
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

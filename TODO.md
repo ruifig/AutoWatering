@@ -1,3 +1,5 @@
+* Instead of groupN-calibrate, have a "calibration-group"
+	* This reduces the number of existing feeds
 
 * Get the latest value of a feed (see https://io.adafruit.com/api/docs/mqtt.html#mqtt-retain)
 

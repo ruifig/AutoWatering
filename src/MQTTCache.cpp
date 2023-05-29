@@ -237,7 +237,7 @@ MQTTCache::Entry* MQTTCache::find(const char* topic, bool create, int* index)
 		CZ_ASSERT(entry);
 		entry->hash = hash;
 		entry->topic = topic;
-		CZ_LOG(logMQTTCache, Log, "find:create: %s", toLogString(entry.get()));
+		CZ_LOG(logMQTTCache, Verbose, "find:create: %s", toLogString(entry.get()));
 		m_cache.push_back(std::move(entry));
 		if (index)
 			*index = m_cache.size() -1;

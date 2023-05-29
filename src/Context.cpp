@@ -621,6 +621,8 @@ void ProgramData::saveGroupConfig(uint8_t index)
 void ProgramData::load()
 {
 	unsigned long startTime = micros();
+
+	m_outer.configStorage.start();
 	ConfigStoragePtr ptr = m_outer.configStorage.ptrAt(0);
 
 	readEEPROM(ptr, m_devicename, sizeof(m_devicename));
@@ -635,6 +637,8 @@ void ProgramData::load()
 	{
 		g.load(ptr, false, true);
 	}
+
+	m_outer.configStorage.end();
 	
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
 	CZ_LOG(logDefault, Log, F("Loading full config from EEPROM took %u ms"), elapsedMs);

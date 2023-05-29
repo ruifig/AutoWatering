@@ -19,7 +19,8 @@
  * How many sensor/motor pairs to support
  * Each i2c board has 6 pairs
  */
-#define AW_MAX_NUM_PAIRS (6*MAX_NUM_I2C_BOARDS)
+//#define AW_MAX_NUM_PAIRS (6*MAX_NUM_I2C_BOARDS)
+#define AW_MAX_NUM_PAIRS 4
 
 #ifdef __cplusplus
 	namespace cz
