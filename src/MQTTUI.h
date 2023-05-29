@@ -42,6 +42,11 @@ class MQTTUI : public Component, public MQTTCache::Listener
 	bool m_firstTick = true;
 	float m_waitingForConfigTimeout = 0.0f;
 
+	// When we receive a configuration change from the MQTT broker, we don't save to EEPROM/Flash straight away, to minimize flash wearing.
+	// Every time we receive a change, we set a delay and only save when it reaches 0.
+	// This also makes it possible to fiddle with the MQTT UI to adjust values, and only after we stop fiddling it will save the changes.
+	float m_saveDelay = 0.0f;
+
 	const MQTTCache::Entry* m_deviceNameValue = nullptr;
 
 	// Dummy config we act on while calibrating a sensor

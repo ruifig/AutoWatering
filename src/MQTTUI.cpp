@@ -115,6 +115,16 @@ float MQTTUI::tick(float deltaSeconds)
 		}
 	}
 
+	if (m_saveDelay > 0.0f)
+	{
+		m_saveDelay -= deltaSeconds;
+		if (m_saveDelay <= 0.0f)
+		{
+			CZ_LOG(logMQTTUI, Log, "Save delay timer expired. Performing save");
+			gCtx.data.save();
+		}
+	}
+
 	return 0.1f;
 }
 
@@ -157,6 +167,8 @@ void MQTTUI::publishConfig()
 	}
 
 	MQTTCache* mqtt = MQTTCache::getInstance();
+
+	CZ_LOG(logMQTTUI, Log, "Sending full config");
 
 	m_deviceNameValue = mqtt->set(buildFeedName("devicename"), gCtx.data.getDeviceName(), 2, false);
 
@@ -393,7 +405,12 @@ void MQTTUI::onMqttValueReceived(const MQTTCache::Entry* entry)
 
 			if (data.isDirty())
 			{
-				gCtx.data.saveGroupConfig(data.getIndex());
+				if (m_saveDelay <= 0.0f)
+				{
+					CZ_LOG(logMQTTUI, Log, "Starting save delay timer (%0.2f)", (float)AW_MQTTUI_SAVEDELAY);
+				}
+
+				m_saveDelay = AW_MQTTUI_SAVEDELAY;
 			}
 		}
 	}
