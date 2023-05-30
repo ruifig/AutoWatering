@@ -416,8 +416,9 @@ void MQTTCache::onMqttMessage(MqttClient::MessageData& md)
 		entry->lastSyncTime = gTimer.getTotalSeconds();
 		if (entry->value != value)
 		{
+			String oldValue = entry->value;
 			entry->value = value;
-			CZ_LOG(logMQTTCache, Log, "onMqttMessage: Value changed. Updating %s", toLogString(entry));
+			CZ_LOG(logMQTTCache, Log, "onMqttMessage: Updating %s. Old value=%s", toLogString(entry), oldValue.c_str());
 			m_listener->onMqttValueReceived(entry);
 		}
 	};

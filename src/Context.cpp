@@ -642,6 +642,9 @@ void ProgramData::load()
 	
 	unsigned long elapsedMs = (micros() - startTime) / 1000;
 	CZ_LOG(logDefault, Log, F("Loading full config from EEPROM took %u ms"), elapsedMs);
+
+	logConfig();	
+
 	bool wasReady = m_isReady;
 	m_isReady = true;
 	if (!wasReady)
