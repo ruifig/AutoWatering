@@ -30,24 +30,38 @@ class MQTTUI : public Component, public MQTTCache::Listener
 	void resetCalibration();
 	void cancelCalibration();
 	void saveCalibration();
+	String createConfigJson();
 	void publishConfig();
-	void publishGroupConfig(int index);
+	void publishGroupData(int index);
 	bool m_subscribed = false;
 
-	bool m_configSent = false;
+	enum State : uint8_t
+	{
+		WaitingForConnection,
+		WaitingForConfig,
+		Idle,
+		CalibratingSensor
+	};
+
+	static const char* const ms_stateNames[4];
+	float m_timeInState = 0;
+	State m_state = State::WaitingForConnection;
+
+	void changeToState(State newState);
+	void onLeaveState();
+	void onEnterState();
+
+	void setSubscriptions(bool config, bool group);
 
 	// We need this to detect the first tick after a wifi connected event
 	// This is because connecting to the Wifi can take a long time (>10 seconds), and so the first tick will
 	// have a high "deltaSeconds" which we want to discard.
-	bool m_firstTick = true;
-	float m_waitingForConfigTimeout = 0.0f;
+	bool m_ignoreNextTick = true;
 
 	// When we receive a configuration change from the MQTT broker, we don't save to EEPROM/Flash straight away, to minimize flash wearing.
 	// Every time we receive a change, we set a delay and only save when it reaches 0.
 	// This also makes it possible to fiddle with the MQTT UI to adjust values, and only after we stop fiddling it will save the changes.
 	float m_saveDelay = 0.0f;
-
-	const MQTTCache::Entry* m_deviceNameValue = nullptr;
 
 	// Dummy config we act on while calibrating a sensor
 	GroupConfig m_dummyCfg;

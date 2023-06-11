@@ -165,8 +165,8 @@ class ATC24CWrapper : public ConfigStorage
   Type m_at24c;
 };
 
-//using ConfigStorageType = ATC24CWrapper<AT24C256>;
-using ConfigStorageType = EEPROMWrapper;
+using ConfigStorageType = ATC24CWrapper<AT24C256>;
+//using ConfigStorageType = EEPROMWrapper;
 
 } // namespace cz
 

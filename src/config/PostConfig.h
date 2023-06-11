@@ -372,7 +372,7 @@ How many motors can be active at one given time
 This is to control the peak power usage, depending on what power supply it is being used
 */
 #ifndef AW_MAX_SIMULTANEOUS_PUMPS
-	#define AW_MAX_SIMULTANEOUS_PUMPS 3
+	#define AW_MAX_SIMULTANEOUS_PUMPS 2
 #endif
 
 /*
@@ -425,6 +425,14 @@ For every change, the delay is reset to this value, and once the delay reaches z
 	#define AW_MQTTUI_SAVEDELAY 5.0f
 #endif
 
+/*
+How long to wait in seconds until the full config is received from the MQTT broker.
+This timer starts after Wifi connection is detected.
+If the config is not received within this time window, the local config is published
+*/
+#ifndef AW_MQTTUI_WAITFORCONFIG_TIMEOUT
+	#define AW_MQTTUI_WAITFORCONFIG_TIMEOUT 5.0f
+#endif
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                               GRAPHICAL UI COMPONENT OPTIONS

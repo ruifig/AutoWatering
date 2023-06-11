@@ -3,6 +3,7 @@
 #include <crazygaze/micromuc/StringUtils.h>
 #include <crazygaze/micromuc/ScopeGuard.h>
 #include <crazygaze/micromuc/Profiler.h>
+#include <crazygaze/micromuc/Algorithm.h>
 
 #include "MqttClient.h"
 #include "Component.h"
@@ -318,14 +319,32 @@ const MQTTCache::Entry* MQTTCache::create(const char* topic, uint8_t qos)
 
 void MQTTCache::subscribe(const char* topic)
 {
-	for(auto&& subscription : m_subscriptions )
-	{
-		if (subscription.topic == topic)
-			return;
-	}
+	auto it = find_if(m_subscriptions, [topic](const Subscription& s) { return s.topic == topic; });
 
-	m_subscriptions.push_back({formatString("%s/json",topic), true});
-	m_hasNewSubscriptions = true;
+	if (it == m_subscriptions.end())
+	{
+		m_subscriptions.push_back({topic, Subscription::State::NeedsSubscribe});
+		m_hasSubscriptionsChanges = true;
+	}
+	else if (it->state != Subscription::State::Subscribed)
+	{
+		it->state = Subscription::State::NeedsSubscribe;
+		m_hasSubscriptionsChanges = true;
+	}
+}
+
+void MQTTCache::unsubscribe(const char* topic)
+{
+	auto it = find_if(m_subscriptions, [topic](const Subscription& s) { return s.topic == topic; });
+
+	if (it != m_subscriptions.end())
+	{
+		if (it->state != Subscription::State::Unsubscribed)
+		{
+			it->state == Subscription::State::NeedsUnsubscribe;
+			m_hasSubscriptionsChanges = true;
+		}
+	}
 }
 
 const MQTTCache::Entry* MQTTCache::get(const char* topic)
@@ -435,7 +454,7 @@ void MQTTCache::onMqttMessage(MqttClient::MessageData& md)
 		// - If the input to deserializeJson is writeable, then JsonDocument uses zero-copy, since it points to the input buffer instead of copying the data
 		// - DynamicJsonDocument is fixed size (we need to initialize it with the maximum memory we think we need)
 		DeserializationError error = deserializeJson(*m_jsondoc, payload);
-		CZ_LOG(logDefault, Verbose, "DynamicJsonDocument memory usage: %u bytes out of %u", m_jsondoc->memoryUsage(), m_jsondoc->capacity());
+		CZ_LOG(logMQTTCache, Verbose, "DynamicJsonDocument memory usage: %u bytes out of %u", m_jsondoc->memoryUsage(), m_jsondoc->capacity());
 		if (error)
 		{
 			CZ_LOG(logMQTTCache, Error, "onMqttMessage: Error deserializing message: %s", error.c_str());
@@ -548,17 +567,30 @@ float MQTTCache::tick(float deltaSeconds)
 		}
 	}
 
-	if (m_hasNewSubscriptions)
+	if (m_hasSubscriptionsChanges)
 	{
 		for(auto&& subscription : m_subscriptions)
 		{
-			if (subscription.newSubscription)
+			switch (subscription.state)
 			{
-				doSubscribe(subscription.topic.c_str());
-				subscription.newSubscription = false;
+				case Subscription::State::Unsubscribed:
+					// Nothing to do
+				break;
+				case Subscription::State::NeedsSubscribe:
+					doSubscribe(subscription.topic.c_str());
+					subscription.state = Subscription::State::Subscribed;
+				break;
+				case Subscription::State::Subscribed:
+					// Nothing to do
+				break;
+				case Subscription::State::NeedsUnsubscribe:
+					doUnsubscribe(subscription.topic.c_str());
+					subscription.state = Subscription::State::Unsubscribed;
+				break;
 			}
 		}
-		m_hasNewSubscriptions = false;
+
+		m_hasSubscriptionsChanges = false;
 	}
 
 	m_mqtt.client->yield(1);
@@ -793,5 +825,15 @@ void MQTTCache::doSubscribe(const char* topic)
 #endif
 }
 
-
+void MQTTCache::doUnsubscribe(const char* topic)
+{
+	CZ_LOG(logMQTTCache, Log, "Unsubscribing from '%s'", topic);
+	MqttClient::Error::type rc = m_mqtt.client->unsubscribe(topic);
+	if (rc != MqttClient::Error::SUCCESS)
+	{
+		CZ_LOG(logMQTTCache, Error, "Failed to unsubscribe from '%s'. Error %i", topic, rc);
+		return;
+	}
 }
+
+} // namespace cz

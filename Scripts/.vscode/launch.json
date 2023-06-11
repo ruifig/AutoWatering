@@ -1,0 +1,30 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "AutoWatering_Test1",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/AutoWatering.py",
+            "console": "integratedTerminal",
+            "args": [
+                "create", "auto-watering-test1", "2"
+            ],
+			"justMyCode": false
+        },
+        {
+            "name": "AutoWatering_Test2",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/AutoWatering.py",
+            "console": "integratedTerminal",
+            "args": [
+                "create", "auto-watering-test2", "1", "--has_th_sensor", "--has_battery"
+            ],
+			"justMyCode": false
+        }
+   ]
+}

@@ -170,6 +170,11 @@ class MQTTCache : public Component
 	void subscribe(const char* topic);
 
 	/**
+	 * Unsubscribes from a previously subscribed topic
+	*/
+	void unsubscribe(const char* topic);
+
+	/**
 	 * Finds the specified cache entry.
 	 * Returns the entry or NULL if it doesn't exist
 	*/
@@ -193,6 +198,18 @@ class MQTTCache : public Component
 	virtual float tick(float deltaSeconds) override;
 	virtual void onEvent(const Event& evt) override;
 	virtual bool processCommand(const Command& cmd) override;
+
+
+	/*
+	* Returns the internal json document object that the caller can use for a one-off operation.
+	* The caller should use NOT keep hold of the object, since it will be reused for internal operations
+	*
+	* The main purpose of this is to avoid memory fragmentation by using one json document with a memory pool big enough for all operations
+	*/
+	DynamicJsonDocument* getScratchJsonDocument()
+	{
+		return m_jsondoc.get();
+	}
 
   private:
 
@@ -224,10 +241,17 @@ class MQTTCache : public Component
 	struct Subscription
 	{
 		String topic;
-		bool newSubscription = false;
+		enum class State
+		{
+			Unsubscribed,
+			NeedsSubscribe,
+			Subscribed,
+			NeedsUnsubscribe
+		};
+		State state = State::Unsubscribed;
 	};
 	std::vector<Subscription> m_subscriptions;
-	bool m_hasNewSubscriptions = false;
+	bool m_hasSubscriptionsChanges = false;
 	float m_publishCountdown = 0;
 	Listener* m_listener;
 	WiFiClient m_wifiClient;
@@ -255,6 +279,7 @@ class MQTTCache : public Component
 
 	bool connectToMqttBroker(float deltaSeconds);
 	void doSubscribe(const char* topic);
+	void doUnsubscribe(const char* topic);
 	float m_connectToMqttBrokerCountdown = 0;
 
 	// To avoid reallocating memory every time we receive a message (and possibly reduce fragmentation) we reuse the object

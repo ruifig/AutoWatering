@@ -72,7 +72,31 @@ namespace
 			return false;
 		}
 	}
+
+	const char* buildFeedName(const char* part1, int index, const char* part2)
+	{
+		return formatString(ADAFRUIT_IO_USERNAME"/feeds/%s.%s%d-%s", gCtx.data.getDeviceName(), part1, index, part2);
+	}
+
+	const char* buildFeedName(const char* part1, const char* part2)
+	{
+		return formatString(ADAFRUIT_IO_USERNAME"/feeds/%s.%s-%s", gCtx.data.getDeviceName(), part1, part2);
+	}
+
+	const char* buildFeedName(const char* part1)
+	{
+		return formatString(ADAFRUIT_IO_USERNAME"/feeds/%s.%s", gCtx.data.getDeviceName(), part1);
+	}
+
 }
+
+const char* const MQTTUI::ms_stateNames[4] =
+{
+	"WaitingForConnection",
+	"WaitingForConfig",
+	"Idle",
+	"CalibratingSensor"
+};
 
 MQTTUI::MQTTUI()
 {
@@ -90,30 +114,22 @@ bool MQTTUI::initImpl()
 	{
 		return false;
 	}
-	else
-	{
-		return true;
-	}
+
+	onEnterState();
+	return true;
 }
 
 float MQTTUI::tick(float deltaSeconds)
 {
-	if (!m_configSent)
+	constexpr float retVal = 0.1f;
+
+	if (m_ignoreNextTick)
 	{
-		// We want to discard the first tick because deltaSeconds will be huge after the Wifi connected event
-		if (m_firstTick)
-		{
-			m_firstTick = false;
-		}
-		else
-		{
-			m_waitingForConfigTimeout -= deltaSeconds;
-			if (m_waitingForConfigTimeout <= 0)
-			{
-				publishConfig();
-			}
-		}
+		m_ignoreNextTick = false;
+		return retVal;
 	}
+
+	m_timeInState += deltaSeconds;
 
 	if (m_saveDelay > 0.0f)
 	{
@@ -125,62 +141,120 @@ float MQTTUI::tick(float deltaSeconds)
 		}
 	}
 
-	return 0.1f;
+	switch(m_state)
+	{
+		case WaitingForConnection:
+		break;
+
+		case WaitingForConfig:
+		{
+			if (m_timeInState >= AW_MQTTUI_WAITFORCONFIG_TIMEOUT)
+			{
+				CZ_LOG(logMQTTUI, Log, "Config not received.")
+				publishConfig();
+				changeToState(State::Idle);
+			}
+		}
+		break;
+
+		case Idle:
+		break;
+
+		case CalibratingSensor:
+		break;
+	};
+
+	return retVal;
 }
 
-const char* buildFeedName(const char* part1, int index, const char* part2)
-{
-	return formatString(ADAFRUIT_IO_USERNAME"/feeds/%s.%s%d-%s", gCtx.data.getDeviceName(), part1, index, part2);
-}
-
-const char* buildFeedName(const char* part1, const char* part2)
-{
-	return formatString(ADAFRUIT_IO_USERNAME"/feeds/%s.%s-%s", gCtx.data.getDeviceName(), part1, part2);
-}
-
-const char* buildFeedName(const char* part1)
-{
-	return formatString(ADAFRUIT_IO_USERNAME"/feeds/%s.%s", gCtx.data.getDeviceName(), part1);
-}
-
-void MQTTUI::publishGroupConfig(int index)
+void MQTTUI::publishGroupData(int index)
 {
 	MQTTCache* mqtt = MQTTCache::getInstance();
 	GroupData& groupData = gCtx.data.getGroupData(index);
 	mqtt->set(buildFeedName("group", index, "running"), groupData.isRunning() ? 1 : 0, 2, false);
+	mqtt->set(buildFeedName("group", index, "motoron"), 0, 2, false);
 	mqtt->set(buildFeedName("group", index, "samplinginterval"), groupData.getSamplingIntervalInMinutes(), 2, false);
 	mqtt->set(buildFeedName("group", index, "shotduration"), groupData.getShotDuration(), 2, false);
-	mqtt->set(buildFeedName("group", index, "airvalue"), groupData.getAirValue(), 2, false);
-	mqtt->set(buildFeedName("group", index, "watervalue"), groupData.getWaterValue(), 2, false);
 	mqtt->set(buildFeedName("group", index, "threshold"), groupData.getThresholdValueAsPercentage(), 2, false);
+	mqtt->set(buildFeedName("group", index, "value"), groupData.getCurrentValueAsPercentage(), 2, false);
+}
 
-	// To make sure we don't leave a group marked as "calibrating", otherwise when we boot and receive a '1' for a group,
-	// it will go into calibrating mode and thus that group won't be monitoring.
-	mqtt->set(buildFeedName("group", index, "calibrate"), 0, 2, false);
+String MQTTUI::createConfigJson()
+{
+	DynamicJsonDocument& doc = *MQTTCache::getInstance()->getScratchJsonDocument();
+	doc.clear();
+
+	doc["devicename"] = gCtx.data.getDeviceName();
+
+	JsonArray groups = doc.createNestedArray("groups");
+	for(int i=0; i< AW_MAX_NUM_PAIRS; i++)
+	{
+		GroupData& groupData = gCtx.data.getGroupData(i);
+		JsonObject obj = groups.createNestedObject();
+		obj["running"] = groupData.isRunning() ? 1 : 0;
+		obj["samplingInterval"] = groupData.getSamplingInterval();
+		obj["shotDuration"] = groupData.getShotDuration();
+		obj["waterValue"] = groupData.getWaterValue();
+		obj["airValue"] = groupData.getAirValue();
+		obj["thresholdValue"] = groupData.getThresholdValue();
+	}
+
+	CZ_LOG(logMQTTUI, Verbose, "DynamicJsonDocument memory usage: %u bytes out of %u", doc.memoryUsage(), doc.capacity());
+	String res;
+#if CZ_LOG_ENABLED
+	serializeJsonPretty(doc, res);
+	cz::LogOutput::logToAllSimple(res.c_str());
+	res = "";
+#endif
+
+	serializeJson(doc, res);
+	doc.clear();
+	return res;
 }
 
 void MQTTUI::publishConfig()
 {
-	if (m_configSent)
+	CZ_LOG(logMQTTUI, Log, "Sending local config");
+
+	auto createIfNotExists = [](const char* topic, auto value)
 	{
-		return;
-	}
+		MQTTCache* mqtt = MQTTCache::getInstance();
+		if (mqtt->get(topic) == nullptr)
+		{
+			mqtt->set(topic, value, 2, false);
+		}
+	};
 
 	MQTTCache* mqtt = MQTTCache::getInstance();
+	mqtt->set(buildFeedName("fullconfig"), createConfigJson().c_str(), 2, false);
 
-	CZ_LOG(logMQTTUI, Log, "Sending full config");
+	// Create feeds that don't exist
+	createIfNotExists(buildFeedName("devicename"), gCtx.data.getDeviceName());
+	if constexpr(AW_BATTERYLIFE_ENABLED)
+	{
+		createIfNotExists(buildFeedName("battery-perc"), 0);
+		createIfNotExists(buildFeedName("battery-voltage"), 0);
+	}
 
-	m_deviceNameValue = mqtt->set(buildFeedName("devicename"), gCtx.data.getDeviceName(), 2, false);
+	if constexpr(AW_THSENSOR_ENABLED)
+	{
+		createIfNotExists(buildFeedName("humidity"), 0);
+		createIfNotExists(buildFeedName("temperature"), 0);
+	}
+
+	createIfNotExists(buildFeedName("calibration", "cancel"), 0);
+	createIfNotExists(buildFeedName("calibration", "index"), -1);
+	createIfNotExists(buildFeedName("calibration", "info"), "");
+	createIfNotExists(buildFeedName("calibration", "reset"), 0);
+	createIfNotExists(buildFeedName("calibration", "save"), 0);
+	createIfNotExists(buildFeedName("calibration", "threshold"), 0);
 
 	for (int i = 0; i < AW_MAX_NUM_PAIRS; i++)
 	{
-		publishGroupConfig(i);
-		mqtt->set(buildFeedName("group", i, "motoron"), 0, 2, false);
+		publishGroupData(i);
 	}
 
 	publishCalibrationInfo();
-
-	m_configSent = true;
 }
 
 void MQTTUI::onEvent(const Event& evt)
@@ -198,34 +272,18 @@ void MQTTUI::onEvent(const Event& evt)
 			if (e.connected)
 			{
 				startTicking();
-
-				if (!m_subscribed)
-				{
-					m_subscribed = true;
-					MQTTCache* mqtt = MQTTCache::getInstance();
-					mqtt->subscribe(formatString("%s/groups/%s", ADAFRUIT_IO_USERNAME, gCtx.data.getDeviceName()));
-					mqtt->setListener(*this);
-
-					// We'll wait a bit to see if we receive the entire feed group
-					if (!m_configSent)
-					{
-						m_firstTick = true;
-						m_waitingForConfigTimeout = 5.0f;
-					}
-				}
+				changeToState(State::WaitingForConfig);
 			}
 			else
 			{
-				m_subscribed = false;
-				m_configSent = false;
-				m_waitingForConfigTimeout = 0.0f;
-				m_firstTick = true;
+				changeToState(State::WaitingForConnection);
 			}
 		}
 		break;
 
 		case Event::TemperatureSensorReading:
 		{
+			// NOTE: We can set the cache entry for this regardless of the state
 			auto&& e = static_cast<const TemperatureSensorReadingEvent&>(evt);
 			// We don't need to wait for Wifi to connect to set this
 			MQTTCache::getInstance()->set<1>(buildFeedName("temperature"), e.temperatureC, 2, AW_MQTT_SENSOR_FORCESYNC ? true : false);
@@ -234,6 +292,7 @@ void MQTTUI::onEvent(const Event& evt)
 
 		case Event::HumiditySensorReading:
 		{
+			// NOTE: We can set the cache entry for this regardless of the state
 			auto&& e = static_cast<const HumiditySensorReadingEvent&>(evt);
 			// We don't need to wait for Wifi to connect to set this
 			MQTTCache::getInstance()->set<1>(buildFeedName("humidity"), e.humidity, 2, AW_MQTT_SENSOR_FORCESYNC ? true : false);
@@ -242,12 +301,13 @@ void MQTTUI::onEvent(const Event& evt)
 
 		case Event::SoilMoistureSensorReading:
 		{
+			// NOTE: We can set the cache entry for this regardless of the state. E.g: Doesn't matter if Wifi is not connected yet.
+
 			auto&& e = static_cast<const SoilMoistureSensorReadingEvent&>(evt);
 			const GroupData& data = gCtx.data.getGroupData(e.index);
 			SoilMoistureSensor* sensor = gSetup->getSoilMoistureSensor(e.index);
 			if (e.reading.isValid())
 			{
-				// We don't need to wait for Wifi to connect to set this
 				MQTTCache* mqtt = MQTTCache::getInstance();
 				const char* topicName = buildFeedName("group", e.index, "value");
 				const MQTTCache::Entry* entry = mqtt->get(topicName);
@@ -276,23 +336,34 @@ void MQTTUI::onEvent(const Event& evt)
 
 		case Event::SoilMoistureSensorCalibration:
 		{
-			auto&& e = static_cast<const SoilMoistureSensorCalibrationEvent&>(evt);
-			if (!e.started) // check if we are starting or finishing the calibration
+			if (m_state == State::CalibratingSensor)
 			{
-				publishGroupConfig(e.index);
+				auto&& e = static_cast<const SoilMoistureSensorCalibrationEvent&>(evt);
+				if (e.started)
+				{
+					// Nothing to do
+				}
+				else
+				{
+					// If finished the calibration, then publish the new group data
+					publishGroupData(e.index);
+				}
 			}
 		}
 		break;
 
 		case Event::SoilMoistureSensorCalibrationReading:
 		{
-			auto& e = static_cast<const SoilMoistureSensorCalibrationReadingEvent&>(evt);
-			if (e.index==m_calibratingIndex)
+			if (m_state == State::CalibratingSensor)
 			{
-				if (e.reading.isValid())
+				auto& e = static_cast<const SoilMoistureSensorCalibrationReadingEvent&>(evt);
+				if (e.index==m_calibratingIndex)
 				{
-					m_dummyCfg.setSensorValue(e.reading.meanValue, true);
-					publishCalibrationInfo();
+					if (e.reading.isValid())
+					{
+						m_dummyCfg.setSensorValue(e.reading.meanValue, true);
+						publishCalibrationInfo();
+					}
 				}
 			}
 		}
@@ -301,7 +372,7 @@ void MQTTUI::onEvent(const Event& evt)
 		case Event::GroupOnOff:
 		{
 			auto&& e = static_cast<const GroupOnOffEvent&>(evt);
-			publishGroupConfig(e.index);
+			publishGroupData(e.index);
 		}
 		break;
 
@@ -310,10 +381,10 @@ void MQTTUI::onEvent(const Event& evt)
 			auto&& e = static_cast<const BatteryLifeReadingEvent&>(evt);
 			// We don't need to wait for Wifi to connect to set these
 			MQTTCache::getInstance()->set(
-				buildFeedName("battery", "perc"),
+				buildFeedName("battery-perc"),
 				e.percentage, 2, false);
 			MQTTCache::getInstance()->set<2>(
-				buildFeedName("battery", "voltage"),
+				buildFeedName("battery-voltage"),
 				e.voltage, 2, false);
 		}
 		break;
@@ -334,41 +405,44 @@ void MQTTUI::onMqttValueReceived(const MQTTCache::Entry* entry)
 {
 	ParsedTopic parsed;
 
-	if (entry == m_deviceNameValue)
+	if (!parseTopic(entry->topic.c_str(), parsed))
+	{
+		return;
+	}
+
+	// Regardless of the state, if we receive a "devicename" change, then we update the local devicename, which will cause a reboot
+	if (strcmp(parsed.name, "devicename") == 0)
 	{
 		gCtx.data.setDeviceName(entry->value.c_str());
+	}
 
-		// If we are receiving the devicename for the first time, then it's very likely part of the initial message with the entire feed group.
-		// In that case, we reset the timer, so the next tick we publish the full config. That needs to be done from the tick and NOT from here,
-		// because at this point MQTTCache is still processing the received feed group message.
-		// By waiting until the tick, it means MQTTCache will have created all the entries from the feed group message.
-		if (!m_configSent)
+	if (m_state == State::WaitingForConfig)
+	{
+		if (strcmp(parsed.name, "fullconfig") == 0)
 		{
-			m_waitingForConfigTimeout = 0.0f;
+			CZ_LOG(logDefault, Log, "**** TODO **** process received config")
+			changeToState(State::Idle);
+			// TODO : Start the save delay timer, or save immediately
 		}
 	}
-	else if (parseTopic(entry->topic.c_str(), parsed))
+	else if (m_state == State::Idle)
 	{
-		if (parsed.index==-1) // -1 means it's not part of a sensor/motor group
+		if (parsed.index == -1)
 		{
-			if (strcmp(parsed.name, "calibration-reset") == 0)
+			if (strcmp(parsed.name, "calibration-index") == 0)
 			{
-				resetCalibration();
-			}
-			else if (strcmp(parsed.name, "calibration-cancel") == 0)
-			{
-				cancelCalibration();
-			}
-			else if (strcmp(parsed.name, "calibration-save") == 0)
-			{
-				saveCalibration();
-			}
-			else if (strcmp(parsed.name, "calibration-threshold") == 0)
-			{
-				m_dummyCfg.setThresholdValueAsPercentage(atoi(entry->value.c_str()));
+				int value = atoi(entry->value.c_str());
+
+				// 0..N : Group to start calibrating
+				// -1 : Button released
+				if (value != -1)
+				{
+					startCalibration(value);
+					changeToState(State::CalibratingSensor);
+				}
 			}
 		}
-		else
+		else  // Check if this feed is part of a group
 		{
 			GroupData& data = gCtx.data.getGroupData(parsed.index);
 			if (strcmp(parsed.name, "running") == 0)
@@ -381,8 +455,9 @@ void MQTTUI::onMqttValueReceived(const MQTTCache::Entry* entry)
 			}
 			else if (strcmp(parsed.name, "samplinginterval") == 0)
 			{
-				// NOTE: Both the touch UI and MQTT show sampling intervals in minutes, but internall it uses seconds
-				data.setSamplingInterval(atoi(entry->value.c_str())*60);
+				// NOTE: Both the touch UI and MQTT show sampling intervals in minutes, but internall it uses
+				// seconds
+				data.setSamplingInterval(atoi(entry->value.c_str()) * 60);
 			}
 			else if (strcmp(parsed.name, "shotduration") == 0)
 			{
@@ -400,6 +475,7 @@ void MQTTUI::onMqttValueReceived(const MQTTCache::Entry* entry)
 				if (atoi(entry->value.c_str()) != 0)
 				{
 					startCalibration(parsed.index);
+					changeToState(State::CalibratingSensor);
 				}
 			}
 
@@ -414,6 +490,31 @@ void MQTTUI::onMqttValueReceived(const MQTTCache::Entry* entry)
 			}
 		}
 	}
+	else if (m_state == State::CalibratingSensor)
+	{
+		if (parsed.index == -1)  // -1 means it's not part of a sensor/motor group
+		{
+			if (strcmp(parsed.name, "calibration-reset") == 0)
+			{
+				resetCalibration();
+			}
+			else if (strcmp(parsed.name, "calibration-cancel") == 0)
+			{
+				cancelCalibration();
+				changeToState(State::Idle);
+			}
+			else if (strcmp(parsed.name, "calibration-save") == 0)
+			{
+				saveCalibration();
+				changeToState(State::Idle);
+			}
+			else if (strcmp(parsed.name, "calibration-threshold") == 0)
+			{
+				m_dummyCfg.setThresholdValueAsPercentage(atoi(entry->value.c_str()));
+			}
+		}
+	}
+
 }
 
 void MQTTUI::publishCalibrationInfo()
@@ -437,6 +538,17 @@ void MQTTUI::publishCalibrationInfo()
 	}
 }
 
+void MQTTUI::cancelCalibration()
+{
+	if (m_calibratingIndex == -1)
+		return;
+
+	GroupData& data = gCtx.data.getGroupData(m_calibratingIndex);
+	data.setInConfigMenu(false);
+	m_calibratingIndex = -1;
+	publishCalibrationInfo();
+}
+
 void MQTTUI::startCalibration(int index)
 {
 	cancelCalibration();
@@ -458,17 +570,6 @@ void MQTTUI::resetCalibration()
 	publishCalibrationInfo();
 }
 
-void MQTTUI::cancelCalibration()
-{
-	if (m_calibratingIndex == -1)
-		return;
-
-	GroupData& data = gCtx.data.getGroupData(m_calibratingIndex);
-	data.setInConfigMenu(false);
-	m_calibratingIndex = -1;
-	publishCalibrationInfo();
-}
-
 void MQTTUI::saveCalibration()
 {
 	if (m_calibratingIndex == -1)
@@ -484,6 +585,88 @@ void MQTTUI::saveCalibration()
 bool MQTTUI::processCommand(const Command& cmd)
 {
 	return false;
+}
+
+void MQTTUI::changeToState(State newState)
+{
+	CZ_LOG(logMQTTUI, Log, F("Changing state: %ssec %s->%s")
+		, *FloatToString(m_timeInState)
+		, ms_stateNames[(int)m_state]
+		, ms_stateNames[(int)newState]);
+
+	onLeaveState();
+	m_state = newState;
+	m_timeInState = 0.0f;
+	onEnterState();
+}
+
+void MQTTUI::setSubscriptions(bool config, bool group)
+{
+	auto process = [](bool subscribe, const char* topic)
+	{
+		if (subscribe)
+		{
+			MQTTCache::getInstance()->subscribe(topic);
+		}
+		else
+		{
+			MQTTCache::getInstance()->unsubscribe(topic);
+		}
+	};
+
+	process(config, formatString("%s/feeds/%s.fullconfig", ADAFRUIT_IO_USERNAME, gCtx.data.getDeviceName()));
+	process(group, formatString("%s/groups/%s/json", ADAFRUIT_IO_USERNAME, gCtx.data.getDeviceName()));
+
+}
+
+void MQTTUI::onLeaveState()
+{
+	switch(m_state)
+	{
+		case WaitingForConnection:
+		break;
+
+		case WaitingForConfig:
+		{
+			setSubscriptions(false, false);
+		}
+		break;
+
+		case Idle:
+		break;
+
+		case CalibratingSensor:
+		break;
+	}
+}
+
+void MQTTUI::onEnterState()
+{
+	switch(m_state)
+	{
+		case WaitingForConnection:
+			setSubscriptions(false, false);
+		break;
+
+		case WaitingForConfig:
+		{
+			// We enter this state as the result of a wifi connect, which takes a very long time and thus the next tick will have a huge delta.
+			// Therefore we ignore the next tick
+			m_ignoreNextTick = true;
+			MQTTCache::getInstance()->setListener(*this);
+			setSubscriptions(true, false);
+		}
+		break;
+
+		case Idle:
+		{
+			setSubscriptions(false, true);
+		}
+		break;
+
+		case CalibratingSensor:
+		break;
+	}
 }
 
 } // namespace cz

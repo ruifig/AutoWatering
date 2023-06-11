@@ -1,4 +1,7 @@
-* Instead of groupN-calibrate, have a "calibration-group"
+
+* Rename AW_XXX touch ui macros to AW_TOUCHUI_XXX
+
+* Instead of groupN-calibrate, have a "calibration-group" -  DONE
 	* This reduces the number of existing feeds
 
 * Get the latest value of a feed (see https://io.adafruit.com/api/docs/mqtt.html#mqtt-retain)
