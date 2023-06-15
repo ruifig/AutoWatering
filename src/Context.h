@@ -75,7 +75,7 @@ namespace cz
 	struct GraphPoint
 	{
 		// 0..100 moisture level
-		unsigned int val : AW_GRAPH_POINT_NUM_BITS;
+		unsigned int val : AW_TOUCHUI_GRAPH_POINT_NUM_BITS;
 		// Tells if the motor was on at this point
 		bool motorOn : 1;
 
@@ -87,7 +87,7 @@ namespace cz
 	// We set space for AW_GRAPH_NUMPOINT+1 to make it easier to deal with the display scrolling.
 	// Considering there was just 1 update to the queue since the last draw, we can do the following:
 	// The first point to draw is index 1, and to draw index 1, we erase the pixel in that pixel with the info from index 0
-	using HistoryQueue = TStaticFixedCapacityQueue<GraphPoint, AW_GRAPH_NUMPOINTS + 1>;
+	using HistoryQueue = TStaticFixedCapacityQueue<GraphPoint, AW_TOUCHUI_GRAPH_NUMPOINTS + 1>;
 
 
 	// Data that should be saved/loaded

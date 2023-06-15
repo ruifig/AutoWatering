@@ -100,9 +100,9 @@ void TouchKeyboard::init()
 	};
 
 	constexpr int16_t height = 32;
-	constexpr int16_t width1 = AW_SCREEN_WIDTH/10;
-	constexpr int16_t width2 = AW_SCREEN_WIDTH/11;
-	constexpr int16_t startY = AW_SCREEN_HEIGHT-32*5;
+	constexpr int16_t width1 = AW_TOUCHUI_SCREEN_WIDTH/10;
+	constexpr int16_t width2 = AW_TOUCHUI_SCREEN_WIDTH/11;
+	constexpr int16_t startY = AW_TOUCHUI_SCREEN_HEIGHT-32*5;
 	for(int i=0; i<=51; i++)
 	{
 		Rect pos;

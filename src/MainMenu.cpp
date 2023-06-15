@@ -26,12 +26,12 @@ void MainMenu::init()
 		m_buttons[(int)id].setClearWhenHidden(false);
 	};
 
-	initButton(ButtonId::StartGroup, LayoutHelper::getMenuButtonPos(0,0), AW_SCREEN_BKG_COLOUR, img_Play);
-	initButton(ButtonId::StopGroup, LayoutHelper::getMenuButtonPos(0,0), AW_SCREEN_BKG_COLOUR, img_Stop);
-	initButton(ButtonId::Shot, LayoutHelper::getMenuButtonPos(1,0), AW_SCREEN_BKG_COLOUR, img_Shot);
-	initButton(ButtonId::Settings, LayoutHelper::getMenuButtonPos(2,0), AW_SCREEN_BKG_COLOUR, img_Settings);
-	initButton(ButtonId::Up, LayoutHelper::getMenuButtonPos(8,0), AW_SCREEN_BKG_COLOUR, img_Up);
-	initButton(ButtonId::Down, LayoutHelper::getMenuButtonPos(8,1), AW_SCREEN_BKG_COLOUR, img_Down);
+	initButton(ButtonId::StartGroup, LayoutHelper::getMenuButtonPos(0,0), AW_TOUCHUI_SCREEN_BKG_COLOUR, img_Play);
+	initButton(ButtonId::StopGroup, LayoutHelper::getMenuButtonPos(0,0), AW_TOUCHUI_SCREEN_BKG_COLOUR, img_Stop);
+	initButton(ButtonId::Shot, LayoutHelper::getMenuButtonPos(1,0), AW_TOUCHUI_SCREEN_BKG_COLOUR, img_Shot);
+	initButton(ButtonId::Settings, LayoutHelper::getMenuButtonPos(2,0), AW_TOUCHUI_SCREEN_BKG_COLOUR, img_Settings);
+	initButton(ButtonId::Up, LayoutHelper::getMenuButtonPos(8,0), AW_TOUCHUI_SCREEN_BKG_COLOUR, img_Up);
+	initButton(ButtonId::Down, LayoutHelper::getMenuButtonPos(8,1), AW_TOUCHUI_SCREEN_BKG_COLOUR, img_Down);
 
 	show();
 }

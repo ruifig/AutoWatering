@@ -11,7 +11,7 @@ void Menu::show()
 
 void Menu::clearEntireArea()
 {
-	fillRect(LayoutHelper::getMenuFullArea(), AW_SCREEN_BKG_COLOUR);
+	fillRect(LayoutHelper::getMenuFullArea(), AW_TOUCHUI_SCREEN_BKG_COLOUR);
 }
 
 void Menu::hide()

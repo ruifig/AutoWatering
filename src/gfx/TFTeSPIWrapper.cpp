@@ -55,7 +55,7 @@ bool TFTeSPIWrapper::begin()
 
 	m_tft.setRotation(3);
 	pinMode(m_bkpin, OUTPUT);
-	setBacklightBrightness(AW_SCREEN_DEFAULT_BRIGHTNESS);
+	setBacklightBrightness(AW_TOUCHUI_SCREEN_DEFAULT_BRIGHTNESS);
 	fillScreen(Colour_White);
 	setTextColor(Colour_White);
 	return true;

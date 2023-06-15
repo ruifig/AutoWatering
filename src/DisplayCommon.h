@@ -9,12 +9,12 @@ struct LayoutHelper
 	{
 		Rect rect(
 			// Leave space to add the small markers
-			AW_GROUP_NUM_WIDTH+3,
+			AW_TOUCHUI_GROUP_NUM_WIDTH+3,
 			// 1+ to leave a line for the box
 			// + X at the end to add a space between different history plots
-			1 + (index*(AW_GRAPH_HEIGHT + 5)),
-			AW_GRAPH_NUMPOINTS, // width
-			AW_GRAPH_HEIGHT // height
+			1 + (index*(AW_TOUCHUI_GRAPH_HEIGHT + 5)),
+			AW_TOUCHUI_GRAPH_NUMPOINTS, // width
+			AW_TOUCHUI_GRAPH_HEIGHT // height
 		);
 
 		return rect;
@@ -58,7 +58,7 @@ struct LayoutHelper
 	#define STATUS_BAR_DIVISIONS 20
 	static constexpr Rect getStatusBarPos()
 	{
-		Rect rect { getMenuButtonPos(0,2), {AW_SCREEN_WIDTH, AW_SCREEN_HEIGHT} };
+		Rect rect { getMenuButtonPos(0,2), {AW_TOUCHUI_SCREEN_WIDTH, AW_TOUCHUI_SCREEN_HEIGHT} };
 		return rect;
 	}
 
@@ -73,6 +73,6 @@ struct LayoutHelper
 };
 	
 // Make sure we have enough space at the bottom for the menu
-static_assert((AW_SCREEN_HEIGHT - (LayoutHelper::getHistoryPlotRect(3).y + LayoutHelper::getHistoryPlotRect(3).height)) > 64, "Need enough space left at the bottom for the menu (64 pixels high)");
+static_assert((AW_TOUCHUI_SCREEN_HEIGHT - (LayoutHelper::getHistoryPlotRect(3).y + LayoutHelper::getHistoryPlotRect(3).height)) > 64, "Need enough space left at the bottom for the menu (64 pixels high)");
 
 } // namespace cz
