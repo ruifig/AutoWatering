@@ -731,6 +731,16 @@ How many sensor/motor pairs fit on the screen
 	#error AW_MAX_NUM_PAIRS must be defined by the user config
 #endif
 
+
+//
+// Check some requirements for the Touch UI
+#if AW_TOUCHUI_ENABLED
+
+	#if AW_MAX_NUM_PAIRS < AW_VISIBLE_NUM_PAIRS
+		#error At the moment the touch UI requires AW_MAX_NUM_PAIRS to be >= AW_VISIBLE_NUM_PAIRS
+	#endif
+#endif
+
 #define AW_CONFIG_DONE
 #include "Secrets.h"
 
