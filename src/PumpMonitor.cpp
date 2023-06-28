@@ -39,7 +39,7 @@ void PumpMonitor::doShot()
 	}
 	else
 	{
-		tryTurnMotorOn(false);
+		tryTurnMotorOn(true);
 	}
 }
 
@@ -102,7 +102,10 @@ float PumpMonitor::tick(float deltaSeconds)
 	}
 	else if (m_motorOffCountdown <= -AW_MINIMUM_TIME_BETWEEN_MOTOR_ON)
 	{
-		if (data.isRunning() && m_sensorValidReadingSinceLastShot && m_lastValidReading.meanValue > data.getThresholdValue())
+		if (
+			(data.isRunning() && m_sensorValidReadingSinceLastShot && m_lastValidReading.meanValue > data.getThresholdValue()) ||
+			// The motor might be alrady queued for turning on due to an explicit shot (e.g: From the touch UI or MQTT UI)
+			m_queueHandle.isQueued())
 		{
 			tryTurnMotorOn(true);
 		}
