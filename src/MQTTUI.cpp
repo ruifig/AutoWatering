@@ -212,7 +212,7 @@ String MQTTUI::createConfigJson()
 	return res;
 }
 
-void MQTTUI::publishConfig()
+void MQTTUI::publishConfig(int groupIndex)
 {
 	CZ_LOG(logMQTTUI, Log, "Sending local config");
 
@@ -249,9 +249,16 @@ void MQTTUI::publishConfig()
 	createIfNotExists(buildFeedName("calibration", "save"), 0);
 	createIfNotExists(buildFeedName("calibration", "threshold"), 0);
 
-	for (int i = 0; i < AW_MAX_NUM_PAIRS; i++)
+	if (groupIndex == -1)
 	{
-		publishGroupData(i);
+		for (int i = 0; i < AW_MAX_NUM_PAIRS; i++)
+		{
+			publishGroupData(i);
+		}
+	}
+	else
+	{
+		publishGroupData(groupIndex);
 	}
 
 	publishCalibrationInfo();
@@ -336,18 +343,20 @@ void MQTTUI::onEvent(const Event& evt)
 
 		case Event::SoilMoistureSensorCalibration:
 		{
-			if (m_state == State::CalibratingSensor)
+			// NOTE: We are not checking if m_state == State::CalibratingSensor, because if the calibration is being done through the Touch UI,
+			// then we still need to do a publishGroupData
+			auto&& e = static_cast<const SoilMoistureSensorCalibrationEvent&>(evt);
+			if (e.started)
 			{
-				auto&& e = static_cast<const SoilMoistureSensorCalibrationEvent&>(evt);
-				if (e.started)
-				{
-					// Nothing to do
-				}
-				else
-				{
-					// If finished the calibration, then publish the new group data
-					publishGroupData(e.index);
-				}
+				// Nothing to do
+			}
+			else
+			{
+				// If finished the calibration, then publish the entire config.
+				// We need publish the entire config, so the "fullconfig" field is published
+				publishConfig(e.index);
+				// Set a short delay before saving the config locally, so the save is done in the ticking
+				m_saveDelay = 0.1f;
 			}
 		}
 		break;
