@@ -33,9 +33,14 @@ WifiManager* WifiManager::getInstance()
 	return ms_instance;
 }
 
-bool WifiManager::isConnected()
+bool WifiManager::isConnected() const
 {
 	return WiFi.status() == WL_CONNECTED;
+}
+
+bool WifiManager::willReconnect() const
+{
+	return m_reconnect;
 }
 
 void WifiManager::disconnect(bool reconnect)
@@ -97,7 +102,6 @@ void WifiManager::checkConnection(bool systemResetOnFail)
 		return;
 	}
 
-	#define MAX_NUM_WIFI_CONNECT_TRIES_PER_LOOP 20
 	int numTries = 0;
 	while(WiFi.status() != WL_CONNECTED)
 	{
@@ -107,7 +111,7 @@ void WifiManager::checkConnection(bool systemResetOnFail)
 		}
 
 		numTries++;
-		CZ_LOG(logWifi, Log, "Connecting to %s (Attempt %d)", WIFI_SSID, numTries);
+		CZ_LOG(logWifi, Log, "Connecting to %s (Attempt %d out of %d)", WIFI_SSID, numTries, AW_WIFI_CONNECT_NUM_TRIES);
 
 		// Disable the watchdog ONLY for as long as we need
 		uint8_t runRes;
@@ -123,18 +127,27 @@ void WifiManager::checkConnection(bool systemResetOnFail)
 			break;
 		}
 
-		if (numTries > MAX_NUM_WIFI_CONNECT_TRIES_PER_LOOP)
+		if (numTries >= AW_WIFI_CONNECT_NUM_TRIES)
 		{
 			Component::raiseEvent(WifiStatusEvent(false));
-			// Restart for Portenta as something is very wrong
-			CZ_LOG(logWifi, Error, "Can't connect to any WiFi. Resetting");
-			cz::LogOutput::flush();
-			delay(1000);
-			rp2040.reboot();
+			if constexpr (AW_WIFI_REBOOT_CONNECT_FAILURE == 0)
+			{
+				CZ_LOG(logWifi, Error, "Can't connect to any WiFi.");
+				m_reconnect = false;
+			}
+			else
+			{
+				// Restart for Portenta as something is very wrong
+				CZ_LOG(logWifi, Error, "Can't connect to any WiFi. Resetting");
+				cz::LogOutput::flush();
+				delay(1000);
+				rp2040.reboot();
+			}
 			return;
 		}
 		else
 		{
+			CZ_LOG(logWifi, Error, "Can't connect to any WiFi. Retrying.");
 			delay(200);
 		}
 	}

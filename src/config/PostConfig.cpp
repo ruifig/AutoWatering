@@ -2,6 +2,10 @@
 #include <Arduino.h>
 #include <crazygaze/micromuc/Logging.h>
 
+#if AW_WIFI_ENABLED
+	static_assert(AW_WIFI_CONNECT_NUM_TRIES >= 1, "Invalid value for AW_WIFI_CONNECT_NUM_TRIES");
+#endif
+
 namespace cz
 {
 

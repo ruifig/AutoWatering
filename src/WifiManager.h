@@ -15,7 +15,12 @@ class WifiManager : public Component
 
 	static WifiManager* getInstance();
 
-	bool isConnected();
+	bool isConnected() const;
+
+	/*
+	* Returns true if a reconnect will be attempted when Wifi fails
+	*/
+	bool willReconnect() const;
 
 	/**
 	 * Disconnects from Wifi.

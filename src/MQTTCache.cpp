@@ -720,6 +720,10 @@ bool MQTTCache::connectToMqttBroker(float deltaSeconds)
 	{
 		return true;
 	}
+	else if (!wifiManager->willReconnect())
+	{
+		return false;
+	}
 	else
 	{
 		m_connectToMqttBrokerCountdown -= deltaSeconds;

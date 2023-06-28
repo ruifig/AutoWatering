@@ -139,6 +139,25 @@ If 1, it enables profiling code
 #endif
 
 /*
+How many attempts to connect to Wifi should be made.
+Needs to be >= 1
+*/
+#ifndef AW_WIFI_CONNECT_NUM_TRIES
+	#define AW_WIFI_CONNECT_NUM_TRIES 1
+#endif
+
+/*
+Controls behaviour for when a wifi connection fails
+- If to 0, it will continue to run. There might be unexpected side effects.
+- If set to 1 to, it will reboot the device. Note that if the device never suceeds to connect to Wifi, then it will perform no work whatsoever,
+since Wifi connection is a blocking operation and attempted right after boot. This means it will be constantly rebooting after Wifi failure.
+*/
+#ifndef AW_WIFI_REBOOT_CONNECT_FAILURE
+	#define AW_WIFI_REBOOT_CONNECT_FAILURE 0
+#endif
+
+
+/*
 How long to wait between attempts to reconnect to the mqtt broker
 */
 #ifndef AW_MQTT_CONNECTION_RETRY_INTERVAL
