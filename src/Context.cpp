@@ -135,11 +135,15 @@ bool GroupConfig::isRunning() const
 	return m_data.running;
 }
 
+#define SET_DIRTY(field) \
+	CZ_LOG(logDefault, Verbose, "Group %d set to dirty because field '%s' changed", static_cast<int>(m_index), field); \
+	m_isDirty = true;
+
 void GroupConfig::setRunning(bool running)
 {
 	if (running != m_data.running)
 	{
-		m_isDirty = true;
+		SET_DIRTY("running");
 		m_data.running = running;
 	}
 }
@@ -152,7 +156,9 @@ unsigned int GroupConfig::getThresholdValue() const
 unsigned int GroupConfig::getThresholdValueAsPercentage() const
 {
 	unsigned int tmp = cz::clamp(m_data.thresholdValue, m_data.waterValue, m_data.airValue);
-	return map(tmp, m_data.airValue, m_data.waterValue, 0, 100);
+	float val = mapValue((float)tmp, (float)m_data.airValue, (float)m_data.waterValue, 0.0f, 100.0f);
+	//CZ_LOG(logDefault, Log, "Group %d:getThresholdValueAsPercentage, thresholdValue = %f", m_index, val);
+	return val + 0.5f;
 }
 
 float GroupConfig::getThresholdValueOnePercent() const
@@ -164,17 +170,20 @@ void GroupConfig::setThresholdValue(unsigned int value)
 {
 	if (value != m_data.thresholdValue)
 	{
-		m_isDirty = true;
+		SET_DIRTY("thresholdValue");
 		m_data.thresholdValue = value;
 	}
 }
 
 void GroupConfig::setThresholdValueAsPercentage(unsigned int percentageValue)
 {
-	unsigned int value = map(cz::clamp<unsigned int>(percentageValue, 0, 100), 0, 100, m_data.airValue, m_data.waterValue);
+	float tmp = mapValue((float)cz::clamp<unsigned int>(percentageValue, 0, 100), 0.0f, 100.0f, (float)m_data.airValue, (float)m_data.waterValue);
+	
+	//CZ_LOG(logDefault, Log, "Group %d:setThresholdValueAsPercentage(%u), thresholdValue = %f", m_index, percentageValue, tmp);
+	int value = tmp + 0.5f;
 	if (value != m_data.thresholdValue)
 	{
-		m_isDirty = true;
+		SET_DIRTY("thresholdValue");
 		m_data.thresholdValue = value;
 	}
 }
@@ -214,7 +223,7 @@ void GroupConfig::setSamplingInterval(unsigned int value_)
 	unsigned int value = cz::clamp<unsigned int>(value_, 1, AW_MOISTURESENSOR_MAX_SAMPLINGINTERVAL);
 	if (value != m_data.samplingInterval)
 	{
-		m_isDirty = true;
+		SET_DIRTY("samplingInterval");
 		m_data.samplingInterval = value;
 	}
 }
@@ -229,7 +238,7 @@ void GroupConfig::setShotDuration(unsigned int value_)
 	unsigned int value = cz::clamp<unsigned int>(value_, 1, AW_SHOT_MAX_DURATION);
 	if (value != m_data.shotDuration)
 	{
-		m_isDirty = true;
+		SET_DIRTY("shotDuration");
 		m_data.shotDuration = value;
 	}
 }
@@ -253,18 +262,33 @@ void GroupConfig::setSensorValue(unsigned int currentValue_, bool adjustRange)
 
 		if (m_data.airValue != m_calibration.maxValue)
 		{
-			m_isDirty = true;
+			SET_DIRTY("airValue");
 			m_data.airValue = m_calibration.maxValue;
 		}
 
 		if (m_data.waterValue != m_calibration.minValue)
 		{
-			m_isDirty = true;
+			SET_DIRTY("waterValue");
 			m_data.waterValue = m_calibration.minValue;
 		}
 	}
 
 	m_currentValue = cz::clamp(currentValue_, static_cast<unsigned int>(m_data.waterValue), static_cast<unsigned int>(m_data.airValue));
+}
+
+void GroupConfig::setSensorAirAndWaterValues(unsigned int airValue, unsigned int waterValue)
+{
+	if (m_data.airValue != airValue)
+	{
+		SET_DIRTY("airValue");
+		m_data.airValue = airValue;
+	}
+
+	if (m_data.waterValue != waterValue)
+	{
+		SET_DIRTY("waterValue");
+		m_data.waterValue = waterValue;
+	}
 }
 
 void GroupConfig::startCalibration()

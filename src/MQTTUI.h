@@ -31,6 +31,8 @@ class MQTTUI : public Component, public MQTTCache::Listener
 	void cancelCalibration();
 	void saveCalibration();
 	String createConfigJson();
+	bool parseConfigJson(const String& configJson);
+
 	/*
 	* Publishes the full device config.
 	* \param groupIndex If -1 all groups will be published. If !=-1 then only the specified group will be published

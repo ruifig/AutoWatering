@@ -225,6 +225,11 @@ namespace cz
 		void setSensorValue(unsigned int currentValue_, bool adjustRange);
 
 		/**
+		 * This is used by the MQTTUI interface to explicitly set the air and water values.
+		 */
+		void setSensorAirAndWaterValues(unsigned int airValue, unsigned int waterValue);
+
+		/**
 		 * Resets the air/water values to the default values, which is a very narrow range so it allows a new sensor range to be detected properly
 		 */
 		void startCalibration();
@@ -330,6 +335,11 @@ namespace cz
 		void setShotDuration(unsigned int value)
 		{
 			m_cfg.setShotDuration(value);
+		}
+
+		void setAirAndWaterValues(unsigned int airValue, unsigned int waterValue)
+		{
+			m_cfg.setSensorAirAndWaterValues(airValue, waterValue);
 		}
 
 		const HistoryQueue& getHistory()
