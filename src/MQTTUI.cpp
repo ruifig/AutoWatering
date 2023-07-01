@@ -138,6 +138,7 @@ float MQTTUI::tick(float deltaSeconds)
 		{
 			CZ_LOG(logMQTTUI, Log, "Save delay timer expired. Performing save");
 			gCtx.data.save();
+			publishConfig();
 		}
 	}
 
@@ -210,6 +211,73 @@ String MQTTUI::createConfigJson()
 	serializeJson(doc, res);
 	doc.clear();
 	return res;
+}
+
+bool MQTTUI::parseConfigJson(const String& configJson)
+{
+	CZ_LOG(logMQTTUI, Log, "Deserializing fullconfig...");
+
+	DynamicJsonDocument& doc = *MQTTCache::getInstance()->getScratchJsonDocument();
+	doc.clear();
+
+	DeserializationError err = deserializeJson(doc, configJson);
+	if (err)
+	{
+		CZ_LOG(logMQTTUI, Error, "deserializeJson failed with code %s", err.c_str());
+		return false;
+	}
+
+	const char* deviceName = doc["devicename"];
+	JsonArray groups = doc["groups"].as<JsonArray>();
+	int numGroups = groups.size();
+	CZ_LOG(logMQTTUI, Log, "devicename='%s', numGroups=%d", deviceName, numGroups);
+	if (numGroups != AW_MAX_NUM_PAIRS)
+	{
+		int todoGroups = std::min(numGroups, AW_MAX_NUM_PAIRS);
+		CZ_LOG(logMQTTUI, Warning, "Number of groups in the json config (%d) differs from the expected number of groups (%d). Parsing %d groups.", numGroups, AW_MAX_NUM_PAIRS, todoGroups);
+		numGroups = todoGroups;
+	}
+
+	bool isDirty = false;
+	for (int i = 0; i < numGroups; i++)
+	{
+		GroupData& data = gCtx.data.getGroupData(i);
+		int running = groups[i]["running"];
+		int samplingInterval = groups[i]["samplingInterval"];
+		int shotDuration = groups[i]["shotDuration"];
+		int airValue = groups[i]["airValue"];
+		int waterValue = groups[i]["waterValue"];
+		int thresholdValue = groups[i]["thresholdValue"];
+
+		data.setRunning(running == 1 ? true : false);
+		data.setSamplingInterval(samplingInterval);
+		data.setShotDuration(shotDuration);
+		data.setAirAndWaterValues(airValue, waterValue);
+		data.setThresholdValue(thresholdValue);
+		isDirty = isDirty || data.isDirty();
+
+		CZ_LOG(logMQTTUI, Verbose, "Group %d json: running=%d, samplingInterval=%d, shotDuration=%d, airValue=%d, waterValue=%d, thresholdValue=%d",
+			i,
+			running,
+			samplingInterval,
+			shotDuration,
+			airValue,
+			waterValue,
+			thresholdValue
+			);
+	}
+
+	// Save locally if changed
+	if (isDirty)
+	{
+		gCtx.data.save();
+	}
+	else
+	{
+		CZ_LOG(logMQTTUI, Log, "No changes detected. Nothing to save.");
+	}
+
+	return true;
 }
 
 void MQTTUI::publishConfig(int groupIndex)
@@ -352,9 +420,6 @@ void MQTTUI::onEvent(const Event& evt)
 			}
 			else
 			{
-				// If finished the calibration, then publish the entire config.
-				// We need publish the entire config, so the "fullconfig" field is published
-				publishConfig(e.index);
 				// Set a short delay before saving the config locally, so the save is done in the ticking
 				m_saveDelay = 0.1f;
 			}
@@ -429,7 +494,7 @@ void MQTTUI::onMqttValueReceived(const MQTTCache::Entry* entry)
 	{
 		if (strcmp(parsed.name, "fullconfig") == 0)
 		{
-			CZ_LOG(logDefault, Log, "**** TODO **** process received config")
+			parseConfigJson(entry->value);
 			changeToState(State::Idle);
 			// TODO : Start the save delay timer, or save immediately
 		}
